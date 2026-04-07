@@ -1773,62 +1773,127 @@ document.getElementById('GP').focus();
     <!-- SCORING SCREEN -->
     <div id="screen-scoring" class="screen">
       <div class="page-header">
-        <div class="page-title">CPI &amp; GFI <em>Scoring</em></div>
-        <div class="page-meta">CAMPAIGN INTELLIGENCE SCORES</div>
-      </div>
-      <div class="score-overview">
-        <div class="score-card"><div class="score-label">AVG CPI SCORE</div><div class="score-val" id="avgCPI">—</div></div>
-        <div class="score-card"><div class="score-label">AVG GFI SCORE</div><div class="score-val" id="avgGFI">—</div></div>
-        <div class="score-card"><div class="score-label">TOP CREATOR</div><div class="score-val" style="font-size:18px" id="topCreator">—</div></div>
-        <div class="score-card"><div class="score-label">DATA CONFIDENCE</div><div class="score-val" id="dataConf">—</div></div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px">
-        <div class="panel">
-          <div class="panel-title">CPI Score Matrix</div>
-          <div id="cpiMatrix"></div>
+        <div>
+          <div class="page-title">CPI &amp; GFI <em>Scoring</em></div>
+          <div class="page-meta">CAMPAIGN INTELLIGENCE SCORES</div>
         </div>
-        <div class="panel">
-          <div class="panel-title">GFI Score Matrix</div>
-          <div id="gfiMatrix"></div>
+        <button onclick="showScreen('personas',document.querySelector('.nav-tab:nth-child(3)'))" style="padding:10px 20px;background:#0050FF;color:#fff;border:none;border-radius:var(--radius);font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;letter-spacing:.05em">VIEW PERSONA MATCHES →</button>
+      </div>
+
+      <!-- OVERVIEW STAT CARDS -->
+      <div class="score-overview" style="margin-bottom:20px">
+        <div class="score-card"><div class="score-label">AVG CPI SCORE</div><div class="score-val" id="avgCPI" style="color:#FFD400">—</div></div>
+        <div class="score-card"><div class="score-label">AVG GFI SCORE</div><div class="score-val" id="avgGFI" style="color:#00C46A">—</div></div>
+        <div class="score-card"><div class="score-label">TOP CREATOR</div><div class="score-val" id="topCreator" style="font-size:16px;color:#fff">—</div></div>
+        <div class="score-card"><div class="score-label">DATA CONFIDENCE</div><div class="score-val" id="dataConf" style="color:#6B9FFF">—</div></div>
+      </div>
+
+      <!-- FULL CREATOR SCORE TABLE -->
+      <div class="panel" style="margin-bottom:20px;padding:0;overflow:hidden">
+        <div style="display:grid;grid-template-columns:1fr 80px 80px 120px;gap:0;background:var(--bg3);border-bottom:1px solid var(--border);padding:12px 20px">
+          <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#0050FF">Creator</div>
+          <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#0050FF;text-align:center">CPI</div>
+          <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#0050FF;text-align:center">GFI</div>
+          <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#0050FF;text-align:right">CPI BAR</div>
         </div>
+        <div id="fullScoreTable" style="max-height:420px;overflow-y:auto"></div>
       </div>
-      <div class="panel" style="margin-bottom:20px">
-        <div class="panel-title">Genre Benchmark <span id="benchGenreLabel" style="color:var(--text-muted);font-weight:300"></span></div>
-        <div id="benchmarkPanel"></div>
+
+      <!-- GENRE BENCHMARK — BOLD AND OUTLINED -->
+      <div style="border:2px solid #0050FF;border-radius:8px;overflow:hidden;margin-bottom:20px">
+        <div style="background:#0050FF;padding:12px 20px;display:flex;align-items:center;justify-content:space-between">
+          <div style="font-family:'DM Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#fff">Genre Benchmark</div>
+          <div id="benchGenreLabel" style="font-family:'DM Mono',monospace;font-size:11px;font-weight:700;color:#FFD400;letter-spacing:.06em"></div>
+        </div>
+        <div id="benchmarkPanel" style="padding:8px"></div>
       </div>
-      <button onclick="showScreen('personas',document.querySelector('.nav-tab:nth-child(3)'))" style="padding:10px 24px;background:#0050FF;color:#fff;border:none;border-radius:var(--radius);font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;letter-spacing:0.05em">VIEW PERSONA MATCHES →</button>
     </div>
 
     <!-- PERSONAS SCREEN -->
     <div id="screen-personas" class="screen">
       <div class="page-header">
-        <div class="page-title">AI <em>Persona</em> Matching</div>
-        <div class="page-meta">AUDIENCE ARCHETYPE ALIGNMENT</div>
+        <div>
+          <div class="page-title">AI <em>Persona</em> Matching</div>
+          <div class="page-meta">AUDIENCE ARCHETYPE ALIGNMENT</div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <button onclick="personaAutoSelect()" style="padding:10px 18px;background:rgba(255,212,0,0.12);border:1px solid rgba(255,212,0,0.3);color:#FFD400;border-radius:var(--radius);font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;letter-spacing:.05em" title="Auto-select 5 top creators matching this persona">⚡ AUTO-SELECT CREATORS</button>
+          <button onclick="showScreen('simulator',document.querySelector('.nav-tab:nth-child(4)'))" style="padding:10px 18px;background:#0050FF;color:#fff;border:none;border-radius:var(--radius);font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;letter-spacing:.05em">RUN SIMULATION →</button>
+        </div>
       </div>
+
+      <!-- PERSONA RECOMMENDATION BANNER -->
+      <div id="personaRecommendation" style="display:none;background:rgba(255,212,0,0.06);border:1px solid rgba(255,212,0,0.25);border-radius:8px;padding:16px 20px;margin-bottom:20px">
+        <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#FFD400;margin-bottom:6px">⚡ Auto-selected Campaign</div>
+        <div id="personaRecommendText" style="font-size:13px;color:var(--text-dim);line-height:1.6"></div>
+        <div style="margin-top:12px;display:flex;gap:8px">
+          <button onclick="showScreen('simulator',document.querySelector('.nav-tab:nth-child(4)'));runSimulation()" style="padding:8px 16px;background:#FFD400;color:#000;border:none;border-radius:4px;font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;font-weight:700;letter-spacing:.05em">SIMULATE THIS CAMPAIGN →</button>
+          <button onclick="document.getElementById('personaRecommendation').style.display='none'" style="padding:8px 16px;background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:4px;font-family:'DM Mono',monospace;font-size:10px;cursor:pointer">DISMISS</button>
+        </div>
+      </div>
+
       <div id="personaGrid" class="persona-grid"></div>
-      <button onclick="showScreen('simulator',document.querySelector('.nav-tab:nth-child(4)'))" style="margin-top:20px;padding:10px 24px;background:#0050FF;color:#fff;border:none;border-radius:var(--radius);font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;letter-spacing:0.05em">RUN SIMULATION →</button>
     </div>
 
     <!-- SIMULATOR SCREEN -->
     <div id="screen-simulator" class="screen">
       <div class="page-header">
-        <div class="page-title">Campaign <em>Simulator</em></div>
-        <div class="page-meta">PROBABILISTIC OUTCOME FORECAST</div>
+        <div>
+          <div class="page-title">Campaign <em>Simulator</em></div>
+          <div class="page-meta">PROBABILISTIC OUTCOME FORECAST</div>
+        </div>
+        <button onclick="runSimulation()" style="padding:10px 20px;background:#FF7A00;color:#fff;border:none;border-radius:var(--radius);font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;letter-spacing:.05em;font-weight:700">▶ RE-RUN</button>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:24px">
-        <button class="scenario-btn active" onclick="setScenario('base',this)">BASE CASE</button>
-        <button class="scenario-btn" onclick="setScenario('best',this)">BEST CASE</button>
-        <button class="scenario-btn" onclick="setScenario('worst',this)">WORST CASE</button>
+
+      <!-- P10 / P50 / P90 — BOLD, VISIBLE, CLICKABLE -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">
+        <div id="bandWorst" onclick="expandBand('worst')" style="background:rgba(230,0,35,0.08);border:2px solid rgba(230,0,35,0.4);border-radius:10px;padding:20px;cursor:pointer;transition:all .2s" title="Click for breakdown">
+          <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#E60023;margin-bottom:6px">P10 — WORST CASE</div>
+          <div id="bandWorstImpr" style="font-family:'Space Grotesk',sans-serif;font-size:36px;font-weight:700;color:#E60023;line-height:1">—</div>
+          <div style="font-family:'DM Mono',monospace;font-size:9px;color:rgba(230,0,35,0.6);margin-top:4px">IMPRESSIONS</div>
+          <div id="bandWorstSub" style="margin-top:10px;font-size:12px;color:rgba(255,255,255,0.4)"></div>
+          <div style="font-family:'DM Mono',monospace;font-size:9px;color:rgba(230,0,35,0.5);margin-top:8px;text-align:right">CLICK FOR DETAIL ↓</div>
+        </div>
+        <div id="bandBase" onclick="expandBand('base')" style="background:rgba(255,212,0,0.08);border:2px solid rgba(255,212,0,0.5);border-radius:10px;padding:20px;cursor:pointer;transition:all .2s" title="Click for breakdown">
+          <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#FFD400;margin-bottom:6px">P50 — BASE CASE</div>
+          <div id="bandBaseImpr" style="font-family:'Space Grotesk',sans-serif;font-size:36px;font-weight:700;color:#FFD400;line-height:1">—</div>
+          <div style="font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,212,0,0.6);margin-top:4px">IMPRESSIONS</div>
+          <div id="bandBaseSub" style="margin-top:10px;font-size:12px;color:rgba(255,255,255,0.4)"></div>
+          <div style="font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,212,0,0.5);margin-top:8px;text-align:right">CLICK FOR DETAIL ↓</div>
+        </div>
+        <div id="bandBest" onclick="expandBand('best')" style="background:rgba(0,196,106,0.08);border:2px solid rgba(0,196,106,0.4);border-radius:10px;padding:20px;cursor:pointer;transition:all .2s" title="Click for breakdown">
+          <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#00C46A;margin-bottom:6px">P90 — BEST CASE</div>
+          <div id="bandBestImpr" style="font-family:'Space Grotesk',sans-serif;font-size:36px;font-weight:700;color:#00C46A;line-height:1">—</div>
+          <div style="font-family:'DM Mono',monospace;font-size:9px;color:rgba(0,196,106,0.6);margin-top:4px">IMPRESSIONS</div>
+          <div id="bandBestSub" style="margin-top:10px;font-size:12px;color:rgba(255,255,255,0.4)"></div>
+          <div style="font-family:'DM Mono',monospace;font-size:9px;color:rgba(0,196,106,0.5);margin-top:8px;text-align:right">CLICK FOR DETAIL ↓</div>
+        </div>
       </div>
-      <div id="simResults" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:24px"></div>
+
+      <!-- BAND DETAIL EXPANSION -->
+      <div id="bandDetail" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:20px;margin-bottom:20px">
+        <div id="bandDetailContent"></div>
+      </div>
+
+      <!-- CORE METRICS -->
+      <div id="simResults" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px"></div>
+
+      <!-- CREATOR INDIVIDUAL SCORES -->
+      <div class="panel" style="margin-bottom:20px;padding:0;overflow:hidden">
+        <div style="background:var(--bg3);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;justify-content:space-between">
+          <div class="panel-title" style="margin:0">Per-Creator Forecast</div>
+          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);letter-spacing:.06em">INDIVIDUAL PROJECTED RETURNS</div>
+        </div>
+        <div id="creatorBreakdown"></div>
+      </div>
+
+      <!-- CTR CURVE -->
       <div class="panel" style="margin-bottom:20px">
-        <div class="panel-title">CTR Distribution — P10 / P50 / P90 Confidence Bands</div>
+        <div class="panel-title">CTR Distribution — Confidence Bands</div>
         <div id="efficiencyCurve" style="height:140px;position:relative;margin-top:12px"></div>
       </div>
-      <div id="budgetPanel" class="panel" style="margin-bottom:20px">
-        <div class="panel-title">Estimated Budget Range</div>
-        <div id="budgetPanelContent"></div>
-      </div>
+
+      <!-- BENCHMARK -->
       <div class="panel">
         <div class="panel-title">Industry Benchmark Comparison</div>
         <div id="pvaPanel"></div>
@@ -2281,12 +2346,15 @@ function renderCreatorGrid() {
 
     return `<div class="creator-card ${selected?'selected':''}" onclick="toggleCreator(${c.id})" style="cursor:pointer">
       <div class="creator-card-header">
-        <div class="creator-avatar" style="background:${c.color}22;color:${c.color};${selected?'border:2px solid '+c.color:''}">${c.name.charAt(0)}</div>
+        <div class="creator-avatar" onclick="event.stopPropagation();openProfileOverlay(${c.id})" style="background:${c.color}22;color:${c.color};${selected?'border:2px solid '+c.color:''};cursor:zoom-in" title="View profile">${c.name.charAt(0)}</div>
         <div style="flex:1;min-width:0">
           <div style="font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.name}</div>
           <div style="font-size:11px;color:var(--text-dim)">${c.handle} · ${c.platform}</div>
         </div>
-        <div>${tierBadgeHtml(c)}</div>
+        <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
+          ${tierBadgeHtml(c)}
+          <button onclick="event.stopPropagation();openProfileOverlay(${c.id})" style="font-family:'DM Mono',monospace;font-size:9px;padding:3px 8px;background:rgba(0,80,255,0.15);border:1px solid rgba(0,80,255,0.3);color:#6B9FFF;border-radius:3px;cursor:pointer;white-space:nowrap">VIEW ↗</button>
+        </div>
       </div>
       <div class="creator-stats">
         <div class="stat"><div class="stat-label">SUBS</div><div class="stat-val">${c.subs}</div></div>
@@ -2314,43 +2382,90 @@ function openProfileOverlay(id) {
   const c = CREATORS.find(x=>x.id===id);
   if(!c) return;
   const e = computeCostEstimate(c);
-  const gfi = computeGFI(c);
+  const gfi = c.gfi || computeGFI(c);
+  const genre = getSelectedGenre() || 'Gaming & Esports';
+
   document.getElementById('profileContent').innerHTML = `
-    <div style="background:var(--bg2);border:1px solid var(--border-bright);border-radius:8px;overflow:hidden">
-      <div style="background:linear-gradient(135deg,${c.color}22,transparent);padding:28px 28px 20px">
-        <div style="display:flex;gap:16px;align-items:flex-start">
-          <div style="width:64px;height:64px;border-radius:50%;background:${c.color}33;border:2px solid ${c.color};display:flex;align-items:center;justify-content:center;font-size:28px;color:${c.color};font-weight:600;flex-shrink:0">${c.name.charAt(0)}</div>
+    <div style="background:var(--bg2);border:1px solid var(--border-bright);border-radius:12px;overflow:hidden">
+
+      <!-- HERO BAND -->
+      <div style="background:linear-gradient(135deg,${c.color}22,transparent);padding:32px;position:relative">
+        <button onclick="closeProfileOverlay()" style="position:absolute;top:16px;right:16px;background:rgba(0,0,0,0.4);border:1px solid var(--border);color:var(--text-dim);border-radius:6px;padding:6px 12px;cursor:pointer;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.06em">✕ CLOSE</button>
+        <div style="display:flex;gap:20px;align-items:center">
+          <div style="width:72px;height:72px;border-radius:50%;background:${c.color}33;border:3px solid ${c.color};display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;color:${c.color};flex-shrink:0;font-family:'Space Grotesk',sans-serif">${c.name.charAt(0)}</div>
           <div>
-            <div style="font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:600">${c.name}</div>
-            <div style="font-size:12px;color:var(--text-dim);margin-top:2px">${c.handle} · ${c.allPlatforms.join(' · ')}</div>
-            <div style="margin-top:8px">${tierBadgeHtml(c)}</div>
+            <div style="font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:600;letter-spacing:-.02em">${c.name}</div>
+            <div style="font-size:13px;color:var(--text-dim);margin-top:4px">${c.handle} · ${c.allPlatforms ? c.allPlatforms.join(' · ') : c.platform}</div>
+            <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+              ${tierBadgeHtml(c)}
+              <span style="font-family:'DM Mono',monospace;font-size:9px;padding:3px 8px;border-radius:3px;background:rgba(0,80,255,0.15);border:1px solid rgba(0,80,255,0.3);color:#6B9FFF">${c.genre}</span>
+            </div>
           </div>
-          <button onclick="closeProfileOverlay()" style="margin-left:auto;background:none;border:1px solid var(--border);color:var(--text-muted);padding:6px 12px;border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace;font-size:10px">✕ CLOSE</button>
         </div>
-        <p style="font-size:12px;color:var(--text-dim);margin-top:16px;line-height:1.6">${c.bio}</p>
+        ${c.bio ? `<p style="font-size:13px;color:var(--text-dim);margin-top:18px;line-height:1.7;max-width:540px">${c.bio}</p>` : ''}
       </div>
+
+      <!-- STATS ROW -->
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border-top:1px solid var(--border)">
-        ${[['SUBSCRIBERS',c.subs],['AVG VIEWS',c.avgViews],['ENG RATE',c.eng],['CPI SCORE',c.cpi]].map(([l,v])=>
-          `<div style="background:var(--bg3);padding:16px;text-align:center"><div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);margin-bottom:6px">${l}</div><div style="font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:600;color:${l==='CPI SCORE'?'#FFD400':'var(--text)'}">${v}</div></div>`
-        ).join('')}
+        ${[['SUBSCRIBERS',c.subs,'var(--text)'],['AVG VIEWS',c.avgViews,'var(--text)'],['ENG RATE',c.eng,'#00C46A'],['CPI SCORE',c.cpi,'#FFD400']].map(([l,v,col])=>`
+          <div style="background:var(--bg3);padding:20px;text-align:center">
+            <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px">${l}</div>
+            <div style="font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:600;color:${col}">${v}</div>
+          </div>`).join('')}
       </div>
-      <div style="padding:20px 28px">
-        <div style="font-family:'DM Mono',monospace;font-size:10px;color:#0050FF;letter-spacing:.1em;margin-bottom:12px">GFI SCORE</div>
-        <div style="background:var(--bg3);border-radius:4px;height:8px;margin-bottom:6px">
-          <div style="height:100%;border-radius:4px;background:${gfi>=60?'#00C46A':gfi>=40?'#FF7A00':'#E60023'};width:${gfi}%;transition:width .5s"></div>
-        </div>
-        <div style="font-size:11px;color:var(--text-muted)">Genre Fit: ${gfi}% alignment with ${getSelectedGenre()}</div>
-        <div style="margin-top:20px">${renderCostPanel(c)}</div>
-        <div style="margin-top:16px">
-          <div style="font-family:'DM Mono',monospace;font-size:10px;color:#0050FF;letter-spacing:.1em;margin-bottom:8px">SPONSOR HISTORY</div>
-          <div style="display:flex;flex-wrap:wrap;gap:6px">
-            ${(c.sponsorHistory||[]).map(s=>`<span style="font-family:'DM Mono',monospace;font-size:10px;padding:4px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:3px;color:var(--text-dim)">${s}</span>`).join('')}
+
+      <!-- SCORES + ESTIMATE -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border-top:1px solid var(--border)">
+
+        <!-- GFI SCORE -->
+        <div style="background:var(--bg2);padding:24px">
+          <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#0050FF;margin-bottom:14px">Genre Fit Index · ${genre}</div>
+          <div style="display:flex;align-items:center;gap:16px;margin-bottom:10px">
+            <div style="font-family:'Space Grotesk',sans-serif;font-size:40px;font-weight:600;color:${gfi>=80?'#00C46A':gfi>=60?'#FF7A00':'#E60023'}">${gfi}%</div>
+            <div style="font-size:13px;color:var(--text-dim);line-height:1.5">${gfi>=80?'Strong fit — high audience alignment':'Moderate fit — some genre crossover'}</div>
           </div>
+          <div style="background:var(--bg3);border-radius:3px;height:6px">
+            <div style="height:100%;border-radius:3px;background:${gfi>=80?'#00C46A':gfi>=60?'#FF7A00':'#E60023'};width:${gfi}%;transition:width .8s ease"></div>
+          </div>
+          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);margin-top:8px">CPI ${c.cpi} · P${Math.round(c.cpi/10)*10} performance band</div>
         </div>
+
+        <!-- COST ESTIMATE -->
+        <div style="background:var(--bg2);padding:24px">
+          <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#0050FF;margin-bottom:14px">Estimated Budget Range</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+            ${[['Dedicated',e.ranges.ded],['Integrated',e.ranges.int],['Mixed',e.ranges.mix]].map(([label,range])=>`
+              <div style="background:var(--bg3);border-radius:6px;padding:12px;text-align:center">
+                <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);margin-bottom:6px">${label}</div>
+                <div style="font-size:13px;font-weight:600;color:#FFD400">${e.fmt(range[0])}</div>
+                <div style="font-size:10px;color:var(--text-muted)">– ${e.fmt(range[1])}</div>
+              </div>`).join('')}
+          </div>
+          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);margin-top:10px;line-height:1.5">${e.verifiedNote || '2025 CPM benchmark'}</div>
+        </div>
+
       </div>
+
+      <!-- SPONSOR HISTORY -->
+      ${c.sponsorHistory && c.sponsorHistory.length ? `
+      <div style="padding:20px 24px;border-top:1px solid var(--border)">
+        <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#0050FF;margin-bottom:10px">Sponsor History</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          ${c.sponsorHistory.map(s=>`<span style="font-family:'DM Mono',monospace;font-size:10px;padding:4px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:3px;color:var(--text-dim)">${s}</span>`).join('')}
+        </div>
+      </div>` : ''}
+
+      <!-- ADD TO CAMPAIGN -->
+      <div style="padding:20px 24px;border-top:1px solid var(--border);background:var(--bg3);display:flex;align-items:center;justify-content:space-between">
+        <div style="font-size:13px;color:var(--text-dim)">Add to your campaign brief and run a simulation.</div>
+        <button onclick="toggleCreator(${c.id});closeProfileOverlay()" style="padding:10px 20px;background:var(--blue-bright)||'#0050FF';background:#0050FF;color:#fff;border:none;border-radius:6px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.06em;cursor:pointer;text-transform:uppercase">+ Add to Campaign</button>
+      </div>
+
     </div>
   `;
+
   document.getElementById('profileOverlay').style.display = 'block';
+  document.getElementById('profileOverlay').scrollTop = 0;
 }
 
 function closeProfileOverlay() {
@@ -2365,7 +2480,7 @@ function showScreen(name, btn) {
   if(screen) screen.classList.add('active');
   if(btn) btn.classList.add('active');
 
-  if(name==='scoring') renderScoringScreen();
+  if(name==='scoring') { renderScoringScreen(); renderFullScoreTable(); }
   if(name==='personas') renderPersonaScreen();
   if(name==='simulator') { computeSimResults(); updateSimDisplay(); renderEfficiencyCurve(); }
 }
@@ -2598,6 +2713,46 @@ function updateSimDisplay() {
     <div style="margin-top:10px;font-size:10px;color:var(--text-muted);text-align:center">Budget: ${formatBudget(budget)} · 90% statistical confidence · All outputs based on 2025 industry benchmarks</div>
   `;
 
+  // ── SELECTED CREATORS BREAKDOWN ─────────────────────────────
+  const toShowSim = selectedCreators.size > 0
+    ? CREATORS.filter(cr => selectedCreators.has(cr.id))
+    : CREATORS.slice(0, 5);
+
+  const creatorBreakdown = document.getElementById('creatorBreakdown');
+  if (creatorBreakdown) {
+    creatorBreakdown.innerHTML = toShowSim.map(cr => {
+      const crGfi = cr.gfi || computeGFI(cr);
+      const crCpiPct = cr.cpi;
+      const crEst = computeCostEstimate(cr);
+      const crContrib = Math.round(r.impressions / toShowSim.length);
+      return `<div style="display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--border)">
+        <div style="width:36px;height:36px;border-radius:50%;background:${cr.color}22;color:${cr.color};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0;font-family:'Space Grotesk',sans-serif">${cr.name.charAt(0)}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${cr.name}</div>
+          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);margin-top:2px">${cr.platform} · ${cr.subs} subs</div>
+        </div>
+        <div style="text-align:center;min-width:52px">
+          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted)">CPI</div>
+          <div style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:600;color:#FFD400">${crCpiPct}</div>
+        </div>
+        <div style="text-align:center;min-width:52px">
+          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted)">GFI</div>
+          <div style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:600;color:${crGfi>=80?'#00C46A':crGfi>=60?'#FF7A00':'#E60023'}">${crGfi}%</div>
+        </div>
+        <div style="text-align:center;min-width:72px">
+          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted)">EST. REACH</div>
+          <div style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:600;color:#0050FF">${fmtNum(crContrib)}</div>
+        </div>
+        <div style="text-align:right;min-width:80px">
+          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted)">INT. RATE</div>
+          <div style="font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;color:var(--text)">${crEst.fmt(crEst.ranges.int[0])}</div>
+          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted)">– ${crEst.fmt(crEst.ranges.int[1])}</div>
+        </div>
+      </div>`;
+    }).join('') + `<div style="padding:10px 20px;font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);text-align:center;letter-spacing:.06em">${toShowSim.length} CREATOR${toShowSim.length>1?'S':''} IN SIMULATION · ESTIMATED REACH SPLIT EQUALLY</div>`;
+  }
+
+
   // PvA panel
   const genre = getSelectedGenre() || 'Gaming & Esports';
   const bench = GENRE_BENCHMARKS[genre] || GENRE_BENCHMARKS['Gaming & Esports'];
@@ -2611,6 +2766,8 @@ function updateSimDisplay() {
         </div>`).join('')}
     </div>`;
 }
+
+  updateBandDisplays();
 
 function renderEfficiencyCurve() {
   if(!simResults) return;
@@ -2765,6 +2922,143 @@ window.addEventListener('DOMContentLoaded', function() {
     sessionStorage.setItem('sf_visited', '1');
   }
 });
+
+
+// ── FULL SCORE TABLE (Scoring screen) ─────────────────────────────────
+function renderFullScoreTable() {
+  const toShow = selectedCreators.size > 0
+    ? CREATORS.filter(cr => selectedCreators.has(cr.id))
+    : [...CREATORS].sort((a,b) => b.cpi - a.cpi);
+
+  const el = document.getElementById('fullScoreTable');
+  if (!el) return;
+
+  el.innerHTML = toShow.map(cr => {
+    const gfi = cr.gfi || computeGFI(cr);
+    const gfiCol = gfi >= 80 ? '#00C46A' : gfi >= 60 ? '#FF7A00' : '#E60023';
+    const cpiBarW = cr.cpi;
+    return `<div style="display:grid;grid-template-columns:1fr 80px 80px 120px;gap:0;padding:12px 20px;border-bottom:1px solid var(--border);align-items:center;cursor:pointer" onclick="openProfileOverlay(${cr.id})" title="Click to view profile">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:28px;height:28px;border-radius:50%;background:${cr.color}22;color:${cr.color};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0">${cr.name.charAt(0)}</div>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--text)">${cr.name}</div>
+          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted)">${cr.platform} · ${cr.subs}</div>
+        </div>
+      </div>
+      <div style="text-align:center;font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:#FFD400">${cr.cpi}</div>
+      <div style="text-align:center;font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:${gfiCol}">${gfi}%</div>
+      <div style="padding-right:4px">
+        <div style="background:var(--bg3);border-radius:2px;height:6px">
+          <div style="height:100%;border-radius:2px;background:linear-gradient(90deg,#001060,#0050FF);width:${cpiBarW}%;transition:width .6s ease"></div>
+        </div>
+        <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--text-muted);margin-top:3px;text-align:right">${cr.eng} eng</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── BAND EXPANSION (Simulator) ─────────────────────────────────────────
+function expandBand(band) {
+  if (!simResults) return;
+  const r = simResults;
+  const detail = document.getElementById('bandDetail');
+  const content = document.getElementById('bandDetailContent');
+  if (!detail || !content) return;
+
+  // Toggle off if same band clicked again
+  if (detail.dataset.band === band && detail.style.display !== 'none') {
+    detail.style.display = 'none';
+    detail.dataset.band = '';
+    return;
+  }
+  detail.dataset.band = band;
+
+  const configs = {
+    worst: { label:'P10 — Worst Case', color:'#E60023', data: r.p10 },
+    base:  { label:'P50 — Base Case',  color:'#FFD400', data: r.p50 },
+    best:  { label:'P90 — Best Case',  color:'#00C46A', data: r.p90 },
+  };
+  const cfg = configs[band];
+  const d = cfg.data;
+
+  content.innerHTML = `
+    <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:${cfg.color};margin-bottom:16px;font-weight:700">${cfg.label} — Full Breakdown</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+      ${[
+        ['Impressions', fmtNum(d.impressions), cfg.color],
+        ['CTR',         d.ctr + '%',           cfg.color],
+        ['ROAS',        d.roas + '×',          cfg.color],
+        ['Est. Clicks', fmtNum(Math.round(d.impressions * d.ctr / 100)), 'var(--text)'],
+      ].map(([l,v,col]) => `
+        <div style="background:var(--bg3);border-radius:6px;padding:16px;text-align:center">
+          <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px">${l}</div>
+          <div style="font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:700;color:${col}">${v}</div>
+        </div>`).join('')}
+    </div>
+    <div style="margin-top:12px;font-family:'DM Mono',monospace;font-size:10px;color:var(--text-muted);line-height:1.6">
+      ${band === 'worst' ? 'Conservative estimate based on lower engagement and saturation scenarios. Plan contingencies around these numbers.' :
+        band === 'base'  ? 'Most probable outcome based on current benchmark data and creator CPI/GFI scores. Use as your primary planning figure.' :
+        'Optimistic outcome under ideal conditions — strong audience alignment, high engagement, favourable timing. Treat as upside potential.'}
+    </div>
+  `;
+  detail.style.display = 'block';
+}
+
+// ── PERSONA AUTO-SELECT ────────────────────────────────────────────────
+function personaAutoSelect() {
+  const genre = getSelectedGenre() || 'Gaming & Esports';
+
+  // Sort by combined CPI + GFI score, pick top 5
+  const top = [...CREATORS]
+    .sort((a,b) => (b.cpi + (b.gfi||0)) - (a.cpi + (a.gfi||0)))
+    .slice(0, 5);
+
+  // Select them
+  selectedCreators.clear();
+  top.forEach(cr => selectedCreators.add(cr.id));
+
+  // Show recommendation banner
+  const banner = document.getElementById('personaRecommendation');
+  const text   = document.getElementById('personaRecommendText');
+  if (banner && text) {
+    const names = top.map(cr => cr.name).join(', ');
+    const avgCpi = Math.round(top.reduce((a,cr) => a+cr.cpi, 0) / top.length);
+    const avgGfi = Math.round(top.reduce((a,cr) => a+(cr.gfi||0), 0) / top.length);
+    text.innerHTML = `Auto-selected <strong style="color:#fff">${top.length} creators</strong> optimised for <strong style="color:#FFD400">${genre}</strong> with avg CPI <strong style="color:#FFD400">${avgCpi}</strong> and avg GFI <strong style="color:#FFD400">${avgGfi}%</strong>.<br>
+    <span style="color:var(--text-muted)">${names}</span>`;
+    banner.style.display = 'block';
+  }
+}
+
+// ── RENDER SCORING SCREEN (UPDATED) ───────────────────────────────────
+function renderScoringScreenFull() {
+  renderScoringScreen(); // existing function
+  renderFullScoreTable();
+}
+
+// ── UPDATE BAND DISPLAYS ───────────────────────────────────────────────
+function updateBandDisplays() {
+  if (!simResults) return;
+  const r = simResults;
+
+  // Worst
+  const wEl = document.getElementById('bandWorstImpr');
+  const wSub = document.getElementById('bandWorstSub');
+  if (wEl) wEl.textContent = fmtNum(r.p10.impressions);
+  if (wSub) wSub.innerHTML = `CTR <strong style="color:#E60023">${r.p10.ctr}%</strong> &nbsp; ROAS <strong style="color:#E60023">${r.p10.roas}×</strong>`;
+
+  // Base
+  const bEl = document.getElementById('bandBaseImpr');
+  const bSub = document.getElementById('bandBaseSub');
+  if (bEl) bEl.textContent = fmtNum(r.p50.impressions);
+  if (bSub) bSub.innerHTML = `CTR <strong style="color:#FFD400">${r.p50.ctr}%</strong> &nbsp; ROAS <strong style="color:#FFD400">${r.p50.roas}×</strong>`;
+
+  // Best
+  const gEl = document.getElementById('bandBestImpr');
+  const gSub = document.getElementById('bandBestSub');
+  if (gEl) gEl.textContent = fmtNum(r.p90.impressions);
+  if (gSub) gSub.innerHTML = `CTR <strong style="color:#00C46A">${r.p90.ctr}%</strong> &nbsp; ROAS <strong style="color:#00C46A">${r.p90.roas}×</strong>`;
+}
 
 // ── INIT ──────────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
