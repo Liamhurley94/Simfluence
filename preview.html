@@ -4,259 +4,106 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Simfluence — Your Campaign Preview</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-:root {
-  --gold:#FFD400; --blue:#0050FF; --green:#00C46A;
-  --orange:#FF7A00; --red:#E60023;
-  --bg:#000; --bg2:#0A0A0F; --bg3:#0D1020;
-  --border:rgba(0,50,160,0.25); --border-bright:rgba(0,50,160,0.5);
-  --text:#fff; --dim:rgba(255,255,255,0.45); --muted:rgba(255,255,255,0.2);
-}
-body { background:var(--bg); color:var(--text); font-family:"DM Sans",sans-serif; min-height:100vh; }
-
-/* NAV */
-nav {
-  display:flex; align-items:center; justify-content:space-between;
-  padding:0 40px; height:62px;
-  background:rgba(0,0,0,0.95); border-bottom:1px solid var(--border);
-  position:sticky; top:0; z-index:100; backdrop-filter:blur(12px);
-}
-.logo { font-family:"Space Grotesk",sans-serif; font-size:20px; font-weight:600; color:var(--gold); }
-.logo em { font-style:italic; font-weight:300; }
-.nav-badge {
-  font-family:"DM Mono",monospace; font-size:9px; letter-spacing:.1em;
-  text-transform:uppercase; padding:4px 12px; border-radius:3px;
-  background:rgba(255,122,0,0.12); border:1px solid rgba(255,122,0,0.25);
-  color:var(--orange);
-}
-.nav-upgrade {
-  padding:9px 20px; background:var(--blue); color:#fff;
-  border:none; border-radius:6px; font-family:"DM Mono",monospace;
-  font-size:11px; letter-spacing:.06em; text-transform:uppercase;
-  cursor:pointer; text-decoration:none; transition:background .2s;
-}
-.nav-upgrade:hover { background:#003FCC; }
-
-/* HERO STRIP */
-.hero-strip {
-  background:linear-gradient(135deg, rgba(0,50,160,0.15), rgba(0,80,255,0.05));
-  border-bottom:1px solid var(--border);
-  padding:36px 40px;
-  display:grid; grid-template-columns:1fr auto;
-  gap:24px; align-items:center;
-}
-.hero-strip h1 {
-  font-family:"Space Grotesk",sans-serif;
-  font-size:clamp(24px,3vw,36px); font-weight:600;
-  letter-spacing:-.02em; line-height:1.1; margin-bottom:8px;
-}
-.hero-strip h1 em { font-style:italic; font-weight:300; color:var(--gold); }
-.hero-strip p { font-size:14px; color:var(--dim); line-height:1.7; max-width:520px; }
-.upgrade-box {
-  background:rgba(255,122,0,0.08); border:1px solid rgba(255,122,0,0.2);
-  border-radius:10px; padding:20px 24px; text-align:center; min-width:220px;
-}
-.upgrade-box-label {
-  font-family:"DM Mono",monospace; font-size:9px; letter-spacing:.1em;
-  text-transform:uppercase; color:var(--orange); margin-bottom:6px;
-}
-.upgrade-box-headline {
-  font-family:"Space Grotesk",sans-serif; font-size:18px; font-weight:600;
-  margin-bottom:4px;
-}
-.upgrade-box-sub { font-size:12px; color:var(--dim); margin-bottom:14px; line-height:1.5; }
-.upgrade-box-btn {
-  display:block; padding:10px 20px; background:var(--orange); color:#fff;
-  border:none; border-radius:6px; font-family:"DM Mono",monospace;
-  font-size:10px; letter-spacing:.06em; text-transform:uppercase;
-  cursor:pointer; text-decoration:none; transition:background .2s; width:100%;
-}
-.upgrade-box-btn:hover { background:#CC6200; }
-
-/* MAIN LAYOUT */
-.main { max-width:1200px; margin:0 auto; padding:40px; }
-
-/* SECTION TITLES */
-.section-title {
-  font-family:"DM Mono",monospace; font-size:10px; letter-spacing:.12em;
-  text-transform:uppercase; color:var(--blue); margin-bottom:20px;
-  display:flex; align-items:center; gap:12px;
-}
-.section-title::after {
-  content:""; flex:1; height:1px; background:var(--border);
-}
-
-/* CREATOR CARDS */
-.creator-grid {
-  display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr));
-  gap:12px; margin-bottom:48px;
-}
-.creator-card {
-  background:var(--bg2); border:1px solid var(--border);
-  border-radius:10px; padding:20px; transition:border-color .2s;
-}
-.creator-card:hover { border-color:var(--border-bright); }
-.cc-header { display:flex; align-items:center; gap:12px; margin-bottom:16px; }
-.cc-avatar {
-  width:44px; height:44px; border-radius:50%;
-  display:flex; align-items:center; justify-content:center;
-  font-family:"Space Grotesk",sans-serif; font-size:18px; font-weight:600;
-  flex-shrink:0;
-}
-.cc-name { font-size:14px; font-weight:600; margin-bottom:2px; line-height:1.2; }
-.cc-handle { font-family:"DM Mono",monospace; font-size:10px; color:var(--dim); }
-.cc-scores { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px; }
-.cc-score {
-  background:var(--bg3); border:1px solid var(--border);
-  border-radius:6px; padding:10px; text-align:center;
-}
-.cc-score-label {
-  font-family:"DM Mono",monospace; font-size:8px; letter-spacing:.08em;
-  text-transform:uppercase; color:var(--dim); margin-bottom:4px;
-}
-.cc-score-val {
-  font-family:"Space Grotesk",sans-serif; font-size:22px; font-weight:600;
-}
-.cc-bar { height:3px; background:var(--bg3); border-radius:2px; margin-bottom:10px; }
-.cc-bar-fill { height:100%; border-radius:2px; transition:width .8s ease; }
-.cc-meta { font-family:"DM Mono",monospace; font-size:9px; color:var(--dim); }
-
-/* SIMULATION PANEL */
-.sim-panel {
-  background:var(--bg2); border:1px solid var(--border);
-  border-radius:12px; overflow:hidden; margin-bottom:48px;
-}
-.sim-panel-header {
-  background:var(--bg3); border-bottom:1px solid var(--border);
-  padding:18px 24px; display:flex; justify-content:space-between; align-items:center;
-}
-.sim-panel-title {
-  font-family:"Space Grotesk",sans-serif; font-size:16px; font-weight:600;
-}
-.sim-panel-sub { font-size:12px; color:var(--dim); margin-top:2px; }
-.sim-lock-badge {
-  font-family:"DM Mono",monospace; font-size:9px; letter-spacing:.08em;
-  padding:5px 12px; border-radius:4px;
-  background:rgba(255,122,0,0.1); border:1px solid rgba(255,122,0,0.2);
-  color:var(--orange);
-}
-.sim-bands {
-  display:grid; grid-template-columns:repeat(3,1fr);
-  gap:1px; background:var(--border);
-}
-.sim-band {
-  background:var(--bg2); padding:28px 24px; text-align:center;
-}
-.sim-band-label {
-  font-family:"DM Mono",monospace; font-size:9px; letter-spacing:.1em;
-  text-transform:uppercase; margin-bottom:16px;
-}
-.sim-band-metrics { display:flex; flex-direction:column; gap:12px; }
-.sim-metric-row { display:flex; justify-content:space-between; align-items:center; }
-.sim-metric-name { font-family:"DM Mono",monospace; font-size:10px; color:var(--dim); }
-.sim-metric-val {
-  font-family:"Space Grotesk",sans-serif; font-size:18px; font-weight:600;
-}
-.sim-band-best  { background:rgba(0,196,106,0.04); }
-.sim-band-worst { background:rgba(230,0,35,0.04); }
-
-/* LOCK OVERLAY for additional features */
-.lock-section {
-  background:var(--bg2); border:1px solid var(--border);
-  border-radius:12px; padding:40px; text-align:center;
-  margin-bottom:24px; position:relative; overflow:hidden;
-}
-.lock-section::before {
-  content:""; position:absolute; inset:0;
-  background:linear-gradient(180deg,transparent 0%,rgba(0,0,0,0.7) 100%);
-  pointer-events:none;
-}
-.lock-content { position:relative; z-index:1; }
-.lock-icon { font-size:28px; margin-bottom:12px; }
-.lock-title {
-  font-family:"Space Grotesk",sans-serif; font-size:20px; font-weight:600;
-  margin-bottom:8px;
-}
-.lock-sub { font-size:14px; color:var(--dim); margin-bottom:20px; line-height:1.6; max-width:480px; margin-left:auto; margin-right:auto; }
-.lock-btn {
-  padding:12px 28px; background:var(--blue); color:#fff;
-  border:none; border-radius:8px; font-family:"DM Mono",monospace;
-  font-size:11px; letter-spacing:.06em; text-transform:uppercase;
-  cursor:pointer; text-decoration:none; display:inline-block;
-  transition:background .2s;
-}
-.lock-btn:hover { background:#003FCC; }
-
-/* BLURRED LOCKED ROWS */
-.blurred { filter:blur(6px); pointer-events:none; user-select:none; }
-
-/* FOOTER */
-footer {
-  border-top:1px solid var(--border); padding:24px 40px;
-  display:flex; justify-content:space-between; align-items:center;
-  background:var(--bg2);
-}
-.footer-copy { font-family:"DM Mono",monospace; font-size:10px; color:var(--muted); }
-.footer-link { font-family:"DM Mono",monospace; font-size:10px; color:var(--dim); text-decoration:none; }
-.footer-link:hover { color:var(--text); }
-
-  /* ── LIGHT MODE ──────────────────────────────────────────────────── */
-  body.light {
-    --bg: #F5F5F2; --bg2: #FFFFFF; --bg3: #ECECEA;
-    --border: rgba(0,0,0,0.08); --border-bright: rgba(0,0,0,0.18);
-    --text: #0A0A0F; --dim: rgba(0,0,0,0.5); --muted: rgba(0,0,0,0.3);
-    --gold: #B8960A; --blue: #0040CC; --green: #00A658;
-  }
-  body.light nav, body.light .nav-bar { background: rgba(245,245,242,0.95) !important; }
-  body.light .back-bar { background: #fff !important; }
-  .theme-toggle {
-    width:34px; height:34px; background:var(--bg2);
-    border:1px solid var(--border); border-radius:7px;
-    cursor:pointer; font-size:15px; transition:all .2s;
-    display:inline-flex; align-items:center; justify-content:center;
-  }
-  .theme-toggle:hover { border-color: var(--border-bright); }
-
-  </style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+:root{--gold:#FFD400;--blue:#0050FF;--green:#00C46A;--orange:#FF7A00;--red:#E60023;--bg:#000;--bg2:#0A0A0F;--bg3:#0D1020;--border:rgba(0,50,160,0.25);--text:#fff;--dim:rgba(255,255,255,0.45);--muted:rgba(255,255,255,0.2);}
+body{background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;min-height:100vh;}
+body.light{--bg:#F5F5F2;--bg2:#fff;--bg3:#ECECEA;--border:rgba(0,0,0,0.08);--text:#0A0A0F;--dim:rgba(0,0,0,0.5);--muted:rgba(0,0,0,0.3);--gold:#B8960A;--blue:#0040CC;}
+.back-bar{background:#0A0A0F;border-bottom:1px solid rgba(0,50,160,0.3);padding:8px 32px;display:flex;align-items:center;justify-content:space-between;font-family:"DM Mono",monospace;font-size:10px;letter-spacing:.06em;}
+body.light .back-bar{background:#fff;}
+.back-bar a{color:rgba(100,160,255,0.7);text-decoration:none;}
+.back-bar a:hover{color:#6B9FFF;}
+.back-bar span{color:rgba(255,255,255,0.2);text-transform:uppercase;}
+body.light .back-bar span{color:rgba(0,0,0,0.3);}
+nav{display:flex;align-items:center;justify-content:space-between;padding:0 40px;height:62px;background:rgba(0,0,0,0.95);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;backdrop-filter:blur(12px);}
+body.light nav{background:rgba(245,245,242,0.95);}
+.logo{font-family:"Space Grotesk",sans-serif;font-size:20px;font-weight:600;color:var(--gold);}
+.logo em{font-style:italic;font-weight:300;}
+.nav-badge{font-family:"DM Mono",monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:4px 12px;border-radius:3px;background:rgba(255,122,0,0.12);border:1px solid rgba(255,122,0,0.25);color:var(--orange);}
+.nav-right{display:flex;gap:10px;align-items:center;}
+.theme-toggle{width:34px;height:34px;background:var(--bg2);border:1px solid var(--border);border-radius:7px;cursor:pointer;font-size:15px;display:inline-flex;align-items:center;justify-content:center;}
+.nav-upgrade{padding:9px 20px;background:var(--blue);color:#fff;border:none;border-radius:6px;font-family:"DM Mono",monospace;font-size:11px;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;text-decoration:none;}
+.hero-strip{background:linear-gradient(135deg,rgba(0,50,160,0.15),rgba(0,80,255,0.05));border-bottom:1px solid var(--border);padding:36px 40px;display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center;}
+.hero-strip h1{font-family:"Space Grotesk",sans-serif;font-size:clamp(24px,3vw,36px);font-weight:600;letter-spacing:-.02em;line-height:1.1;margin-bottom:8px;}
+.hero-strip h1 em{font-style:italic;font-weight:300;color:var(--gold);}
+.hero-strip p{font-size:14px;color:var(--dim);line-height:1.7;max-width:520px;}
+.upgrade-box{background:rgba(255,122,0,0.08);border:1px solid rgba(255,122,0,0.2);border-radius:10px;padding:20px 24px;text-align:center;min-width:220px;}
+.upgrade-box-label{font-family:"DM Mono",monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--orange);margin-bottom:6px;}
+.upgrade-box-headline{font-family:"Space Grotesk",sans-serif;font-size:18px;font-weight:600;margin-bottom:4px;}
+.upgrade-box-sub{font-size:12px;color:var(--dim);margin-bottom:14px;line-height:1.5;}
+.upgrade-box-btn{display:block;padding:10px 20px;background:var(--orange);color:#fff;border:none;border-radius:6px;font-family:"DM Mono",monospace;font-size:10px;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;text-decoration:none;width:100%;}
+.main{max-width:1200px;margin:0 auto;padding:40px;}
+.section-title{font-family:"DM Mono",monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);margin-bottom:20px;display:flex;align-items:center;gap:12px;}
+.section-title::after{content:"";flex:1;height:1px;background:var(--border);}
+.creator-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin-bottom:48px;}
+.creator-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:20px;}
+.cc-header{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+.cc-avatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:"Space Grotesk",sans-serif;font-size:18px;font-weight:600;flex-shrink:0;}
+.cc-name{font-size:14px;font-weight:600;margin-bottom:2px;line-height:1.2;}
+.cc-handle{font-family:"DM Mono",monospace;font-size:10px;color:var(--dim);}
+.cc-scores{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+.cc-score{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:10px;text-align:center;}
+.cc-score-label{font-family:"DM Mono",monospace;font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin-bottom:4px;}
+.cc-score-val{font-family:"Space Grotesk",sans-serif;font-size:22px;font-weight:600;}
+.cc-bar{height:3px;background:var(--bg3);border-radius:2px;margin-bottom:10px;}
+.cc-bar-fill{height:100%;border-radius:2px;}
+.cc-meta{font-family:"DM Mono",monospace;font-size:9px;color:var(--dim);}
+.sim-panel{background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:48px;}
+.sim-panel-header{background:var(--bg3);border-bottom:1px solid var(--border);padding:18px 24px;display:flex;justify-content:space-between;align-items:center;}
+.sim-panel-title{font-family:"Space Grotesk",sans-serif;font-size:16px;font-weight:600;}
+.sim-panel-sub{font-size:12px;color:var(--dim);margin-top:2px;}
+.sim-lock-badge{font-family:"DM Mono",monospace;font-size:9px;letter-spacing:.08em;padding:5px 12px;border-radius:4px;background:rgba(255,122,0,0.1);border:1px solid rgba(255,122,0,0.2);color:var(--orange);}
+.sim-bands{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);}
+.sim-band{background:var(--bg2);padding:28px 24px;text-align:center;}
+.sim-band-label{font-family:"DM Mono",monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:16px;}
+.sim-band-metrics{display:flex;flex-direction:column;gap:12px;}
+.sim-metric-row{display:flex;justify-content:space-between;align-items:center;}
+.sim-metric-name{font-family:"DM Mono",monospace;font-size:10px;color:var(--dim);}
+.sim-metric-val{font-family:"Space Grotesk",sans-serif;font-size:18px;font-weight:600;}
+.lock-section{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:40px;text-align:center;margin-bottom:24px;}
+.lock-icon{font-size:28px;margin-bottom:12px;}
+.lock-title{font-family:"Space Grotesk",sans-serif;font-size:20px;font-weight:600;margin-bottom:8px;}
+.lock-sub{font-size:14px;color:var(--dim);margin-bottom:20px;line-height:1.6;max-width:480px;margin-left:auto;margin-right:auto;}
+.lock-btn{padding:12px 28px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-family:"DM Mono",monospace;font-size:11px;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;text-decoration:none;display:inline-block;}
+footer{border-top:1px solid var(--border);padding:24px 40px;display:flex;justify-content:space-between;align-items:center;background:var(--bg2);}
+.footer-copy{font-family:"DM Mono",monospace;font-size:10px;color:var(--muted);}
+.footer-link{font-family:"DM Mono",monospace;font-size:10px;color:var(--dim);text-decoration:none;}
+</style>
 </head>
 <body>
-<!-- BACK TO HOMEPAGE BAR -->
-<div style="background:#0A0A0F;border-bottom:1px solid rgba(0,50,160,0.3);padding:8px 32px;display:flex;align-items:center;justify-content:space-between;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.06em">
-  <a href="index.html" style="color:rgba(100,160,255,0.7);text-decoration:none;display:flex;align-items:center;gap:6px;transition:color .15s" onmouseover="this.style.color='#6B9FFF'" onmouseout="this.style.color='rgba(100,160,255,0.7)'">
-    ← Back to simfluence.ai
-  </a>
-  <span style="color:rgba(255,255,255,0.2);text-transform:uppercase">Campaign Preview · Sign up to unlock more</span>
+
+<div class="back-bar">
+  <a href="index.html">← Back to simfluence.ai</a>
+  <span>Campaign Preview · Sign up to unlock more</span>
 </div>
 
 <nav>
   <div class="logo">Sim<em>fluence</em></div>
-  <div class="nav-badge">Preview — 5 Creators · 1 Genre</div>
-  <a href="mailto:liam@simfluence.ai" class="nav-upgrade">Unlock full platform →</a>
+  <div class="nav-badge">Preview · 5 Creators · 1 Genre</div>
+  <div class="nav-right">
+    <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn" title="Toggle mode">🌙</button>
+    <a href="mailto:liam@simfluence.ai?subject=Upgrade%20enquiry" class="nav-upgrade">Unlock full platform →</a>
+  </div>
 </nav>
 
-<!-- HERO STRIP -->
 <div class="hero-strip">
   <div>
     <h1>Your campaign <em>preview.</em></h1>
-    <p>Below is a snapshot of what Simfluence does — 5 creators from the Gaming & Esports genre, scored and simulated. The full platform covers 50+ creators across 18 genres, with a live campaign simulator, AI persona matching and complete forecast reports.</p>
+    <p>A snapshot of what Simfluence does — 5 creators from the Gaming &amp; Esports genre, scored and simulated. The full platform covers 167+ creators across 18 genres with a live campaign simulator, AI persona matching and complete forecast reports.</p>
   </div>
   <div class="upgrade-box">
     <div class="upgrade-box-label">Full access</div>
     <div class="upgrade-box-headline">Unlock everything</div>
     <div class="upgrade-box-sub">All creators. Full simulator.<br>AI personas. Live forecasts.</div>
-    <a href="mailto:liam@simfluence.ai" class="upgrade-box-btn">Get full access →</a>
+    <a href="mailto:liam@simfluence.ai?subject=Upgrade%20to%20full%20platform" class="upgrade-box-btn">Get full access →</a>
   </div>
 </div>
 
 <div class="main">
-
-  <!-- CREATOR DISCOVERY -->
   <div class="section-title">Creator Discovery · Gaming &amp; Esports · Top 5</div>
   <div class="creator-grid" id="creatorGrid"></div>
 
-  <!-- SIMULATION PANEL -->
   <div class="section-title">Campaign Simulation · £85,000 budget · Dedicated format</div>
   <div class="sim-panel">
     <div class="sim-panel-header">
@@ -267,7 +114,7 @@ footer {
       <div class="sim-lock-badge">PREVIEW · FIXED BRIEF</div>
     </div>
     <div class="sim-bands">
-      <div class="sim-band sim-band-worst">
+      <div class="sim-band" style="background:rgba(230,0,35,0.04)">
         <div class="sim-band-label" style="color:var(--red)">P10 — Worst case</div>
         <div class="sim-band-metrics">
           <div class="sim-metric-row"><span class="sim-metric-name">Impressions</span><span class="sim-metric-val" style="color:var(--red)">2.9M</span></div>
@@ -285,7 +132,7 @@ footer {
           <div class="sim-metric-row"><span class="sim-metric-name">ROAS</span><span class="sim-metric-val" style="color:var(--gold)">3.4×</span></div>
         </div>
       </div>
-      <div class="sim-band sim-band-best">
+      <div class="sim-band" style="background:rgba(0,196,106,0.04)">
         <div class="sim-band-label" style="color:var(--green)">P90 — Best case</div>
         <div class="sim-band-metrics">
           <div class="sim-metric-row"><span class="sim-metric-name">Impressions</span><span class="sim-metric-val" style="color:var(--green)">7.8M</span></div>
@@ -297,57 +144,30 @@ footer {
     </div>
   </div>
 
-  <!-- LOCKED SECTIONS -->
   <div class="section-title">AI Persona Matching</div>
   <div class="lock-section">
-    <div style="filter:blur(4px);margin-bottom:20px">
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;opacity:.5">
-        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:20px">
-          <div style="font-size:22px;margin-bottom:8px">👤</div>
-          <div style="font-size:14px;font-weight:600;color:#7B68EE;margin-bottom:6px">The Competitor</div>
-          <div style="font-size:12px;color:var(--dim)">Win-focused, high engagement, responds to performance claims</div>
-        </div>
-        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:20px">
-          <div style="font-size:22px;margin-bottom:8px">👤</div>
-          <div style="font-size:14px;font-weight:600;color:#0050FF;margin-bottom:6px">The Community Builder</div>
-          <div style="font-size:12px;color:var(--dim)">Social, streamer-adjacent, values belonging</div>
-        </div>
-        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:20px">
-          <div style="font-size:22px;margin-bottom:8px">👤</div>
-          <div style="font-size:14px;font-weight:600;color:#FFD400;margin-bottom:6px">The Enthusiast</div>
-          <div style="font-size:12px;color:var(--dim)">Broad gaming interest, high purchase intent</div>
-        </div>
-      </div>
-    </div>
-    <div class="lock-content">
-      <div class="lock-icon">🔒</div>
-      <div class="lock-title">AI Persona Matching</div>
-      <div class="lock-sub">See exactly which audience archetypes your creators carry — and how to write CTAs that convert each one. Unlock with any paid plan.</div>
-      <a href="mailto:liam@simfluence.ai" class="lock-btn">Unlock Persona Matching →</a>
-    </div>
+    <div class="lock-icon">🔒</div>
+    <div class="lock-title">AI Persona Matching</div>
+    <div class="lock-sub">See exactly which audience archetypes your creators carry — and how to write CTAs that convert each one. Unlock with any paid plan.</div>
+    <a href="mailto:liam@simfluence.ai?subject=Upgrade%20enquiry" class="lock-btn">Unlock Persona Matching →</a>
   </div>
 
   <div class="section-title">Full Creator Database</div>
   <div class="lock-section">
-    <div class="lock-content">
-      <div class="lock-icon">🔒</div>
-      <div class="lock-title">50+ Creators · 18 Genres · 12 Platforms</div>
-      <div class="lock-sub">The full database includes creators across Gaming, Tech, Finance, Beauty, Automotive, Travel and 12 more genres — all scored, ranked and filterable in real time.</div>
-      <a href="mailto:liam@simfluence.ai" class="lock-btn">Unlock Full Database →</a>
-    </div>
+    <div class="lock-icon">🔒</div>
+    <div class="lock-title">167+ Creators · 18 Genres · 12 Platforms</div>
+    <div class="lock-sub">The full database includes creators across Gaming, Tech, Finance, Beauty, Automotive, Travel and 12 more genres — all scored, ranked and filterable in real time.</div>
+    <a href="mailto:liam@simfluence.ai?subject=Full%20creator%20database" class="lock-btn">Unlock Full Database →</a>
   </div>
 
   <div class="section-title">Custom Simulation</div>
   <div class="lock-section">
-    <div class="lock-content">
-      <div class="lock-icon">🔒</div>
-      <div class="lock-title">Run your actual brief</div>
-      <div class="lock-sub">Input your real budget, genre, format and creators. Get a full P10/P50/P90 forecast for your specific campaign — not a fixed example.</div>
-      <a href="mailto:liam@simfluence.ai" class="lock-btn">Unlock the Simulator →</a>
-    </div>
+    <div class="lock-icon">🔒</div>
+    <div class="lock-title">Run your actual brief</div>
+    <div class="lock-sub">Input your real budget, genre, format and creators. Get a full P10/P50/P90 forecast for your specific campaign — not a fixed example.</div>
+    <a href="mailto:liam@simfluence.ai?subject=Custom%20simulation%20access" class="lock-btn">Unlock the Simulator →</a>
   </div>
-
-</div><!-- end .main -->
+</div>
 
 <footer>
   <span class="footer-copy">© 2025 Simfluence Ltd · Dubai, UAE · Preview mode</span>
@@ -357,54 +177,39 @@ footer {
   </div>
 </footer>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js">
-// ── THEME TOGGLE ───────────────────────────────────────────────────────
-function toggleTheme() {
-  var isLight = document.body.classList.toggle('light');
-  var btn = document.getElementById('themeBtn');
-  if (btn) btn.textContent = isLight ? '🌑' : '🌙';
-  try { localStorage.setItem('sf_theme', isLight ? 'light' : 'dark'); } catch(e) {}
-}
-(function() {
-  try {
-    if (localStorage.getItem('sf_theme') === 'light') {
-      document.body.classList.add('light');
-      document.addEventListener('DOMContentLoaded', function() {
-        var b = document.getElementById('themeBtn');
-        if (b) b.textContent = '🌑';
-      });
-    }
-  } catch(e) {}
-})();
-</script><script>
-const CREATORS = [
-  { name:'Jacksepticeye', handle:'@jacksepticeye', platform:'YouTube', subs:'34M', avgViews:'3.2M', eng:'4.8%', cpi:94, gfi:92, color:'#4CAF50' },
-  { name:'Rhia Official',  handle:'@rhia.official',  platform:'YouTube', subs:'2.8M', avgViews:'380K', eng:'5.1%', cpi:91, gfi:89, color:'#E040FB' },
-  { name:'MKBHD',          handle:'@mkbhd',          platform:'YouTube', subs:'18M',  avgViews:'3.8M', eng:'4.1%', cpi:93, gfi:78, color:'#F44336' },
-  { name:'KSI',            handle:'@ksi',            platform:'YouTube', subs:'24M',  avgViews:'4.1M', eng:'6.2%', cpi:87, gfi:84, color:'#FF9800' },
-  { name:'Roshtein',       handle:'@roshtein',       platform:'Kick',    subs:'1.1M', avgViews:'42K',  eng:'11.2%',cpi:76, gfi:71, color:'#9C27B0' },
+<script>
+var CREATORS=[
+  {name:'General Sam',handle:'@GeneralSam',platform:'YouTube',subs:'1.5M',avgViews:'720K',eng:'15.0%',cpi:88,gfi:89,color:'#4CAF50'},
+  {name:'Legendary Drops',handle:'@LegendaryDropss',platform:'YouTube',subs:'459K',avgViews:'320K',eng:'15.0%',cpi:96,gfi:89,color:'#9C27B0'},
+  {name:'Sodapoppin',handle:'@sodapoppin',platform:'Twitch',subs:'9.0M',avgViews:'11.9K',eng:'4.2%',cpi:91,gfi:89,color:'#2196F3'},
+  {name:'Doublelift',handle:'@Doublelift',platform:'Twitch',subs:'1.9M',avgViews:'4.6K',eng:'3.5%',cpi:85,gfi:89,color:'#FF9800'},
+  {name:'HarvestZ',handle:'@HarvestZ',platform:'YouTube',subs:'165K',avgViews:'900K',eng:'15.0%',cpi:96,gfi:83,color:'#F44336'}
 ];
+function gfiColor(g){return g>=80?'#00C46A':g>=60?'#FF7A00':'#E60023';}
+document.getElementById('creatorGrid').innerHTML=CREATORS.map(function(c){
+  return '<div class="creator-card">'+
+    '<div class="cc-header">'+
+      '<div class="cc-avatar" style="background:'+c.color+'22;color:'+c.color+'">'+c.name.charAt(0)+'</div>'+
+      '<div><div class="cc-name">'+c.name+'</div><div class="cc-handle">'+c.handle+' · '+c.platform+'</div></div>'+
+    '</div>'+
+    '<div class="cc-scores">'+
+      '<div class="cc-score"><div class="cc-score-label">CPI Score</div><div class="cc-score-val" style="color:#FFD400">'+c.cpi+'</div></div>'+
+      '<div class="cc-score"><div class="cc-score-label">GFI Score</div><div class="cc-score-val" style="color:'+gfiColor(c.gfi)+'">'+c.gfi+'%</div></div>'+
+    '</div>'+
+    '<div class="cc-bar"><div class="cc-bar-fill" style="width:'+c.cpi+'%;background:linear-gradient(90deg,#001060,#0050FF)"></div></div>'+
+    '<div class="cc-meta">'+c.subs+' subscribers · '+c.avgViews+' avg views · '+c.eng+' eng</div>'+
+  '</div>';
+}).join('');
 
-function gfiColor(g) {
-  return g >= 80 ? '#00C46A' : g >= 60 ? '#FF7A00' : '#E60023';
+function toggleTheme(){
+  var isLight=document.body.classList.toggle('light');
+  var btn=document.getElementById('themeBtn');
+  if(btn) btn.textContent=isLight?'🌑':'🌙';
+  try{localStorage.setItem('sf_theme',isLight?'light':'dark');}catch(e){}
 }
-
-document.getElementById('creatorGrid').innerHTML = CREATORS.map(function(c) {
-  return '<div class="creator-card">' +
-    '<div class="cc-header">' +
-      '<div class="cc-avatar" style="background:' + c.color + '22;color:' + c.color + '">' + c.name.charAt(0) + '</div>' +
-      '<div>' +
-        '<div class="cc-name">' + c.name + '</div>' +
-        '<div class="cc-handle">' + c.handle + ' · ' + c.platform + '</div>' +
-      '</div>' +
-    '</div>' +
-    '<div class="cc-scores">' +
-      '<div class="cc-score">' +
-        '<div class="cc-score-label">CPI Score</div>' +
-        '<div class="cc-score-val" style="color:#FFD400">' + c.cpi + '</div>' +
-      '</div>' +
-      '<div class="cc-score">' +
-        '<div class="cc-score-label">GFI Score</div>' +
-        '<div class="cc-score-val" style="color:' + gfiColor(c.gfi) + '">' + c.gfi + '%</div>' +
-      '</div>' +
- 
+(function(){
+  try{if(localStorage.getItem('sf_theme')==='light'){document.body.classList.add('light');var b=document.getElementById('themeBtn');if(b)b.textContent='🌑';}}catch(e){}
+})();
+</script>
+</body>
+</html>
