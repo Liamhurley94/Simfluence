@@ -1812,7 +1812,7 @@ document.getElementById('GP').focus();
 
         <div class="field">
           <label>Creator Tier Mix</label>
-          <select id="tierMix" onchange="updateSim()">
+          <select id="tierMix" onchange="renderCreatorGrid();updateSim()">
             <option value="0">Micro only (≤50K)</option>
             <option value="1" selected>Mid-tier (50K–500K)</option>
             <option value="2">Established (500K–2M)</option>
@@ -2734,92 +2734,212 @@ function cpiScoreColor(cpi) {
 }
 
 function renderCreatorGrid() {
-  const genre  = getSelectedGenre();
-  const budget = parseInt((document.getElementById('budget')||{value:'85000'}).value)||85000;
+  const genre   = getSelectedGenre();
+  const budget  = parseInt((document.getElementById('budget')||{value:'85000'}).value)||85000;
   const tierMix = parseInt((document.getElementById('tierMix')||{value:'4'}).value);
+  const format  = (document.getElementById('format')||{value:'Integrated'}).value;
+  const fmtKey  = format==='Dedicated'?'ded':format==='Mixed'?'mix':'int';
 
-  // Filter: only show creators that match the selected genre
-  // Grey out (but show) creators outside budget range
-  const all = [...CREATORS].sort(
-    sortMode==='gfi'  ? (a,b)=>computeGFI(b)-computeGFI(a) :
-    sortMode==='subs' ? (a,b)=>parseSubs(b.subs)-parseSubs(a.subs) :
-                        (a,b)=>b.cpi-a.cpi
-  );
+  // ── Active objectives ─────────────────────────────────────────────
+  const activeObjs = [...document.querySelectorAll('#objectiveGroups .chip.active')].map(b=>b.dataset.obj);
+  const hasObj = obj => activeObjs.includes(obj);
 
-  // Genre-match filter: show creators whose genre matches OR has high affinity
-  const genreMatched = all.filter(c => {
-    if (c.genre === genre) return true;
-    const affinity = (GENRE_AFFINITY[c.genre]||{})[genre] ?? 0;
-    return affinity >= 0.6; // show cross-genre creators with decent affinity
-  });
+  // ── Objective scoring weights ─────────────────────────────────────
+  // Each objective boosts a different creator trait
+  function objectiveScore(cr) {
+    let bonus = 0;
+    const subs    = parseSubs(cr.subs);
+    const views   = parseSubs(cr.avgViews);
+    const engPct  = parseFloat(cr.eng) || 2;
+    const viewRatio = subs > 0 ? views / subs : 0;
 
-  // If no genre match at all, show everything (fallback)
-  const sorted = genreMatched.length >= 5 ? genreMatched : all;
+    if (hasObj('Brand Awareness') || hasObj('Reach & Impressions')) {
+      // Reward large reach — high subs + high avg views
+      bonus += Math.min(subs / 1e6, 15) + Math.min(views / 1e5, 10);
+    }
+    if (hasObj('Content Virality')) {
+      // Reward high view-to-sub ratio (content travels beyond subscribers)
+      bonus += Math.min(viewRatio * 30, 20) + Math.min(engPct * 2, 10);
+    }
+    if (hasObj('Engagement Rate') || hasObj('Community Growth')) {
+      // Reward high engagement — smaller focused audiences score well here
+      bonus += Math.min(engPct * 4, 25);
+    }
+    if (hasObj('Direct Sales') || hasObj('Promo / Affiliate') || hasObj('App Install')) {
+      // Reward high CPI (direct commercial performance predictor)
+      bonus += (cr.cpi / 100) * 20;
+    }
+    if (hasObj('Lead Generation') || hasObj('Pre-launch Sign-up')) {
+      // Reward mid-tier with high engagement (niche trust)
+      const isMid = subs >= 50e3 && subs <= 2e6;
+      bonus += isMid ? 15 : 5;
+      bonus += Math.min(engPct * 2, 10);
+    }
+    if (hasObj('Sentiment Shift')) {
+      // Reward established creators with long track records
+      const isEstab = subs >= 500e3;
+      bonus += isEstab ? 12 : 4;
+    }
+    if (hasObj('Retention')) {
+      // Reward consistent avg views (high ratio = loyal audience)
+      bonus += Math.min(viewRatio * 20, 15);
+    }
+    return bonus;
+  }
 
-  document.getElementById('creatorGrid').innerHTML = sorted.map((c, idx) => {
-    // Check if creator fits budget
-    const e2 = computeCostEstimate(c);
-    const minRate = e2.ranges.int[0];
-    const budgetOk = minRate <= budget;
-    const dimmed = !budgetOk ? 'opacity:0.45;' : '';
-    const selected   = selectedCreators.has(c.id);
-    const gfi        = computeGFI(c);
-    const mismatch   = getMismatch(c);
-    const e          = computeCostEstimate(c);
+  // ── Sub-mode keyword scoring ───────────────────────────────────────
+  const subMode = activeSubMode ? activeSubMode.toLowerCase() : '';
+  function subModeScore(cr) {
+    if (!subMode) return 0;
+    const bio = (cr.bio || '').toLowerCase();
+    const handle = (cr.handle || '').toLowerCase();
+    const words = subMode.split(/[\s\/\-&]+/);
+    return words.filter(w => w.length > 2 && (bio.includes(w) || handle.includes(w))).length * 8;
+  }
 
-    // Compute how much of budget is already committed by selected creators
+  // ── Tier filter ───────────────────────────────────────────────────
+  // 0=Micro ≤50K, 1=Mid 50K–500K, 2=Established 500K–2M, 3=Mega 2M+, 4=Mixed (all)
+  const tierRanges = [
+    [0, 50e3],          // Micro
+    [50e3, 500e3],      // Mid-tier
+    [500e3, 2e6],       // Established
+    [2e6, Infinity],    // Megastar
+    [0, Infinity],      // Mixed
+  ];
+  const [tierLo, tierHi] = tierRanges[tierMix] || [0, Infinity];
+
+  function passedTierFilter(cr) {
+    const subs = parseSubs(cr.subs);
+    return subs >= tierLo && subs < tierHi;
+  }
+
+  // ── Budget filter ─────────────────────────────────────────────────
+  // Hard filter: hide creators whose MINIMUM integrated rate > total budget
+  function passedBudgetFilter(cr) {
+    const e = computeCostEstimate(cr);
+    return e.ranges.int[0] <= budget;
+  }
+
+  // ── Genre filter ──────────────────────────────────────────────────
+  function genreScore(cr) {
+    if (cr.genre === genre) return 30;
+    const affinity = (GENRE_AFFINITY[cr.genre]||{})[genre] ?? 0;
+    if (affinity >= 0.6) return 10;
+    return -999; // exclude
+  }
+
+  // ── Build filtered + scored list ──────────────────────────────────
+  const scored = CREATORS
+    .filter(cr => {
+      if (!passedBudgetFilter(cr)) return false;
+      if (!passedTierFilter(cr)) return false;
+      if (genreScore(cr) < 0) return false;
+      return true;
+    })
+    .map(cr => {
+      const gScore  = genreScore(cr);
+      const oScore  = objectiveScore(cr);
+      const smScore = subModeScore(cr);
+      // Base sort score
+      const base = sortMode==='gfi'  ? (cr.gfi || computeGFI(cr)) :
+                   sortMode==='subs' ? parseSubs(cr.subs) / 1e6 :
+                   cr.cpi;
+      return { cr, total: base + gScore + oScore + smScore };
+    })
+    .sort((a,b) => b.total - a.total);
+
+  // ── Fallback: if filters too aggressive, show genre-matched only ──
+  const display = scored.length >= 3 ? scored : CREATORS
+    .filter(cr => cr.genre === genre)
+    .map(cr => ({ cr, total: cr.cpi }))
+    .sort((a,b) => b.total - a.total);
+
+  const totalHidden = CREATORS.length - display.length;
+
+  // ── Highlight label: what objective is boosting rank? ────────────
+  function getHighlightLabel(cr) {
+    if (activeObjs.length === 0) return '';
+    const engPct = parseFloat(cr.eng) || 2;
+    const subs   = parseSubs(cr.subs);
+    if ((hasObj('Content Virality') || hasObj('Engagement Rate')) && engPct >= 5)
+      return `<span style="font-family:'DM Mono',monospace;font-size:8px;padding:2px 6px;background:rgba(0,196,106,0.15);border:1px solid rgba(0,196,106,0.3);color:#00C46A;border-radius:2px">⚡ HIGH ENGAGEMENT</span>`;
+    if ((hasObj('Brand Awareness') || hasObj('Reach & Impressions')) && subs >= 1e6)
+      return `<span style="font-family:'DM Mono',monospace;font-size:8px;padding:2px 6px;background:rgba(0,80,255,0.15);border:1px solid rgba(0,80,255,0.3);color:#6B9FFF;border-radius:2px">📡 MASS REACH</span>`;
+    if ((hasObj('Direct Sales') || hasObj('App Install')) && cr.cpi >= 85)
+      return `<span style="font-family:'DM Mono',monospace;font-size:8px;padding:2px 6px;background:rgba(255,122,0,0.15);border:1px solid rgba(255,122,0,0.3);color:#FF7A00;border-radius:2px">💰 HIGH CONVERSION</span>`;
+    if (subMode && subModeScore(cr) > 0)
+      return `<span style="font-family:'DM Mono',monospace;font-size:8px;padding:2px 6px;background:rgba(255,212,0,0.12);border:1px solid rgba(255,212,0,0.25);color:#FFD400;border-radius:2px">✓ SUB-MODE MATCH</span>`;
+    return '';
+  }
+
+  // ── Render ────────────────────────────────────────────────────────
+  document.getElementById('creatorGrid').innerHTML = display.map(({cr}) => {
+    const selected   = selectedCreators.has(cr.id);
+    const gfi        = cr.gfi || computeGFI(cr);
+    const mismatch   = getMismatch(cr);
+    const e          = computeCostEstimate(cr);
+    const highlight  = getHighlightLabel(cr);
+
+    // Per-card budget: would adding this creator overspend?
     const alreadySpent = [...selectedCreators].reduce((total, selId) => {
-      if (selId === c.id) return total; // don't double-count if already selected
+      if (selId === cr.id) return total;
       const selCr = CREATORS.find(x => x.id === selId);
       if (!selCr) return total;
-      const selEst = computeCostEstimate(selCr);
-      const selFmtKey = 'int';
-      return total + Math.round((selEst.ranges[selFmtKey][0] + selEst.ranges[selFmtKey][1]) / 2);
+      const selE = computeCostEstimate(selCr);
+      return total + Math.round((selE.ranges.int[0] + selE.ranges.int[1]) / 2);
     }, 0);
-    const thisMinCost   = e2.ranges.int[0];
-    const thisMidCost   = Math.round((e2.ranges.int[0] + e2.ranges.int[1]) / 2);
-    const wouldSpend    = alreadySpent + thisMidCost;
-    const wouldOverrun  = wouldSpend > budget;
-    const remainingBudg = budget - alreadySpent;
+    const thisMid      = Math.round((e.ranges.int[0] + e.ranges.int[1]) / 2);
+    const wouldOverrun = !selected && (alreadySpent + thisMid > budget);
 
-    const budgetBadge = !budgetOk
-      ? `<div style="position:absolute;top:8px;left:8px;font-family:'DM Mono',monospace;font-size:8px;padding:2px 7px;background:rgba(230,0,35,0.15);border:1px solid rgba(230,0,35,0.3);color:#FF3355;border-radius:2px;z-index:1;letter-spacing:.04em">ABOVE BUDGET</div>`
-      : wouldOverrun && !selected
-        ? `<div style="position:absolute;top:8px;left:8px;font-family:'DM Mono',monospace;font-size:8px;padding:2px 7px;background:rgba(255,122,0,0.12);border:1px solid rgba(255,122,0,0.3);color:#FF7A00;border-radius:2px;z-index:1;letter-spacing:.04em">WOULD OVERSPEND</div>`
-        : '';
+    const budgetBadge = wouldOverrun
+      ? `<div style="position:absolute;top:8px;left:8px;font-family:'DM Mono',monospace;font-size:8px;padding:2px 7px;background:rgba(255,122,0,0.12);border:1px solid rgba(255,122,0,0.3);color:#FF7A00;border-radius:2px;z-index:1">WOULD OVERSPEND</div>`
+      : '';
 
-    return `<div class="creator-card ${selected?'selected':''}" onclick="toggleCreator(${c.id})" style="cursor:pointer;${dimmed}position:relative">
+    return `<div class="creator-card ${selected?'selected':''}" onclick="toggleCreator(${cr.id})" style="cursor:pointer;position:relative">
       ${budgetBadge}
       <div class="creator-card-header">
-        <div class="creator-avatar" onclick="event.stopPropagation();openProfileOverlay(${c.id})" style="background:${c.color}22;color:${c.color};${selected?'border:2px solid '+c.color:''};cursor:zoom-in" title="View profile">${c.name.charAt(0)}</div>
+        <div class="creator-avatar" onclick="event.stopPropagation();openProfileOverlay(${cr.id})" style="background:${cr.color}22;color:${cr.color};${selected?'border:2px solid '+cr.color:''};cursor:zoom-in" title="View profile">${cr.name.charAt(0)}</div>
         <div style="flex:1;min-width:0">
-          <div style="font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.name}</div>
-          <div style="font-size:11px;color:var(--text-dim)">${c.handle} · ${c.platform}</div>
+          <div style="font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${cr.name}</div>
+          <div style="font-size:11px;color:var(--text-dim)">${cr.handle} · ${cr.platform}</div>
         </div>
         <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
-          ${tierBadgeHtml(c)}
-          <button onclick="event.stopPropagation();openProfileOverlay(${c.id})" style="font-family:'DM Mono',monospace;font-size:9px;padding:3px 8px;background:rgba(0,80,255,0.15);border:1px solid rgba(0,80,255,0.3);color:#6B9FFF;border-radius:3px;cursor:pointer;white-space:nowrap">VIEW ↗</button>
+          ${tierBadgeHtml(cr)}
+          <button onclick="event.stopPropagation();openProfileOverlay(${cr.id})" style="font-family:'DM Mono',monospace;font-size:9px;padding:3px 8px;background:rgba(0,80,255,0.15);border:1px solid rgba(0,80,255,0.3);color:#6B9FFF;border-radius:3px;cursor:pointer;white-space:nowrap">VIEW ↗</button>
         </div>
       </div>
       <div class="creator-stats">
-        <div class="stat"><div class="stat-label">SUBS</div><div class="stat-val">${c.subs}</div></div>
-        <div class="stat"><div class="stat-label">AVG VIEWS</div><div class="stat-val">${c.avgViews}</div></div>
-        <div class="stat"><div class="stat-label">ENG RATE</div><div class="stat-val">${c.eng}</div></div>
-        <div class="stat"><div class="stat-label">CPI SCORE</div><div class="stat-val" style="color:${cpiScoreColor(c.cpi)};font-size:22px;font-weight:700">${c.cpi}</div></div>
+        <div class="stat"><div class="stat-label">SUBS</div><div class="stat-val">${cr.subs}</div></div>
+        <div class="stat"><div class="stat-label">AVG VIEWS</div><div class="stat-val">${cr.avgViews}</div></div>
+        <div class="stat"><div class="stat-label">ENG RATE</div><div class="stat-val">${cr.eng}</div></div>
+        <div class="stat"><div class="stat-label">CPI SCORE</div><div class="stat-val" style="color:${cpiScoreColor(cr.cpi)};font-size:22px;font-weight:700">${cr.cpi}</div></div>
       </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">
-        <div style="font-size:11px;color:var(--text-muted)">GFI: <span style="color:#fff;background:${gfi>=GFI_WARN_THRESHOLD?'#00D47A':gfi>=GFI_DANGER_THRESHOLD?'#FF9500':'#FF3355'};padding:1px 6px;border-radius:3px;font-weight:700">${gfi}%</span> ${mismatch?'<span style="color:#FF7A00;font-size:10px">⚠ '+mismatch+'</span>':''}</div>
-        <button onclick="event.stopPropagation();openProfileOverlay(${c.id})" style="font-family:'DM Mono',monospace;font-size:9px;padding:3px 8px;background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:2px;cursor:pointer">PROFILE</button>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;gap:6px;flex-wrap:wrap">
+        <div style="font-size:11px;color:var(--text-muted)">GFI: <span style="color:#fff;background:${gfi>=80?'#00D47A':gfi>=60?'#FF9500':'#FF3355'};padding:1px 6px;border-radius:3px;font-weight:700">${gfi}%</span>
+          ${mismatch?`<span style="color:#FF7A00;font-size:10px"> ⚠ ${mismatch}</span>`:''}
+        </div>
+        ${highlight}
       </div>
       <div style="margin-top:8px;font-size:10px;color:var(--text-muted);display:flex;justify-content:space-between">
         <span style="color:var(--text-dim);font-weight:600;font-size:11px">Int: <strong style="color:#FFD400">${e.fmt(e.ranges.int[0])}–${e.fmt(e.ranges.int[1])}</strong></span>
         <span style="color:var(--text-dim);font-weight:600;font-size:11px">Ded: <strong style="color:#FFD400">${e.fmt(e.ranges.ded[0])}–${e.fmt(e.ranges.ded[1])}</strong></span>
       </div>
     </div>`;
-  }).join('');
+  }).join('') || `<div style="padding:60px;text-align:center;color:var(--text-muted);font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.08em">
+    NO CREATORS MATCH CURRENT FILTERS<br>
+    <span style="font-size:10px;margin-top:8px;display:block;opacity:.6">Try increasing your budget, changing the tier mix, or adjusting the genre</span>
+  </div>`;
 
-  document.getElementById('discoveryMeta').textContent = sorted.length + ' CREATORS · ' + genre.toUpperCase() + (sorted.length < CREATORS.length ? ' · ' + (CREATORS.length - sorted.length) + ' OTHER GENRES HIDDEN' : '');
+  // ── Update meta label ─────────────────────────────────────────────
+  const tierLabels = ['Micro Only','Mid-Tier','Established','Megastar','All Tiers'];
+  const tierLabel  = tierLabels[tierMix] || 'All Tiers';
+  const objLabel   = activeObjs.length > 0 ? ' · ' + activeObjs.slice(0,2).join(' + ') : '';
+  document.getElementById('discoveryMeta').textContent =
+    display.length + ' CREATORS · ' + genre.toUpperCase() + ' · ' + tierLabel.toUpperCase() +
+    (totalHidden > 0 ? ' · ' + totalHidden + ' FILTERED OUT' : '') + objLabel.toUpperCase();
 }
+
+
 
 // ── PROFILE OVERLAY ───────────────────────────────────────────────────
 function openProfileOverlay(id) {
@@ -3020,6 +3140,7 @@ function renderPersonaScreen() {
 function toggleChip(btn) {
   btn.classList.toggle('active');
   updateObjCount();
+  renderCreatorGrid();
   updateSim();
 }
 
@@ -3086,6 +3207,7 @@ function updateTierLabel(v) {
       el.textContent = formatBudget(budget);
     }
   }
+  renderCreatorGrid();
   updateSim();
   updateBriefPanel();
 }
