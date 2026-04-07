@@ -400,4 +400,19 @@ document.getElementById('creatorGrid').innerHTML = CREATORS.map(function(c) {
     '</div>' +
     '<div class="cc-scores">' +
       '<div class="cc-score">' +
+        '<div class="cc-score-label">CPI</div>' +
+        '<div class="cc-score-val" style="color:' + c.color + '">' + c.cpi + '</div>' +
+      '</div>' +
+      '<div class="cc-score">' +
+        '<div class="cc-score-label">GFI</div>' +
+        '<div class="cc-score-val" style="color:' + gfiColor(c.gfi) + '">' + c.gfi + '</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="cc-bar"><div class="cc-bar-fill" style="width:' + c.cpi + '%;background:' + c.color + '"></div></div>' +
+    '<div class="cc-meta">' + c.subs + ' subs · ' + c.avgViews + ' avg views · ' + c.eng + ' eng</div>' +
+  '</div>';
+}).join('');
+</script>
+</body>
+</html>
    
