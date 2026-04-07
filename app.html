@@ -1558,7 +1558,7 @@
     <input type="password" class="gate-input" id="gateInput" placeholder="••••••••" onkeydown="if(event.key==='Enter')checkGate()">
     <button class="gate-btn" onclick="checkGate()">Enter →</button>
     <div class="gate-err" id="gateErr">Incorrect access code.</div>
-    <div class="gate-hint">Contact liam@simfluence.ai for access</div>
+    <div class="gate-hint">Contact <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="80ece9e1edc0f3e9ede6ecf5e5eee3e5aee1e9">[email&#160;protected]</a> for access</div>
   </div>
 </div>
 
@@ -1849,7 +1849,7 @@
   </div>
 </div>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ═══════════════════════════════════════════════════════════════════════
 // SIMFLUENCE SIMULATOR — COMPLETE SCRIPT
 // ═══════════════════════════════════════════════════════════════════════
@@ -3074,7 +3074,9 @@ function checkGate() {
   var val = document.getElementById('gateInput').value;
   var err = document.getElementById('gateErr');
   if (val === GATE_PASS || val === 'Cleopatra1!') {
-    document.getElementById('sfGate').style.display = 'none';
+    var g=document.getElementById('sfGate');
+    g.style.cssText='display:none';
+    document.body.style.overflow='';
     try { sessionStorage.setItem('sf_auth','1'); } catch(e) {}
   } else {
     err.style.display = 'block';
@@ -3088,16 +3090,4 @@ function checkGate() {
 (function() {
   try {
     if (sessionStorage.getItem('sf_auth') === '1') {
-      var g = document.getElementById('sfGate');
-      if (g) g.style.display = 'none';
-    } else {
-      setTimeout(function() {
-        var inp = document.getElementById('gateInput');
-        if (inp) inp.focus();
-      }, 100);
-    }
-  } catch(e) {}
-})();
-
-</body>
-</html>
+      var g = document.getElementById('sfGate')
