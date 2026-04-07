@@ -357,7 +357,7 @@ footer {
   </div>
 </footer>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js">
+<script>
 // ── THEME TOGGLE ───────────────────────────────────────────────────────
 function toggleTheme() {
   var isLight = document.body.classList.toggle('light');
@@ -378,11 +378,11 @@ function toggleTheme() {
 })();
 </script><script>
 const CREATORS = [
-  { name:'Jacksepticeye', handle:'@jacksepticeye', platform:'YouTube', subs:'34M', avgViews:'3.2M', eng:'4.8%', cpi:94, gfi:92, color:'#4CAF50' },
-  { name:'Rhia Official',  handle:'@rhia.official',  platform:'YouTube', subs:'2.8M', avgViews:'380K', eng:'5.1%', cpi:91, gfi:89, color:'#E040FB' },
-  { name:'MKBHD',          handle:'@mkbhd',          platform:'YouTube', subs:'18M',  avgViews:'3.8M', eng:'4.1%', cpi:93, gfi:78, color:'#F44336' },
-  { name:'KSI',            handle:'@ksi',            platform:'YouTube', subs:'24M',  avgViews:'4.1M', eng:'6.2%', cpi:87, gfi:84, color:'#FF9800' },
-  { name:'Roshtein',       handle:'@roshtein',       platform:'Kick',    subs:'1.1M', avgViews:'42K',  eng:'11.2%',cpi:76, gfi:71, color:'#9C27B0' },
+  { name:'General Sam',    handle:'@GeneralSam',    platform:'YouTube', subs:'1.5M', avgViews:'720K', eng:'15.0%', cpi:88, gfi:89, color:'#4CAF50' },
+  { name:'Legendary Drops',handle:'@LegendaryDropss',platform:'YouTube', subs:'459K', avgViews:'320K', eng:'15.0%', cpi:96, gfi:89, color:'#9C27B0' },
+  { name:'Sodapoppin',     handle:'@sodapoppin',    platform:'Twitch',  subs:'9.0M', avgViews:'11.9K', eng:'4.2%', cpi:91, gfi:89, color:'#2196F3' },
+  { name:'Doublelift',     handle:'@Doublelift',    platform:'Twitch',  subs:'1.9M', avgViews:'4.6K',  eng:'3.5%', cpi:85, gfi:89, color:'#FF9800' },
+  { name:'HarvestZ',       handle:'@HarvestZ',      platform:'YouTube', subs:'165K', avgViews:'900K',  eng:'15.0%', cpi:96, gfi:83, color:'#F44336' },
 ];
 
 function gfiColor(g) {
@@ -400,11 +400,19 @@ document.getElementById('creatorGrid').innerHTML = CREATORS.map(function(c) {
     '</div>' +
     '<div class="cc-scores">' +
       '<div class="cc-score">' +
-        '<div class="cc-score-label">CPI Score</div>' +
-        '<div class="cc-score-val" style="color:#FFD400">' + c.cpi + '</div>' +
+        '<div class="cc-score-label">CPI</div>' +
+        '<div class="cc-score-val" style="color:' + c.color + '">' + c.cpi + '</div>' +
       '</div>' +
       '<div class="cc-score">' +
-        '<div class="cc-score-label">GFI Score</div>' +
-        '<div class="cc-score-val" style="color:' + gfiColor(c.gfi) + '">' + c.gfi + '%</div>' +
+        '<div class="cc-score-label">GFI</div>' +
+        '<div class="cc-score-val" style="color:' + gfiColor(c.gfi) + '">' + c.gfi + '</div>' +
       '</div>' +
- 
+    '</div>' +
+    '<div class="cc-bar"><div class="cc-bar-fill" style="width:' + c.cpi + '%;background:' + c.color + '"></div></div>' +
+    '<div class="cc-meta">' + c.subs + ' subs · ' + c.avgViews + ' avg views · ' + c.eng + ' eng</div>' +
+  '</div>';
+}).join('');
+</script>
+</body>
+</html>
+   
