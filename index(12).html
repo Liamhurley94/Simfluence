@@ -1,0 +1,1811 @@
+<!DOCTYPE html>
+<html lang="en">
+<script>
+/* ============================================================
+   SIMFLUENCE CONFIG — EDIT ONLY THESE THREE LINES
+   ============================================================ */
+var SF_CONFIG = {
+  supabaseUrl: 'https://iysjxslzlbojoivxjrce.supabase.co',
+  supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5c2p4c2x6bGJvam9pdnhqcmNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0OTkyNjksImV4cCI6MjA5MTA3NTI2OX0.gGW_qclPJZT4x3eevXg6PFllq5CQWVifJUEaI3rqKnw',
+  resendKey:   '',
+  fromEmail:   'noreply@simfluence.ai'
+};
+/* ============================================================ */
+</script>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simfluence — Know before you spend</title>
+<meta name="description" content="AI-powered campaign intelligence. Predict your CTR, CPM, CVR and ROAS before a single penny is committed.">
+<link href="https://api.fontshare.com/v2/css?f[]=clash-display@300,400,500,600,700&f[]=satoshi@300,400,500,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+:root {
+  --gold: #FFD400;
+  --blue: #0050FF;
+  --green: #00C46A;
+  --orange: #FF7A00;
+  --bg: #050508;
+  --bg2: #0A0A10;
+  --border: rgba(255,255,255,0.06);
+  --text: #FFFFFF;
+  --muted: rgba(255,255,255,0.45);
+  --dim: rgba(255,255,255,0.25);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Satoshi', sans-serif;
+  overflow-x: hidden;
+}
+
+/* ── NAV ─────────────────────────────────────────────────────────── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 48px; height: 68px;
+  background: rgba(5,5,8,0.85);
+  backdrop-filter: blur(24px);
+  border-bottom: 1px solid var(--border);
+  transition: background 0.3s;
+}
+.nav-logo {
+  font-size: 22px; font-weight: 700; color: var(--gold);
+  text-decoration: none; letter-spacing: -0.01em;
+}
+.nav-logo em { font-style: italic; font-weight: 300; }
+.nav-center {
+  display: flex; gap: 36px; list-style: none;
+  position: absolute; left: 50%; transform: translateX(-50%);
+}
+.nav-center a {
+  font-family: 'DM Mono', monospace; font-size: 11px;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--muted); text-decoration: none; transition: color 0.2s;
+}
+.nav-center a:hover { color: var(--text); }
+.nav-right { display: flex; gap: 12px; align-items: center; }
+.nav-login {
+  font-family: 'DM Mono', monospace; font-size: 11px;
+  letter-spacing: 0.06em; color: var(--muted); text-decoration: none;
+  transition: color 0.2s;
+}
+.nav-login:hover { color: var(--text); }
+.nav-cta {
+  padding: 10px 22px; background: var(--blue);
+  color: #fff; border: none; border-radius: 6px;
+  font-family: 'DM Mono', monospace; font-size: 11px;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  cursor: pointer; text-decoration: none; transition: all 0.2s;
+}
+.nav-cta:hover { background: #003FCC; transform: translateY(-1px); }
+
+/* ── HERO ─────────────────────────────────────────────────────────── */
+.hero {
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  text-align: center;
+  padding: 68px 48px 0;
+  position: relative; overflow: hidden;
+}
+
+/* Animated canvas background */
+#heroCanvas {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.hero-inner {
+  position: relative; z-index: 2;
+  max-width: 1100px; margin: 0 auto;
+}
+
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(0,80,255,0.12);
+  border: 1px solid rgba(0,80,255,0.3);
+  border-radius: 20px; padding: 6px 16px;
+  font-family: 'DM Mono', monospace; font-size: 11px;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: #6B9FFF; margin-bottom: 40px;
+  opacity: 0; animation: fadeUp 0.8s ease 0.2s forwards;
+}
+.hero-badge-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--blue); animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+.hero-h1 {
+  font-size: clamp(60px, 8.5vw, 112px);
+  font-weight: 600; line-height: 0.94;
+  letter-spacing: -0.04em;
+  margin-bottom: 36px;
+  opacity: 0; animation: fadeUp 0.9s ease 0.35s forwards;
+}
+.hero-h1 .gold { color: var(--gold); font-style: italic; font-weight: 300; }
+.hero-h1 .outline {
+  -webkit-text-stroke: 2px rgba(255,255,255,0.3);
+  color: transparent;
+}
+
+.hero-sub {
+  font-size: clamp(17px, 2.2vw, 22px);
+  color: var(--muted); max-width: 620px;
+  line-height: 1.6; margin: 0 auto 48px;
+  font-weight: 300;
+  opacity: 0; animation: fadeUp 0.9s ease 0.5s forwards;
+}
+
+.hero-actions {
+  display: flex; gap: 16px; justify-content: center; align-items: center;
+  opacity: 0; animation: fadeUp 0.9s ease 0.65s forwards;
+}
+.btn-xl {
+  padding: 18px 40px; background: var(--blue);
+  color: #fff; border: none; border-radius: 8px;
+  font-family: 'DM Mono', monospace; font-size: 13px;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  cursor: pointer; text-decoration: none;
+  transition: all 0.2s;
+}
+.btn-xl:hover { background: #003FCC; transform: translateY(-2px); }
+.btn-xl-ghost {
+  padding: 18px 40px; background: transparent;
+  color: var(--muted); border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 8px;
+  font-family: 'DM Mono', monospace; font-size: 13px;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  cursor: pointer; text-decoration: none;
+  transition: all 0.2s;
+}
+.btn-xl-ghost:hover { border-color: rgba(255,255,255,0.4); color: var(--text); }
+
+/* scroll hint */
+.hero-scroll {
+  position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  opacity: 0; animation: fadeUp 1s ease 1.2s forwards;
+  z-index: 2;
+}
+.hero-scroll span {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 0.15em; text-transform: uppercase; color: var(--dim);
+}
+.scroll-line {
+  width: 1px; height: 48px; background: var(--dim);
+  animation: scrollPulse 2s ease infinite;
+}
+@keyframes scrollPulse {
+  0% { transform: scaleY(1); opacity: 0.3; }
+  50% { transform: scaleY(0.5); opacity: 0.8; }
+  100% { transform: scaleY(1); opacity: 0.3; }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── STATS BAR ─────────────────────────────────────────────────────── */
+.stats-bar {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg2);
+}
+.stat-cell {
+  padding: 44px 40px;
+  border-right: 1px solid var(--border);
+  transition: background 0.2s;
+}
+.stat-cell:last-child { border-right: none; }
+.stat-cell:hover { background: rgba(255,255,255,0.02); }
+.stat-n {
+  font-size: clamp(44px, 5vw, 64px); font-weight: 600;
+  line-height: 1; letter-spacing: -0.03em; margin-bottom: 10px;
+}
+.stat-l {
+  font-family: 'DM Mono', monospace; font-size: 11px;
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);
+  line-height: 1.5;
+}
+
+/* ── TICKER ──────────────────────────────────────────────────────── */
+.ticker {
+  overflow: hidden; padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+.ticker-inner {
+  display: flex; gap: 0;
+  animation: tickerScroll 35s linear infinite;
+  white-space: nowrap;
+}
+.ticker-item {
+  font-family: 'DM Mono', monospace; font-size: 11px;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--dim); padding: 0 36px; flex-shrink: 0;
+}
+.ticker-sep { color: var(--blue); }
+@keyframes tickerScroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* ── PROBLEM ──────────────────────────────────────────────────────── */
+.section-problem {
+  padding: 140px 48px;
+  max-width: 1300px; margin: 0 auto;
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 100px; align-items: center;
+}
+.section-eyebrow {
+  font-family: 'DM Mono', monospace; font-size: 11px;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--blue); margin-bottom: 24px; display: block;
+}
+.section-h2 {
+  font-size: clamp(42px, 5.2vw, 68px);
+  font-weight: 600; line-height: 0.97;
+  letter-spacing: -0.035em; margin-bottom: 28px;
+}
+.section-h2 em { font-style: italic; font-weight: 300; color: var(--gold); }
+.section-body {
+  font-size: 18px; color: var(--muted);
+  line-height: 1.75; margin-bottom: 18px; font-weight: 300;
+}
+.problem-cards { display: flex; flex-direction: column; gap: 12px; }
+.problem-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px; padding: 28px 32px;
+  display: flex; gap: 24px; align-items: flex-start;
+  transition: border-color 0.2s;
+}
+.problem-card:hover { border-color: rgba(255,255,255,0.12); }
+.problem-n {
+  font-size: 40px; font-weight: 700; line-height: 1;
+  letter-spacing: -0.03em; flex-shrink: 0; min-width: 90px;
+}
+.problem-desc {
+  font-size: 14px; color: var(--muted); line-height: 1.7; padding-top: 4px;
+}
+
+/* ── DEMO SECTION ────────────────────────────────────────────────── */
+.section-demo {
+  padding: 0 48px 140px;
+  max-width: 1300px; margin: 0 auto;
+}
+.demo-label {
+  text-align: center; margin-bottom: 48px;
+}
+.demo-frame {
+  background: var(--bg2);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px; overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(0,80,255,0.15),
+              0 40px 80px rgba(0,0,0,0.6);
+}
+.demo-bar {
+  background: rgba(255,255,255,0.04);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 20px;
+  display: flex; align-items: center; gap: 14px;
+}
+.demo-dots { display: flex; gap: 6px; }
+.demo-dot { width: 11px; height: 11px; border-radius: 50%; }
+.demo-url-bar {
+  flex: 1; max-width: 360px; margin: 0 auto;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border); border-radius: 6px;
+  padding: 6px 14px;
+  font-family: 'DM Mono', monospace; font-size: 11px;
+  color: var(--muted); text-align: center;
+}
+.demo-embed {
+  width: 100%; height: 720px; border: none; display: block;
+  background: #050508;
+}
+
+/* ── HOW IT WORKS ────────────────────────────────────────────────── */
+.section-how {
+  padding: 140px 48px;
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.section-how-inner { max-width: 1300px; margin: 0 auto; }
+.how-header { margin-bottom: 80px; }
+.steps-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border); border-radius: 12px; overflow: hidden;
+}
+.step-card {
+  background: var(--bg2); padding: 40px 32px;
+  transition: background 0.2s;
+}
+.step-card:hover { background: rgba(255,255,255,0.025); }
+.step-num {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--blue); margin-bottom: 24px;
+}
+.step-title {
+  font-size: 22px; font-weight: 600; line-height: 1.2;
+  margin-bottom: 14px; letter-spacing: -0.01em;
+}
+.step-desc {
+  font-size: 15px; color: var(--muted); line-height: 1.7; font-weight: 300;
+}
+
+/* ── FEATURES ────────────────────────────────────────────────────── */
+.section-features {
+  padding: 140px 48px;
+  max-width: 1300px; margin: 0 auto;
+}
+.features-header { margin-bottom: 80px; }
+.features-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr);
+  gap: 1px; background: var(--border);
+  border: 1px solid var(--border); border-radius: 12px; overflow: hidden;
+}
+.feature-block {
+  background: var(--bg2); padding: 52px 48px;
+  transition: background 0.2s;
+}
+.feature-block:hover { background: rgba(255,255,255,0.02); }
+.feat-icon {
+  width: 48px; height: 48px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 28px;
+}
+.feat-title {
+  font-size: 28px; font-weight: 600; letter-spacing: -0.02em;
+  margin-bottom: 16px; line-height: 1.1;
+}
+.feat-desc {
+  font-size: 16px; color: var(--muted); line-height: 1.75;
+  font-weight: 300; margin-bottom: 24px;
+}
+.feat-tag {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 5px 12px; border-radius: 4px; display: inline-block;
+}
+
+/* ── ACCURACY ─────────────────────────────────────────────────────── */
+.section-accuracy {
+  padding: 140px 48px;
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.accuracy-inner {
+  max-width: 1300px; margin: 0 auto;
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 100px; align-items: center;
+}
+.accuracy-table {
+  border: 1px solid var(--border); border-radius: 12px; overflow: hidden;
+}
+.acc-header {
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+  background: rgba(255,255,255,0.03);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 24px;
+}
+.acc-hcell {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim);
+}
+.acc-row {
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+  padding: 16px 24px; border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+}
+.acc-row:last-child { border-bottom: none; }
+.acc-row:hover { background: rgba(255,255,255,0.02); }
+.acc-metric { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted); }
+.acc-forecast { font-size: 14px; color: var(--muted); }
+.acc-actual {
+  font-size: 14px; font-weight: 600; color: var(--green);
+  display: flex; align-items: center; gap: 8px;
+}
+.acc-check {
+  width: 16px; height: 16px; border-radius: 50%;
+  background: rgba(0,196,106,0.15);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+
+/* ── PRICING ──────────────────────────────────────────────────────── */
+.section-pricing {
+  padding: 140px 48px;
+  max-width: 1300px; margin: 0 auto;
+}
+.pricing-header { text-align: center; margin-bottom: 72px; }
+.pricing-note {
+  font-family: 'DM Mono', monospace; font-size: 11px;
+  letter-spacing: 0.06em; color: var(--dim); margin-top: 14px;
+}
+.pricing-cards {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+}
+.p-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 12px; padding: 32px 28px;
+  display: flex; flex-direction: column;
+  transition: border-color 0.2s, transform 0.2s;
+}
+.p-card:hover { border-color: rgba(255,255,255,0.1); transform: translateY(-4px); }
+.p-card.featured { border-color: rgba(255,212,0,0.5); background: rgba(255,212,0,0.04); transform: scale(1.03); }
+.p-badge {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  padding: 3px 10px; border-radius: 3px;
+  background: rgba(255,212,0,0.1); color: var(--gold);
+  display: inline-block; margin-bottom: 10px;
+  letter-spacing: 0.08em; text-transform: uppercase;
+}
+.p-tier {
+  font-family: 'DM Mono', monospace; font-size: 11px;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.p-price {
+  font-size: 52px; font-weight: 700; line-height: 1;
+  letter-spacing: -0.03em; margin-bottom: 4px;
+}
+.p-period { font-size: 16px; font-weight: 300; color: var(--muted); }
+.p-yearly {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  color: var(--dim); margin-bottom: 24px;
+}
+.p-divider {
+  height: 1px; background: var(--border); margin-bottom: 20px;
+}
+.p-features { flex: 1; margin-bottom: 24px; }
+.p-feat {
+  font-size: 13px; color: var(--muted); padding: 6px 0;
+  display: flex; gap: 10px; align-items: flex-start; line-height: 1.5;
+}
+.p-feat::before {
+  content: '—'; color: var(--dim); flex-shrink: 0; font-family: 'DM Mono', monospace;
+}
+.p-btn {
+  display: block; text-align: center; text-decoration: none;
+  padding: 13px; border-radius: 8px;
+  font-family: 'DM Mono', monospace; font-size: 11px;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  cursor: pointer; border: none; transition: all 0.2s;
+}
+.p-btn-blue { background: var(--blue); color: #fff; }
+.p-btn-blue:hover { background: #003FCC; }
+.p-btn-outline { background: transparent; border: 1px solid rgba(255,255,255,0.12); color: var(--muted); }
+.p-btn-outline:hover { border-color: rgba(255,255,255,0.3); color: var(--text); }
+.p-btn-gold { background: transparent; border: 1px solid rgba(255,212,0,0.25); color: var(--gold); }
+.p-btn-gold:hover { background: rgba(255,212,0,0.08); }
+
+/* ── CTA ─────────────────────────────────────────────────────────── */
+.section-cta {
+  padding: 160px 48px;
+  text-align: center;
+  border-top: 1px solid var(--border);
+  position: relative; overflow: hidden;
+  background: var(--bg2);
+}
+.cta-glow {
+  position: absolute; width: 700px; height: 400px;
+  background: radial-gradient(ellipse, rgba(0,80,255,0.1) 0%, transparent 70%);
+  top: 50%; left: 50%; transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.cta-h2 {
+  font-size: clamp(48px, 7vw, 96px); font-weight: 700;
+  line-height: 0.92; letter-spacing: -0.04em;
+  margin-bottom: 28px; position: relative; z-index: 1;
+}
+.cta-h2 em { color: var(--gold); font-style: italic; font-weight: 300; }
+.cta-sub {
+  font-size: 20px; color: var(--muted); font-weight: 300;
+  margin-bottom: 52px; position: relative; z-index: 1;
+}
+.cta-btns {
+  display: flex; gap: 16px; justify-content: center;
+  position: relative; z-index: 1;
+}
+.cta-note {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 0.08em; color: var(--dim); margin-top: 20px;
+  position: relative; z-index: 1;
+}
+
+/* ── FOOTER ──────────────────────────────────────────────────────── */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 60px 48px 32px;
+  display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 48px;
+  background: var(--bg);
+}
+.f-logo {
+  font-size: 20px; font-weight: 700; color: var(--gold);
+  text-decoration: none; display: block; margin-bottom: 12px;
+  letter-spacing: -0.01em;
+}
+.f-logo em { font-style: italic; font-weight: 300; }
+.f-tag { font-size: 14px; color: var(--muted); line-height: 1.7; max-width: 260px; margin-bottom: 16px; font-weight: 300; }
+.f-email { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--dim); }
+.f-email a { color: #6B9FFF; text-decoration: none; }
+.f-col-title {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--blue); margin-bottom: 20px;
+}
+.f-links { display: flex; flex-direction: column; gap: 12px; }
+.f-link {
+  font-size: 14px; color: var(--muted); text-decoration: none;
+  background: none; border: none; cursor: pointer; text-align: left;
+  padding: 0; font-family: 'Clash Display', sans-serif;
+  transition: color 0.15s; font-weight: 300;
+}
+.f-link:hover { color: var(--text); }
+.f-bottom {
+  grid-column: 1 / -1;
+  border-top: 1px solid var(--border); padding-top: 24px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.f-copy { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--dim); letter-spacing: 0.04em; }
+.f-legal { display: flex; gap: 24px; }
+.f-legal a { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--dim); text-decoration: none; }
+.f-legal a:hover { color: var(--muted); }
+
+/* ── REVEAL ──────────────────────────────────────────────────────── */
+.reveal { opacity: 0; transform: translateY(32px); transition: opacity 0.7s ease, transform 0.7s ease; }
+.reveal.visible { opacity: 1; transform: translateY(0); }
+.reveal-delay-1 { transition-delay: 0.15s; }
+.reveal-delay-2 { transition-delay: 0.3s; }
+.reveal-delay-3 { transition-delay: 0.45s; }
+/* Fallback: if JS fails or is slow, show everything */
+.no-js .reveal { opacity: 1; transform: none; }
+
+/* ── MOBILE ──────────────────────────────────────────────────────── */
+@media (max-width: 960px) {
+  nav { padding: 0 24px; }
+  .nav-center { display: none; }
+  .hero { padding: 68px 24px 0; }
+  .stats-bar { grid-template-columns: repeat(2,1fr); }
+  .stat-cell { padding: 32px 24px; }
+  .section-problem { grid-template-columns: 1fr; padding: 80px 24px; gap: 48px; }
+  .section-demo { padding: 0 24px 80px; }
+  .demo-embed { height: 480px; }
+  .section-how { padding: 80px 24px; }
+  .steps-grid { grid-template-columns: 1fr 1fr; }
+  .section-features { padding: 80px 24px; }
+  .features-grid { grid-template-columns: 1fr; }
+  .section-accuracy { padding: 80px 24px; }
+  .accuracy-inner { grid-template-columns: 1fr; gap: 48px; }
+  .section-pricing { padding: 80px 24px; }
+  .pricing-cards { grid-template-columns: 1fr 1fr; }
+  .section-cta { padding: 100px 24px; }
+  .cta-btns { flex-direction: column; align-items: center; }
+  footer { grid-template-columns: 1fr 1fr; padding: 48px 24px 24px; }
+}
+
+  /* ── SIGNUP MODAL ──────────────────────────────────────────────── */
+  .modal-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(8px);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 9000; padding: 24px;
+    opacity: 0; transition: opacity 0.2s;
+    pointer-events: none;
+  }
+  .modal-backdrop.open {
+    opacity: 1; pointer-events: all;
+  }
+  .modal-box {
+    background: #0A0A10;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px; padding: 40px;
+    width: 100%; max-width: 440px;
+    transform: translateY(20px); transition: transform 0.25s ease;
+    position: relative;
+  }
+  .modal-backdrop.open .modal-box { transform: translateY(0); }
+
+  .modal-close {
+    position: absolute; top: 16px; right: 16px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 6px; padding: 6px 10px;
+    color: rgba(255,255,255,0.4); cursor: pointer;
+    font-size: 14px; line-height: 1; transition: all 0.15s;
+  }
+  .modal-close:hover { background: rgba(255,255,255,0.1); color: #fff; }
+
+  .modal-logo {
+    font-family: 'Clash Display', sans-serif;
+    font-size: 22px; font-weight: 600; color: #FFD400;
+    margin-bottom: 4px;
+  }
+  .modal-logo em { font-style: italic; font-weight: 300; }
+  .modal-tagline {
+    font-family: 'DM Mono', monospace; font-size: 10px;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: rgba(255,255,255,0.25); margin-bottom: 28px;
+  }
+
+  .modal-step { display: none; }
+  .modal-step.active { display: block; }
+
+  .modal-step-title {
+    font-family: 'Clash Display', sans-serif;
+    font-size: 24px; font-weight: 600; line-height: 1.15;
+    margin-bottom: 6px; letter-spacing: -0.02em;
+  }
+  .modal-step-sub {
+    font-size: 14px; color: rgba(255,255,255,0.45);
+    margin-bottom: 24px; line-height: 1.6; font-weight: 300;
+  }
+
+  .m-field { margin-bottom: 14px; }
+  .m-label {
+    font-family: 'DM Mono', monospace; font-size: 9px;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: rgba(255,255,255,0.3); display: block; margin-bottom: 6px;
+  }
+  .m-input {
+    width: 100%; padding: 13px 16px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px; color: #fff;
+    font-family: 'Satoshi', sans-serif; font-size: 15px;
+    outline: none; transition: border-color 0.2s; box-sizing: border-box;
+  }
+  .m-input:focus { border-color: rgba(0,80,255,0.6); background: rgba(0,80,255,0.05); }
+  .m-input::placeholder { color: rgba(255,255,255,0.2); }
+
+  .m-select {
+    width: 100%; padding: 13px 16px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px; color: #fff;
+    font-family: 'Satoshi', sans-serif; font-size: 15px;
+    outline: none; cursor: pointer; appearance: none;
+    box-sizing: border-box;
+  }
+  .m-select option { background: #0D0D14; color: #fff; }
+
+  .m-btn {
+    width: 100%; padding: 15px;
+    background: #0050FF; color: #fff;
+    border: none; border-radius: 8px;
+    font-family: 'DM Mono', monospace; font-size: 12px;
+    font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
+    cursor: pointer; margin-top: 6px; transition: background 0.2s;
+  }
+  .m-btn:hover { background: #003FCC; }
+  .m-btn:disabled { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.3); cursor: not-allowed; }
+
+  .m-error {
+    font-family: 'DM Mono', monospace; font-size: 11px;
+    color: #FF5555; margin-top: 8px; display: none; letter-spacing: 0.04em;
+  }
+  .m-note {
+    text-align: center; font-family: 'DM Mono', monospace;
+    font-size: 10px; letter-spacing: 0.06em;
+    color: rgba(255,255,255,0.2); margin-top: 16px;
+    line-height: 1.6;
+  }
+  .m-note a { color: rgba(0,150,255,0.8); text-decoration: none; }
+
+  /* Verification code input */
+  .verify-inputs {
+    display: flex; gap: 10px; justify-content: center; margin-bottom: 20px;
+  }
+  .verify-digit {
+    width: 52px; height: 60px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px; color: #fff;
+    font-family: 'Clash Display', sans-serif;
+    font-size: 28px; font-weight: 600; text-align: center;
+    outline: none; transition: border-color 0.2s;
+    padding: 0;
+  }
+  .verify-digit:focus { border-color: rgba(0,80,255,0.7); background: rgba(0,80,255,0.08); }
+
+  /* Progress dots */
+  .modal-progress {
+    display: flex; gap: 6px; justify-content: center; margin-bottom: 28px;
+  }
+  .progress-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: rgba(255,255,255,0.15); transition: all 0.3s;
+  }
+  .progress-dot.active { background: #0050FF; width: 20px; border-radius: 3px; }
+  .progress-dot.done { background: #00C46A; }
+
+  /* Plan selector in signup */
+  .plan-options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+  .plan-opt {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 13px 16px; border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.08);
+    cursor: pointer; transition: all 0.15s;
+    background: rgba(255,255,255,0.03);
+  }
+  .plan-opt:hover { border-color: rgba(255,255,255,0.18); }
+  .plan-opt.selected { border-color: rgba(0,80,255,0.6); background: rgba(0,80,255,0.08); }
+  .plan-opt.selected.gold { border-color: rgba(255,212,0,0.5); background: rgba(255,212,0,0.06); }
+  .plan-opt-name {
+    font-family: 'DM Mono', monospace; font-size: 11px;
+    letter-spacing: 0.06em; font-weight: 500;
+  }
+  .plan-opt-price {
+    font-family: 'Clash Display', sans-serif; font-size: 16px; font-weight: 600;
+  }
+
+  /* Success state */
+  .success-icon {
+    width: 64px; height: 64px; border-radius: 50%;
+    background: rgba(0,196,106,0.12);
+    border: 1px solid rgba(0,196,106,0.3);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 20px;
+  }
+
+  
+  /* ── LIGHT MODE ──────────────────────────────────────────────────── */
+  body.light {
+    --bg:     #F8F8F6;
+    --bg2:    #FFFFFF;
+    --bg3:    #F0F0ED;
+    --border: rgba(0,0,0,0.08);
+    --border-bright: rgba(0,0,0,0.18);
+    --text:   #0A0A0F;
+    --muted:  rgba(0,0,0,0.55);
+    --dim:    rgba(0,0,0,0.35);
+    --gold:   #B8960A;
+    --blue:   #0040CC;
+  }
+  body.light nav {
+    background: rgba(248,248,246,0.92);
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+  }
+  body.light .hero { background: #F8F8F6; }
+  body.light #heroCanvas { opacity: 0.12; }
+  body.light .stats-bar { background: #fff; }
+  body.light .ticker { background: #F0F0ED; }
+  body.light .section-how { background: #fff; border-color: rgba(0,0,0,0.06); }
+  body.light .section-accuracy { background: #fff; border-color: rgba(0,0,0,0.06); }
+  body.light .section-cta { background: #F0F0ED; border-color: rgba(0,0,0,0.06); }
+  body.light footer { background: #F8F8F6; }
+  body.light .step-card { background: #fff; }
+  body.light .feature-block { background: #fff; }
+  body.light .p-card { background: #fff; border-color: rgba(0,0,0,0.08); }
+  body.light .p-card.featured { border-color: rgba(180,150,10,0.4); background: rgba(255,212,0,0.03); }
+  body.light .acc-row:hover { background: rgba(0,0,0,0.02); }
+  body.light .section-h2 em { color: var(--gold); }
+  body.light .hero-h1 .gold { color: var(--gold); }
+  body.light .section-eyebrow { color: var(--blue); }
+  body.light .step-num { color: var(--blue); }
+  body.light .f-col-title { color: var(--blue); }
+  body.light .stat-n { }
+  body.light .cta-glow { opacity: 0.4; }
+
+  /* Toggle button */
+  .theme-toggle {
+    width: 36px; height: 36px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer; display: flex;
+    align-items: center; justify-content: center;
+    font-size: 16px; transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .theme-toggle:hover { border-color: var(--border-bright); }
+
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">Sim<em>fluence</em></a>
+  <ul class="nav-center">
+    <li><a href="#how">How it works</a></li>
+    <li><a href="#features">Features</a></li>
+    <li><a href="preview.html" target="_blank">See the platform</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+  </ul>
+  <div class="nav-right">
+    <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn" title="Toggle light/dark mode">🌙</button>
+    <a href="app.html" target="_blank" class="nav-login">Sign in</a>
+    <button onclick="openSignup()" class="nav-cta">Start today →</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <canvas id="heroCanvas"></canvas>
+  <div class="hero-inner">
+    <div class="hero-badge">
+      <div class="hero-badge-dot"></div>
+      AI-powered campaign intelligence
+    </div>
+    <h1 class="hero-h1">
+      Know<br>before you<br><span class="gold">spend.</span>
+    </h1>
+    <p class="hero-sub">Predict your CTR, CPM, CVR and ROAS before a single penny is committed. Model your campaign. Know your outcome. Launch with certainty.</p>
+    <div class="hero-actions">
+      <button onclick="openSignup()" class="btn-xl">Start today</button>
+      <a href="#demo" class="btn-xl-ghost">See the platform ↓</a>
+    </div>
+  </div>
+  <div class="hero-scroll">
+    <span>Scroll</span>
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<!-- STATS BAR -->
+<div class="stats-bar reveal">
+  <div class="stat-cell">
+    <div class="stat-n" style="color:var(--gold)">68%</div>
+    <div class="stat-l">of campaigns underperform<br>without a forecast</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-n" style="color:var(--blue)">&lt;2m</div>
+    <div class="stat-l">from brief<br>to full forecast</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-n" style="color:var(--green)">90%</div>
+    <div class="stat-l">statistical confidence<br>on all outputs</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-n" style="color:var(--orange)">18</div>
+    <div class="stat-l">genres · 53 sub-modes<br>12 platforms</div>
+  </div>
+</div>
+
+<!-- TICKER -->
+<div class="ticker">
+  <div class="ticker-inner">
+    <span class="ticker-item">Creator Performance Index <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">Genre Fit Index <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">P10 / P50 / P90 Confidence Bands <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">CTR Forecasting <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">ROAS Prediction <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">AI Persona Matching <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">CPM Modelling <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">CVR Analysis <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">Campaign Simulation <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">Budget Efficiency Scoring <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">Prediction vs Actual Loop <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">Reputation Tier System <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">Creator Performance Index <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">Genre Fit Index <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">P10 / P50 / P90 Confidence Bands <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">CTR Forecasting <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">ROAS Prediction <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">AI Persona Matching <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">CPM Modelling <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">CVR Analysis <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">Campaign Simulation <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">Budget Efficiency Scoring <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">Prediction vs Actual Loop <span class="ticker-sep">·</span></span>
+    <span class="ticker-item">Reputation Tier System <span class="ticker-sep">·</span></span>
+  </div>
+</div>
+
+<!-- PROBLEM -->
+<section>
+  <div class="section-problem reveal">
+    <div>
+      <span class="section-eyebrow">The problem</span>
+      <h2 class="section-h2">Brands spend<br>before they <em>know.</em></h2>
+      <p class="section-body">The influencer marketing industry runs on gut feel and hope. Brands commit six-figure budgets to creators they believe will perform — and find out weeks later whether they were right.</p>
+      <p class="section-body">There has never been a tool that tells you what will happen before you spend. Until now.</p>
+    </div>
+    <div class="problem-cards">
+      <div class="problem-card reveal reveal-delay-1">
+        <div class="problem-n" style="color:#E60023">68%</div>
+        <div class="problem-desc">of influencer campaigns underperform against forecast. Not because the creators were wrong — because nobody ran the numbers before launch.</div>
+      </div>
+      <div class="problem-card reveal reveal-delay-2">
+        <div class="problem-n" style="color:var(--gold)">£340K</div>
+        <div class="problem-desc">wasted per year by the average gaming publisher on influencer campaigns that miss their targets.</div>
+      </div>
+      <div class="problem-card reveal reveal-delay-3">
+        <div class="problem-n" style="color:var(--green)">0</div>
+        <div class="problem-desc">platforms offered predictive campaign simulation before Simfluence. You were flying blind. Now you don't have to.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+
+
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="section-how">
+    <div class="section-how-inner">
+      <div class="how-header reveal">
+        <span class="section-eyebrow">How it works</span>
+        <h2 class="section-h2">Brief to forecast<br>in <em>under 2 minutes.</em></h2>
+      </div>
+      <div class="steps-grid reveal">
+        <div class="step-card">
+          <div class="step-num">01 —</div>
+          <div class="step-title">Input your brief</div>
+          <div class="step-desc">Genre, sub-mode, region, platforms, budget and campaign objectives. Sixty seconds. No lengthy onboarding, no unnecessary complexity.</div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">02 —</div>
+          <div class="step-title">Discover creators</div>
+          <div class="step-desc">Browse by CPI and GFI score. Filter by tier, region and persona. Brand safety flags surface instantly. The right creators rise to the top.</div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">03 —</div>
+          <div class="step-title">Run the simulation</div>
+          <div class="step-desc">Click run. Get probabilistic CTR, CPM, CVR and ROAS forecasts in seconds — complete with P10, P50 and P90 confidence bands.</div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">04 —</div>
+          <div class="step-title">Launch with certainty</div>
+          <div class="step-desc">You know what to expect before you spend. Brief your team. Set your benchmark. Every result you enter feeds the model and sharpens the next forecast.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="section-features">
+    <div class="features-header reveal">
+      <span class="section-eyebrow">Platform</span>
+      <h2 class="section-h2">Four tools.<br><em>Zero guesswork.</em></h2>
+    </div>
+    <div class="features-grid reveal">
+
+      <div class="feature-block">
+        <div class="feat-icon" style="background:rgba(0,80,255,0.12)">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="9" cy="9" r="6" stroke="#6B9FFF" stroke-width="1.6"/><path d="M13.5 13.5L18 18" stroke="#6B9FFF" stroke-width="1.6" stroke-linecap="round"/><path d="M7 9h4M9 7v4" stroke="#6B9FFF" stroke-width="1.4" stroke-linecap="round"/></svg>
+        </div>
+        <div class="feat-title">Creator Discovery</div>
+        <div class="feat-desc">Find creators by what they will deliver, not by how many follow them. Our database grows continuously — new creators added across every genre, platform and region as the influencer landscape evolves. Every result ranked by CPI in real time.</div>
+        <span class="feat-tag" style="background:rgba(0,80,255,0.1);color:#6B9FFF">18 genres · 53 sub-modes · 12 platforms</span>
+      </div>
+
+      <div class="feature-block">
+        <div class="feat-icon" style="background:rgba(100,80,200,0.12)">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="2" y="13" width="4" height="7" rx="1.5" fill="#9B8FDD"/><rect x="9" y="8" width="4" height="12" rx="1.5" fill="#9B8FDD" opacity=".7"/><rect x="16" y="2" width="4" height="18" rx="1.5" fill="#9B8FDD" opacity=".4"/></svg>
+        </div>
+        <div class="feat-title">CPI & GFI Scoring</div>
+        <div class="feat-desc">Two scores that do what follower count never could. The Creator Performance Index predicts commercial outcomes. The Genre Fit Index measures audience alignment to your campaign territory. Together they make the right shortlist obvious.</div>
+        <span class="feat-tag" style="background:rgba(100,80,200,0.1);color:#9B8FDD">0–100 scale · 90% confidence · live data</span>
+      </div>
+
+      <div class="feature-block">
+        <div class="feat-icon" style="background:rgba(0,196,106,0.1)">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="8" r="4.5" stroke="#00C46A" stroke-width="1.6"/><path d="M3 20c0-4.418 3.582-7 8-7s8 2.582 8 7" stroke="#00C46A" stroke-width="1.6" stroke-linecap="round"/><path d="M16 10l2 2 3-3" stroke="#00C46A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="feat-title">AI Persona Matching</div>
+        <div class="feat-desc">Every creator carries an audience archetype — the way their followers think, buy and respond to a call to action. Simfluence maps 100+ genre-native personas to your brand narrative so your message lands with the right psychology, not just the right demographic.</div>
+        <span class="feat-tag" style="background:rgba(0,196,106,0.08);color:#00C46A">100+ archetypes · CTA mapped · genre-native</span>
+      </div>
+
+      <div class="feature-block">
+        <div class="feat-icon" style="background:rgba(255,122,0,0.1)">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M2 18L7 11l5 5 4-8 5 9" stroke="#FF7A00" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="7" cy="11" r="1.8" fill="#FF7A00"/><circle cx="12" cy="16" r="1.8" fill="#FF7A00"/><circle cx="16" cy="8" r="1.8" fill="#FF7A00"/></svg>
+        </div>
+        <div class="feat-title">Campaign Simulator</div>
+        <div class="feat-desc">Before any budget moves, you see your predicted CTR, CPM, CVR and ROAS — with P10, P50 and P90 confidence bands. Swap creators, adjust budget, run what-if scenarios. Every number is a commitment you can interrogate before you make it real.</div>
+        <span class="feat-tag" style="background:rgba(255,122,0,0.08);color:#FF7A00">under 2 min · P10–P90 · 4 core metrics</span>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ACCURACY -->
+<section>
+  <div class="section-accuracy">
+    <div class="accuracy-inner">
+      <div class="reveal">
+        <span class="section-eyebrow">Accuracy</span>
+        <h2 class="section-h2">Forecasts that<br><em>hold up.</em></h2>
+        <p class="section-body">Every campaign run through Simfluence gets compared against its actuals. The model learns. The forecasts tighten. The longer you use it, the more accurate it becomes.</p>
+        <p style="font-family:'DM Mono',monospace;font-size:11px;color:var(--dim);line-height:1.6">Example: Gaming publisher · RPG open-world<br>£85K budget · 3 mid-tier YouTubers · Dedicated format</p>
+      </div>
+      <div class="accuracy-table reveal">
+        <div class="acc-header">
+          <div class="acc-hcell">Metric</div>
+          <div class="acc-hcell">Forecast range</div>
+          <div class="acc-hcell">Actual result</div>
+        </div>
+        <div class="acc-row">
+          <div class="acc-metric">Impressions</div>
+          <div class="acc-forecast">4.2M – 5.8M</div>
+          <div class="acc-actual"><div class="acc-check"><svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1.5 4L3.5 6L6.5 2" stroke="#00C46A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>5.1M</div>
+        </div>
+        <div class="acc-row">
+          <div class="acc-metric">CTR</div>
+          <div class="acc-forecast">2.4% – 3.1%</div>
+          <div class="acc-actual"><div class="acc-check"><svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1.5 4L3.5 6L6.5 2" stroke="#00C46A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>2.7%</div>
+        </div>
+        <div class="acc-row">
+          <div class="acc-metric">CPM</div>
+          <div class="acc-forecast">£11.20</div>
+          <div class="acc-actual"><div class="acc-check"><svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1.5 4L3.5 6L6.5 2" stroke="#00C46A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>£11.60</div>
+        </div>
+        <div class="acc-row">
+          <div class="acc-metric">Installs</div>
+          <div class="acc-forecast">310 – 420</div>
+          <div class="acc-actual"><div class="acc-check"><svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1.5 4L3.5 6L6.5 2" stroke="#00C46A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>388</div>
+        </div>
+        <div class="acc-row">
+          <div class="acc-metric">ROAS</div>
+          <div class="acc-forecast">3.0× – 3.6×</div>
+          <div class="acc-actual"><div class="acc-check"><svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1.5 4L3.5 6L6.5 2" stroke="#00C46A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>3.4×</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section id="pricing">
+  <div class="section-pricing">
+    <div class="pricing-header reveal">
+      <span class="section-eyebrow" style="display:inline-block">Pricing</span>
+      <h2 class="section-h2" style="margin-top:16px;font-size:clamp(52px,7vw,96px)">Simple.<br><em>Transparent.</em><br>No surprises.</h2>
+      <p style="font-size:18px;color:var(--muted);margin-top:20px;font-weight:300;max-width:500px;margin-left:auto;margin-right:auto">Choose your plan. Start free for 14 days. Cancel anytime. No hidden fees, no commission, no nonsense.</p>
+    </div>
+    <div class="pricing-cards reveal">
+
+      <div class="p-card">
+        <div class="p-tier" style="color:#6B9FFF">Starter</div>
+        <div class="p-price">£199<span class="p-period">/mo</span></div>
+        <div class="p-yearly">£1,999/yr</div>
+        <div class="p-divider"></div>
+        <div class="p-features">
+          <div class="p-feat">Genre matching</div>
+          <div class="p-feat">Full creator search</div>
+          <div class="p-feat">CPI &amp; GFI scores</div>
+          <div class="p-feat">Estimated metrics</div>
+          <div class="p-feat">Basic shortlisting</div>
+          <div class="p-feat">Email support</div>
+        </div>
+        <button onclick="openSignup()" class="p-btn p-btn-outline">Start today</button>
+      </div>
+
+      <div class="p-card featured">
+        <div class="p-badge">Most popular</div>
+        <div class="p-tier" style="color:var(--gold)">Studio Pro</div>
+        <div class="p-price" style="color:var(--gold)">£699<span class="p-period">/mo</span></div>
+        <div class="p-yearly">£6,999/yr</div>
+        <div class="p-divider"></div>
+        <div class="p-features">
+          <div class="p-feat">All Starter features</div>
+          <div class="p-feat">AI persona matching</div>
+          <div class="p-feat">Campaign simulator</div>
+          <div class="p-feat">Priority support</div>
+          <div class="p-feat">4–10 campaigns/yr</div>
+        </div>
+        <button onclick="openSignup()" class="p-btn p-btn-blue">Start today</button>
+      </div>
+
+      <div class="p-card">
+        <div class="p-tier" style="color:var(--orange)">Publisher Elite</div>
+        <div class="p-price">£1,999<span class="p-period">/mo</span></div>
+        <div class="p-yearly">£19,999/yr</div>
+        <div class="p-divider"></div>
+        <div class="p-features">
+          <div class="p-feat">All Studio Pro features</div>
+          <div class="p-feat">Full feedback loop</div>
+          <div class="p-feat">Unlimited campaigns</div>
+          <div class="p-feat">White-label reports</div>
+          <div class="p-feat">Dedicated support</div>
+        </div>
+        <button onclick="openSignup()" class="p-btn p-btn-outline">Start today</button>
+      </div>
+
+      <div class="p-card">
+        <div class="p-tier" style="color:var(--muted)">Enterprise</div>
+        <div class="p-price" style="font-size:32px">Custom</div>
+        <div class="p-yearly">API + volume pricing</div>
+        <div class="p-divider"></div>
+        <div class="p-features">
+          <div class="p-feat">Everything in Elite</div>
+          <div class="p-feat">API licensing</div>
+          <div class="p-feat">SSO + workspaces</div>
+          <div class="p-feat">Data integration</div>
+          <div class="p-feat">Co-development</div>
+        </div>
+        <a href="mailto:liam@simfluence.ai" class="p-btn p-btn-gold">Contact us</a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="section-cta reveal">
+  <div class="cta-glow"></div>
+  <h2 class="cta-h2">Your next campaign<br>already has<br>a <em>forecast.</em></h2>
+  <p class="cta-sub">Run your brief. See your numbers. Launch knowing what to expect.</p>
+  <div class="cta-btns">
+    <button onclick="openSignup()" class="btn-xl">Start today</button>
+    <a href="mailto:liam@simfluence.ai" class="btn-xl-ghost">Book a live demo</a>
+  </div>
+  <p class="cta-note">14-day free trial · Cancel anytime · <a href="mailto:liam@simfluence.ai" style="color:rgba(255,255,255,0.4)">liam@simfluence.ai</a></p>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div>
+    <a href="#" class="f-logo">Sim<em>fluence</em></a>
+    <p class="f-tag">AI-powered campaign intelligence. Know your CTR, CPM, CVR and ROAS before a single penny is spent.</p>
+    <p class="f-email">Contact: <a href="mailto:liam@simfluence.ai"><span class="__cf_email__" data-cfemail="c2aeaba3af82b1abafa4aeb7a7aca1a7eca3ab">[email&#160;protected]</span></a></p>
+  </div>
+  <div>
+    <div class="f-col-title">Platform</div>
+    <div class="f-links">
+      <a href="app.html" class="f-link">Creator Discovery</a>
+      <a href="app.html" class="f-link">CPI &amp; GFI Scoring</a>
+      <a href="app.html" class="f-link">AI Persona Matching</a>
+      <a href="app.html" class="f-link">Campaign Simulator</a>
+    </div>
+  </div>
+  <div>
+    <div class="f-col-title">Company</div>
+    <div class="f-links">
+      <a href="app.html" class="f-link">About</a>
+      <a href="mailto:liam@simfluence.ai" class="f-link">Contact</a>
+      <a href="app.html" class="f-link">Terms of Use</a>
+      <a href="app.html" class="f-link">Legal Notice</a>
+    </div>
+  </div>
+  <div>
+    <div class="f-col-title">Plans</div>
+    <div class="f-links">
+      <a href="app.html" class="f-link">Starter — £199/mo</a>
+      <a href="app.html" class="f-link">Studio Pro — £699/mo</a>
+      <a href="app.html" class="f-link">Publisher Elite — £1,999/mo</a>
+      <a href="mailto:liam@simfluence.ai" class="f-link">Enterprise</a>
+    </div>
+  </div>
+  <div class="f-bottom">
+    <span class="f-copy">© 2025 Simfluence Ltd · Dubai, UAE · All rights reserved</span>
+    <div class="f-legal">
+      <a href="app.html">Terms</a>
+      <a href="app.html">Legal</a>
+      <a href="mailto:liam@simfluence.ai">Contact</a>
+    </div>
+  </div>
+</footer>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js">/* ── SCROLL REVEAL ─────────────────────────────────────────── */
+function initReveal() {
+  const els = document.querySelectorAll('.reveal');
+
+  // Immediately show anything already in viewport
+  els.forEach(el => {
+    const rect = el.getBoundingClientRect();
+    if (rect.top < window.innerHeight) {
+      el.classList.add('visible');
+    }
+  });
+
+  if ('IntersectionObserver' in window) {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          observer.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.05, rootMargin: '0px 0px -40px 0px' });
+
+    els.forEach(el => {
+      if (!el.classList.contains('visible')) {
+        observer.observe(el);
+      }
+    });
+  } else {
+    // Fallback: show all
+    els.forEach(el => el.classList.add('visible'));
+  }
+}
+
+// Run on DOM ready and again after a short delay (catches late-rendered elements)
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initReveal);
+} else {
+  initReveal();
+}
+setTimeout(initReveal, 400);
+
+// ── SIGNUP FLOW ────────────────────────────────────────────────────────
+var selectedPlan = '';
+var signupEmail  = '';
+var demoCode     = '';
+
+/* openSignup defined below */
+
+function closeSignup() {
+  document.getElementById('signupModal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function goToStep(n) {
+  [1,2,3,4].forEach(function(i) {
+    document.getElementById('step-' + i).classList.remove('active');
+    var dot = document.getElementById('dot-' + i);
+    if (i < n) dot.className = 'progress-dot done';
+    else if (i === n) dot.className = 'progress-dot active';
+    else dot.className = 'progress-dot';
+  });
+  document.getElementById('step-' + n).classList.add('active');
+}
+
+function signupStep1() {
+  var company = document.getElementById('su-company').value.trim();
+  var email   = document.getElementById('su-email').value.trim();
+  var pass    = document.getElementById('su-pass').value;
+  var err     = document.getElementById('su-err-1');
+  if (!company || !email.includes('@') || pass.length < 8) {
+    err.style.display = 'block'; return;
+  }
+  err.style.display = 'none';
+  signupEmail = email;
+  goToStep(2);
+}
+
+function selectPlan(el, plan) {
+  document.querySelectorAll('.plan-opt').forEach(function(p) { p.classList.remove('selected'); });
+  el.classList.add('selected');
+  selectedPlan = plan;
+}
+
+function signupStep2() {
+  var err = document.getElementById('su-err-2');
+  if (!selectedPlan) { err.style.display = 'block'; return; }
+  err.style.display = 'none';
+  document.getElementById('su-email-display').textContent = signupEmail;
+  demoCode = Math.floor(100000 + Math.random() * 900000).toString();
+  console.log('Verification code (demo):', demoCode);
+  goToStep(3);
+  setTimeout(function() { document.getElementById('vd-1').focus(); }, 200);
+}
+
+function verifyInput(input, num) {
+  input.value = input.value.replace(/[^0-9]/g, '');
+  if (input.value.length === 1 && num < 6) {
+    document.getElementById('vd-' + (num + 1)).focus();
+  }
+  var code = '';
+  for (var i = 1; i <= 6; i++) { code += document.getElementById('vd-' + i).value; }
+  document.getElementById('verify-btn').disabled = code.length < 6;
+}
+
+function verifyBack(event, num) {
+  if (event.key === 'Backspace' && document.getElementById('vd-' + num).value === '' && num > 1) {
+    document.getElementById('vd-' + (num - 1)).focus();
+  }
+}
+
+function signupStep3() {
+  var code = '';
+  for (var i = 1; i <= 6; i++) { code += document.getElementById('vd-' + i).value; }
+  var err = document.getElementById('su-err-3');
+  if (code === demoCode || code === '123456') {
+    err.style.display = 'none';
+    var planNames = { free:'Free account active', starter:'Starter — 14-day trial started', studio:'Studio Pro — 14-day trial started', publisher:'Publisher Elite — 14-day trial started' };
+    document.getElementById('su-success-msg').textContent = (planNames[selectedPlan] || '14-day free trial started') + '. Welcome to Simfluence.';
+    goToStep(4);
+  } else {
+    err.style.display = 'block';
+    for (var i = 1; i <= 6; i++) { document.getElementById('vd-' + i).value = ''; }
+    document.getElementById('vd-1').focus();
+    document.getElementById('verify-btn').disabled = true;
+  }
+}
+
+function resendCode() {
+  demoCode = Math.floor(100000 + Math.random() * 900000).toString();
+  console.log('New code (demo):', demoCode);
+  document.getElementById('su-verify-sub').innerHTML = 'Code resent to <strong style="color:#fff">' + signupEmail + '</strong>. Check your inbox.';
+  for (var i = 1; i <= 6; i++) { document.getElementById('vd-' + i).value = ''; }
+  document.getElementById('vd-1').focus();
+  document.getElementById('verify-btn').disabled = true;
+}
+
+function goToPlatform() {
+  closeSignup();
+  window.location.href = 'app.html';
+}
+
+function switchToLogin() {
+  closeSignup();
+  window.location.href = 'app.html';
+}
+
+// All signup init wrapped in DOMContentLoaded
+document.addEventListener('DOMContentLoaded', function() {
+  var _sm = document.getElementById('signupModal');
+  if (_sm) {
+    _sm.addEventListener('click', function(e) {
+      if (e.target === this) closeSignup();
+    });
+  }
+});
+</script><script>
+/* ── HERO CANVAS ANIMATION ─────────────────────────────────── */
+const canvas = document.getElementById('heroCanvas');
+const ctx = canvas.getContext('2d');
+let W, H, particles = [];
+
+function resize() {
+  W = canvas.width  = canvas.offsetWidth;
+  H = canvas.height = canvas.offsetHeight;
+}
+
+function initParticles() {
+  particles = [];
+  const count = Math.floor((W * H) / 14000);
+  for (let i = 0; i < count; i++) {
+    particles.push({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      vx: (Math.random() - 0.5) * 0.3,
+      vy: (Math.random() - 0.5) * 0.3,
+      r: Math.random() * 1.5 + 0.5,
+      alpha: Math.random() * 0.5 + 0.1,
+    });
+  }
+}
+
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+
+  // Draw connections
+  for (let i = 0; i < particles.length; i++) {
+    for (let j = i + 1; j < particles.length; j++) {
+      const dx = particles[i].x - particles[j].x;
+      const dy = particles[i].y - particles[j].y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist < 120) {
+        ctx.beginPath();
+        ctx.moveTo(particles[i].x, particles[i].y);
+        ctx.lineTo(particles[j].x, particles[j].y);
+        ctx.strokeStyle = `rgba(0,80,255,${(1 - dist/120) * 0.15})`;
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+      }
+    }
+  }
+
+  // Draw particles
+  particles.forEach(p => {
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(0,80,255,${p.alpha})`;
+    ctx.fill();
+
+    // Move
+    p.x += p.vx;
+    p.y += p.vy;
+    if (p.x < 0 || p.x > W) p.vx *= -1;
+    if (p.y < 0 || p.y > H) p.vy *= -1;
+  });
+
+  requestAnimationFrame(draw);
+
+}
+
+/* ── SCROLL REVEAL ─────────────────────────────────────────── */
+function initReveal() {
+  var els = document.querySelectorAll('.reveal');
+
+  // Show anything already in viewport on load
+  els.forEach(function(el) {
+    var rect = el.getBoundingClientRect();
+    if (rect.top < window.innerHeight + 100) {
+      el.classList.add('visible');
+    }
+  });
+
+  if ('IntersectionObserver' in window) {
+    var observer = new IntersectionObserver(function(entries) {
+      entries.forEach(function(e) {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          observer.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.05, rootMargin: '0px 0px -20px 0px' });
+
+    els.forEach(function(el) {
+      if (!el.classList.contains('visible')) observer.observe(el);
+    });
+  } else {
+    els.forEach(function(el) { el.classList.add('visible'); });
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initReveal);
+} else {
+  initReveal();
+}
+setTimeout(initReveal, 300);
+setTimeout(initReveal, 800);
+
+
+
+// ── SIGNUP ────────────────────────────────────────────────────────────
+var sfPlan = '', sfNameVal = '', sfEmailVal = '', sfCompanyVal = '';
+
+function openSignup() {
+  var m = document.getElementById('sfModal');
+  if (!m) return;
+  // Reset to step 1
+  sfShowStep(1);
+  sfPlan = '';
+  document.querySelectorAll('#sfPlans > div').forEach(function(d) {
+    d.style.borderColor = '';
+    d.style.background  = '';
+  });
+  ['sfName','sfCompany','sfEmail'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  m.style.cssText = 'display:block;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.9);z-index:9999;overflow-y:auto';
+  document.body.style.overflow = 'hidden';
+  setTimeout(function() {
+    var el = document.getElementById('sfName');
+    if (el) el.focus();
+  }, 150);
+}
+
+function sfClose() {
+  var m = document.getElementById('sfModal');
+  if (m) m.style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function sfShowStep(n) {
+  [1,2,3].forEach(function(i) {
+    var s = document.getElementById('sfS'+i);
+    var p = document.getElementById('sfP'+i);
+    if (s) s.style.display = i === n ? 'block' : 'none';
+    if (p) p.style.background = i <= n ? '#0050FF' : 'rgba(255,255,255,0.1)';
+  });
+  if (n === 3) document.getElementById('sfP3').style.background = '#00C46A';
+}
+
+function sfStep1() {
+  var name    = document.getElementById('sfName').value.trim();
+  var company = document.getElementById('sfCompany').value.trim();
+  var email   = document.getElementById('sfEmail').value.trim();
+  var err     = document.getElementById('sfE1');
+  if (!name || !company || !email || !email.includes('@') || !email.includes('.')) {
+    err.style.display = 'block'; return;
+  }
+  err.style.display = 'none';
+  sfNameVal    = name;
+  sfCompanyVal = company;
+  sfEmailVal   = email;
+  sfShowStep(2);
+}
+
+function sfPick(el, plan) {
+  document.querySelectorAll('#sfPlans > div').forEach(function(d) {
+    d.style.outline = '';
+    d.style.boxShadow = '';
+  });
+  el.style.outline = '2px solid #0050FF';
+  el.style.boxShadow = '0 0 0 4px rgba(0,80,255,0.15)';
+  sfPlan = plan;
+  document.getElementById('sfE2').style.display = 'none';
+}
+
+function sfStep2() {
+  if (!sfPlan) {
+    document.getElementById('sfE2').style.display = 'block'; return;
+  }
+  // Write to Supabase
+  sfSave();
+}
+
+async function sfSave() {
+  var planLabels = {
+    free:    'Free',
+    starter: 'Starter — £199/mo',
+    studio:  'Studio Pro — £699/mo',
+    elite:   'Publisher Elite — £1,999/mo'
+  };
+
+  var payload = {
+    name:          sfNameVal,
+    company:       sfCompanyVal,
+    email:         sfEmailVal,
+    plan:          sfPlan,
+    plan_label:    planLabels[sfPlan] || sfPlan,
+    signed_up_at:  new Date().toISOString(),
+    trial_ends_at: new Date(Date.now() + 14*24*60*60*1000).toISOString()
+  };
+
+  // Show success immediately — don't make them wait for the DB write
+  sfShowSuccess();
+
+  // Then write to Supabase in background
+  try {
+    var res = await fetch(SF_CONFIG.supabaseUrl + '/rest/v1/signups', {
+      method: 'POST',
+      headers: {
+        'Content-Type':  'application/json',
+        'apikey':        SF_CONFIG.supabaseKey,
+        'Authorization': 'Bearer ' + SF_CONFIG.supabaseKey,
+        'Prefer':        'return=minimal'
+      },
+      body: JSON.stringify(payload)
+    });
+    if (res.ok) {
+      console.log('%c Signup saved to Supabase ✓', 'background:#00C46A;color:#fff;padding:4px 10px;border-radius:4px');
+    } else {
+      var err = await res.text();
+      console.error('Supabase error:', res.status, err);
+    }
+  } catch(e) {
+    console.error('Network error:', e);
+  }
+}
+
+function sfShowSuccess() {
+  var planNames = {
+    free:    'Free account — explore the platform.',
+    starter: 'Starter plan — 14-day trial started.',
+    studio:  'Studio Pro — 14-day trial started.',
+    elite:   'Publisher Elite — 14-day trial started.'
+  };
+  document.getElementById('sfSuccessMsg').textContent = 'Welcome, ' + sfNameVal + '. ' + (planNames[sfPlan] || '');
+  document.getElementById('sfConfirmEmail').textContent = sfEmailVal;
+  sfShowStep(3);
+}
+
+// Close on backdrop click
+document.addEventListener('click', function(e) {
+  if (e.target && e.target.id === 'sfModal') sfClose();
+});
+
+// ── THEME TOGGLE ───────────────────────────────────────────────────────
+function toggleTheme() {
+  var isLight = document.body.classList.toggle('light');
+  var btn = document.getElementById('themeBtn');
+  if (btn) btn.textContent = isLight ? '🌑' : '🌙';
+  try { localStorage.setItem('sf_theme', isLight ? 'light' : 'dark'); } catch(e) {}
+}
+(function() {
+  try {
+    if (localStorage.getItem('sf_theme') === 'light') {
+      document.body.classList.add('light');
+      document.addEventListener('DOMContentLoaded', function() {
+        var b = document.getElementById('themeBtn');
+        if (b) b.textContent = '🌑';
+      });
+    }
+  } catch(e) {}
+})();
+</script>
+
+
+
+<!-- SIGNUP MODAL -->
+<div id="sfModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.9);z-index:9999;overflow-y:auto">
+  <div style="background:#0A0A10;border:1px solid rgba(255,255,255,0.12);border-radius:16px;padding:40px;width:100%;max-width:440px;margin:60px auto;position:relative">
+
+    <button onclick="sfClose()" style="position:absolute;top:14px;right:14px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:rgba(255,255,255,0.5);cursor:pointer;padding:5px 10px;font-size:13px;font-family:'DM Mono',monospace">✕</button>
+
+    <div style="font-family:'Clash Display',sans-serif;font-size:20px;font-weight:600;color:#FFD400;margin-bottom:2px">Sim<em style="font-style:italic;font-weight:300">fluence</em></div>
+    <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.12em;color:rgba(255,255,255,0.2);margin-bottom:28px;text-transform:uppercase">Campaign Intelligence Platform</div>
+
+    <!-- Progress bar -->
+    <div style="display:flex;gap:6px;margin-bottom:28px">
+      <div id="sfP1" style="height:4px;flex:1;border-radius:2px;background:#0050FF;transition:all .3s"></div>
+      <div id="sfP2" style="height:4px;flex:1;border-radius:2px;background:rgba(255,255,255,0.1);transition:all .3s"></div>
+      <div id="sfP3" style="height:4px;flex:1;border-radius:2px;background:rgba(255,255,255,0.1);transition:all .3s"></div>
+    </div>
+
+    <!-- STEP 1: Details -->
+    <div id="sfS1">
+      <div style="font-family:'Clash Display',sans-serif;font-size:24px;font-weight:600;margin-bottom:6px;letter-spacing:-.02em">Get started</div>
+      <div style="font-size:14px;color:rgba(255,255,255,0.4);margin-bottom:24px;font-weight:300">No card required. Free to explore.</div>
+
+      <div style="margin-bottom:14px">
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:6px">Your name</div>
+        <input id="sfName" type="text" placeholder="e.g. Gareth Evans" autocomplete="name"
+          style="width:100%;padding:13px 16px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#fff;font-size:14px;outline:none;box-sizing:border-box;font-family:'Satoshi',sans-serif">
+      </div>
+      <div style="margin-bottom:14px">
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:6px">Company / Brand</div>
+        <input id="sfCompany" type="text" placeholder="e.g. Ubisoft MENA" autocomplete="organization"
+          style="width:100%;padding:13px 16px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#fff;font-size:14px;outline:none;box-sizing:border-box;font-family:'Satoshi',sans-serif">
+      </div>
+      <div style="margin-bottom:20px">
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:6px">Work email</div>
+        <input id="sfEmail" type="email" placeholder="you@company.com" autocomplete="email"
+          style="width:100%;padding:13px 16px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#fff;font-size:14px;outline:none;box-sizing:border-box;font-family:'Satoshi',sans-serif">
+      </div>
+
+      <div id="sfE1" style="font-family:'DM Mono',monospace;font-size:10px;color:#ff5555;display:none;margin-bottom:12px">Please fill in all fields with a valid email.</div>
+      <button onclick="sfStep1()" style="width:100%;padding:15px;background:#0050FF;color:#fff;border:none;border-radius:8px;font-family:'DM Mono',monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:background .2s">Continue →</button>
+      <div style="text-align:center;font-family:'DM Mono',monospace;font-size:10px;color:rgba(255,255,255,0.2);margin-top:14px">Already using Simfluence? <a href="app.html" style="color:rgba(100,180,255,0.7)">Sign in</a></div>
+    </div>
+
+    <!-- STEP 2: Plan -->
+    <div id="sfS2" style="display:none">
+      <div style="font-family:'Clash Display',sans-serif;font-size:24px;font-weight:600;margin-bottom:6px;letter-spacing:-.02em">Choose your plan</div>
+      <div style="font-size:14px;color:rgba(255,255,255,0.4);margin-bottom:24px;font-weight:300">14-day free trial on any paid plan. Cancel anytime.</div>
+
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px" id="sfPlans">
+
+        <div onclick="sfPick(this,'free')" style="padding:14px 16px;border:1px solid rgba(255,255,255,0.08);border-radius:8px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,0.02)">
+          <div>
+            <div style="font-family:'DM Mono',monospace;font-size:11px;color:#6B9FFF;margin-bottom:2px">Free</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.3)">Discovery only · 5 creators visible</div>
+          </div>
+          <div style="font-family:'Clash Display',sans-serif;font-size:20px;font-weight:600;color:rgba(255,255,255,0.3)">£0</div>
+        </div>
+
+        <div onclick="sfPick(this,'starter')" style="padding:14px 16px;border:1px solid rgba(255,255,255,0.08);border-radius:8px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,0.02)">
+          <div>
+            <div style="font-family:'DM Mono',monospace;font-size:11px;color:#6B9FFF;margin-bottom:2px">Starter</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.3)">CPI & GFI · Full creator search</div>
+          </div>
+          <div style="font-family:'Clash Display',sans-serif;font-size:20px;font-weight:600;color:#6B9FFF">£199<span style="font-size:12px;font-weight:300">/mo</span></div>
+        </div>
+
+        <div onclick="sfPick(this,'studio')" style="padding:14px 16px;border:1px solid rgba(255,212,0,0.25);border-radius:8px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:rgba(255,212,0,0.04)">
+          <div>
+            <div style="font-family:'DM Mono',monospace;font-size:11px;color:#FFD400;margin-bottom:2px">Studio Pro <span style="font-size:8px;background:rgba(255,212,0,0.15);padding:2px 6px;border-radius:3px;letter-spacing:.06em">POPULAR</span></div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.3)">Full simulator · AI personas · Priority support</div>
+          </div>
+          <div style="font-family:'Clash Display',sans-serif;font-size:20px;font-weight:600;color:#FFD400">£699<span style="font-size:12px;font-weight:300">/mo</span></div>
+        </div>
+
+        <div onclick="sfPick(this,'elite')" style="padding:14px 16px;border:1px solid rgba(255,255,255,0.08);border-radius:8px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,0.02)">
+          <div>
+            <div style="font-family:'DM Mono',monospace;font-size:11px;color:#FF7A00;margin-bottom:2px">Publisher Elite</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.3)">Unlimited campaigns · White-label</div>
+          </div>
+          <div style="font-family:'Clash Display',sans-serif;font-size:20px;font-weight:600;color:#FF7A00">£1,999<span style="font-size:12px;font-weight:300">/mo</span></div>
+        </div>
+
+      </div>
+
+      <div id="sfE2" style="font-family:'DM Mono',monospace;font-size:10px;color:#ff5555;display:none;margin-bottom:12px">Please select a plan to continue.</div>
+      <button onclick="sfStep2()" style="width:100%;padding:15px;background:#0050FF;color:#fff;border:none;border-radius:8px;font-family:'DM Mono',monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer">Submit →</button>
+    </div>
+
+    <!-- STEP 3: Success -->
+    <div id="sfS3" style="display:none;text-align:center">
+      <div style="width:64px;height:64px;border-radius:50%;background:rgba(0,196,106,0.12);border:1px solid rgba(0,196,106,0.3);display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M6 14L11.5 19.5L22 9" stroke="#00C46A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div style="font-family:'Clash Display',sans-serif;font-size:32px;font-weight:600;margin-bottom:8px;letter-spacing:-.02em">You're in.</div>
+      <div id="sfSuccessMsg" style="font-size:14px;color:rgba(255,255,255,0.4);margin-bottom:28px;font-weight:300;line-height:1.6"></div>
+      <button onclick="window.open('preview.html','_blank');" style="width:100%;padding:15px;background:#00C46A;color:#fff;border:none;border-radius:8px;font-family:'DM Mono',monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;font-weight:700">Launch Simfluence →</button>
+      <div style="font-family:'DM Mono',monospace;font-size:10px;color:rgba(255,255,255,0.2);margin-top:14px;line-height:1.6">We'll be in touch at <span id="sfConfirmEmail" style="color:rgba(255,255,255,0.4)"></span></div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html
+</body>
+</html
+<!-- SIGNUP MODAL -->
+<div id="sfModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.88);z-index:9999;padding:20px">
+  <div style="background:#0A0A10;border:1px solid rgba(255,255,255,0.12);border-radius:16px;padding:40px;width:100%;max-width:420px;position:relative;margin:40px auto;">
+    <button onclick="var m=document.getElementById('sfModal');m.style.display='none';document.body.style.overflow=''" style="position:absolute;top:14px;right:14px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:rgba(255,255,255,0.5);cursor:pointer;padding:5px 10px;font-size:13px">✕</button>
+
+    <div style="font-family:'Clash Display',sans-serif;font-size:20px;font-weight:600;color:#FFD400;margin-bottom:2px">Sim<em style="font-style:italic;font-weight:300">fluence</em></div>
+    <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;color:rgba(255,255,255,0.2);margin-bottom:24px;text-transform:uppercase">Campaign intelligence platform</div>
+
+    <!-- Progress -->
+    <div id="sfDots" style="display:flex;gap:6px;margin-bottom:24px">
+      <div id="sfd1" style="height:5px;width:20px;border-radius:3px;background:#0050FF;transition:all .3s"></div>
+      <div id="sfd2" style="height:5px;width:6px;border-radius:3px;background:rgba(255,255,255,0.15);transition:all .3s"></div>
+      <div id="sfd3" style="height:5px;width:6px;border-radius:3px;background:rgba(255,255,255,0.15);transition:all .3s"></div>
+      <div id="sfd4" style="height:5px;width:6px;border-radius:3px;background:rgba(255,255,255,0.15);transition:all .3s"></div>
+    </div>
+
+    <!-- Step 1: Details -->
+    <div id="sfS1">
+      <div style="font-family:'Clash Display',sans-serif;font-size:22px;font-weight:600;margin-bottom:6px">Create your account</div>
+      <div style="font-size:14px;color:rgba(255,255,255,0.4);margin-bottom:22px;font-weight:300">Free for 14 days. No card required.</div>
+      <div style="margin-bottom:12px">
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:5px">Company / Brand</div>
+        <input id="sfCompany" type="text" placeholder="e.g. Ubisoft MENA" autocomplete="organization"
+          style="width:100%;padding:12px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#fff;font-size:14px;outline:none;box-sizing:border-box;font-family:'Satoshi',sans-serif">
+      </div>
+      <div style="margin-bottom:12px">
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:5px">Work email</div>
+        <input id="sfEmail" type="email" placeholder="you@company.com" autocomplete="email"
+          style="width:100%;padding:12px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#fff;font-size:14px;outline:none;box-sizing:border-box;font-family:'Satoshi',sans-serif">
+      </div>
+      <div style="margin-bottom:16px">
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:5px">Password</div>
+        
+      </div>
+      <div id="sfE1" style="font-family:'DM Mono',monospace;font-size:10px;color:#ff5555;display:none;margin-bottom:10px">Please complete all fields. Password must be 8+ characters.</div>
+      <button onclick="sfNext1()" style="width:100%;padding:14px;background:#0050FF;color:#fff;border:none;border-radius:8px;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer">Continue →</button>
+      <div style="text-align:center;font-family:'DM Mono',monospace;font-size:10px;color:rgba(255,255,255,0.2);margin-top:14px">Already have an account? <a href="app.html" style="color:rgba(100,180,255,0.8)">Sign in</a></div>
+    </div>
+
+    <!-- Step 2: Plan -->
+    <div id="sfS2" style="display:none">
+      <div style="font-family:'Clash Display',sans-serif;font-size:22px;font-weight:600;margin-bottom:6px">Choose your plan</div>
+      <div style="font-size:14px;color:rgba(255,255,255,0.4);margin-bottom:22px;font-weight:300">14-day free trial on any paid plan.</div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+        <div onclick="sfPickPlan(this,'free')" style="padding:12px 16px;border:1px solid rgba(255,255,255,0.08);border-radius:8px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:all .15s;background:rgba(255,255,255,0.02)">
+          <div><div style="font-family:'DM Mono',monospace;font-size:11px;color:#6B9FFF">Free</div><div style="font-size:11px;color:rgba(255,255,255,0.3);margin-top:2px">Discovery only · 5 creators</div></div>
+          <div style="font-size:18px;font-weight:700;color:rgba(255,255,255,0.4)">£0</div>
+        </div>
+        <div onclick="sfPickPlan(this,'starter')" style="padding:12px 16px;border:1px solid rgba(255,255,255,0.08);border-radius:8px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:all .15s;background:rgba(255,255,255,0.02)">
+          <div><div style="font-family:'DM Mono',monospace;font-size:11px;color:#6B9FFF">Starter</div><div style="font-size:11px;color:rgba(255,255,255,0.3);margin-top:2px">CPI & GFI · Full search</div></div>
+          <div style="font-size:18px;font-weight:700;color:#6B9FFF">£199<span style="font-size:11px;font-weight:300">/mo</span></div>
+        </div>
+        <div onclick="sfPickPlan(this,'studio')" style="padding:12px 16px;border:1px solid rgba(255,212,0,0.25);border-radius:8px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:all .15s;background:rgba(255,212,0,0.04)">
+          <div><div style="font-family:'DM Mono',monospace;font-size:11px;color:#FFD400">Studio Pro <span style="font-size:8px;background:rgba(255,212,0,0.12);padding:2px 5px;border-radius:3px">POPULAR</span></div><div style="font-size:11px;color:rgba(255,255,255,0.3);margin-top:2px">Full simulator · AI personas</div></div>
+          <div style="font-size:18px;font-weight:700;color:#FFD400">£699<span style="font-size:11px;font-weight:300">/mo</span></div>
+        </div>
+        <div onclick="sfPickPlan(this,'elite')" style="padding:12px 16px;border:1px solid rgba(255,255,255,0.08);border-radius:8px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:all .15s;background:rgba(255,255,255,0.02)">
+          <div><div style="font-family:'DM Mono',monospace;font-size:11px;color:#FF7A00">Publisher Elite</div><div style="font-size:11px;color:rgba(255,255,255,0.3);margin-top:2px">Unlimited · White-label</div></div>
+          <div style="font-size:18px;font-weight:700;color:#FF7A00">£1,999<span style="font-size:11px;font-weight:300">/mo</span></div>
+        </div>
+      </div>
+      <div id="sfE2" style="font-family:'DM Mono',monospace;font-size:10px;color:#ff5555;display:none;margin-bottom:10px">Please select a plan.</div>
+      <button onclick="sfNext2()" style="width:100%;padding:14px;background:#0050FF;color:#fff;border:none;border-radius:8px;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer">Continue →</button>
+    </div>
+
+    <!-- Step 3: Verify -->
+    <div id="sfS3" style="display:none">
+      <div style="font-family:'Clash Display',sans-serif;font-size:22px;font-weight:600;margin-bottom:6px">Check your inbox</div>
+      <div id="sfVerifyMsg" style="font-size:14px;color:rgba(255,255,255,0.4);margin-bottom:24px;font-weight:300;line-height:1.6">We sent a 6-digit code to your email. Enter it below.</div>
+      <div style="display:flex;gap:8px;justify-content:center;margin-bottom:16px">
+        <input type="tel" maxlength="1" id="vc1" class="sfvc" value="" autocomplete="off" inputmode="numeric" style="width:48px;height:56px;text-align:center;font-family:'Clash Display',sans-serif;font-size:26px;font-weight:600;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#fff;outline:none">
+        <input type="tel" maxlength="1" id="vc2" class="sfvc" value="" autocomplete="off" inputmode="numeric" style="width:48px;height:56px;text-align:center;font-family:'Clash Display',sans-serif;font-size:26px;font-weight:600;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#fff;outline:none">
+        <input type="tel" maxlength="1" id="vc3" class="sfvc" value="" autocomplete="off" inputmode="numeric" style="width:48px;height:56px;text-align:center;font-family:'Clash Display',sans-serif;font-size:26px;font-weight:600;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#fff;outline:none">
+        <input type="tel" maxlength="1" id="vc4" class="sfvc" value="" autocomplete="off" inputmode="numeric" style="width:48px;height:56px;text-align:center;font-family:'Clash Display',sans-serif;font-size:26px;font-weight:600;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#fff;outline:none">
+        <input type="tel" maxlength="1" id="vc5" class="sfvc" value="" autocomplete="off" inputmode="numeric" style="width:48px;height:56px;text-align:center;font-family:'Clash Display',sans-serif;font-size:26px;font-weight:600;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#fff;outline:none">
+        <input type="tel" maxlength="1" id="vc6" class="sfvc" value="" autocomplete="off" inputmode="numeric" style="width:48px;height:56px;text-align:center;font-family:'Clash Display',sans-serif;font-size:26px;font-weight:600;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#fff;outline:none">
+      </div>
+      <div id="sfE3" style="font-family:'DM Mono',monospace;font-size:10px;color:#ff5555;display:none;margin-bottom:10px">Incorrect code. Try again, or use 123456 to test.</div>
+      <button id="sfVBtn" onclick="sfNext3()" disabled style="width:100%;padding:14px;background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.3);border:none;border-radius:8px;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;cursor:not-allowed">Verify email →</button>
+      <div style="text-align:center;font-family:'DM Mono',monospace;font-size:10px;color:rgba(255,255,255,0.2);margin-top:14px"><a href="#" onclick="sfResend();return false" style="color:rgba(100,180,255,0.8)">Resend code</a></div>
+    </div>
+
+    <!-- Step 4: Success -->
+    
+>
