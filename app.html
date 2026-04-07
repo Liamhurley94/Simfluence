@@ -2352,6 +2352,12 @@ function tierBadgeHtml(c) {
 }
 
 // ── RENDER CREATOR GRID ───────────────────────────────────────────────
+function cpiScoreColor(cpi) {
+  if (cpi >= 80) return '#00D47A';
+  if (cpi >= 40) return '#FF9500';
+  return '#FF3355';
+}
+
 function renderCreatorGrid() {
   const sorted = sortMode==='gfi' ? [...CREATORS].sort((a,b)=>computeGFI(b)-computeGFI(a))
                : sortMode==='subs' ? [...CREATORS].sort((a,b)=>parseSubs(b.subs)-parseSubs(a.subs))
@@ -3423,13 +3429,6 @@ function checkGate() {
     if (sessionStorage.getItem('sf_auth') === '1') {
       var g = document.getElementById('sfGate')
 </body>
-</htmlfunction cpiScoreColor(cpi) {
-  // Green 80+, Orange 40-79, Red <40
-  if (cpi >= 80) return '#00D47A';
-  if (cpi >= 40) return '#FF9500';
-  return '#FF3355';
-}
-
->
+</html>
 </body>
 </html>
