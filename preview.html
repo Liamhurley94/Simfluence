@@ -83,7 +83,7 @@ footer{border-top:1px solid var(--border);padding:24px 40px;display:flex;justify
   <div class="nav-badge">Preview · 5 Creators · 1 Genre</div>
   <div class="nav-right">
     <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn" title="Toggle mode">🌙</button>
-    <a href="mailto:liam@simfluence.ai?subject=Upgrade%20enquiry" class="nav-upgrade">Unlock full platform →</a>
+    <a href="/cdn-cgi/l/email-protection#274b4e464a67544e4a414b524249444209464e185452454d4244531a72574055464342021517424956524e555e" class="nav-upgrade">Unlock full platform →</a>
   </div>
 </nav>
 
@@ -96,7 +96,7 @@ footer{border-top:1px solid var(--border);padding:24px 40px;display:flex;justify
     <div class="upgrade-box-label">Full access</div>
     <div class="upgrade-box-headline">Unlock everything</div>
     <div class="upgrade-box-sub">All creators. Full simulator.<br>AI personas. Live forecasts.</div>
-    <a href="mailto:liam@simfluence.ai?subject=Upgrade%20to%20full%20platform" class="upgrade-box-btn">Get full access →</a>
+    <a href="/cdn-cgi/l/email-protection#573b3e363a17243e3a313b223239343279363e682422353d3234236a02273025363332726567233872656731223b3b726567273b36233138253a" class="upgrade-box-btn">Get full access →</a>
   </div>
 </div>
 
@@ -149,7 +149,7 @@ footer{border-top:1px solid var(--border);padding:24px 40px;display:flex;justify
     <div class="lock-icon">🔒</div>
     <div class="lock-title">AI Persona Matching</div>
     <div class="lock-sub">See exactly which audience archetypes your creators carry — and how to write CTAs that convert each one. Unlock with any paid plan.</div>
-    <a href="mailto:liam@simfluence.ai?subject=Upgrade%20enquiry" class="lock-btn">Unlock Persona Matching →</a>
+    <a href="/cdn-cgi/l/email-protection#a5c9ccc4c8e5d6ccc8c3c9d0c0cbc6c08bc4cc9ad6d0c7cfc0c6d198f0d5c2d7c4c1c0809795c0cbd4d0ccd7dc" class="lock-btn">Unlock Persona Matching →</a>
   </div>
 
   <div class="section-title">Full Creator Database</div>
@@ -157,7 +157,7 @@ footer{border-top:1px solid var(--border);padding:24px 40px;display:flex;justify
     <div class="lock-icon">🔒</div>
     <div class="lock-title">167+ Creators · 18 Genres · 12 Platforms</div>
     <div class="lock-sub">The full database includes creators across Gaming, Tech, Finance, Beauty, Automotive, Travel and 12 more genres — all scored, ranked and filterable in real time.</div>
-    <a href="mailto:liam@simfluence.ai?subject=Full%20creator%20database" class="lock-btn">Unlock Full Database →</a>
+    <a href="/cdn-cgi/l/email-protection#127e7b737f52617b7f747e67777c71773c737b2d616770787771662f54677e7e37202271607773667d603720227673667370736177" class="lock-btn">Unlock Full Database →</a>
   </div>
 
   <div class="section-title">Custom Simulation</div>
@@ -165,19 +165,19 @@ footer{border-top:1px solid var(--border);padding:24px 40px;display:flex;justify
     <div class="lock-icon">🔒</div>
     <div class="lock-title">Run your actual brief</div>
     <div class="lock-sub">Input your real budget, genre, format and creators. Get a full P10/P50/P90 forecast for your specific campaign — not a fixed example.</div>
-    <a href="mailto:liam@simfluence.ai?subject=Custom%20simulation%20access" class="lock-btn">Unlock the Simulator →</a>
+    <a href="/cdn-cgi/l/email-protection#c8a4a1a9a588bba1a5aea4bdada6abade6a9a1f7bbbdaaa2adabbcf58bbdbbbca7a5edfaf8bba1a5bda4a9bca1a7a6edfaf8a9ababadbbbb" class="lock-btn">Unlock the Simulator →</a>
   </div>
 </div>
 
 <footer>
   <span class="footer-copy">© 2025 Simfluence Ltd · Dubai, UAE · Preview mode</span>
   <div style="display:flex;gap:24px">
-    <a href="mailto:liam@simfluence.ai" class="footer-link">Contact</a>
+    <a href="/cdn-cgi/l/email-protection#721e1b131f32011b1f141e07171c11175c131b" class="footer-link">Contact</a>
     <a href="index.html" class="footer-link">Homepage</a>
   </div>
 </footer>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 var CREATORS=[
   {name:'General Sam',handle:'@GeneralSam',platform:'YouTube',subs:'1.5M',avgViews:'720K',eng:'15.0%',cpi:88,gfi:89,color:'#4CAF50'},
   {name:'Legendary Drops',handle:'@LegendaryDropss',platform:'YouTube',subs:'459K',avgViews:'320K',eng:'15.0%',cpi:96,gfi:89,color:'#9C27B0'},
@@ -197,19 +197,6 @@ document.getElementById('creatorGrid').innerHTML=CREATORS.map(function(c){
       '<div class="cc-score"><div class="cc-score-label">GFI Score</div><div class="cc-score-val" style="color:'+gfiColor(c.gfi)+'">'+c.gfi+'%</div></div>'+
     '</div>'+
     '<div class="cc-bar"><div class="cc-bar-fill" style="width:'+c.cpi+'%;background:linear-gradient(90deg,#001060,#0050FF)"></div></div>'+
-    '<div class="cc-meta">'+c.subs+' subscribers · '+c.avgViews+' avg views · '+c.eng+' eng</div>'+
-  '</div>';
-}).join('');
-
-function toggleTheme(){
-  var isLight=document.body.classList.toggle('light');
-  var btn=document.getElementById('themeBtn');
-  if(btn) btn.textContent=isLight?'🌑':'🌙';
-  try{localStorage.setItem('sf_theme',isLight?'light':'dark');}catch(e){}
-}
-(function(){
-  try{if(localStorage.getItem('sf_theme')==='light'){document.body.classList.add('light');var b=document.getElementById('themeBtn');if(b)b.textContent='🌑';}}catch(e){}
-})();
-</script>
+    '<div class="cc-meta">'+c.subs+' subscribers · '+c.avgViews+' avg views
 </body>
 </html>
