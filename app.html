@@ -1558,6 +1558,88 @@
   
   
 
+  
+  /* ── CAMPAIGN BRIEF PANEL ─────────────────────────────────────── */
+  #briefPanel {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--bg2);
+    border-top: 2px solid #0050FF;
+    z-index: 300;
+    transform: translateY(100%);
+    transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
+    box-shadow: 0 -8px 32px rgba(0,0,80,0.4);
+  }
+  #briefPanel.open { transform: translateY(0); }
+  .brief-inner {
+    max-width: 1400px; margin: 0 auto;
+    padding: 20px 40px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 24px;
+    align-items: center;
+  }
+  .brief-creators { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .brief-creator-chip {
+    display: flex; align-items: center; gap: 7px;
+    padding: 6px 12px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 12px; font-weight: 600;
+    cursor: pointer; transition: all .15s;
+  }
+  .brief-creator-chip:hover { border-color: rgba(230,0,35,0.4); }
+  .brief-creator-chip .chip-x { color: #FF3355; font-size: 10px; font-weight: 700; }
+  .brief-stats {
+    display: flex; gap: 24px; align-items: center;
+    border-left: 1px solid var(--border);
+    padding-left: 24px; margin-left: 8px;
+  }
+  .brief-stat { text-align: center; }
+  .brief-stat-val {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 22px; font-weight: 700; color: #FFD400;
+  }
+  .brief-stat-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px; letter-spacing: .08em;
+    text-transform: uppercase; color: var(--text-muted);
+    margin-top: 2px;
+  }
+  .brief-actions { display: flex; gap: 10px; align-items: center; }
+  .brief-run-btn {
+    padding: 13px 28px;
+    background: #00C46A; color: #fff;
+    border: none; border-radius: 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px; letter-spacing: .08em;
+    text-transform: uppercase; cursor: pointer;
+    font-weight: 700; white-space: nowrap;
+    transition: background .2s;
+  }
+  .brief-run-btn:hover { background: #00A858; }
+  .brief-clear-btn {
+    padding: 10px 16px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    border-radius: 6px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; letter-spacing: .06em;
+    text-transform: uppercase; cursor: pointer;
+  }
+  .brief-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px; letter-spacing: .12em;
+    text-transform: uppercase; color: #0050FF;
+    margin-bottom: 10px;
+  }
+  .brief-budget-display {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 18px; font-weight: 700; color: var(--text);
+  }
+
   </style>
 </head>
 <body>
@@ -2260,6 +2342,272 @@ const CREATORS = [
   { id:165, name:'Marex', handle:'@Marex', platform:'Twitch', allPlatforms:['Twitch'], subs:'149K', avgViews:'1K', eng:'0.7%', genre:'Gaming & Esports', cpi:60, gfi:96, color:'#607D8B', verifiedDeals:2, sponsorHistory:['Keen Games','Enshrouded'], bio:'Sandbox (Minecraft), Roguelike (Darkest Dungeon), Action (Fu' },
   { id:166, name:'MathieuSommetLive', handle:'@MathieuSommetLive', platform:'Twitch', allPlatforms:['Twitch'], subs:'54K', avgViews:'436', eng:'0.8%', genre:'Gaming & Esports', cpi:58, gfi:75, color:'#CDDC39', verifiedDeals:2, sponsorHistory:['Keen Games','Enshrouded'], bio:'Horror (Daymare: 1998, Scorn, Whispers of the Eyeless, Hellm' },
   { id:167, name:'At0mium', handle:'@At0mium', platform:'Twitch', allPlatforms:['Twitch'], subs:'179K', avgViews:'996', eng:'0.6%', genre:'Gaming & Esports', cpi:60, gfi:83, color:'#FF4081', verifiedDeals:2, sponsorHistory:['Keen Games','Enshrouded'], bio:'Simulation (About Fishing), Fighting (Honura no X), RPG (Cri' },
+  { id:168, name:'Dreamy Toy ASMR', handle:'@zhengshang-s1t', platform:'YouTube', allPlatforms:['YouTube'], subs:'8K', avgViews:'14K', eng:'15.0%', genre:'Kids & Family / Toys', cpi:92, gfi:92, color:'#FF6B35', verifiedDeals:0, sponsorHistory:['Unboxing'], bio:'#pawpatrol #asmr #unboxing' },
+  { id:169, name:'Sploinky', handle:'@Sploinkyy', platform:'YouTube', allPlatforms:['YouTube'], subs:'62K', avgViews:'943K', eng:'15.0%', genre:'Unboxing', cpi:94, gfi:89, color:'#7B2FBE', verifiedDeals:0, sponsorHistory:['Unboxing'], bio:'#asmr #satisfying #satisfyingvideo' },
+  { id:170, name:'HopeScope', handle:'@hopescope', platform:'YouTube', allPlatforms:['YouTube'], subs:'8.3M', avgViews:'3.6M', eng:'15.0%', genre:'Lifestyle & Vlogs', cpi:83, gfi:74, color:'#00C49F', verifiedDeals:0, sponsorHistory:['Unboxing'], bio:'YouTube creator' },
+  { id:171, name:'SarahGrace', handle:'@TheSarahGrace', platform:'YouTube', allPlatforms:['YouTube'], subs:'3.6M', avgViews:'2.3M', eng:'15.0%', genre:'Tech & Gadgets', cpi:95, gfi:85, color:'#FF4E8C', verifiedDeals:0, sponsorHistory:['Unboxing'], bio:'YouTube creator' },
+  { id:172, name:'audree ham', handle:'@hamaudree', platform:'YouTube', allPlatforms:['YouTube'], subs:'48K', avgViews:'11K', eng:'15.0%', genre:'Kids & Family / Toys', cpi:85, gfi:92, color:'#3D9BE9', verifiedDeals:0, sponsorHistory:['Unboxing'], bio:'#straykids #skz #stay' },
+  { id:173, name:'Unbox Therapy', handle:'@unboxtherapy', platform:'YouTube', allPlatforms:['YouTube'], subs:'25.2M', avgViews:'1.7M', eng:'6.7%', genre:'Unboxing', cpi:70, gfi:89, color:'#F7C325', verifiedDeals:0, sponsorHistory:['Unboxing'], bio:'#MetaRayBan' },
+  { id:174, name:'Anna Altamirano', handle:'@annaaaltamirano', platform:'YouTube', allPlatforms:['YouTube'], subs:'1.6M', avgViews:'507K', eng:'15.0%', genre:'Unboxing', cpi:88, gfi:89, color:'#00B4D8', verifiedDeals:0, sponsorHistory:['Unboxing'], bio:'#glitterdumpling #nanotape #fidgettoys' },
+  { id:175, name:'Disney Unboxing', handle:'@DisneyUnboxing', platform:'YouTube', allPlatforms:['YouTube'], subs:'7K', avgViews:'262', eng:'3.8%', genre:'Kids & Family / Toys', cpi:65, gfi:92, color:'#E63946', verifiedDeals:0, sponsorHistory:['Unboxing'], bio:'#disney #frozen #elsa' },
+
+  { id:168, name:'Dreamy Toy ASMR', handle:'@zhengshang-s1t', platform:'YouTube', allPlatforms:['YouTube'], subs:'8K', avgViews:'14K', eng:'2.4%', genre:'Unboxing', cpi:92, gfi:96, color:'#FF6B9D', verifiedDeals:0, sponsorHistory:[], bio:'ASMR 67+ Mins Satisfying Unboxing Ultimate PAW PATROL Toy Eg' },
+  { id:169, name:'Sploinky', handle:'@Sploinkyy', platform:'YouTube', allPlatforms:['YouTube'], subs:'62K', avgViews:'943K', eng:'0.9%', genre:'Unboxing', cpi:94, gfi:96, color:'#C77DFF', verifiedDeals:0, sponsorHistory:[], bio:'NEW! FULL CASE Mini Brands Fill The Mini Fridge ASMR Unboxin' },
+  { id:170, name:'HopeScope', handle:'@hopescope', platform:'YouTube', allPlatforms:['YouTube'], subs:'8.3M', avgViews:'10.3M', eng:'1.2%', genre:'Unboxing', cpi:90, gfi:83, color:'#7B2FBE', verifiedDeals:0, sponsorHistory:[], bio:'I Bought EVERY POPMART Mystery Box' },
+  { id:171, name:'SarahGrace', handle:'@TheSarahGrace', platform:'YouTube', allPlatforms:['YouTube'], subs:'3.6M', avgViews:'2.3M', eng:'1.1%', genre:'Unboxing', cpi:95, gfi:75, color:'#00B4D8', verifiedDeals:0, sponsorHistory:[], bio:'I Bought 200 Lost Mail Packages for CHEAP' },
+  { id:172, name:'audree ham', handle:'@hamaudree', platform:'YouTube', allPlatforms:['YouTube'], subs:'48K', avgViews:'11K', eng:'11.5%', genre:'Unboxing', cpi:85, gfi:83, color:'#48CAE4', verifiedDeals:0, sponsorHistory:[], bio:'REAL STAYS CAN GET THESE RIGHT… (DO IT FULL SET UNBOXING)' },
+  { id:173, name:'Unbox Therapy', handle:'@unboxtherapy', platform:'YouTube', allPlatforms:['YouTube'], subs:'25.2M', avgViews:'1.7M', eng:'1.1%', genre:'Unboxing', cpi:70, gfi:83, color:'#F72585', verifiedDeals:0, sponsorHistory:[], bio:'Unboxing Meta Ray-Ban Display Glasses' },
+  { id:174, name:'Anna Altamirano', handle:'@annaaaltamirano', platform:'YouTube', allPlatforms:['YouTube'], subs:'1.6M', avgViews:'507K', eng:'2.8%', genre:'Unboxing', cpi:88, gfi:89, color:'#4361EE', verifiedDeals:0, sponsorHistory:[], bio:'Unboxing the Worlds BIGGEST Viral Mystery Dumplings!' },
+  { id:175, name:'Disney Unboxing', handle:'@DisneyUnboxing', platform:'YouTube', allPlatforms:['YouTube'], subs:'7K', avgViews:'262', eng:'15.0%', genre:'Unboxing', cpi:65, gfi:89, color:'#4CC9F0', verifiedDeals:0, sponsorHistory:[], bio:'Disney Princess Toys Collection Unboxing | Disney Frozen Car' },
+
+  { id:176, name:'Luisito Comunica', handle:'@luisitocomunica', platform:'YouTube', allPlatforms:['YouTube'], subs:'45.7M', avgViews:'6.0M', eng:'1.64%', genre:'Travel & Adventure', cpi:66, gfi:89, color:'#FF6B6B', verifiedDeals:0, sponsorHistory:[], bio:'Travel Destinations' },
+  { id:177, name:'Brent Rivera', handle:'@brentrivera', platform:'YouTube', allPlatforms:['YouTube'], subs:'42.0M', avgViews:'2.4M', eng:'2.75%', genre:'Travel & Adventure', cpi:74, gfi:75, color:'#4ECDC4', verifiedDeals:0, sponsorHistory:[], bio:'Comedy & Sketches' },
+  { id:178, name:'TRANS7 OFFICIAL', handle:'@trans7official', platform:'YouTube', allPlatforms:['YouTube'], subs:'27.8M', avgViews:'636', eng:'3.1%', genre:'Travel & Adventure', cpi:80, gfi:89, color:'#45B7D1', verifiedDeals:0, sponsorHistory:[], bio:'Adventure Travel' },
+  { id:179, name:'National Geographic', handle:'@natgeo', platform:'YouTube', allPlatforms:['YouTube'], subs:'25.9M', avgViews:'16K', eng:'2.12%', genre:'Travel & Adventure', cpi:74, gfi:89, color:'#96CEB4', verifiedDeals:0, sponsorHistory:[], bio:'Travel Destinations' },
+  { id:180, name:'Noor Stars', handle:'@noorstars', platform:'YouTube', allPlatforms:['YouTube'], subs:'22.2M', avgViews:'2.1M', eng:'3.86%', genre:'Travel & Adventure', cpi:80, gfi:89, color:'#FFEAA7', verifiedDeals:0, sponsorHistory:[], bio:'Train Travel' },
+  { id:181, name:'Ivana Alawi', handle:'@ivanaalawi', platform:'YouTube', allPlatforms:['YouTube'], subs:'20.4M', avgViews:'5.4M', eng:'2.97%', genre:'Travel & Adventure', cpi:74, gfi:89, color:'#DDA0DD', verifiedDeals:0, sponsorHistory:[], bio:'Travel Destinations' },
+  { id:182, name:'Joe HaTTab', handle:'@joehattab', platform:'YouTube', allPlatforms:['YouTube'], subs:'20.1M', avgViews:'6.6M', eng:'2.03%', genre:'Travel & Adventure', cpi:74, gfi:89, color:'#98D8C8', verifiedDeals:0, sponsorHistory:[], bio:'Travel Destinations' },
+  { id:183, name:'TheGrefg', handle:'@thegrefg', platform:'YouTube', allPlatforms:['YouTube'], subs:'19.7M', avgViews:'233K', eng:'5.21%', genre:'Travel & Adventure', cpi:90, gfi:89, color:'#F7DC6F', verifiedDeals:0, sponsorHistory:[], bio:'Travel Destinations' },
+  { id:184, name:'Ruhi Cenet Documentaries', handle:'@ruhicenetdocs', platform:'YouTube', allPlatforms:['YouTube'], subs:'18.0M', avgViews:'90.9M', eng:'1.95%', genre:'Travel & Adventure', cpi:68, gfi:89, color:'#BB8FCE', verifiedDeals:0, sponsorHistory:[], bio:'Adventure Travel' },
+  { id:185, name:'YoSoyPlex', handle:'@yosoyplex', platform:'YouTube', allPlatforms:['YouTube'], subs:'14.8M', avgViews:'2.2M', eng:'4.24%', genre:'Travel & Adventure', cpi:86, gfi:89, color:'#85C1E9', verifiedDeals:0, sponsorHistory:[], bio:'Travel Destinations' },
+  { id:186, name:'Lindsey Stirling', handle:'@LindseyStirling', platform:'YouTube', allPlatforms:['YouTube'], subs:'14.3M', avgViews:'65K', eng:'4.59%', genre:'Travel & Adventure', cpi:86, gfi:72, color:'#F1948A', verifiedDeals:0, sponsorHistory:[], bio:'Music Performances' },
+
+  { id:187, name:'MrBeast', handle:'@mrbeast', platform:'YouTube', allPlatforms:['YouTube'], subs:'466.0M', avgViews:'126.2M', eng:'2.1%', genre:'Entertainment & Comedy', cpi:72, gfi:80, color:'#FF6B6B', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Pranks & Challenges (0.95)' },
+  { id:188, name:'T-Series', handle:'@tseries', platform:'YouTube', allPlatforms:['YouTube'], subs:'309.0M', avgViews:'287K', eng:'4.0%', genre:'Music', cpi:78, gfi:88, color:'#4ECDC4', verifiedDeals:0, sponsorHistory:[], bio:'Music - Indian Music (0.95)' },
+  { id:189, name:'Cocomelon - Nursery Rhymes', handle:'@cocomelon', platform:'YouTube', allPlatforms:['YouTube'], subs:'200.0M', avgViews:'1.8M', eng:'0.6%', genre:'Kids & Family / Toys', cpi:54, gfi:82, color:'#45B7D1', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Childrens Entertainment (0.95)' },
+  { id:190, name:'SET India', handle:'@setindia', platform:'YouTube', allPlatforms:['YouTube'], subs:'188.0M', avgViews:'2K', eng:'1.6%', genre:'Music', cpi:64, gfi:85, color:'#96CEB4', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Music Performances (0.95)' },
+  { id:191, name:'Vlad and Niki', handle:'@vladandniki', platform:'YouTube', allPlatforms:['YouTube'], subs:'149.0M', avgViews:'8.0M', eng:'0.1%', genre:'Kids & Family / Toys', cpi:54, gfi:82, color:'#FFEAA7', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Childrens Entertainment (0.95)' },
+  { id:192, name:'✿ Kids Diana Show', handle:'@kidsdianashow', platform:'YouTube', allPlatforms:['YouTube'], subs:'138.0M', avgViews:'809K', eng:'0.4%', genre:'Kids & Family / Toys', cpi:54, gfi:82, color:'#DDA0DD', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Childrens Entertainment (0.95)' },
+  { id:193, name:'Stokes Twins', handle:'@stokestwins', platform:'YouTube', allPlatforms:['YouTube'], subs:'137.0M', avgViews:'38.5M', eng:'1.3%', genre:'Entertainment & Comedy', cpi:64, gfi:80, color:'#98D8C8', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Pranks & Challenges (0.95)' },
+  { id:194, name:'Like Nastya', handle:'@likenastyaofficial', platform:'YouTube', allPlatforms:['YouTube'], subs:'131.0M', avgViews:'5.5M', eng:'0.3%', genre:'Kids & Family / Toys', cpi:54, gfi:82, color:'#F7DC6F', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Childrens Entertainment (0.95)' },
+  { id:195, name:'김프로KIMPRO', handle:'@kimpro828', platform:'YouTube', allPlatforms:['YouTube'], subs:'130.0M', avgViews:'7.8M', eng:'0.7%', genre:'Kids & Family / Toys', cpi:54, gfi:82, color:'#BB8FCE', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Childrens Entertainment (0.95)' },
+  { id:196, name:'Zee Music Company', handle:'@zeemusiccompany', platform:'YouTube', allPlatforms:['YouTube'], subs:'122.0M', avgViews:'266K', eng:'0.2%', genre:'Music', cpi:54, gfi:85, color:'#85C1E9', verifiedDeals:0, sponsorHistory:[], bio:'Music - Indian Music (0.95)' },
+  { id:197, name:'WWE', handle:'@wwe', platform:'YouTube', allPlatforms:['YouTube'], subs:'112.0M', avgViews:'97K', eng:'3.0%', genre:'Entertainment & Comedy', cpi:78, gfi:83, color:'#F1948A', verifiedDeals:0, sponsorHistory:[], bio:'Sports - Combat Sports (0.95)' },
+  { id:198, name:'PewDiePie', handle:'@pewdiepie', platform:'YouTube', allPlatforms:['YouTube'], subs:'110.0M', avgViews:'3.3M', eng:'6.0%', genre:'Gaming & Esports', cpi:82, gfi:95, color:'#82E0AA', verifiedDeals:0, sponsorHistory:[], bio:'Video Essays - Personal Narratives and Autobiographical Essa' },
+  { id:199, name:'Goldmines', handle:'@goldminestelefilms', platform:'YouTube', allPlatforms:['YouTube'], subs:'109.0M', avgViews:'21K', eng:'1.1%', genre:'Entertainment & Comedy', cpi:64, gfi:80, color:'#F0B27A', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Comedy & Sketches (0.85)' },
+  { id:200, name:'Sony SAB', handle:'@sonysab', platform:'YouTube', allPlatforms:['YouTube'], subs:'105.0M', avgViews:'27K', eng:'1.7%', genre:'Entertainment & Comedy', cpi:64, gfi:80, color:'#AED6F1', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Comedy & Sketches (0.95)' },
+  { id:201, name:'Alejo Igoa', handle:'@alejoigoa', platform:'YouTube', allPlatforms:['YouTube'], subs:'105.0M', avgViews:'23.6M', eng:'2.4%', genre:'Gaming & Esports', cpi:72, gfi:89, color:'#D2B4DE', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Pranks & Challenges (0.95)' },
+  { id:202, name:'BLACKPINK', handle:'@blackpink', platform:'YouTube', allPlatforms:['YouTube'], subs:'99.8M', avgViews:'11.5M', eng:'3.7%', genre:'Music', cpi:81, gfi:88, color:'#A9DFBF', verifiedDeals:0, sponsorHistory:[], bio:'Music - K-Pop (0.95)' },
+  { id:203, name:'Alans Universe', handle:'@alanchikinchow', platform:'YouTube', allPlatforms:['YouTube'], subs:'99.4M', avgViews:'4.0M', eng:'1.7%', genre:'Entertainment & Comedy', cpi:67, gfi:80, color:'#FAD7A0', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Pranks & Challenges (0.85)' },
+  { id:204, name:'ChuChu TV Nursery Rhymes & Kids Songs', handle:'@chuchutv', platform:'YouTube', allPlatforms:['YouTube'], subs:'98.1M', avgViews:'580K', eng:'0.6%', genre:'Kids & Family / Toys', cpi:57, gfi:82, color:'#A3E4D7', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Childrens Entertainment (0.95)' },
+  { id:205, name:'Zee TV', handle:'@zeetv', platform:'YouTube', allPlatforms:['YouTube'], subs:'97.0M', avgViews:'5K', eng:'1.5%', genre:'Entertainment & Comedy', cpi:67, gfi:80, color:'#D7BDE2', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - TV & Web Series (0.95)' },
+  { id:206, name:'A4', handle:'@a4a4a4a4', platform:'YouTube', allPlatforms:['YouTube'], subs:'92.4M', avgViews:'49.9M', eng:'2.2%', genre:'Kids & Family / Toys', cpi:75, gfi:82, color:'#A9CCE3', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Pranks & Challenges (0.95)' },
+  { id:207, name:'Topper Guild', handle:'@topperguild', platform:'YouTube', allPlatforms:['YouTube'], subs:'84.4M', avgViews:'11.2M', eng:'2.2%', genre:'Entertainment & Comedy', cpi:75, gfi:80, color:'#FF6B6B', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Pranks & Challenges (0.95)' },
+  { id:208, name:'Baby Shark - Pinkfong Kids’ Songs & Stories', handle:'@pinkfong', platform:'YouTube', allPlatforms:['YouTube'], subs:'84.2M', avgViews:'399K', eng:'0.3%', genre:'Kids & Family / Toys', cpi:57, gfi:82, color:'#4ECDC4', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Childrens Entertainment (0.95)' },
+  { id:209, name:'BANGTANTV', handle:'@bts', platform:'YouTube', allPlatforms:['YouTube'], subs:'82.2M', avgViews:'830K', eng:'15.0%', genre:'Music', cpi:89, gfi:91, color:'#45B7D1', verifiedDeals:0, sponsorHistory:[], bio:'Music - K-Pop (0.95)' },
+  { id:210, name:'Toys and Colors', handle:'@toysandcolors', platform:'YouTube', allPlatforms:['YouTube'], subs:'82.1M', avgViews:'1.3M', eng:'0.5%', genre:'Kids & Family / Toys', cpi:57, gfi:82, color:'#96CEB4', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Childrens Entertainment (0.95)' },
+  { id:211, name:'Colors TV', handle:'@colorstv', platform:'YouTube', allPlatforms:['YouTube'], subs:'81.8M', avgViews:'338', eng:'2.7%', genre:'Entertainment & Comedy', cpi:75, gfi:80, color:'#FFEAA7', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Comedy & Sketches (0.95)' },
+  { id:212, name:'KL BRO Biju Rithvik', handle:'@klbrobijurithvik1', platform:'YouTube', allPlatforms:['YouTube'], subs:'81.4M', avgViews:'3.4M', eng:'1.4%', genre:'Entertainment & Comedy', cpi:67, gfi:80, color:'#DDA0DD', verifiedDeals:0, sponsorHistory:[], bio:'Relationships & Family - Family Vlogs & Lifestyle (0.95)' },
+  { id:213, name:'T-Series Bhakti Sagar', handle:'@tseriesbhaktisagar', platform:'YouTube', allPlatforms:['YouTube'], subs:'81.4M', avgViews:'26K', eng:'1.9%', genre:'Music', cpi:67, gfi:85, color:'#98D8C8', verifiedDeals:0, sponsorHistory:[], bio:'Music - Indian Music (0.95)' },
+  { id:214, name:'ZAMZAM BROTHERS OFFICIAL', handle:'@zamzam_brotherss_official', platform:'YouTube', allPlatforms:['YouTube'], subs:'81.0M', avgViews:'71K', eng:'2.7%', genre:'Entertainment & Comedy', cpi:75, gfi:80, color:'#F7DC6F', verifiedDeals:0, sponsorHistory:[], bio:'Business & Startups - Startups & Entrepreneurship (0.85)' },
+  { id:215, name:'5-Minute Crafts', handle:'@5minutecraftsyoutube', platform:'YouTube', allPlatforms:['YouTube'], subs:'80.8M', avgViews:'64K', eng:'0.4%', genre:'Lifestyle & Vlogs', cpi:57, gfi:78, color:'#BB8FCE', verifiedDeals:0, sponsorHistory:[], bio:'Home & DIY - DIY Crafts & Projects (0.95)' },
+  { id:216, name:'Tips Official', handle:'@tipsofficial', platform:'YouTube', allPlatforms:['YouTube'], subs:'80.7M', avgViews:'49K', eng:'0.7%', genre:'Music', cpi:57, gfi:85, color:'#85C1E9', verifiedDeals:0, sponsorHistory:[], bio:'Music - Indian Music (0.95)' },
+  { id:217, name:'HYBE LABELS', handle:'@hybelabels', platform:'YouTube', allPlatforms:['YouTube'], subs:'79.5M', avgViews:'1.8M', eng:'3.8%', genre:'Music', cpi:81, gfi:88, color:'#F1948A', verifiedDeals:0, sponsorHistory:[], bio:'Music - K-Pop (0.95)' },
+  { id:218, name:'UR · Cristiano', handle:'@cristiano', platform:'YouTube', allPlatforms:['YouTube'], subs:'78.1M', avgViews:'2.2M', eng:'6.5%', genre:'Entertainment & Comedy', cpi:85, gfi:86, color:'#82E0AA', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Vlogs & Daily Life (0.75)' },
+  { id:219, name:'Justin Bieber', handle:'@justinbieber', platform:'YouTube', allPlatforms:['YouTube'], subs:'77.0M', avgViews:'3.7M', eng:'2.0%', genre:'Music', cpi:75, gfi:85, color:'#F0B27A', verifiedDeals:0, sponsorHistory:[], bio:'Music - Pop Music (0.95)' },
+  { id:220, name:'Aaj Tak', handle:'@aajtak', platform:'YouTube', allPlatforms:['YouTube'], subs:'74.6M', avgViews:'8K', eng:'0.8%', genre:'Entertainment & Comedy', cpi:57, gfi:80, color:'#AED6F1', verifiedDeals:0, sponsorHistory:[], bio:'News & Politics - Asian Politics (0.95)' },
+  { id:221, name:'Shemaroo Filmi Gaane', handle:'@filmigaane', platform:'YouTube', allPlatforms:['YouTube'], subs:'74.2M', avgViews:'23K', eng:'1.0%', genre:'Music', cpi:67, gfi:85, color:'#D2B4DE', verifiedDeals:0, sponsorHistory:[], bio:'Music - Indian Music (0.95)' },
+  { id:222, name:'ISSEI / いっせい', handle:'@issei0806', platform:'YouTube', allPlatforms:['YouTube'], subs:'72.8M', avgViews:'4.2M', eng:'1.7%', genre:'Entertainment & Comedy', cpi:67, gfi:80, color:'#A9DFBF', verifiedDeals:0, sponsorHistory:[], bio:'Relationships & Family - Family Vlogs & Lifestyle (0.75)' },
+  { id:223, name:'Mark Rober', handle:'@markrober', platform:'YouTube', allPlatforms:['YouTube'], subs:'72.8M', avgViews:'44.0M', eng:'2.4%', genre:'Education & Self-Development', cpi:75, gfi:85, color:'#FAD7A0', verifiedDeals:0, sponsorHistory:[], bio:'Education - Educational & Documentary (0.95)' },
+  { id:224, name:'Fede Vigevani', handle:'@fedevigevani', platform:'YouTube', allPlatforms:['YouTube'], subs:'72.3M', avgViews:'6.8M', eng:'4.5%', genre:'Entertainment & Comedy', cpi:81, gfi:83, color:'#A3E4D7', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Pranks & Challenges (0.85)' },
+  { id:225, name:'Infobells - Hindi', handle:'@infobellshindirhymes', platform:'YouTube', allPlatforms:['YouTube'], subs:'72.1M', avgViews:'816K', eng:'0.5%', genre:'Kids & Family / Toys', cpi:57, gfi:82, color:'#D7BDE2', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Childrens Entertainment (0.95)' },
+  { id:226, name:'HAR PAL GEO', handle:'@harpalgeoofficial', platform:'YouTube', allPlatforms:['YouTube'], subs:'71.9M', avgViews:'643', eng:'3.1%', genre:'Entertainment & Comedy', cpi:81, gfi:83, color:'#A9CCE3', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - TV & Web Series (0.95)' },
+  { id:227, name:'YRF', handle:'@yrf', platform:'YouTube', allPlatforms:['YouTube'], subs:'71.2M', avgViews:'218K', eng:'2.1%', genre:'Music', cpi:75, gfi:85, color:'#FF6B6B', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Music Performances (0.95)' },
+  { id:228, name:'El Reino Infantil', handle:'@elreinoinfantil', platform:'YouTube', allPlatforms:['YouTube'], subs:'70.8M', avgViews:'250K', eng:'0.6%', genre:'Kids & Family / Toys', cpi:57, gfi:82, color:'#4ECDC4', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Childrens Entertainment (0.95)' },
+  { id:229, name:'Sony Music India', handle:'@sonymusicindia', platform:'YouTube', allPlatforms:['YouTube'], subs:'70.0M', avgViews:'14K', eng:'2.1%', genre:'Music', cpi:75, gfi:85, color:'#45B7D1', verifiedDeals:0, sponsorHistory:[], bio:'Music - Indian Music (0.95)' },
+  { id:230, name:'Bispo Bruno Leonardo', handle:'@bispobrunoleonardo', platform:'YouTube', allPlatforms:['YouTube'], subs:'69.5M', avgViews:'542K', eng:'73.3%', genre:'Education & Self-Development', cpi:89, gfi:91, color:'#96CEB4', verifiedDeals:0, sponsorHistory:[], bio:'Motivational & Self-Improvement - Mindfulness & Meditation (' },
+  { id:231, name:'Wave Music', handle:'@wavemusicindia', platform:'YouTube', allPlatforms:['YouTube'], subs:'69.3M', avgViews:'146K', eng:'1.6%', genre:'Music', cpi:67, gfi:85, color:'#FFEAA7', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Music Performances (0.95)' },
+  { id:232, name:'Canal KondZilla', handle:'@kondzilla', platform:'YouTube', allPlatforms:['YouTube'], subs:'68.0M', avgViews:'44K', eng:'1.0%', genre:'Music', cpi:67, gfi:85, color:'#DDA0DD', verifiedDeals:0, sponsorHistory:[], bio:'Music - Hip-Hop & Rap (0.95)' },
+  { id:233, name:'Anaya Kandhal', handle:'@anayakandhal', platform:'YouTube', allPlatforms:['YouTube'], subs:'67.7M', avgViews:'1.6M', eng:'0.7%', genre:'Kids & Family / Toys', cpi:57, gfi:82, color:'#98D8C8', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Childrens Entertainment (0.95)' },
+  { id:234, name:'Zhong', handle:'@zhong', platform:'YouTube', allPlatforms:['YouTube'], subs:'67.5M', avgViews:'4.4M', eng:'2.2%', genre:'Entertainment & Comedy', cpi:75, gfi:80, color:'#F7DC6F', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Pranks & Challenges (0.95)' },
+  { id:235, name:'ARY Digital HD', handle:'@arydigitalasia', platform:'YouTube', allPlatforms:['YouTube'], subs:'67.1M', avgViews:'3K', eng:'3.1%', genre:'Entertainment & Comedy', cpi:81, gfi:83, color:'#BB8FCE', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - TV & Web Series (0.95)' },
+  { id:236, name:'YOLO AVENTURAS', handle:'@yoloaventuras', platform:'YouTube', allPlatforms:['YouTube'], subs:'67.1M', avgViews:'1.9M', eng:'3.5%', genre:'Kids & Family / Toys', cpi:81, gfi:85, color:'#85C1E9', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Childrens Entertainment (0.85)' },
+  { id:237, name:'EminemMusic', handle:'@eminem', platform:'YouTube', allPlatforms:['YouTube'], subs:'66.3M', avgViews:'5.5M', eng:'2.8%', genre:'Music', cpi:75, gfi:85, color:'#F1948A', verifiedDeals:0, sponsorHistory:[], bio:'Music - Hip-Hop & Rap (0.95)' },
+  { id:238, name:'Movieclips', handle:'@movieclips', platform:'YouTube', allPlatforms:['YouTube'], subs:'65.8M', avgViews:'7K', eng:'1.3%', genre:'Entertainment & Comedy', cpi:67, gfi:80, color:'#82E0AA', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - TV & Web Series (0.95)' },
+  { id:239, name:'Taylor Swift', handle:'@taylorswift', platform:'YouTube', allPlatforms:['YouTube'], subs:'63.0M', avgViews:'27.6M', eng:'0.8%', genre:'Music', cpi:57, gfi:85, color:'#F0B27A', verifiedDeals:0, sponsorHistory:[], bio:'Music - Pop Music (0.95)' },
+  { id:240, name:'PANDA BOI', handle:'@pandaboi', platform:'YouTube', allPlatforms:['YouTube'], subs:'62.5M', avgViews:'399K', eng:'2.2%', genre:'Entertainment & Comedy', cpi:75, gfi:80, color:'#AED6F1', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Pranks & Challenges (0.95)' },
+  { id:241, name:'Dude Perfect', handle:'@dudeperfect', platform:'YouTube', allPlatforms:['YouTube'], subs:'61.8M', avgViews:'10.5M', eng:'2.1%', genre:'Entertainment & Comedy', cpi:75, gfi:80, color:'#D2B4DE', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Pranks & Challenges (0.7)' },
+  { id:242, name:'LooLoo Kids - Nursery Rhymes and Childrens Songs', handle:'@loolookids', platform:'YouTube', allPlatforms:['YouTube'], subs:'61.7M', avgViews:'6.2M', eng:'0.2%', genre:'Kids & Family / Toys', cpi:57, gfi:82, color:'#A9DFBF', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Childrens Entertainment (0.95)' },
+  { id:243, name:'Shemaroo', handle:'@shemaroo', platform:'YouTube', allPlatforms:['YouTube'], subs:'61.3M', avgViews:'48K', eng:'1.0%', genre:'Entertainment & Comedy', cpi:67, gfi:80, color:'#FAD7A0', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Movies & TV Reviews (0.9)' },
+  { id:244, name:'Saregama Music', handle:'@saregamamusic', platform:'YouTube', allPlatforms:['YouTube'], subs:'60.6M', avgViews:'1.0M', eng:'1.4%', genre:'Music', cpi:67, gfi:85, color:'#A3E4D7', verifiedDeals:0, sponsorHistory:[], bio:'Music - Indian Music (0.95)' },
+  { id:245, name:'आचार्य प्रशान्त - Acharya Prashant', handle:'@shriprashant', platform:'YouTube', allPlatforms:['YouTube'], subs:'59.8M', avgViews:'24K', eng:'4.1%', genre:'Education & Self-Development', cpi:81, gfi:88, color:'#D7BDE2', verifiedDeals:0, sponsorHistory:[], bio:'Motivational & Self-Improvement - Motivational Talks (0.95)' },
+  { id:246, name:'Dangal TV Channel', handle:'@dangaltvchannel', platform:'YouTube', allPlatforms:['YouTube'], subs:'59.8M', avgViews:'822K', eng:'2.0%', genre:'Entertainment & Comedy', cpi:75, gfi:80, color:'#A9CCE3', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - TV & Web Series (0.95)' },
+  { id:247, name:'Маша и Медведь', handle:'@mashabearrussian', platform:'YouTube', allPlatforms:['YouTube'], subs:'59.6M', avgViews:'885K', eng:'0.4%', genre:'Kids & Family / Toys', cpi:57, gfi:82, color:'#FF6B6B', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Animation & Cartoons (0.95)' },
+  { id:248, name:'ToRung', handle:'@torung', platform:'YouTube', allPlatforms:['YouTube'], subs:'59.6M', avgViews:'517K', eng:'1.1%', genre:'Kids & Family / Toys', cpi:67, gfi:82, color:'#4ECDC4', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Comedy & Sketches (0.85)' },
+  { id:249, name:'SonyMusicIndiaVEVO', handle:'@sonymusicindiavevo', platform:'YouTube', allPlatforms:['YouTube'], subs:'59.4M', avgViews:'529K', eng:'0.6%', genre:'Music', cpi:57, gfi:85, color:'#45B7D1', verifiedDeals:0, sponsorHistory:[], bio:'Music - Indian Music (0.95)' },
+  { id:250, name:'Ed Sheeran', handle:'@edsheeran', platform:'YouTube', allPlatforms:['YouTube'], subs:'58.9M', avgViews:'670K', eng:'2.1%', genre:'Music', cpi:75, gfi:85, color:'#96CEB4', verifiedDeals:0, sponsorHistory:[], bio:'Music - Pop Music (0.95)' },
+  { id:251, name:'Marshmello', handle:'@marshmello', platform:'YouTube', allPlatforms:['YouTube'], subs:'58.4M', avgViews:'523K', eng:'2.2%', genre:'Music', cpi:75, gfi:85, color:'#FFEAA7', verifiedDeals:0, sponsorHistory:[], bio:'Music - Electronic Music (0.95)' },
+  { id:252, name:'JioHotstar Kids', handle:'@jio_hotstar_kids', platform:'YouTube', allPlatforms:['YouTube'], subs:'58.1M', avgViews:'11K', eng:'0.9%', genre:'Kids & Family / Toys', cpi:57, gfi:82, color:'#DDA0DD', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Animation & Cartoons (0.85)' },
+  { id:253, name:'Billion Surprise Toys', handle:'@billionsurprisetoys', platform:'YouTube', allPlatforms:['YouTube'], subs:'58.1M', avgViews:'12K', eng:'0.8%', genre:'Kids & Family / Toys', cpi:57, gfi:82, color:'#98D8C8', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Animation & Cartoons (0.95)' },
+  { id:254, name:'Mikecrack', handle:'@mikecrack', platform:'YouTube', allPlatforms:['YouTube'], subs:'57.9M', avgViews:'2.4M', eng:'2.1%', genre:'Gaming & Esports', cpi:75, gfi:89, color:'#F7DC6F', verifiedDeals:0, sponsorHistory:[], bio:'Gaming - Minecraft (0.95)' },
+  { id:255, name:'Billie Eilish', handle:'@billieeilish', platform:'YouTube', allPlatforms:['YouTube'], subs:'57.6M', avgViews:'1.1M', eng:'6.4%', genre:'Music', cpi:85, gfi:91, color:'#BB8FCE', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Music Performances (0.95)' },
+  { id:256, name:'Alfredo Larin', handle:'@alfredolarin', platform:'YouTube', allPlatforms:['YouTube'], subs:'57.5M', avgViews:'8.6M', eng:'1.6%', genre:'Entertainment & Comedy', cpi:67, gfi:80, color:'#85C1E9', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Comedy & Sketches (0.95)' },
+  { id:257, name:'Get Movies', handle:'@getmovies', platform:'YouTube', allPlatforms:['YouTube'], subs:'57.0M', avgViews:'47K', eng:'0.7%', genre:'Kids & Family / Toys', cpi:57, gfi:82, color:'#F1948A', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Animation & Cartoons (0.95)' },
+  { id:258, name:'Ariana Grande', handle:'@arianagrande', platform:'YouTube', allPlatforms:['YouTube'], subs:'56.9M', avgViews:'2.2M', eng:'3.7%', genre:'Music', cpi:81, gfi:88, color:'#82E0AA', verifiedDeals:0, sponsorHistory:[], bio:'Music - Pop Music (0.95)' },
+  { id:259, name:'StarPlus', handle:'@starplus', platform:'YouTube', allPlatforms:['YouTube'], subs:'56.3M', avgViews:'4K', eng:'2.4%', genre:'Entertainment & Comedy', cpi:75, gfi:80, color:'#F0B27A', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - TV & Web Series (0.95)' },
+  { id:260, name:'MrBeast 2', handle:'@mrbeast2', platform:'YouTube', allPlatforms:['YouTube'], subs:'55.6M', avgViews:'16.4M', eng:'2.9%', genre:'Food & Cooking', cpi:75, gfi:84, color:'#AED6F1', verifiedDeals:0, sponsorHistory:[], bio:'Food' },
+  { id:261, name:'Juan De Dios Pantoja', handle:'@juandediospantojaa', platform:'YouTube', allPlatforms:['YouTube'], subs:'55.5M', avgViews:'10.8M', eng:'2.0%', genre:'Entertainment & Comedy', cpi:75, gfi:80, color:'#D2B4DE', verifiedDeals:0, sponsorHistory:[], bio:'Relationships & Family - Family Vlogs & Lifestyle (0.9)' },
+  { id:262, name:'shfa', handle:'@shfa-1', platform:'YouTube', allPlatforms:['YouTube'], subs:'55.4M', avgViews:'7.1M', eng:'0.6%', genre:'Kids & Family / Toys', cpi:57, gfi:82, color:'#A9DFBF', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Childrens Entertainment (0.95)' },
+  { id:263, name:'JuegaGerman', handle:'@juegagerman', platform:'YouTube', allPlatforms:['YouTube'], subs:'54.8M', avgViews:'2.1M', eng:'3.8%', genre:'Gaming & Esports', cpi:81, gfi:92, color:'#FAD7A0', verifiedDeals:0, sponsorHistory:[], bio:'Gaming - Game Streaming & Lets Plays (0.75)' },
+  { id:264, name:'ABS-CBN Entertainment', handle:'@abscbnentertainment', platform:'YouTube', allPlatforms:['YouTube'], subs:'54.6M', avgViews:'2K', eng:'1.7%', genre:'Entertainment & Comedy', cpi:67, gfi:80, color:'#A3E4D7', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - TV & Web Series (0.95)' },
+  { id:265, name:'Masha and The Bear', handle:'@mashabearen', platform:'YouTube', allPlatforms:['YouTube'], subs:'54.6M', avgViews:'788K', eng:'0.2%', genre:'Kids & Family / Toys', cpi:57, gfi:82, color:'#D7BDE2', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Animation & Cartoons (0.95)' },
+  { id:266, name:'Jess No Limit', handle:'@jessnolimit', platform:'YouTube', allPlatforms:['YouTube'], subs:'54.3M', avgViews:'145K', eng:'2.0%', genre:'Gaming & Esports', cpi:75, gfi:89, color:'#A9CCE3', verifiedDeals:0, sponsorHistory:[], bio:'Gaming - Mobile Games (0.95)' },
+  { id:267, name:'Celine Dept', handle:'@celinedept', platform:'YouTube', allPlatforms:['YouTube'], subs:'54.2M', avgViews:'4.8M', eng:'1.4%', genre:'Entertainment & Comedy', cpi:67, gfi:80, color:'#FF6B6B', verifiedDeals:0, sponsorHistory:[], bio:'Sports - Soccer (Football) (0.95)' },
+  { id:268, name:'MrBeast Gaming', handle:'@mrbeastgaming', platform:'YouTube', allPlatforms:['YouTube'], subs:'54.0M', avgViews:'55.2M', eng:'1.6%', genre:'Gaming & Esports', cpi:67, gfi:89, color:'#4ECDC4', verifiedDeals:0, sponsorHistory:[], bio:'Gaming - Minecraft (0.85)' },
+  { id:269, name:'HUM TV', handle:'@humtv', platform:'YouTube', allPlatforms:['YouTube'], subs:'53.6M', avgViews:'2K', eng:'1.7%', genre:'Entertainment & Comedy', cpi:67, gfi:80, color:'#45B7D1', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - TV & Web Series (0.95)' },
+  { id:270, name:'LUCCAS NETO', handle:'@luccasneto', platform:'YouTube', allPlatforms:['YouTube'], subs:'53.5M', avgViews:'235K', eng:'1.7%', genre:'Kids & Family / Toys', cpi:67, gfi:82, color:'#96CEB4', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Childrens Entertainment (0.95)' },
+  { id:271, name:'shfa2 - شفا', handle:'@shfa2', platform:'YouTube', allPlatforms:['YouTube'], subs:'53.1M', avgViews:'2.1M', eng:'0.5%', genre:'Kids & Family / Toys', cpi:57, gfi:82, color:'#FFEAA7', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Childrens Entertainment (0.95)' },
+  { id:272, name:'Ishtar Music', handle:'@ishtarmusic', platform:'YouTube', allPlatforms:['YouTube'], subs:'52.8M', avgViews:'47K', eng:'0.5%', genre:'Music', cpi:57, gfi:85, color:'#DDA0DD', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Music Performances (0.95)' },
+  { id:273, name:'Real fools shorts official', handle:'@realfoolsshorts63', platform:'YouTube', allPlatforms:['YouTube'], subs:'52.6M', avgViews:'3.4M', eng:'2.8%', genre:'Entertainment & Comedy', cpi:75, gfi:80, color:'#98D8C8', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Comedy & Sketches (0.95)' },
+  { id:274, name:'BETER BÖCÜK', handle:'@beterbocuk', platform:'YouTube', allPlatforms:['YouTube'], subs:'51.9M', avgViews:'78K', eng:'1.0%', genre:'Entertainment & Comedy', cpi:67, gfi:80, color:'#F7DC6F', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Comedy & Sketches (0.95)' },
+  { id:275, name:'T-Series Bollywood Classics', handle:'@tseriesoldisgold', platform:'YouTube', allPlatforms:['YouTube'], subs:'51.9M', avgViews:'19K', eng:'1.7%', genre:'Music', cpi:67, gfi:85, color:'#BB8FCE', verifiedDeals:0, sponsorHistory:[], bio:'Music - Indian Music (0.95)' },
+  { id:276, name:'Bad Bunny', handle:'@badbunnypr', platform:'YouTube', allPlatforms:['YouTube'], subs:'51.7M', avgViews:'42.3M', eng:'0.9%', genre:'Music', cpi:57, gfi:85, color:'#85C1E9', verifiedDeals:0, sponsorHistory:[], bio:'Music - Latin Music (0.95)' },
+  { id:277, name:'IShowSpeed', handle:'@ishowspeed', platform:'YouTube', allPlatforms:['YouTube'], subs:'50.9M', avgViews:'8.2M', eng:'3.7%', genre:'Gaming & Esports', cpi:81, gfi:92, color:'#F1948A', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Comedy & Sketches (0.85)' },
+  { id:278, name:'IndiaTV', handle:'@indiatv', platform:'YouTube', allPlatforms:['YouTube'], subs:'50.2M', avgViews:'6K', eng:'1.5%', genre:'Entertainment & Comedy', cpi:67, gfi:80, color:'#82E0AA', verifiedDeals:0, sponsorHistory:[], bio:'News & Politics - Asian Politics (0.85)' },
+  { id:279, name:'Maria Clara & JP', handle:'@mariaclaraejp', platform:'YouTube', allPlatforms:['YouTube'], subs:'50.1M', avgViews:'826K', eng:'0.7%', genre:'Kids & Family / Toys', cpi:57, gfi:82, color:'#F0B27A', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Childrens Entertainment (0.95)' },
+  { id:280, name:'Fernanfloo', handle:'@fernanfloo', platform:'YouTube', allPlatforms:['YouTube'], subs:'50.0M', avgViews:'13.4M', eng:'8.5%', genre:'Gaming & Esports', cpi:89, gfi:95, color:'#AED6F1', verifiedDeals:0, sponsorHistory:[], bio:'Gaming - Game Streaming & Lets Plays (0.9)' },
+  { id:281, name:'ABP NEWS', handle:'@abpnews', platform:'YouTube', allPlatforms:['YouTube'], subs:'49.9M', avgViews:'3K', eng:'1.1%', genre:'Entertainment & Comedy', cpi:69, gfi:80, color:'#D2B4DE', verifiedDeals:0, sponsorHistory:[], bio:'News & Politics - Asian Politics (0.85)' },
+  { id:282, name:'Sierra & Rhia FAM', handle:'@sierrarhiafam', platform:'YouTube', allPlatforms:['YouTube'], subs:'49.9M', avgViews:'2.0M', eng:'0.4%', genre:'Education & Self-Development', cpi:59, gfi:85, color:'#A9DFBF', verifiedDeals:0, sponsorHistory:[], bio:'Education - Educational Entertainment (Edutainment) (0.95)' },
+  { id:283, name:'Shakira', handle:'@shakira', platform:'YouTube', allPlatforms:['YouTube'], subs:'49.8M', avgViews:'5.8M', eng:'1.1%', genre:'Music', cpi:69, gfi:85, color:'#FAD7A0', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Music Performances (0.95)' },
+  { id:284, name:'Dushyant kukreja', handle:'@dushyant_kukreja', platform:'YouTube', allPlatforms:['YouTube'], subs:'49.8M', avgViews:'2.4M', eng:'0.9%', genre:'Entertainment & Comedy', cpi:59, gfi:80, color:'#A3E4D7', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Comedy & Sketches (0.95)' },
+  { id:285, name:'Techno Gamerz', handle:'@technogamerzofficial', platform:'YouTube', allPlatforms:['YouTube'], subs:'49.6M', avgViews:'8.6M', eng:'4.0%', genre:'Gaming & Esports', cpi:83, gfi:92, color:'#D7BDE2', verifiedDeals:0, sponsorHistory:[], bio:'Gaming - Game Streaming & Lets Plays (0.95)' },
+  { id:286, name:'Karla Bustillos', handle:'@karlabustillos', platform:'YouTube', allPlatforms:['YouTube'], subs:'49.6M', avgViews:'4.7M', eng:'3.3%', genre:'Entertainment & Comedy', cpi:83, gfi:83, color:'#A9CCE3', verifiedDeals:0, sponsorHistory:[], bio:'Relationships & Family - Family Vlogs & Lifestyle (0.9)' },
+  { id:287, name:'Genevieves Playhouse - Learning Videos for Kids', handle:'@genevievesplayhouse', platform:'YouTube', allPlatforms:['YouTube'], subs:'49.3M', avgViews:'5.9M', eng:'0.1%', genre:'Education & Self-Development', cpi:59, gfi:85, color:'#FF6B6B', verifiedDeals:0, sponsorHistory:[], bio:'Animals - Farm & Domesticated Animals (0.95)' },
+  { id:288, name:'MR. INDIAN HACKER', handle:'@mrindianhacker', platform:'YouTube', allPlatforms:['YouTube'], subs:'49.2M', avgViews:'2.4M', eng:'6.4%', genre:'Entertainment & Comedy', cpi:87, gfi:86, color:'#4ECDC4', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Pranks & Challenges (0.95)' },
+  { id:289, name:'BeatboxJCOP', handle:'@beatboxjcop', platform:'YouTube', allPlatforms:['YouTube'], subs:'49.1M', avgViews:'886K', eng:'2.7%', genre:'Entertainment & Comedy', cpi:77, gfi:80, color:'#45B7D1', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Music Performances (0.95)' },
+  { id:290, name:'Ricis Official', handle:'@ricisofficial1795', platform:'YouTube', allPlatforms:['YouTube'], subs:'48.8M', avgViews:'60K', eng:'3.0%', genre:'Kids & Family / Toys', cpi:83, gfi:85, color:'#96CEB4', verifiedDeals:0, sponsorHistory:[], bio:'Relationships & Family - Family Vlogs & Lifestyle (0.95)' },
+  { id:291, name:'Goldmines Gaane Sune Ansune', handle:'@gaanesuneansune', platform:'YouTube', allPlatforms:['YouTube'], subs:'48.8M', avgViews:'24K', eng:'0.7%', genre:'Music', cpi:59, gfi:85, color:'#FFEAA7', verifiedDeals:0, sponsorHistory:[], bio:'Music - Indian Music (0.95)' },
+  { id:292, name:'AboFlah', handle:'@aboflah', platform:'YouTube', allPlatforms:['YouTube'], subs:'48.4M', avgViews:'9.1M', eng:'2.7%', genre:'Gaming & Esports', cpi:77, gfi:89, color:'#DDA0DD', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Comedy & Sketches (0.85)' },
+  { id:293, name:'Ben Azelart', handle:'@benazelart', platform:'YouTube', allPlatforms:['YouTube'], subs:'48.4M', avgViews:'41.7M', eng:'1.4%', genre:'Lifestyle & Vlogs', cpi:69, gfi:78, color:'#98D8C8', verifiedDeals:0, sponsorHistory:[], bio:'Home & DIY - Home Improvement & Renovation (0.85)' },
+  { id:294, name:'Speed Records', handle:'@speedrecords', platform:'YouTube', allPlatforms:['YouTube'], subs:'48.2M', avgViews:'90K', eng:'0.7%', genre:'Music', cpi:59, gfi:85, color:'#F7DC6F', verifiedDeals:0, sponsorHistory:[], bio:'Music - Indian Music (0.95)' },
+  { id:295, name:'Shorts Break', handle:'@shortsbreak_official', platform:'YouTube', allPlatforms:['YouTube'], subs:'48.1M', avgViews:'7.3M', eng:'2.9%', genre:'Entertainment & Comedy', cpi:77, gfi:80, color:'#BB8FCE', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Comedy & Sketches (0.95)' },
+  { id:296, name:'Felipe Neto', handle:'@felipeneto', platform:'YouTube', allPlatforms:['YouTube'], subs:'47.7M', avgViews:'524K', eng:'7.3%', genre:'Food & Cooking', cpi:87, gfi:90, color:'#85C1E9', verifiedDeals:0, sponsorHistory:[], bio:'Food' },
+  { id:297, name:'Badabun', handle:'@badabunoficial', platform:'YouTube', allPlatforms:['YouTube'], subs:'47.6M', avgViews:'14K', eng:'2.3%', genre:'Entertainment & Comedy', cpi:77, gfi:80, color:'#F1948A', verifiedDeals:0, sponsorHistory:[], bio:'News & Politics - Social Issues Commentary (0.8)' },
+  { id:298, name:'BEN EAGLE', handle:'@beneagleofficial', platform:'YouTube', allPlatforms:['YouTube'], subs:'47.5M', avgViews:'155K', eng:'1.3%', genre:'Entertainment & Comedy', cpi:69, gfi:80, color:'#82E0AA', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Comedy & Sketches (0.95)' },
+  { id:299, name:'Alan Walker', handle:'@alanwalkermusic', platform:'YouTube', allPlatforms:['YouTube'], subs:'47.4M', avgViews:'147K', eng:'3.5%', genre:'Music', cpi:83, gfi:88, color:'#F0B27A', verifiedDeals:0, sponsorHistory:[], bio:'Music - Electronic Music (0.95)' },
+  { id:300, name:'Kimberly Loaiza', handle:'@kimberlyloaiza', platform:'YouTube', allPlatforms:['YouTube'], subs:'47.4M', avgViews:'17.7M', eng:'3.5%', genre:'Entertainment & Comedy', cpi:83, gfi:83, color:'#AED6F1', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Pranks & Challenges (0.95)' },
+  { id:301, name:'DaFuq!?Boom!', handle:'@dafuqboom', platform:'YouTube', allPlatforms:['YouTube'], subs:'47.2M', avgViews:'38.8M', eng:'2.6%', genre:'Kids & Family / Toys', cpi:77, gfi:82, color:'#D2B4DE', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Animation & Cartoons (0.95)' },
+  { id:302, name:'Sony PAL', handle:'@sonypal', platform:'YouTube', allPlatforms:['YouTube'], subs:'47.1M', avgViews:'5K', eng:'0.7%', genre:'Entertainment & Comedy', cpi:59, gfi:80, color:'#A9DFBF', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - TV & Web Series (0.95)' },
+  { id:303, name:'Você Sabia?', handle:'@vocesabia', platform:'YouTube', allPlatforms:['YouTube'], subs:'47.0M', avgViews:'493K', eng:'4.8%', genre:'Finance & Investing', cpi:83, gfi:86, color:'#FAD7A0', verifiedDeals:0, sponsorHistory:[], bio:'Finance & Cryptocurrency - Financial Education & Literacy (0' },
+  { id:304, name:'Katy Perry', handle:'@katyperry', platform:'YouTube', allPlatforms:['YouTube'], subs:'46.7M', avgViews:'351K', eng:'3.7%', genre:'Music', cpi:83, gfi:88, color:'#A3E4D7', verifiedDeals:0, sponsorHistory:[], bio:'Music - Pop Music (0.95)' },
+  { id:305, name:'Ultra Bollywood', handle:'@ultrabollywood', platform:'YouTube', allPlatforms:['YouTube'], subs:'46.6M', avgViews:'205K', eng:'0.6%', genre:'Entertainment & Comedy', cpi:59, gfi:80, color:'#D7BDE2', verifiedDeals:0, sponsorHistory:[], bio:'nan' },
+  { id:306, name:'dednahype', handle:'@dednahype', platform:'YouTube', allPlatforms:['YouTube'], subs:'46.5M', avgViews:'1.7M', eng:'0.9%', genre:'Entertainment & Comedy', cpi:59, gfi:80, color:'#A9CCE3', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Comedy & Sketches (0.95)' },
+  { id:307, name:'Jingle Toons', handle:'@jingletoons', platform:'YouTube', allPlatforms:['YouTube'], subs:'46.0M', avgViews:'1.6M', eng:'1.0%', genre:'Kids & Family / Toys', cpi:69, gfi:82, color:'#FF6B6B', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Childrens Entertainment (0.98)' },
+  { id:308, name:'Priyal Kukreja', handle:'@priyal_kukreja', platform:'YouTube', allPlatforms:['YouTube'], subs:'46.0M', avgViews:'4.3M', eng:'0.9%', genre:'Entertainment & Comedy', cpi:59, gfi:80, color:'#4ECDC4', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Comedy & Sketches (0.85)' },
+  { id:309, name:'Frost Diamond', handle:'@frostdiamond', platform:'YouTube', allPlatforms:['YouTube'], subs:'45.9M', avgViews:'609K', eng:'2.8%', genre:'Gaming & Esports', cpi:77, gfi:89, color:'#45B7D1', verifiedDeals:0, sponsorHistory:[], bio:'Gaming - Roblox (0.95)' },
+  { id:310, name:'Super Simple Songs - Kids Songs', handle:'@supersimplesongs', platform:'YouTube', allPlatforms:['YouTube'], subs:'45.9M', avgViews:'467K', eng:'0.2%', genre:'Kids & Family / Toys', cpi:59, gfi:82, color:'#96CEB4', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Childrens Entertainment (0.95)' },
+  { id:311, name:'Luisito Comunica', handle:'@luisitocomunica', platform:'YouTube', allPlatforms:['YouTube'], subs:'45.6M', avgViews:'8.3M', eng:'1.6%', genre:'Travel & Adventure', cpi:69, gfi:88, color:'#FFEAA7', verifiedDeals:0, sponsorHistory:[], bio:'Travel - Travel Destinations (0.95)' },
+  { id:312, name:'Rihanna', handle:'@rihanna', platform:'YouTube', allPlatforms:['YouTube'], subs:'45.5M', avgViews:'1.3M', eng:'2.4%', genre:'Music', cpi:77, gfi:85, color:'#DDA0DD', verifiedDeals:0, sponsorHistory:[], bio:'Music - Pop Music (0.95)' },
+  { id:313, name:'Akshay Nagwadiya', handle:'@akshaynagwadiya', platform:'YouTube', allPlatforms:['YouTube'], subs:'45.5M', avgViews:'2.0M', eng:'1.8%', genre:'Entertainment & Comedy', cpi:69, gfi:80, color:'#98D8C8', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Comedy & Sketches (0.95)' },
+  { id:314, name:'Enaldinho', handle:'@enaldinho', platform:'YouTube', allPlatforms:['YouTube'], subs:'45.4M', avgViews:'1.2M', eng:'2.4%', genre:'Entertainment & Comedy', cpi:77, gfi:80, color:'#F7DC6F', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Pranks & Challenges (0.95)' },
+  { id:315, name:'Total Gaming', handle:'@totalgaming093', platform:'YouTube', allPlatforms:['YouTube'], subs:'45.3M', avgViews:'2.1M', eng:'6.7%', genre:'Gaming & Esports', cpi:87, gfi:95, color:'#BB8FCE', verifiedDeals:0, sponsorHistory:[], bio:'Gaming - Gameplay Walkthroughs & Tutorials (0.95)' },
+  { id:316, name:'CarryMinati', handle:'@carryminati', platform:'YouTube', allPlatforms:['YouTube'], subs:'45.3M', avgViews:'45.0M', eng:'8.5%', genre:'Entertainment & Comedy', cpi:91, gfi:86, color:'#85C1E9', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Comedy & Sketches (0.95)' },
+  { id:317, name:'La Granja de Zenón', handle:'@lagranjadezenon', platform:'YouTube', allPlatforms:['YouTube'], subs:'45.3M', avgViews:'410K', eng:'0.6%', genre:'Kids & Family / Toys', cpi:59, gfi:82, color:'#F1948A', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Childrens Entertainment (0.95)' },
+  { id:318, name:'Masha y el Oso', handle:'@mashaoso', platform:'YouTube', allPlatforms:['YouTube'], subs:'45.2M', avgViews:'450K', eng:'0.4%', genre:'Kids & Family / Toys', cpi:59, gfi:82, color:'#82E0AA', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Animation & Cartoons (0.95)' },
+  { id:319, name:'Vlad và Niki', handle:'@vladvaniki1', platform:'YouTube', allPlatforms:['YouTube'], subs:'45.1M', avgViews:'626K', eng:'0.2%', genre:'Kids & Family / Toys', cpi:59, gfi:82, color:'#F0B27A', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Childrens Entertainment (0.95)' },
+  { id:320, name:'whinderssonnunes', handle:'@whindersson', platform:'YouTube', allPlatforms:['YouTube'], subs:'44.7M', avgViews:'20K', eng:'5.8%', genre:'Entertainment & Comedy', cpi:87, gfi:86, color:'#AED6F1', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Comedy & Sketches (0.95)' },
+  { id:321, name:'BRIGHT SIDE', handle:'@brightsideofficial', platform:'YouTube', allPlatforms:['YouTube'], subs:'44.7M', avgViews:'9K', eng:'1.5%', genre:'Entertainment & Comedy', cpi:69, gfi:80, color:'#D2B4DE', verifiedDeals:0, sponsorHistory:[], bio:'nan' },
+  { id:322, name:'Like Nastya Show', handle:'@likenastya_show', platform:'YouTube', allPlatforms:['YouTube'], subs:'44.5M', avgViews:'170K', eng:'0.2%', genre:'Kids & Family / Toys', cpi:59, gfi:82, color:'#A9DFBF', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Childrens Entertainment (0.95)' },
+  { id:323, name:'HolaSoyGerman.', handle:'@holasoygerman', platform:'YouTube', allPlatforms:['YouTube'], subs:'44.5M', avgViews:'46.4M', eng:'4.0%', genre:'Entertainment & Comedy', cpi:83, gfi:83, color:'#FAD7A0', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Comedy & Sketches (0.95)' },
+  { id:324, name:'★ Kids Roma Show', handle:'@kidsromashow', platform:'YouTube', allPlatforms:['YouTube'], subs:'44.4M', avgViews:'2.5M', eng:'0.7%', genre:'Kids & Family / Toys', cpi:59, gfi:82, color:'#A3E4D7', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Childrens Entertainment (0.95)' },
+  { id:325, name:'ช่อง one31', handle:'@one31official', platform:'YouTube', allPlatforms:['YouTube'], subs:'44.3M', avgViews:'2K', eng:'1.2%', genre:'Entertainment & Comedy', cpi:69, gfi:80, color:'#D7BDE2', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - TV & Web Series (0.95)' },
+  { id:326, name:'TEDx Talks', handle:'@tedx', platform:'YouTube', allPlatforms:['YouTube'], subs:'44.1M', avgViews:'5K', eng:'3.1%', genre:'Entertainment & Comedy', cpi:83, gfi:83, color:'#A9CCE3', verifiedDeals:0, sponsorHistory:[], bio:'Humanities & Social Sciences - History & Archaeology (0.9)' },
+  { id:327, name:'MaviGadget', handle:'@mavigadgets', platform:'YouTube', allPlatforms:['YouTube'], subs:'43.7M', avgViews:'56K', eng:'0.6%', genre:'Entertainment & Comedy', cpi:59, gfi:80, color:'#FF6B6B', verifiedDeals:0, sponsorHistory:[], bio:'nan' },
+  { id:328, name:'WorkpointOfficial', handle:'@workpointofficial', platform:'YouTube', allPlatforms:['YouTube'], subs:'43.5M', avgViews:'4K', eng:'2.1%', genre:'Entertainment & Comedy', cpi:77, gfi:80, color:'#4ECDC4', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - TV & Web Series (0.8)' },
+  { id:329, name:'LeoNata Family', handle:'@leonatafamily', platform:'YouTube', allPlatforms:['YouTube'], subs:'43.5M', avgViews:'274K', eng:'0.7%', genre:'Entertainment & Comedy', cpi:59, gfi:80, color:'#45B7D1', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Comedy & Sketches (0.95)' },
+  { id:330, name:'Like Nastya ESP', handle:'@likenastya_esp', platform:'YouTube', allPlatforms:['YouTube'], subs:'43.4M', avgViews:'384K', eng:'0.1%', genre:'Kids & Family / Toys', cpi:59, gfi:82, color:'#96CEB4', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Childrens Entertainment (0.95)' },
+  { id:331, name:'BabyBus - Kids Songs and Cartoons', handle:'@babybus', platform:'YouTube', allPlatforms:['YouTube'], subs:'43.3M', avgViews:'1.3M', eng:'0.1%', genre:'Kids & Family / Toys', cpi:59, gfi:82, color:'#FFEAA7', verifiedDeals:0, sponsorHistory:[], bio:'Education - Educational Entertainment (Edutainment) (0.95)' },
+  { id:332, name:'Peppa Pig - Official Channel', handle:'@peppapigofficial', platform:'YouTube', allPlatforms:['YouTube'], subs:'43.0M', avgViews:'28K', eng:'0.8%', genre:'Kids & Family / Toys', cpi:59, gfi:82, color:'#DDA0DD', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Animation & Cartoons (0.95)' },
+  { id:333, name:'GR6 EXPLODE', handle:'@gr6explode', platform:'YouTube', allPlatforms:['YouTube'], subs:'42.9M', avgViews:'305K', eng:'2.5%', genre:'Music', cpi:77, gfi:85, color:'#98D8C8', verifiedDeals:0, sponsorHistory:[], bio:'Music - Hip-Hop & Rap (0.95)' },
+  { id:334, name:'TheDonato', handle:'@thedonato', platform:'YouTube', allPlatforms:['YouTube'], subs:'42.9M', avgViews:'341K', eng:'3.2%', genre:'Gaming & Esports', cpi:83, gfi:92, color:'#F7DC6F', verifiedDeals:0, sponsorHistory:[], bio:'Gaming - Mobile Games (0.95)' },
+  { id:335, name:'Bruno Mars', handle:'@brunomars', platform:'YouTube', allPlatforms:['YouTube'], subs:'42.8M', avgViews:'80.0M', eng:'1.0%', genre:'Music', cpi:69, gfi:85, color:'#BB8FCE', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Music Performances (0.95)' },
+  { id:336, name:'Zach King', handle:'@zachking', platform:'YouTube', allPlatforms:['YouTube'], subs:'42.8M', avgViews:'5.3M', eng:'1.1%', genre:'Entertainment & Comedy', cpi:69, gfi:80, color:'#85C1E9', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Pranks & Challenges (0.85)' },
+  { id:337, name:'XXXTENTACION', handle:'@xxxtentacion', platform:'YouTube', allPlatforms:['YouTube'], subs:'42.7M', avgViews:'5.8M', eng:'3.9%', genre:'Music', cpi:83, gfi:88, color:'#F1948A', verifiedDeals:0, sponsorHistory:[], bio:'Music - Hip-Hop & Rap (0.95)' },
+  { id:338, name:'Gulshan Kalra', handle:'@gulshankalra07', platform:'YouTube', allPlatforms:['YouTube'], subs:'42.3M', avgViews:'6.8M', eng:'1.0%', genre:'Entertainment & Comedy', cpi:69, gfi:80, color:'#82E0AA', verifiedDeals:0, sponsorHistory:[], bio:'Relationships & Family - Motherhood & Fatherhood (0.85)' },
+  { id:339, name:'LankyBox', handle:'@lankybox', platform:'YouTube', allPlatforms:['YouTube'], subs:'42.0M', avgViews:'101K', eng:'1.4%', genre:'Gaming & Esports', cpi:69, gfi:89, color:'#F0B27A', verifiedDeals:0, sponsorHistory:[], bio:'Gaming - Roblox (0.95)' },
+  { id:340, name:'Jason Derulo', handle:'@jasonderulo', platform:'YouTube', allPlatforms:['YouTube'], subs:'42.0M', avgViews:'209K', eng:'1.7%', genre:'Education & Self-Development', cpi:69, gfi:85, color:'#AED6F1', verifiedDeals:0, sponsorHistory:[], bio:'Motivational & Self-Improvement - Motivational Talks (0.95)' },
+  { id:341, name:'Zee News', handle:'@zeenews', platform:'YouTube', allPlatforms:['YouTube'], subs:'41.9M', avgViews:'2K', eng:'1.7%', genre:'Entertainment & Comedy', cpi:69, gfi:80, color:'#D2B4DE', verifiedDeals:0, sponsorHistory:[], bio:'News & Politics - Asian Politics (0.95)' },
+  { id:342, name:'Little Baby Bum - Nursery Rhymes & Kids Songs', handle:'@littlebabybum', platform:'YouTube', allPlatforms:['YouTube'], subs:'41.7M', avgViews:'101K', eng:'0.4%', genre:'Kids & Family / Toys', cpi:59, gfi:82, color:'#A9DFBF', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Childrens Entertainment (0.95)' },
+  { id:343, name:'Kids Channel India - Hindi Rhymes and Baby Songs', handle:'@kidschannelindia', platform:'YouTube', allPlatforms:['YouTube'], subs:'41.7M', avgViews:'513K', eng:'1.1%', genre:'Kids & Family / Toys', cpi:69, gfi:82, color:'#FAD7A0', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Childrens Entertainment (0.95)' },
+  { id:344, name:'Brent Rivera', handle:'@brentrivera', platform:'YouTube', allPlatforms:['YouTube'], subs:'41.5M', avgViews:'8.5M', eng:'1.1%', genre:'Travel & Adventure', cpi:69, gfi:88, color:'#A3E4D7', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Comedy & Sketches (0.95)' },
+  { id:345, name:'WowKidz', handle:'@wowkidz1', platform:'YouTube', allPlatforms:['YouTube'], subs:'41.3M', avgViews:'6K', eng:'0.9%', genre:'Kids & Family / Toys', cpi:59, gfi:82, color:'#D7BDE2', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Animation & Cartoons (0.95)' },
+  { id:346, name:'Daddy Yankee', handle:'@daddyyankee', platform:'YouTube', allPlatforms:['YouTube'], subs:'41.2M', avgViews:'3.2M', eng:'1.8%', genre:'Music', cpi:69, gfi:85, color:'#A9CCE3', verifiedDeals:0, sponsorHistory:[], bio:'Music - Latin Music (0.95)' },
+  { id:347, name:'Rajshri', handle:'@rajshri', platform:'YouTube', allPlatforms:['YouTube'], subs:'40.9M', avgViews:'4K', eng:'0.9%', genre:'Entertainment & Comedy', cpi:59, gfi:80, color:'#FF6B6B', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Movies & TV Reviews (0.95)' },
+  { id:348, name:'KAROL G', handle:'@karolg', platform:'YouTube', allPlatforms:['YouTube'], subs:'40.9M', avgViews:'19.8M', eng:'1.8%', genre:'Music', cpi:69, gfi:85, color:'#4ECDC4', verifiedDeals:0, sponsorHistory:[], bio:'Music - Latin Music (0.95)' },
+  { id:349, name:'GMA Network', handle:'@gmanetwork', platform:'YouTube', allPlatforms:['YouTube'], subs:'40.8M', avgViews:'2K', eng:'1.2%', genre:'Entertainment & Comedy', cpi:69, gfi:80, color:'#45B7D1', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - TV & Web Series (0.95)' },
+  { id:350, name:'elrubiusOMG', handle:'@elrubiusomg', platform:'YouTube', allPlatforms:['YouTube'], subs:'40.8M', avgViews:'9.9M', eng:'9.8%', genre:'Entertainment & Comedy', cpi:91, gfi:86, color:'#96CEB4', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Vlogs & Daily Life (0.85)' },
+  { id:351, name:'T-Series Apna Punjab', handle:'@apnapunjab', platform:'YouTube', allPlatforms:['YouTube'], subs:'40.8M', avgViews:'232K', eng:'1.6%', genre:'Music', cpi:69, gfi:85, color:'#FFEAA7', verifiedDeals:0, sponsorHistory:[], bio:'Music - Indian Music (0.95)' },
+  { id:352, name:'Marta and Rustam', handle:'@martaandrustam', platform:'YouTube', allPlatforms:['YouTube'], subs:'40.8M', avgViews:'187K', eng:'0.6%', genre:'Entertainment & Comedy', cpi:59, gfi:80, color:'#DDA0DD', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Pranks & Challenges (0.95)' },
+  { id:353, name:'Sujal Thakral', handle:'@sujalthakral', platform:'YouTube', allPlatforms:['YouTube'], subs:'40.7M', avgViews:'3.2M', eng:'1.7%', genre:'Entertainment & Comedy', cpi:69, gfi:80, color:'#98D8C8', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Comedy & Sketches (0.95)' },
+  { id:354, name:'Diana and Roma ESP', handle:'@dianaandromaesp', platform:'YouTube', allPlatforms:['YouTube'], subs:'40.7M', avgViews:'424K', eng:'0.1%', genre:'Kids & Family / Toys', cpi:59, gfi:82, color:'#F7DC6F', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Childrens Entertainment (0.95)' },
+  { id:355, name:'The geeta gurjar', handle:'@thegeetagurjar', platform:'YouTube', allPlatforms:['YouTube'], subs:'40.6M', avgViews:'2.3M', eng:'0.6%', genre:'Kids & Family / Toys', cpi:59, gfi:82, color:'#BB8FCE', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Childrens Entertainment (0.95)' },
+  { id:356, name:'Ryans World', handle:'@ryansworld', platform:'YouTube', allPlatforms:['YouTube'], subs:'40.2M', avgViews:'98K', eng:'0.5%', genre:'Kids & Family / Toys', cpi:59, gfi:82, color:'#85C1E9', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Pranks & Challenges (0.95)' },
+  { id:357, name:'Mr DegrEE', handle:'@mrdegreeofficial', platform:'YouTube', allPlatforms:['YouTube'], subs:'40.4M', avgViews:'161K', eng:'0.5%', genre:'Entertainment & Comedy', cpi:59, gfi:80, color:'#F1948A', verifiedDeals:0, sponsorHistory:[], bio:'Entertainment & Comedy - Pranks & Challenges (0.85)' },
+
+  { id:358, name:'James Charles', handle:'@JamesCharles', platform:'YouTube', allPlatforms:['YouTube'], subs:'23.9M', avgViews:'1.5M', eng:'2.1%', genre:'Beauty & Skincare', cpi:77, gfi:87, color:'#FF6B9D', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 8 videos analysed · avg 1.5M views' },
+  { id:359, name:'Smiti Choudhury', handle:'@Smitichoudhury9', platform:'YouTube', allPlatforms:['YouTube'], subs:'16.8M', avgViews:'6.7M', eng:'0.1%', genre:'Beauty & Skincare', cpi:61, gfi:87, color:'#C77DFF', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 1 video analysed · avg 6.7M views' },
+  { id:360, name:'Vogue', handle:'@Vogue', platform:'YouTube', allPlatforms:['YouTube'], subs:'16.3M', avgViews:'749K', eng:'2.1%', genre:'Beauty & Skincare', cpi:77, gfi:94, color:'#FF85A1', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 1 video analysed · avg 749K views' },
+  { id:361, name:'NikkieTutorials', handle:'@nikkietutorials', platform:'YouTube', allPlatforms:['YouTube'], subs:'15.1M', avgViews:'1.9M', eng:'3.4%', genre:'Beauty & Skincare', cpi:83, gfi:94, color:'#F9A8D4', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 1 video analysed · avg 1.9M views' },
+  { id:362, name:'Sydney Morgan', handle:'@sydneymorgan', platform:'YouTube', allPlatforms:['YouTube'], subs:'9.9M', avgViews:'698K', eng:'1.1%', genre:'Beauty & Skincare', cpi:71, gfi:87, color:'#E879F9', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 2 videos analysed · avg 698K views' },
+  { id:363, name:'Denitslava Makeup', handle:'@DenitslavaMakeup', platform:'YouTube', allPlatforms:['YouTube'], subs:'8.3M', avgViews:'11.1M', eng:'1.6%', genre:'Beauty & Skincare', cpi:75, gfi:94, color:'#FB7185', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 4 videos analysed · avg 11.1M views' },
+  { id:364, name:'Tati', handle:'@Tati', platform:'YouTube', allPlatforms:['YouTube'], subs:'7.9M', avgViews:'144K', eng:'4.6%', genre:'Beauty & Skincare', cpi:85, gfi:94, color:'#F472B6', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 3 videos analysed · avg 144K views' },
+  { id:365, name:'Atarah Mayhew', handle:'@AtarahMayhew', platform:'YouTube', allPlatforms:['YouTube'], subs:'7.8M', avgViews:'5.4M', eng:'1.5%', genre:'Beauty & Skincare', cpi:75, gfi:87, color:'#E11D48', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 2 videos analysed · avg 5.4M views' },
+  { id:366, name:'JUSTKASS', handle:'@JUSTKASS', platform:'YouTube', allPlatforms:['YouTube'], subs:'6.3M', avgViews:'1.5M', eng:'0.9%', genre:'Beauty & Skincare', cpi:63, gfi:87, color:'#BE185D', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 1 video analysed · avg 1.5M views' },
+  { id:367, name:'Carli Bybel', handle:'@CarliBel55', platform:'YouTube', allPlatforms:['YouTube'], subs:'6.1M', avgViews:'46K', eng:'5.3%', genre:'Beauty & Skincare', cpi:89, gfi:87, color:'#9D174D', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 1 video analysed · avg 46K views' },
+  { id:368, name:'Kat Longoria', handle:'@kat_longoria', platform:'YouTube', allPlatforms:['YouTube'], subs:'5.5M', avgViews:'8.8M', eng:'0.3%', genre:'Beauty & Skincare', cpi:65, gfi:87, color:'#DB2777', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 1 video analysed · avg 8.8M views' },
+  { id:369, name:'Manny Mua', handle:'@MannyMua733', platform:'YouTube', allPlatforms:['YouTube'], subs:'4.8M', avgViews:'69K', eng:'5.4%', genre:'Beauty & Skincare', cpi:90, gfi:94, color:'#EC4899', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 1 video analysed · avg 69K views' },
+  { id:370, name:'Tina Yong', handle:'@tina_yong', platform:'YouTube', allPlatforms:['YouTube'], subs:'3.9M', avgViews:'264K', eng:'4.5%', genre:'Beauty & Skincare', cpi:86, gfi:87, color:'#F43F5E', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 2 videos analysed · avg 264K views' },
+  { id:371, name:'Smitha Deepak', handle:'@SmithaDepak', platform:'YouTube', allPlatforms:['YouTube'], subs:'3.8M', avgViews:'186K', eng:'2.2%', genre:'Beauty & Skincare', cpi:80, gfi:87, color:'#FF4D6D', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 1 video analysed · avg 186K views' },
+  { id:372, name:'Salish', handle:'@salishmatter', platform:'YouTube', allPlatforms:['YouTube'], subs:'3.7M', avgViews:'5.0M', eng:'1.5%', genre:'Beauty & Skincare', cpi:76, gfi:87, color:'#C9184A', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 1 video analysed · avg 5.0M views' },
+  { id:373, name:'The Mir Fam', handle:'@TheMirFam', platform:'YouTube', allPlatforms:['YouTube'], subs:'3.1M', avgViews:'3.1M', eng:'0.5%', genre:'Beauty & Skincare', cpi:66, gfi:87, color:'#A4133C', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 4 videos analysed · avg 3.1M views' },
+  { id:374, name:'Cali Sade', handle:'@CaliSade', platform:'YouTube', allPlatforms:['YouTube'], subs:'3.0M', avgViews:'6.6M', eng:'0.4%', genre:'Beauty & Skincare', cpi:66, gfi:87, color:'#800F2F', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 1 video analysed · avg 6.6M views' },
+  { id:375, name:'Jessica Vu', handle:'@jessyluxe', platform:'YouTube', allPlatforms:['YouTube'], subs:'2.1M', avgViews:'1.1M', eng:'3.3%', genre:'Beauty & Skincare', cpi:90, gfi:87, color:'#FF758F', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 1 video analysed · avg 1.1M views' },
+  { id:376, name:'Allure', handle:'@Allure', platform:'YouTube', allPlatforms:['YouTube'], subs:'2.1M', avgViews:'11.9M', eng:'1.1%', genre:'Beauty & Skincare', cpi:76, gfi:94, color:'#FF85A1', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 1 video analysed · avg 11.9M views' },
+  { id:377, name:'WappaModa', handle:'@WappaModa', platform:'YouTube', allPlatforms:['YouTube'], subs:'1.9M', avgViews:'20.6M', eng:'1.2%', genre:'Beauty & Skincare', cpi:76, gfi:87, color:'#FFB3C1', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 1 video analysed · avg 20.6M views' },
+  { id:378, name:'eslis', handle:'@eslielsa', platform:'YouTube', allPlatforms:['YouTube'], subs:'1.4M', avgViews:'238K', eng:'3.5%', genre:'Beauty & Skincare', cpi:86, gfi:87, color:'#FFCCD5', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 1 video analysed · avg 238K views' },
+  { id:379, name:'Ali Andreea', handle:'@AliAndreea', platform:'YouTube', allPlatforms:['YouTube'], subs:'1.4M', avgViews:'52K', eng:'4.2%', genre:'Beauty & Skincare', cpi:86, gfi:87, color:'#FFF0F3', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 1 video analysed · avg 52K views' },
+  { id:380, name:'Monica Ravi-Conway', handle:'@monica.raviii', platform:'YouTube', allPlatforms:['YouTube'], subs:'1.2M', avgViews:'61K', eng:'5.6%', genre:'Beauty & Skincare', cpi:90, gfi:87, color:'#FF6B9D', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 2 videos analysed · avg 61K views' },
+  { id:381, name:'Mrunal Panchal Sharma', handle:'@Mrunalpanchal', platform:'YouTube', allPlatforms:['YouTube'], subs:'1.0M', avgViews:'50K', eng:'3.4%', genre:'Beauty & Skincare', cpi:86, gfi:87, color:'#C77DFF', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 1 video analysed · avg 50K views' },
+  { id:382, name:'kayli boyle', handle:'@kayliboyle', platform:'YouTube', allPlatforms:['YouTube'], subs:'993K', avgViews:'314K', eng:'5.1%', genre:'Beauty & Skincare', cpi:92, gfi:87, color:'#FF85A1', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 1 video analysed · avg 314K views' },
+  { id:383, name:'Mitsuisen', handle:'@Mitsuisen', platform:'YouTube', allPlatforms:['YouTube'], subs:'990K', avgViews:'36K', eng:'3.0%', genre:'Beauty & Skincare', cpi:86, gfi:87, color:'#F9A8D4', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 1 video analysed · avg 36K views' },
+  { id:384, name:'Cosmetic Up', handle:'@cosmeticup.official', platform:'YouTube', allPlatforms:['YouTube'], subs:'734K', avgViews:'644K', eng:'1.1%', genre:'Beauty & Skincare', cpi:76, gfi:94, color:'#E879F9', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 2 videos analysed · avg 644K views' },
+  { id:385, name:'Glam Girl Gabi', handle:'@GlamGirlGabi', platform:'YouTube', allPlatforms:['YouTube'], subs:'725K', avgViews:'18K', eng:'6.6%', genre:'Beauty & Skincare', cpi:90, gfi:94, color:'#FB7185', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 1 video analysed · avg 18K views' },
+  { id:386, name:'Chin-Suns Daily life진선의 일상', handle:'@chin-sunsdailylife8927', platform:'YouTube', allPlatforms:['YouTube'], subs:'720K', avgViews:'12K', eng:'2.5%', genre:'Beauty & Skincare', cpi:80, gfi:87, color:'#F472B6', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 1 video analysed · avg 12K views' },
+  { id:387, name:'Nina Ubhi', handle:'@NinaUbhi1', platform:'YouTube', allPlatforms:['YouTube'], subs:'705K', avgViews:'529K', eng:'2.3%', genre:'Beauty & Skincare', cpi:84, gfi:87, color:'#E11D48', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 2 videos analysed · avg 529K views' },
+  { id:388, name:'Kayla Ryan', handle:'@kayla.ryan1', platform:'YouTube', allPlatforms:['YouTube'], subs:'698K', avgViews:'216K', eng:'3.8%', genre:'Beauty & Skincare', cpi:88, gfi:87, color:'#BE185D', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 1 video analysed · avg 216K views' },
+  { id:389, name:'Embreigh Courtlyn', handle:'@embreighcourtlynn', platform:'YouTube', allPlatforms:['YouTube'], subs:'628K', avgViews:'2.3M', eng:'3.3%', genre:'Beauty & Skincare', cpi:90, gfi:87, color:'#9D174D', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 1 video analysed · avg 2.3M views' },
+  { id:390, name:'Makeup By Nikki La Rose', handle:'@Makeupbynikkilarose', platform:'YouTube', allPlatforms:['YouTube'], subs:'514K', avgViews:'86K', eng:'6.2%', genre:'Beauty & Skincare', cpi:90, gfi:94, color:'#DB2777', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 3 videos analysed · avg 86K views' },
+  { id:391, name:'Tea Renee', handle:'@TeaRenee', platform:'YouTube', allPlatforms:['YouTube'], subs:'479K', avgViews:'9K', eng:'7.1%', genre:'Beauty & Skincare', cpi:90, gfi:87, color:'#EC4899', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 1 video analysed · avg 9K views' },
+  { id:392, name:'Risa Does Makeup', handle:'@RisaDoesMakeup', platform:'YouTube', allPlatforms:['YouTube'], subs:'476K', avgViews:'26K', eng:'11.4%', genre:'Beauty & Skincare', cpi:94, gfi:94, color:'#F43F5E', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 1 video analysed · avg 26K views' },
+  { id:393, name:'InStyle', handle:'@InStyle', platform:'YouTube', allPlatforms:['YouTube'], subs:'378K', avgViews:'288K', eng:'4.5%', genre:'Beauty & Skincare', cpi:90, gfi:87, color:'#FF4D6D', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 1 video analysed · avg 288K views' },
+  { id:394, name:'Lisa J', handle:'@lisajmakeup', platform:'YouTube', allPlatforms:['YouTube'], subs:'367K', avgViews:'24K', eng:'6.3%', genre:'Beauty & Skincare', cpi:90, gfi:94, color:'#C9184A', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 2 videos analysed · avg 24K views' },
+  { id:395, name:'izzy shea', handle:'@IzzyShea', platform:'YouTube', allPlatforms:['YouTube'], subs:'353K', avgViews:'111K', eng:'4.0%', genre:'Beauty & Skincare', cpi:88, gfi:87, color:'#A4133C', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 3 videos analysed · avg 111K views' },
+  { id:396, name:'Alabama Barker', handle:'@AlabamaBarker', platform:'YouTube', allPlatforms:['YouTube'], subs:'295K', avgViews:'1.4M', eng:'2.7%', genre:'Beauty & Skincare', cpi:84, gfi:87, color:'#800F2F', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 1 video analysed · avg 1.4M views' },
+  { id:397, name:'Michele Wang', handle:'@TheMicheleWang', platform:'YouTube', allPlatforms:['YouTube'], subs:'266K', avgViews:'9K', eng:'7.6%', genre:'Beauty & Skincare', cpi:90, gfi:87, color:'#FF758F', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 1 video analysed · avg 9K views' },
+  { id:398, name:'Aishwarya Narkar', handle:'@aishwarya.narkar', platform:'YouTube', allPlatforms:['YouTube'], subs:'204K', avgViews:'5K', eng:'3.2%', genre:'Beauty & Skincare', cpi:86, gfi:87, color:'#FF85A1', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 1 video analysed · avg 5K views' },
+  { id:399, name:'Hannah Louise Poston', handle:'@HannahLouisePoston', platform:'YouTube', allPlatforms:['YouTube'], subs:'200K', avgViews:'18K', eng:'7.2%', genre:'Beauty & Skincare', cpi:90, gfi:87, color:'#FFB3C1', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 1 video analysed · avg 18K views' },
+  { id:400, name:'Makeup Things', handle:'@konichiwa-y2k', platform:'YouTube', allPlatforms:['YouTube'], subs:'185K', avgViews:'959K', eng:'0.6%', genre:'Beauty & Skincare', cpi:66, gfi:94, color:'#FFCCD5', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 2 videos analysed · avg 959K views' },
+  { id:401, name:'Evelyn Ortiz', handle:'@_evess', platform:'YouTube', allPlatforms:['YouTube'], subs:'162K', avgViews:'22K', eng:'5.0%', genre:'Beauty & Skincare', cpi:86, gfi:87, color:'#FFF0F3', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 1 video analysed · avg 22K views' },
+  { id:402, name:'Samantha Harvey', handle:'@makeupbysamanthaharvey', platform:'YouTube', allPlatforms:['YouTube'], subs:'155K', avgViews:'179K', eng:'5.4%', genre:'Beauty & Skincare', cpi:94, gfi:94, color:'#FF6B9D', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 1 video analysed · avg 179K views' },
+  { id:403, name:'Erin Nicole TV', handle:'@ErinNicoleTV', platform:'YouTube', allPlatforms:['YouTube'], subs:'128K', avgViews:'26K', eng:'5.4%', genre:'Beauty & Skincare', cpi:92, gfi:87, color:'#C77DFF', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 1 video analysed · avg 26K views' },
+  { id:404, name:'Amanda Z', handle:'@AmandaZ', platform:'YouTube', allPlatforms:['YouTube'], subs:'127K', avgViews:'20K', eng:'4.9%', genre:'Beauty & Skincare', cpi:86, gfi:87, color:'#FF85A1', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 1 video analysed · avg 20K views' },
+  { id:405, name:'Imani LeeMarie', handle:'@ImaniLeeMarie', platform:'YouTube', allPlatforms:['YouTube'], subs:'120K', avgViews:'4K', eng:'10.2%', genre:'Beauty & Skincare', cpi:94, gfi:87, color:'#F9A8D4', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 1 video analysed · avg 4K views' },
+  { id:406, name:'KKAÖ by KKB', handle:'@kkaobykkb', platform:'YouTube', allPlatforms:['YouTube'], subs:'103K', avgViews:'323K', eng:'4.3%', genre:'Beauty & Skincare', cpi:90, gfi:87, color:'#E879F9', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 1 video analysed · avg 323K views' },
+  { id:407, name:'Emily Heal', handle:'@EmilyHeal', platform:'YouTube', allPlatforms:['YouTube'], subs:'77K', avgViews:'442K', eng:'4.0%', genre:'Beauty & Skincare', cpi:90, gfi:87, color:'#FB7185', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 2 videos analysed · avg 442K views' },
+  { id:408, name:'Darlene Obiyan', handle:'@BeautyIsWhatIDo2.0', platform:'YouTube', allPlatforms:['YouTube'], subs:'76K', avgViews:'4K', eng:'8.3%', genre:'Beauty & Skincare', cpi:94, gfi:94, color:'#F472B6', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 1 video analysed · avg 4K views' },
+  { id:409, name:'By Kristina Studio', handle:'@ByKristinaStudio', platform:'YouTube', allPlatforms:['YouTube'], subs:'64K', avgViews:'14K', eng:'4.8%', genre:'Beauty & Skincare', cpi:88, gfi:87, color:'#E11D48', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 1 video analysed · avg 14K views' },
+  { id:410, name:'Jackeline', handle:'@heyitsjackeline', platform:'YouTube', allPlatforms:['YouTube'], subs:'62K', avgViews:'6K', eng:'7.5%', genre:'Beauty & Skincare', cpi:90, gfi:87, color:'#BE185D', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 1 video analysed · avg 6K views' },
+  { id:411, name:'French For A Day', handle:'@Frenchforaday', platform:'YouTube', allPlatforms:['YouTube'], subs:'59K', avgViews:'9K', eng:'7.3%', genre:'Beauty & Skincare', cpi:90, gfi:87, color:'#9D174D', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 1 video analysed · avg 9K views' },
+  { id:412, name:'Mian', handle:'@Mian_Makeup', platform:'YouTube', allPlatforms:['YouTube'], subs:'57K', avgViews:'7K', eng:'2.5%', genre:'Beauty & Skincare', cpi:80, gfi:94, color:'#DB2777', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 2 videos analysed · avg 7K views' },
+  { id:413, name:'Beautiful and Bothered Podcast', handle:'@beautifulandbothered', platform:'YouTube', allPlatforms:['YouTube'], subs:'54K', avgViews:'19K', eng:'7.4%', genre:'Beauty & Skincare', cpi:92, gfi:87, color:'#EC4899', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 1 video analysed · avg 19K views' },
+  { id:414, name:'leeleetap', handle:'@leeleetap', platform:'YouTube', allPlatforms:['YouTube'], subs:'49K', avgViews:'731K', eng:'0.4%', genre:'Beauty & Skincare', cpi:66, gfi:87, color:'#F43F5E', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 1 video analysed · avg 731K views' },
+  { id:415, name:'Luvv Sophi', handle:'@luvvsophi', platform:'YouTube', allPlatforms:['YouTube'], subs:'34K', avgViews:'261K', eng:'4.6%', genre:'Beauty & Skincare', cpi:90, gfi:87, color:'#FF4D6D', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 1 video analysed · avg 261K views' },
+  { id:416, name:'Sharan Gill', handle:'@sharangill6284', platform:'YouTube', allPlatforms:['YouTube'], subs:'30K', avgViews:'618K', eng:'1.9%', genre:'Beauty & Skincare', cpi:76, gfi:87, color:'#C9184A', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 1 video analysed · avg 618K views' },
+  { id:417, name:'Jam Damian', handle:'@JamDamiann', platform:'YouTube', allPlatforms:['YouTube'], subs:'25K', avgViews:'58K', eng:'6.2%', genre:'Beauty & Skincare', cpi:94, gfi:87, color:'#A4133C', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 1 video analysed · avg 58K views' },
+  { id:418, name:'Aviooli', handle:'@aviooli', platform:'YouTube', allPlatforms:['YouTube'], subs:'24K', avgViews:'7K', eng:'6.7%', genre:'Beauty & Skincare', cpi:92, gfi:87, color:'#800F2F', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 1 video analysed · avg 7K views' },
+  { id:419, name:'Avonna Sunshine', handle:'@Avonna.sunshine', platform:'YouTube', allPlatforms:['YouTube'], subs:'13K', avgViews:'166K', eng:'5.5%', genre:'Beauty & Skincare', cpi:94, gfi:87, color:'#FF758F', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 1 video analysed · avg 166K views' },
+  { id:420, name:'Flora Makeup', handle:'@FloraMakeup-l9z', platform:'YouTube', allPlatforms:['YouTube'], subs:'10K', avgViews:'301K', eng:'1.7%', genre:'Beauty & Skincare', cpi:76, gfi:94, color:'#FF85A1', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 1 video analysed · avg 301K views' },
+  { id:421, name:'Genevieve Daily Beauty', handle:'@Genevievedailybeauty', platform:'YouTube', allPlatforms:['YouTube'], subs:'5K', avgViews:'4K', eng:'6.7%', genre:'Beauty & Skincare', cpi:94, gfi:94, color:'#FFB3C1', verifiedDeals:0, sponsorHistory:[], bio:'Beauty & Skincare · 1 video analysed · avg 4K views' },
 ];
 
 // ── GENRE AFFINITY ────────────────────────────────────────────────────
@@ -2319,12 +2667,14 @@ function toggleCreator(id) {
   else selectedCreators.add(id);
   renderCreatorGrid();
   updateSelectedBar();
+  updateBriefPanel();
 }
 
 function clearSelection() {
   selectedCreators.clear();
   renderCreatorGrid();
   updateSelectedBar();
+  updateBriefPanel();
 }
 
 function updateSelectedBar() {
@@ -2361,19 +2711,41 @@ function cpiScoreColor(cpi) {
 }
 
 function renderCreatorGrid() {
-  const sorted = sortMode==='gfi' ? [...CREATORS].sort((a,b)=>computeGFI(b)-computeGFI(a))
-               : sortMode==='subs' ? [...CREATORS].sort((a,b)=>parseSubs(b.subs)-parseSubs(a.subs))
-               : [...CREATORS].sort((a,b)=>b.cpi-a.cpi);
+  const genre  = getSelectedGenre();
+  const budget = parseInt((document.getElementById('budget')||{value:'85000'}).value)||85000;
+  const tierMix = parseInt((document.getElementById('tierMix')||{value:'4'}).value);
 
-  // All creators visible (subscription)
+  // Filter: only show creators that match the selected genre
+  // Grey out (but show) creators outside budget range
+  const all = [...CREATORS].sort(
+    sortMode==='gfi'  ? (a,b)=>computeGFI(b)-computeGFI(a) :
+    sortMode==='subs' ? (a,b)=>parseSubs(b.subs)-parseSubs(a.subs) :
+                        (a,b)=>b.cpi-a.cpi
+  );
+
+  // Genre-match filter: show creators whose genre matches OR has high affinity
+  const genreMatched = all.filter(c => {
+    if (c.genre === genre) return true;
+    const affinity = (GENRE_AFFINITY[c.genre]||{})[genre] ?? 0;
+    return affinity >= 0.6; // show cross-genre creators with decent affinity
+  });
+
+  // If no genre match at all, show everything (fallback)
+  const sorted = genreMatched.length >= 5 ? genreMatched : all;
 
   document.getElementById('creatorGrid').innerHTML = sorted.map((c, idx) => {
+    // Check if creator fits budget
+    const e2 = computeCostEstimate(c);
+    const minRate = e2.ranges.int[0];
+    const budgetOk = minRate <= budget;
+    const dimmed = !budgetOk ? 'opacity:0.45;' : '';
     const selected   = selectedCreators.has(c.id);
     const gfi        = computeGFI(c);
     const mismatch   = getMismatch(c);
     const e          = computeCostEstimate(c);
 
-    return `<div class="creator-card ${selected?'selected':''}" onclick="toggleCreator(${c.id})" style="cursor:pointer">
+    return `<div class="creator-card ${selected?'selected':''}" onclick="toggleCreator(${c.id})" style="cursor:pointer;${dimmed}position:relative">
+      ${!budgetOk ? `<div style="position:absolute;top:8px;left:8px;font-family:'DM Mono',monospace;font-size:8px;padding:2px 6px;background:rgba(230,0,35,0.15);border:1px solid rgba(230,0,35,0.3);color:#FF3355;border-radius:2px;z-index:1">ABOVE BUDGET</div>` : ''}
       <div class="creator-card-header">
         <div class="creator-avatar" onclick="event.stopPropagation();openProfileOverlay(${c.id})" style="background:${c.color}22;color:${c.color};${selected?'border:2px solid '+c.color:''};cursor:zoom-in" title="View profile">${c.name.charAt(0)}</div>
         <div style="flex:1;min-width:0">
@@ -2402,8 +2774,7 @@ function renderCreatorGrid() {
     </div>`;
   }).join('');
 
-  const genre = getSelectedGenre();
-  document.getElementById('discoveryMeta').textContent = sorted.length + ' CREATORS · ' + genre.toUpperCase();
+  document.getElementById('discoveryMeta').textContent = sorted.length + ' CREATORS · ' + genre.toUpperCase() + (sorted.length < CREATORS.length ? ' · ' + (CREATORS.length - sorted.length) + ' OTHER GENRES HIDDEN' : '');
 }
 
 // ── PROFILE OVERLAY ───────────────────────────────────────────────────
@@ -2652,6 +3023,7 @@ function updateTierLabel(v) {
   const el = document.getElementById('budgetLabel');
   if(el) el.textContent = formatBudget(parseInt(v));
   updateSim();
+  updateBriefPanel();
 }
 
 function getActivePersonas() {
@@ -2668,43 +3040,78 @@ function getObjCategory(obj) {
 function computeSimResults() {
   const budget    = parseInt((document.getElementById('budget')||{value:'85000'}).value)||85000;
   const format    = (document.getElementById('format')||{value:'Integrated'}).value;
-  const tierMix   = parseInt((document.getElementById('tierMix')||{value:'1'}).value)||1;
   const genre     = getSelectedGenre() || 'Gaming & Esports';
   const bench     = GENRE_BENCHMARKS[genre] || GENRE_BENCHMARKS['Gaming & Esports'];
   const { awarenessW, salesW, engagementW } = getObjWeights();
-  const toShow    = selectedCreators.size > 0 ? CREATORS.filter(c=>selectedCreators.has(c.id)) : CREATORS;
-  const subModeMult = activeSubMode ? 1.08 : 1.0;
-  const avgCPI    = toShow.reduce((a,c)=>a+c.cpi,0)/toShow.length/100;
-  const tierMults = [0.75, 1.0, 1.15, 1.35, 1.05];
-  const tierMult  = tierMults[tierMix]||1.0;
-  const formatMult= format==='Dedicated'?1.4:format==='Mixed'?1.15:1.0;
-  const cpmActual = bench.cpmBase * tierMult;
-  const impressions = Math.round((budget / cpmActual) * 1000 * subModeMult);
-  const ctrMult   = avgCPI * tierMult * (1 + awarenessW*0.1 - salesW*0.05);
-  const ctr       = bench.ctrBase * ctrMult * formatMult;
-  const cvr       = bench.cvrBase * (1 + salesW*0.3 - awarenessW*0.1) * avgCPI;
-  const clicks    = Math.round(impressions * ctr / 100);
-  const conversions = Math.round(clicks * cvr / 100);
-  const revenue   = conversions * 28;
-  const roas      = revenue / budget;
-  const engRate   = bench.engBase * (1 + engagementW*0.2) * avgCPI;
 
-  const spread = simScenario==='best'?1.3:simScenario==='worst'?0.72:1.0;
+  // Use selected creators, or fall back to top 5 by CPI
+  const toSim = selectedCreators.size > 0
+    ? CREATORS.filter(cr => selectedCreators.has(cr.id))
+    : [...CREATORS].sort((a,b) => b.cpi - a.cpi).slice(0,5);
+
+  const formatKey   = format === 'Dedicated' ? 'ded' : format === 'Mixed' ? 'mix' : 'int';
+  const formatMult  = format === 'Dedicated' ? 1.4 : format === 'Mixed' ? 1.15 : 1.0;
+  const subModeMult = activeSubMode ? 1.08 : 1.0;
+
+  // Per-creator: allocate budget proportionally by their avg rate
+  // Sum estimated costs to see how many creators fit in budget
+  let totalEstCost = 0;
+  const crData = toSim.map(cr => {
+    const e = computeCostEstimate(cr);
+    const midRate = (e.ranges[formatKey][0] + e.ranges[formatKey][1]) / 2;
+    totalEstCost += midRate;
+    return { cr, e, midRate };
+  });
+
+  // Calculate aggregate impressions from budget and actual avg CPM
+  const niche  = NICHE_SPONSOR_CPM[genre] || DEFAULT_CPM;
+  const cpmBase= niche.med * (format === 'Dedicated' ? niche.dedMult : 1.0);
+
+  // Weighted avg CPI across selected creators
+  const avgCPI = toSim.reduce((a,cr) => a + cr.cpi, 0) / toSim.length / 100;
+  // Weighted avg views (proxy for reach per £ spent)
+  const avgViews = toSim.reduce((a,cr) => a + (parseViews(cr.avgViews)||0), 0) / toSim.length;
+
+  // Impressions = budget / CPM * 1000, boosted by creator CPI
+  const cpmActual  = cpmBase * Math.max(0.6, avgCPI);
+  const impressions = Math.round((budget / Math.max(cpmActual, 1)) * 1000 * subModeMult * formatMult);
+
+  const ctrMult    = avgCPI * (1 + awarenessW*0.1 - salesW*0.05);
+  const ctr        = Math.min(bench.ctrBase * ctrMult * formatMult, 15);
+  const cvr        = Math.min(bench.cvrBase * (1 + salesW*0.3 - awarenessW*0.1) * avgCPI, 20);
+  const clicks     = Math.round(impressions * ctr / 100);
+  const conversions= Math.round(clicks * cvr / 100);
+  const revenue    = conversions * 30;
+  const roas       = budget > 0 ? revenue / budget : 0;
+  const engRate    = Math.min(bench.engBase * (1 + engagementW*0.2) * avgCPI, 20);
 
   simResults = {
-    impressions: Math.round(impressions*spread),
-    ctr: Math.round(ctr*spread*10)/10,
-    cpM: Math.round(cpmActual*100)/100,
-    cvr: Math.round(cvr*spread*10)/10,
-    conversions: Math.round(conversions*spread),
-    roas: Math.round(roas*spread*10)/10,
-    engRate: Math.round(engRate*spread*10)/10,
-    clicks: Math.round(clicks*spread),
+    impressions,
+    ctr:   Math.round(ctr*10)/10,
+    cpM:   Math.round(cpmActual*100)/100,
+    cvr:   Math.round(cvr*10)/10,
+    conversions,
+    roas:  Math.round(roas*10)/10,
+    engRate: Math.round(engRate*10)/10,
+    clicks,
     budget,
-    // Confidence bands
-    p10: { impressions:Math.round(impressions*0.7), ctr:Math.round(ctr*0.7*10)/10, roas:Math.round(roas*0.7*10)/10 },
-    p50: { impressions:Math.round(impressions),     ctr:Math.round(ctr*10)/10,     roas:Math.round(roas*10)/10 },
-    p90: { impressions:Math.round(impressions*1.4), ctr:Math.round(ctr*1.4*10)/10, roas:Math.round(roas*1.4*10)/10 },
+    crData,  // per-creator data for breakdown
+    // P10 / P50 / P90 confidence bands
+    p10: {
+      impressions: Math.round(impressions * 0.68),
+      ctr:  Math.round(ctr * 0.68 * 10)/10,
+      roas: Math.round(roas * 0.65 * 10)/10,
+    },
+    p50: {
+      impressions,
+      ctr:  Math.round(ctr*10)/10,
+      roas: Math.round(roas*10)/10,
+    },
+    p90: {
+      impressions: Math.round(impressions * 1.42),
+      ctr:  Math.round(ctr * 1.42 * 10)/10,
+      roas: Math.round(roas * 1.45 * 10)/10,
+    },
   };
 }
 
@@ -3089,6 +3496,64 @@ function updateBandDisplays() {
   if (gSub) gSub.innerHTML = `CTR <strong style="color:#00C46A">${r.p90.ctr}%</strong> &nbsp; ROAS <strong style="color:#00C46A">${r.p90.roas}×</strong>`;
 }
 
+
+// ── CAMPAIGN BRIEF PANEL ──────────────────────────────────────────────
+function updateBriefPanel() {
+  const panel   = document.getElementById('briefPanel');
+  const chips   = document.getElementById('briefCreatorChips');
+  const countEl = document.getElementById('briefCreatorCount');
+  const budgetEl= document.getElementById('briefBudgetDisplay');
+  const avgCpiEl= document.getElementById('briefAvgCPI');
+  const avgGfiEl= document.getElementById('briefAvgGFI');
+  const reachEl = document.getElementById('briefEstReach');
+  if (!panel) return;
+
+  if (selectedCreators.size === 0) {
+    panel.classList.remove('open');
+    return;
+  }
+
+  panel.classList.add('open');
+
+  const selected = CREATORS.filter(cr => selectedCreators.has(cr.id));
+  const budget   = parseInt((document.getElementById('budget')||{value:'85000'}).value)||85000;
+  const genre    = getSelectedGenre();
+
+  // Creator chips
+  chips.innerHTML = selected.map(cr => `
+    <div class="brief-creator-chip" onclick="toggleCreator(${cr.id})" title="Click to remove">
+      <div style="width:20px;height:20px;border-radius:50%;background:${cr.color}33;color:${cr.color};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700">${cr.name.charAt(0)}</div>
+      <span>${cr.name}</span>
+      <span style="color:#FF3355;font-weight:700;font-size:11px">×</span>
+    </div>
+  `).join('');
+
+  // Stats
+  countEl.textContent  = selected.length;
+  budgetEl.textContent = formatBudget(budget);
+
+  const avgCpi = Math.round(selected.reduce((a,cr) => a + cr.cpi, 0) / selected.length);
+  const avgGfi = Math.round(selected.reduce((a,cr) => a + (cr.gfi || computeGFI(cr)), 0) / selected.length);
+  avgCpiEl.textContent = avgCpi;
+  avgGfiEl.textContent = avgGfi + '%';
+
+  // Estimate reach based on budget / avg CPM
+  const bench  = GENRE_BENCHMARKS[genre] || GENRE_BENCHMARKS['Gaming & Esports'];
+  const reach  = Math.round((budget / bench.cpmBase) * 1000);
+  reachEl.textContent = fmtNum(reach);
+}
+
+function runFromBrief() {
+  if (selectedCreators.size === 0) return;
+  computeSimResults();
+  showScreen('simulator', document.querySelector('.nav-tab:nth-child(4)'));
+  updateSimDisplay();
+  renderEfficiencyCurve();
+  updateBandDisplays();
+  // Scroll to top of simulator
+  document.querySelector('.main').scrollTop = 0;
+}
+
 // ── INIT ──────────────────────────────────────────────────────────────
 window.add
 // ── THEME TOGGLE ──────────────────────────────────────────────────────
@@ -3430,6 +3895,37 @@ function checkGate() {
   try {
     if (sessionStorage.getItem('sf_auth') === '1') {
       var g = document.getElementById('sfGate')
+
+<!-- CAMPAIGN BRIEF PANEL -->
+<div id="briefPanel">
+  <div class="brief-inner">
+    <div>
+      <div class="brief-title">Campaign Brief · <span id="briefCreatorCount">0</span> Creators Selected · Budget: <span id="briefBudgetDisplay">£85K</span></div>
+      <div class="brief-creators" id="briefCreatorChips"></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:20px">
+      <div class="brief-stats">
+        <div class="brief-stat">
+          <div class="brief-stat-val" id="briefAvgCPI">—</div>
+          <div class="brief-stat-label">Avg CPI</div>
+        </div>
+        <div class="brief-stat">
+          <div class="brief-stat-val" id="briefAvgGFI">—</div>
+          <div class="brief-stat-label">Avg GFI</div>
+        </div>
+        <div class="brief-stat">
+          <div class="brief-stat-val" id="briefEstReach">—</div>
+          <div class="brief-stat-label">Est. Reach</div>
+        </div>
+      </div>
+      <div class="brief-actions">
+        <button class="brief-clear-btn" onclick="clearSelection()">CLEAR</button>
+        <button class="brief-run-btn" onclick="runFromBrief()">▶ SIMULATE THIS CAMPAIGN →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
 </body>
