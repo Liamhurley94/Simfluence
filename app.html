@@ -1559,6 +1559,29 @@
   
 
   
+
+  /* ── BUDGET BAR ──────────────────────────────────────────────── */
+  #briefPanel { padding-bottom: 4px; }
+  .brief-inner { padding: 16px 40px 14px; }
+  .cost-pill {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    padding: 3px 8px;
+    border-radius: 3px;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    white-space: nowrap;
+    display: flex; gap: 5px; align-items: center;
+  }
+  .cost-pill .pill-dot {
+    width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+  }
+  .cost-pill.over-budget {
+    border-color: rgba(230,0,35,0.4);
+    color: #FF3355;
+    background: rgba(230,0,35,0.08);
+  }
+
   /* ── CAMPAIGN BRIEF PANEL ─────────────────────────────────────── */
   #briefPanel {
     position: fixed;
@@ -1768,7 +1791,7 @@ document.getElementById('GP').focus();
 
         <div class="field">
           <label>Sponsored Format</label>
-          <select id="format">
+          <select id="format" onchange="updateTierLabel((document.getElementById('budget')||{value:'85000'}).value)">
             <option value="Integrated">Integrated (60–90 sec)</option>
             <option value="Dedicated">Dedicated (full video)</option>
             <option value="Mixed">Mixed</option>
@@ -2744,8 +2767,29 @@ function renderCreatorGrid() {
     const mismatch   = getMismatch(c);
     const e          = computeCostEstimate(c);
 
+    // Compute how much of budget is already committed by selected creators
+    const alreadySpent = [...selectedCreators].reduce((total, selId) => {
+      if (selId === c.id) return total; // don't double-count if already selected
+      const selCr = CREATORS.find(x => x.id === selId);
+      if (!selCr) return total;
+      const selEst = computeCostEstimate(selCr);
+      const selFmtKey = 'int';
+      return total + Math.round((selEst.ranges[selFmtKey][0] + selEst.ranges[selFmtKey][1]) / 2);
+    }, 0);
+    const thisMinCost   = e2.ranges.int[0];
+    const thisMidCost   = Math.round((e2.ranges.int[0] + e2.ranges.int[1]) / 2);
+    const wouldSpend    = alreadySpent + thisMidCost;
+    const wouldOverrun  = wouldSpend > budget;
+    const remainingBudg = budget - alreadySpent;
+
+    const budgetBadge = !budgetOk
+      ? `<div style="position:absolute;top:8px;left:8px;font-family:'DM Mono',monospace;font-size:8px;padding:2px 7px;background:rgba(230,0,35,0.15);border:1px solid rgba(230,0,35,0.3);color:#FF3355;border-radius:2px;z-index:1;letter-spacing:.04em">ABOVE BUDGET</div>`
+      : wouldOverrun && !selected
+        ? `<div style="position:absolute;top:8px;left:8px;font-family:'DM Mono',monospace;font-size:8px;padding:2px 7px;background:rgba(255,122,0,0.12);border:1px solid rgba(255,122,0,0.3);color:#FF7A00;border-radius:2px;z-index:1;letter-spacing:.04em">WOULD OVERSPEND</div>`
+        : '';
+
     return `<div class="creator-card ${selected?'selected':''}" onclick="toggleCreator(${c.id})" style="cursor:pointer;${dimmed}position:relative">
-      ${!budgetOk ? `<div style="position:absolute;top:8px;left:8px;font-family:'DM Mono',monospace;font-size:8px;padding:2px 6px;background:rgba(230,0,35,0.15);border:1px solid rgba(230,0,35,0.3);color:#FF3355;border-radius:2px;z-index:1">ABOVE BUDGET</div>` : ''}
+      ${budgetBadge}
       <div class="creator-card-header">
         <div class="creator-avatar" onclick="event.stopPropagation();openProfileOverlay(${c.id})" style="background:${c.color}22;color:${c.color};${selected?'border:2px solid '+c.color:''};cursor:zoom-in" title="View profile">${c.name.charAt(0)}</div>
         <div style="flex:1;min-width:0">
@@ -2882,7 +2926,7 @@ function showScreen(name, btn) {
 
   if(name==='scoring') { renderScoringScreen(); renderFullScoreTable(); }
   if(name==='personas') renderPersonaScreen();
-  if(name==='simulator') { computeSimResults(); updateSimDisplay(); renderEfficiencyCurve(); }
+  if(name==='simulator') { computeSimResults(); updateSimDisplay(); updateBandDisplays(); renderEfficiencyCurve(); }
 }
 
 // ── SUB-MODES ─────────────────────────────────────────────────────────
@@ -2898,6 +2942,7 @@ function onGenreChange() {
     `<button class="chip ${i===0?'active':''}" onclick="setSubMode('${m.replace(/'/g,"\\'")}',this)">${m}</button>`
   ).join('');
   renderCreatorGrid();
+  updateBriefPanel();
 }
 
 function setSubMode(m, btn) {
@@ -3020,8 +3065,27 @@ function updateSim() {
 }
 
 function updateTierLabel(v) {
+  const budget = parseInt(v) || 85000;
   const el = document.getElementById('budgetLabel');
-  if(el) el.textContent = formatBudget(parseInt(v));
+  if (el) {
+    // Compute committed spend from selected creators
+    const format = (document.getElementById('format')||{value:'Integrated'}).value;
+    const fmtKey = format==='Dedicated'?'ded':format==='Mixed'?'mix':'int';
+    const spent = [...selectedCreators].reduce((total, id) => {
+      const cr = CREATORS.find(x => x.id === id);
+      if (!cr) return total;
+      const e = computeCostEstimate(cr);
+      return total + Math.round((e.ranges[fmtKey][0] + e.ranges[fmtKey][1]) / 2);
+    }, 0);
+    const remaining = budget - spent;
+    if (selectedCreators.size > 0) {
+      const remColor = remaining < 0 ? '#FF3355' : remaining < budget * 0.2 ? '#FF7A00' : '#00C46A';
+      el.innerHTML = formatBudget(budget) +
+        ` <span style="font-size:10px;color:${remColor};font-family:'DM Mono',monospace"> · ${remaining>=0?formatBudget(remaining)+' left':formatBudget(Math.abs(remaining))+' over'}</span>`;
+    } else {
+      el.textContent = formatBudget(budget);
+    }
+  }
   updateSim();
   updateBriefPanel();
 }
@@ -3116,94 +3180,181 @@ function computeSimResults() {
 }
 
 function updateSimDisplay() {
-  if(!simResults) computeSimResults();
+  if (!simResults) computeSimResults();
   const r = simResults;
+  const budget = parseInt((document.getElementById('budget')||{value:'85000'}).value)||85000;
+  const format = (document.getElementById('format')||{value:'Integrated'}).value;
+  const genre  = getSelectedGenre() || 'Gaming & Esports';
+  const bench  = GENRE_BENCHMARKS[genre] || GENRE_BENCHMARKS['Gaming & Esports'];
+  const formatKey = format === 'Dedicated' ? 'ded' : format === 'Mixed' ? 'mix' : 'int';
+
+  // ── BAND DISPLAYS (P10 / P50 / P90) ─────────────────────────────
+  const bands = {
+    worst: { el:'bandWorstImpr', sub:'bandWorstSub', data:r.p10, col:'#E60023' },
+    base:  { el:'bandBaseImpr',  sub:'bandBaseSub',  data:r.p50, col:'#FFD400' },
+    best:  { el:'bandBestImpr',  sub:'bandBestSub',  data:r.p90, col:'#00C46A' },
+  };
+  Object.values(bands).forEach(({el,sub,data,col}) => {
+    const impEl = document.getElementById(el);
+    const subEl = document.getElementById(sub);
+    if (impEl) impEl.textContent = fmtNum(data.impressions);
+    if (subEl) subEl.innerHTML =
+      `CTR <strong style="color:${col}">${data.ctr}%</strong> &nbsp; ROAS <strong style="color:${col}">${data.roas}×</strong>`;
+  });
+
+  // ── CORE METRIC CARDS ─────────────────────────────────────────────
   const metrics = [
-    { label:'Est. Impressions', val:fmtNum(r.impressions), sub:'Total reach', color:'#0050FF' },
-    { label:'CTR',              val:r.ctr+'%',            sub:'Click-through rate', color:'#00C46A' },
+    { label:'Est. Impressions', val:fmtNum(r.impressions), sub:'Total reach',        color:'#0050FF' },
+    { label:'CTR',              val:r.ctr+'%',            sub:'Click-through rate',  color:'#00C46A' },
     { label:'CPM',              val:'£'+r.cpM,            sub:'Cost per 1,000 imps', color:'#FF7A00' },
-    { label:'CVR',              val:r.cvr+'%',            sub:'Conversion rate', color:'#9C27B0' },
-    { label:'Est. Conversions', val:fmtNum(r.conversions),sub:'Installs / leads', color:'#E91E63' },
-    { label:'ROAS',             val:r.roas+'×',           sub:'Return on ad spend', color:'#FFD400' },
+    { label:'CVR',              val:r.cvr+'%',            sub:'Conversion rate',     color:'#9C27B0' },
+    { label:'Est. Conversions', val:fmtNum(r.conversions),sub:'Installs / leads',    color:'#E91E63' },
+    { label:'ROAS',             val:r.roas+'×',           sub:'Return on ad spend',  color:'#FFD400' },
   ];
-  document.getElementById('simResults').innerHTML = metrics.map(m => `
+  const simEl = document.getElementById('simResults');
+  if (simEl) simEl.innerHTML = metrics.map(m => `
     <div class="sim-metric-card">
       <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);letter-spacing:.1em;margin-bottom:8px">${m.label}</div>
-      <div style="font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:600;color:${m.color}">${m.val}</div>
+      <div style="font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:700;color:${m.color}">${m.val}</div>
       <div style="font-size:11px;color:var(--text-muted);margin-top:4px">${m.sub}</div>
     </div>`).join('');
 
-  // P10/P50/P90 panel
-  const budget = parseInt((document.getElementById('budget')||{value:'85000'}).value)||85000;
-  document.getElementById('budgetPanelContent').innerHTML = `
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:10px">
-      ${[['P10 (Conservative)',r.p10],['P50 (Base)',r.p50],['P90 (Optimistic)',r.p90]].map(([label,p])=>`
-        <div style="text-align:center;padding:14px;background:var(--bg3);border-radius:4px;border:1px solid var(--border)">
-          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);margin-bottom:8px">${label}</div>
-          <div style="font-size:18px;font-weight:600;color:#FFD400">${fmtNum(p.impressions)}</div>
-          <div style="font-size:10px;color:var(--text-muted)">impressions</div>
-          <div style="margin-top:8px;font-size:13px;color:#00C46A">${p.ctr}% CTR</div>
-          <div style="font-size:13px;color:#FF7A00">${p.roas}× ROAS</div>
-        </div>`).join('')}
-    </div>
-    <div style="margin-top:10px;font-size:10px;color:var(--text-muted);text-align:center">Budget: ${formatBudget(budget)} · 90% statistical confidence · All outputs based on 2025 industry benchmarks</div>
-  `;
-
-  // ── SELECTED CREATORS BREAKDOWN ─────────────────────────────
+  // ── PER-CREATOR INDIVIDUAL FORECAST ─────────────────────────────
+  // This is the HERO of the simulator
   const toShowSim = selectedCreators.size > 0
     ? CREATORS.filter(cr => selectedCreators.has(cr.id))
-    : CREATORS.slice(0, 5);
+    : [...CREATORS].sort((a,b)=>b.cpi-a.cpi).slice(0,5);
 
-  const creatorBreakdown = document.getElementById('creatorBreakdown');
-  if (creatorBreakdown) {
-    creatorBreakdown.innerHTML = toShowSim.map(cr => {
-      const crGfi = cr.gfi || computeGFI(cr);
-      const crCpiPct = cr.cpi;
-      const crEst = computeCostEstimate(cr);
-      const crContrib = Math.round(r.impressions / toShowSim.length);
-      return `<div style="display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--border)">
-        <div style="width:36px;height:36px;border-radius:50%;background:${cr.color}22;color:${cr.color};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0;font-family:'Space Grotesk',sans-serif">${cr.name.charAt(0)}</div>
-        <div style="flex:1;min-width:0">
-          <div style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${cr.name}</div>
-          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);margin-top:2px">${cr.platform} · ${cr.subs} subs</div>
+  const creatorBreakdownEl = document.getElementById('creatorBreakdown');
+  if (creatorBreakdownEl && toShowSim.length > 0) {
+
+    // Distribute budget by each creator's share of combined avg views
+    const totalViews = toShowSim.reduce((a,cr)=>a+(parseViews(cr.avgViews)||1),0) || 1;
+
+    creatorBreakdownEl.innerHTML = toShowSim.map(cr => {
+      const crGfi     = cr.gfi || 75;
+      const crCpi     = cr.cpi;
+      const crEst     = computeCostEstimate(cr);
+      const crViews   = parseViews(cr.avgViews) || 1;
+
+      // Budget allocation proportional to avg views (bigger reach = more spend)
+      const budgetShare = Math.round(budget * (crViews / totalViews));
+      const crRate      = crEst.ranges[formatKey];
+      const fitsInShare = crRate[0] <= budgetShare;
+
+      // Per-creator impressions based on their budget share and CPM
+      const niche   = NICHE_SPONSOR_CPM[cr.genre] || DEFAULT_CPM;
+      const crCpm   = niche.med * (format==='Dedicated'?niche.dedMult:1.0) * Math.max(0.5, crCpi/100);
+      const crImpr  = Math.round((budgetShare / Math.max(crCpm,1)) * 1000);
+
+      // Per-creator CTR boosted by CPI/GFI
+      const crCtr   = Math.round(bench.ctrBase * (crCpi/100) * (crGfi/100 + 0.5) * 10) / 10;
+      const crClicks= Math.round(crImpr * crCtr / 100);
+
+      // Estimated conversions
+      const crCvr   = Math.round(bench.cvrBase * (crCpi/100) * 10) / 10;
+      const crConv  = Math.round(crClicks * crCvr / 100);
+
+      // P10/P50/P90 for this creator
+      const crP10   = { impr:Math.round(crImpr*0.68), ctr:Math.round(crCtr*0.68*10)/10 };
+      const crP90   = { impr:Math.round(crImpr*1.42), ctr:Math.round(crCtr*1.42*10)/10 };
+
+      const gfiCol  = crGfi>=80?'#00C46A':crGfi>=60?'#FF7A00':'#FF3355';
+      const cpiCol  = cpiScoreColor(crCpi);
+
+      return `<div style="border-bottom:1px solid var(--border);padding:20px">
+
+        <!-- Creator header -->
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+          <div style="width:44px;height:44px;border-radius:50%;background:${cr.color}22;color:${cr.color};
+            display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;
+            flex-shrink:0;font-family:'Space Grotesk',sans-serif;border:2px solid ${cr.color}44">${cr.name.charAt(0)}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;
+              white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${cr.name}</div>
+            <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text-muted);margin-top:2px">
+              ${cr.handle} · ${cr.platform} · ${cr.subs} subscribers</div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:center;flex-shrink:0">
+            <div style="text-align:center">
+              <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted)">CPI</div>
+              <div style="font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;color:${cpiCol}">${crCpi}</div>
+            </div>
+            <div style="text-align:center">
+              <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted)">GFI</div>
+              <div style="font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;
+                color:#fff;background:${gfiCol};border-radius:4px;padding:0 6px">${crGfi}%</div>
+            </div>
+            <div style="text-align:center">
+              <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted)">BUDGET SHARE</div>
+              <div style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;
+                color:${fitsInShare?'#FFD400':'#FF3355'}">${crEst.fmt(budgetShare)}</div>
+            </div>
+          </div>
         </div>
-        <div style="text-align:center;min-width:52px">
-          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted)">CPI</div>
-          <div style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:600;color:#FFD400">${crCpiPct}</div>
+
+        <!-- Per-creator metrics grid -->
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:12px">
+          ${[
+            ['EST. IMPRESSIONS', fmtNum(crImpr),    '#0050FF'],
+            ['CTR',             crCtr+'%',          '#00C46A'],
+            ['EST. CLICKS',     fmtNum(crClicks),   '#FF7A00'],
+            ['EST. CONVERSIONS',fmtNum(crConv),     '#9C27B0'],
+            ['INTEGRATED RATE', crEst.fmt(crRate[0])+'–'+crEst.fmt(crRate[1]), '#FFD400'],
+          ].map(([l,v,col])=>`
+            <div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:12px;text-align:center">
+              <div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.08em;
+                text-transform:uppercase;color:var(--text-muted);margin-bottom:6px">${l}</div>
+              <div style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:${col}">${v}</div>
+            </div>`).join('')}
         </div>
-        <div style="text-align:center;min-width:52px">
-          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted)">GFI</div>
-          <div style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:600;color:${crGfi>=80?'#00C46A':crGfi>=60?'#FF7A00':'#E60023'}">${crGfi}%</div>
+
+        <!-- Mini P10/P50/P90 for this creator -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">
+          <div style="background:rgba(230,0,35,0.06);border:1px solid rgba(230,0,35,0.2);border-radius:5px;padding:10px;text-align:center">
+            <div style="font-family:'DM Mono',monospace;font-size:8px;color:#E60023;margin-bottom:4px">P10 WORST</div>
+            <div style="font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:#E60023">${fmtNum(crP10.impr)}</div>
+            <div style="font-size:10px;color:rgba(230,0,35,0.6)">${crP10.ctr}% CTR</div>
+          </div>
+          <div style="background:rgba(255,212,0,0.06);border:1px solid rgba(255,212,0,0.3);border-radius:5px;padding:10px;text-align:center">
+            <div style="font-family:'DM Mono',monospace;font-size:8px;color:#FFD400;margin-bottom:4px">P50 BASE</div>
+            <div style="font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:#FFD400">${fmtNum(crImpr)}</div>
+            <div style="font-size:10px;color:rgba(255,212,0,0.6)">${crCtr}% CTR</div>
+          </div>
+          <div style="background:rgba(0,196,106,0.06);border:1px solid rgba(0,196,106,0.2);border-radius:5px;padding:10px;text-align:center">
+            <div style="font-family:'DM Mono',monospace;font-size:8px;color:#00C46A;margin-bottom:4px">P90 BEST</div>
+            <div style="font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:#00C46A">${fmtNum(crP90.impr)}</div>
+            <div style="font-size:10px;color:rgba(0,196,106,0.6)">${crP90.ctr}% CTR</div>
+          </div>
         </div>
-        <div style="text-align:center;min-width:72px">
-          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted)">EST. REACH</div>
-          <div style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:600;color:#0050FF">${fmtNum(crContrib)}</div>
-        </div>
-        <div style="text-align:right;min-width:80px">
-          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted)">INT. RATE</div>
-          <div style="font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;color:var(--text)">${crEst.fmt(crEst.ranges.int[0])}</div>
-          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted)">– ${crEst.fmt(crEst.ranges.int[1])}</div>
-        </div>
+
       </div>`;
-    }).join('') + `<div style="padding:10px 20px;font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);text-align:center;letter-spacing:.06em">${toShowSim.length} CREATOR${toShowSim.length>1?'S':''} IN SIMULATION · ESTIMATED REACH SPLIT EQUALLY</div>`;
+    }).join('') + `
+      <div style="padding:14px 20px;font-family:'DM Mono',monospace;font-size:10px;
+        color:var(--text-muted);text-align:center;letter-spacing:.06em;border-top:1px solid var(--border)">
+        ${toShowSim.length} CREATOR${toShowSim.length>1?'S':''} · TOTAL BUDGET ${formatBudget(budget)} ·
+        BUDGET DISTRIBUTED PROPORTIONALLY BY AUDIENCE REACH
+      </div>`;
   }
 
-
-  // PvA panel
-  const genre = getSelectedGenre() || 'Gaming & Esports';
-  const bench = GENRE_BENCHMARKS[genre] || GENRE_BENCHMARKS['Gaming & Esports'];
-  document.getElementById('pvaPanel').innerHTML = `
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border-radius:4px;overflow:hidden;margin-top:8px">
-      ${[['CTR',r.ctr+'%',bench.ctrBase+'%'],['ROAS',r.roas+'×',bench.roasBase+'×'],['CVR',r.cvr+'%',bench.cvrBase+'%'],['ENG',r.engRate+'%',bench.engBase+'%']].map(([m,yours,industry])=>`
-        <div style="background:var(--bg3);padding:12px;text-align:center">
+  // ── PVA BENCHMARK PANEL ───────────────────────────────────────────
+  const pvaEl = document.getElementById('pvaPanel');
+  if (pvaEl) pvaEl.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);
+      border-radius:4px;overflow:hidden;margin-top:8px">
+      ${[['CTR',r.ctr+'%',bench.ctrBase+'%'],['ROAS',r.roas+'×',bench.roasBase+'×'],
+         ['CVR',r.cvr+'%',bench.cvrBase+'%'],['ENG',r.engRate+'%',bench.engBase+'%']
+        ].map(([m,yours,industry])=>`
+        <div style="background:var(--bg3);padding:14px;text-align:center">
           <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);margin-bottom:4px">${m}</div>
-          <div style="font-size:16px;font-weight:600;color:#FFD400">${yours}</div>
-          <div style="font-size:10px;color:var(--text-muted);margin-top:4px">vs ${industry} avg</div>
+          <div style="font-size:18px;font-weight:700;color:#FFD400">${yours}</div>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:4px">vs ${industry} industry avg</div>
         </div>`).join('')}
     </div>`;
-}
 
+  // Update P10/P50/P90 band cards
   updateBandDisplays();
+}
 
 function renderEfficiencyCurve() {
   if(!simResults) return;
@@ -3499,59 +3650,123 @@ function updateBandDisplays() {
 
 // ── CAMPAIGN BRIEF PANEL ──────────────────────────────────────────────
 function updateBriefPanel() {
-  const panel   = document.getElementById('briefPanel');
-  const chips   = document.getElementById('briefCreatorChips');
-  const countEl = document.getElementById('briefCreatorCount');
-  const budgetEl= document.getElementById('briefBudgetDisplay');
-  const avgCpiEl= document.getElementById('briefAvgCPI');
-  const avgGfiEl= document.getElementById('briefAvgGFI');
-  const reachEl = document.getElementById('briefEstReach');
+  const panel = document.getElementById('briefPanel');
   if (!panel) return;
 
   if (selectedCreators.size === 0) {
     panel.classList.remove('open');
     return;
   }
-
   panel.classList.add('open');
 
-  const selected = CREATORS.filter(cr => selectedCreators.has(cr.id));
-  const budget   = parseInt((document.getElementById('budget')||{value:'85000'}).value)||85000;
-  const genre    = getSelectedGenre();
+  const selected  = CREATORS.filter(cr => selectedCreators.has(cr.id));
+  const budget    = parseInt((document.getElementById('budget')||{value:'85000'}).value)||85000;
+  const format    = (document.getElementById('format')||{value:'Integrated'}).value;
+  const formatKey = format==='Dedicated'?'ded':format==='Mixed'?'mix':'int';
+  const genre     = getSelectedGenre();
+  const bench     = GENRE_BENCHMARKS[genre] || GENRE_BENCHMARKS['Gaming & Esports'];
 
-  // Creator chips
-  chips.innerHTML = selected.map(cr => `
+  // ── Compute estimated spend per creator (midpoint of rate range) ──
+  const crCosts = selected.map(cr => {
+    const e      = computeCostEstimate(cr);
+    const lo     = e.ranges[formatKey][0];
+    const hi     = e.ranges[formatKey][1];
+    const midCost= Math.round((lo + hi) / 2);
+    return { cr, lo, hi, midCost, fmt: e.fmt };
+  });
+
+  const totalSpend    = crCosts.reduce((a, x) => a + x.midCost, 0);
+  const remaining     = budget - totalSpend;
+  const pct           = Math.min((totalSpend / budget) * 100, 120); // cap visual at 120%
+  const isOver        = totalSpend > budget;
+  const isWarning     = pct >= 80 && !isOver;
+
+  const barColor = isOver ? '#E60023' : isWarning ? '#FF7A00' : '#00C46A';
+
+  // ── Update elements ───────────────────────────────────────────────
+  const set = (id, val) => { const el=document.getElementById(id); if(el) el.textContent=val; };
+  const setHtml = (id, val) => { const el=document.getElementById(id); if(el) el.innerHTML=val; };
+
+  set('briefCreatorCount', selected.length);
+  set('briefBudgetDisplay', formatBudget(budget));
+
+  // Spent / remaining / over-under
+  const spentEl = document.getElementById('briefSpent');
+  const remEl   = document.getElementById('briefRemaining');
+  const ouEl    = document.getElementById('briefOverUnder');
+  const pctEl   = document.getElementById('briefPctLabel');
+  const barEl   = document.getElementById('briefBar');
+
+  if (spentEl) { spentEl.textContent = formatBudget(totalSpend); spentEl.style.color = barColor; }
+  if (remEl)   {
+    remEl.textContent = remaining >= 0 ? formatBudget(remaining) : '-'+formatBudget(Math.abs(remaining));
+    remEl.style.color = remaining >= 0 ? '#00C46A' : '#E60023';
+  }
+  if (ouEl) {
+    if (isOver) {
+      ouEl.textContent = '-' + formatBudget(Math.abs(remaining));
+      ouEl.style.color = '#E60023';
+    } else {
+      ouEl.textContent = '+' + formatBudget(remaining);
+      ouEl.style.color = '#00C46A';
+    }
+  }
+  if (pctEl) {
+    pctEl.textContent = Math.round(pct) + '% allocated';
+    pctEl.style.color = barColor;
+  }
+  if (barEl) {
+    barEl.style.width = Math.min(pct, 100) + '%';
+    barEl.style.background = barColor;
+    if (isOver) {
+      barEl.style.boxShadow = '0 0 8px rgba(230,0,35,0.5)';
+    } else if (isWarning) {
+      barEl.style.boxShadow = '0 0 8px rgba(255,122,0,0.4)';
+    } else {
+      barEl.style.boxShadow = '0 0 8px rgba(0,196,106,0.3)';
+    }
+  }
+
+  // ── Creator chips ─────────────────────────────────────────────────
+  const chipsEl = document.getElementById('briefCreatorChips');
+  if (chipsEl) chipsEl.innerHTML = selected.map(cr => `
     <div class="brief-creator-chip" onclick="toggleCreator(${cr.id})" title="Click to remove">
-      <div style="width:20px;height:20px;border-radius:50%;background:${cr.color}33;color:${cr.color};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700">${cr.name.charAt(0)}</div>
+      <div style="width:20px;height:20px;border-radius:50%;background:${cr.color}33;color:${cr.color};
+        display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700">${cr.name.charAt(0)}</div>
       <span>${cr.name}</span>
       <span style="color:#FF3355;font-weight:700;font-size:11px">×</span>
-    </div>
-  `).join('');
+    </div>`).join('');
 
-  // Stats
-  countEl.textContent  = selected.length;
-  budgetEl.textContent = formatBudget(budget);
+  // ── Per-creator cost pills ────────────────────────────────────────
+  const pillsEl = document.getElementById('briefCostPills');
+  if (pillsEl) pillsEl.innerHTML = crCosts.map(({cr, lo, hi, midCost, fmt}) => {
+    const over = midCost > budget / selected.length * 2; // flag if one creator eats >2x fair share
+    return `<div class="cost-pill ${over?'over-budget':''}">
+      <div class="pill-dot" style="background:${cr.color}"></div>
+      <span>${cr.name}</span>
+      <span style="color:var(--text-dim)">·</span>
+      <span style="font-weight:700">${fmt(lo)}–${fmt(hi)}</span>
+    </div>`;
+  }).join('');
 
+  // ── CPI / GFI / Reach stats ────────────────────────────────────────
   const avgCpi = Math.round(selected.reduce((a,cr) => a + cr.cpi, 0) / selected.length);
-  const avgGfi = Math.round(selected.reduce((a,cr) => a + (cr.gfi || computeGFI(cr)), 0) / selected.length);
-  avgCpiEl.textContent = avgCpi;
-  avgGfiEl.textContent = avgGfi + '%';
+  const avgGfi = Math.round(selected.reduce((a,cr) => a + (cr.gfi||75), 0) / selected.length);
+  const reach  = Math.round((budget / Math.max(bench.cpmBase,1)) * 1000);
 
-  // Estimate reach based on budget / avg CPM
-  const bench  = GENRE_BENCHMARKS[genre] || GENRE_BENCHMARKS['Gaming & Esports'];
-  const reach  = Math.round((budget / bench.cpmBase) * 1000);
-  reachEl.textContent = fmtNum(reach);
+  set('briefAvgCPI',   avgCpi);
+  set('briefAvgGFI',   avgGfi + '%');
+  set('briefEstReach', fmtNum(reach));
 }
 
 function runFromBrief() {
-  if (selectedCreators.size === 0) return;
   computeSimResults();
   showScreen('simulator', document.querySelector('.nav-tab:nth-child(4)'));
   updateSimDisplay();
   renderEfficiencyCurve();
-  updateBandDisplays();
   // Scroll to top of simulator
-  document.querySelector('.main').scrollTop = 0;
+  const mainEl = document.querySelector('.main');
+  if (mainEl) mainEl.scrollTop = 0;
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────
@@ -3580,6 +3795,8 @@ document.addEventListener('DOMContentLoaded', () => {
   renderCreatorGrid();
   updateObjCount();
   updateTierLabel(85000);
+  // Pre-compute simulation so bands show immediately when simulator is opened
+  computeSimResults();
 
   setTimeout(() => {
     document.querySelectorAll('.score-bar-fill').forEach(el => {
@@ -3899,12 +4116,56 @@ function checkGate() {
 <!-- CAMPAIGN BRIEF PANEL -->
 <div id="briefPanel">
   <div class="brief-inner">
-    <div>
-      <div class="brief-title">Campaign Brief · <span id="briefCreatorCount">0</span> Creators Selected · Budget: <span id="briefBudgetDisplay">£85K</span></div>
-      <div class="brief-creators" id="briefCreatorChips"></div>
+
+    <!-- ROW 1: Creator chips + actions -->
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap">
+      <div style="flex:1;min-width:0">
+        <div class="brief-title">
+          <span id="briefCreatorCount">0</span> CREATORS SELECTED
+          &nbsp;·&nbsp; <span id="briefBudgetDisplay">£85K</span> TOTAL BUDGET
+        </div>
+        <div class="brief-creators" id="briefCreatorChips"></div>
+      </div>
+      <div class="brief-actions" style="flex-shrink:0">
+        <button class="brief-clear-btn" onclick="clearSelection()">CLEAR ALL</button>
+        <button class="brief-run-btn" onclick="runFromBrief()">▶ SIMULATE →</button>
+      </div>
     </div>
-    <div style="display:flex;align-items:center;gap:20px">
-      <div class="brief-stats">
+
+    <!-- ROW 2: Budget bar + stats -->
+    <div style="margin-top:14px;display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center">
+
+      <!-- Budget spend bar -->
+      <div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+          <div style="display:flex;gap:20px;align-items:baseline">
+            <div>
+              <span style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted)">COMMITTED &nbsp;</span>
+              <span id="briefSpent" style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:#FFD400">£0</span>
+            </div>
+            <div>
+              <span style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted)">REMAINING &nbsp;</span>
+              <span id="briefRemaining" style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:#00C46A">£85K</span>
+            </div>
+            <div>
+              <span style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted)">OVER/UNDER &nbsp;</span>
+              <span id="briefOverUnder" style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:var(--text-muted)">—</span>
+            </div>
+          </div>
+          <div id="briefPctLabel" style="font-family:'DM Mono',monospace;font-size:11px;font-weight:700;color:var(--text-muted)">0% allocated</div>
+        </div>
+
+        <!-- The fuel gauge bar -->
+        <div style="height:8px;background:var(--bg3);border-radius:4px;overflow:hidden;border:1px solid var(--border)">
+          <div id="briefBar" style="height:100%;border-radius:4px;width:0%;background:#00C46A;transition:width .4s ease,background .3s ease"></div>
+        </div>
+
+        <!-- Creator cost breakdown pills -->
+        <div id="briefCostPills" style="display:flex;gap:4px;flex-wrap:wrap;margin-top:8px"></div>
+      </div>
+
+      <!-- Avg CPI / GFI / Reach stats -->
+      <div class="brief-stats" style="border-left:1px solid var(--border);padding-left:20px">
         <div class="brief-stat">
           <div class="brief-stat-val" id="briefAvgCPI">—</div>
           <div class="brief-stat-label">Avg CPI</div>
@@ -3918,11 +4179,8 @@ function checkGate() {
           <div class="brief-stat-label">Est. Reach</div>
         </div>
       </div>
-      <div class="brief-actions">
-        <button class="brief-clear-btn" onclick="clearSelection()">CLEAR</button>
-        <button class="brief-run-btn" onclick="runFromBrief()">▶ SIMULATE THIS CAMPAIGN →</button>
-      </div>
     </div>
+
   </div>
 </div>
 
