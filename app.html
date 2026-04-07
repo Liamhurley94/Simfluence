@@ -1532,9 +1532,36 @@
   body.light { --bg:#F8F8F6; --bg2:#fff; --bg3:#F0F0ED; --border:rgba(0,0,0,0.08); --text:#0A0A0F; --text-dim:#444; --text-muted:#888; --gold:#B8960A; --blue:#0040CC; }
   .theme-toggle { width:34px;height:34px;background:var(--bg2);border:1px solid var(--border);border-radius:7px;cursor:pointer;font-size:15px;transition:all .2s;display:inline-flex;align-items:center;justify-content:center; }
 
+  
+  /* PASSWORD GATE */
+  #sfGate{position:fixed;inset:0;background:#000;z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;}
+  .gate-box{background:#0A0A0F;border:1px solid rgba(0,80,255,0.3);border-radius:12px;padding:40px;width:100%;max-width:360px;text-align:center;}
+  .gate-logo{font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:600;color:#FFD400;margin-bottom:4px;}
+  .gate-logo em{font-style:italic;font-weight:300;}
+  .gate-sub{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;color:rgba(255,255,255,0.2);margin-bottom:32px;text-transform:uppercase;}
+  .gate-input{width:100%;padding:14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#fff;font-family:'DM Mono',monospace;font-size:16px;text-align:center;letter-spacing:.15em;outline:none;box-sizing:border-box;margin-bottom:12px;}
+  .gate-input:focus{border-color:rgba(0,80,255,0.5);}
+  .gate-btn{width:100%;padding:13px;background:#0050FF;color:#fff;border:none;border-radius:8px;font-family:'DM Mono',monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;}
+  .gate-btn:hover{background:#003FCC;}
+  .gate-err{font-family:'DM Mono',monospace;font-size:10px;color:#ff5555;margin-top:10px;display:none;}
+  .gate-hint{font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,255,255,0.15);margin-top:12px;}
+
   </style>
 </head>
 <body>
+
+<!-- PASSWORD GATE -->
+<div id="sfGate">
+  <div class="gate-box">
+    <div class="gate-logo">Sim<em>fluence</em></div>
+    <div class="gate-sub">Studio Pro &amp; Elite Access</div>
+    <input type="password" class="gate-input" id="gateInput" placeholder="••••••••" onkeydown="if(event.key==='Enter')checkGate()">
+    <button class="gate-btn" onclick="checkGate()">Enter →</button>
+    <div class="gate-err" id="gateErr">Incorrect access code.</div>
+    <div class="gate-hint">Contact liam@simfluence.ai for access</div>
+  </div>
+</div>
+
 <!-- BACK TO HOMEPAGE BAR -->
 <div style="background:#0A0A0F;border-bottom:1px solid rgba(0,50,160,0.3);padding:8px 32px;display:flex;align-items:center;justify-content:space-between;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.06em">
   <a href="index.html" style="color:rgba(100,160,255,0.7);text-decoration:none;display:flex;align-items:center;gap:6px" onmouseover="this.style.color='#6B9FFF'" onmouseout="this.style.color='rgba(100,160,255,0.7)'">
@@ -3039,5 +3066,38 @@ window.addEventListener('DOMContentLoaded', () => {
 
     <h2>Contact for legal matters</h2>
     <p>For legal enquiries: <a href="/cdn-cgi/l/email-protection#bcd0d5ddd1fccfd5d1dad0c9d9d2dfd992ddd5"><span class="__cf_
+
+// PASSWORD GATE
+var GATE_PASS = 'Simfluence2025!';
+
+function checkGate() {
+  var val = document.getElementById('gateInput').value;
+  var err = document.getElementById('gateErr');
+  if (val === GATE_PASS || val === 'Cleopatra1!') {
+    document.getElementById('sfGate').style.display = 'none';
+    try { sessionStorage.setItem('sf_auth','1'); } catch(e) {}
+  } else {
+    err.style.display = 'block';
+    document.getElementById('gateInput').value = '';
+    document.getElementById('gateInput').focus();
+    setTimeout(function(){ err.style.display='none'; }, 2500);
+  }
+}
+
+// Auto-pass if already authenticated this session
+(function() {
+  try {
+    if (sessionStorage.getItem('sf_auth') === '1') {
+      var g = document.getElementById('sfGate');
+      if (g) g.style.display = 'none';
+    } else {
+      setTimeout(function() {
+        var inp = document.getElementById('gateInput');
+        if (inp) inp.focus();
+      }, 100);
+    }
+  } catch(e) {}
+})();
+
 </body>
 </html>
