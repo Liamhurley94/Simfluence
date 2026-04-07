@@ -1528,9 +1528,20 @@
   }
   .ob-skip:hover { color: rgba(255,255,255,0.4); }
 
+  
+  body.light { --bg:#F8F8F6; --bg2:#fff; --bg3:#F0F0ED; --border:rgba(0,0,0,0.08); --text:#0A0A0F; --text-dim:#444; --text-muted:#888; --gold:#B8960A; --blue:#0040CC; }
+  .theme-toggle { width:34px;height:34px;background:var(--bg2);border:1px solid var(--border);border-radius:7px;cursor:pointer;font-size:15px;transition:all .2s;display:inline-flex;align-items:center;justify-content:center; }
+
   </style>
 </head>
 <body>
+<!-- BACK TO HOMEPAGE BAR -->
+<div style="background:#0A0A0F;border-bottom:1px solid rgba(0,50,160,0.3);padding:8px 32px;display:flex;align-items:center;justify-content:space-between;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.06em">
+  <a href="index.html" style="color:rgba(100,160,255,0.7);text-decoration:none;display:flex;align-items:center;gap:6px" onmouseover="this.style.color='#6B9FFF'" onmouseout="this.style.color='rgba(100,160,255,0.7)'">
+    ← Back to simfluence.ai
+  </a>
+  <span style="color:rgba(255,255,255,0.2);text-transform:uppercase">Full Platform · Subscriber Access</span>
+</div>
 
 <!-- ══ ONBOARDING OVERLAY ══════════════════════════════════════════ -->
 <div id="sfOnboard">
@@ -1575,6 +1586,7 @@
     <button class="nav-tab" onclick="showScreen('simulator',this)">Simulator</button>
   </div>
   <div class="nav-badge">SIMFLUENCE · SUBSCRIBER</div>
+  <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn" title="Toggle mode">🌙</button>
 </nav>
 
 
@@ -3019,4 +3031,13 @@ window.addEventListener('DOMContentLoaded', () => {
     <h2>No financial or investment advice</h2>
     <p>Nothing on the Simfluence platform constitutes financial, investment, or professional marketing advice. Forecast outputs are tools to inform your own independent decision-making. You should conduct your own due diligence before committing any marketing budget.</p>
 
-    <h2>Links and t
+    <h2>Links and third-party platforms
+    <p>The platform may reference or link to third-party platforms including YouTube, TikTok, Instagram, Twitch, and Kick. Simfluence has no control over and accepts no responsibility for the content, availability, or practices of these third-party services.</p>
+
+    <h2>Governing jurisdiction</h2>
+    <p>This legal notice and any disputes arising from the operation of the Simfluence platform are governed by the laws of the United Arab Emirates.</p>
+
+    <h2>Contact for legal matters</h2>
+    <p>For legal enquiries: <a href="/cdn-cgi/l/email-protection#bcd0d5ddd1fccfd5d1dad0c9d9d2dfd992ddd5"><span class="__cf_
+</body>
+</html>
