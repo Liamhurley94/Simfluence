@@ -1736,7 +1736,18 @@ document.getElementById('GP').focus();
     <button class="nav-tab" onclick="showScreen('personas',this)">Personas</button>
     <button class="nav-tab" onclick="showScreen('simulator',this)">Simulator</button>
   </div>
-  <div class="nav-badge">SIMFLUENCE · SUBSCRIBER</div>
+  <div style="display:flex;align-items:center;gap:8px;position:relative">
+    <div style="position:relative;display:flex;align-items:center">
+      <span style="position:absolute;left:10px;color:var(--text-muted);font-size:13px;pointer-events:none">🔍</span>
+      <input id="creatorSearch" type="text" placeholder="Search creators..." 
+        oninput="runCreatorSearch(this.value)"
+        onfocus="this.style.borderColor='#0050FF'"
+        onblur="this.style.borderColor='var(--border)'"
+        style="font-family:'DM Mono',monospace;font-size:11px;padding:7px 12px 7px 30px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;color:var(--text);width:220px;outline:none;transition:border-color .2s"
+      >
+      <button id="searchClear" onclick="clearCreatorSearch()" style="display:none;position:absolute;right:8px;background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:14px;padding:0;line-height:1">✕</button>
+    </div>
+  </div>
   <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn" title="Toggle mode">🌙</button>
 </nav>
 
@@ -2939,7 +2950,16 @@ function renderCreatorGrid() {
     .filter(cr => {
       if (!passedBudgetFilter(cr)) return false;
       if (!passedTierFilter(cr)) return false;
-      if (genreScore(cr) < 0) return false;
+      // Search filter — match name, handle, bio, genre
+      if (creatorSearchQuery) {
+        var q = creatorSearchQuery;
+        var matchName   = cr.name.toLowerCase().indexOf(q) !== -1;
+        var matchHandle = (cr.handle || '').toLowerCase().indexOf(q) !== -1;
+        var matchBio    = (cr.bio || '').toLowerCase().indexOf(q) !== -1;
+        var matchGenre  = (cr.genre || '').toLowerCase().indexOf(q) !== -1;
+        if (!matchName && !matchHandle && !matchBio && !matchGenre) return false;
+      }
+      if (genreScore(cr) < 0 && !creatorSearchQuery) return false;
       return true;
     })
     .map(cr => {
@@ -4154,6 +4174,33 @@ async function injectLiveDataIntoProfile(creator) {
     var ago = Math.round((Date.now() - new Date(data.fetched_at).getTime()) / 60000);
     tsEl.textContent = ago < 2 ? 'just now' : ago + ' min ago';
   }
+}
+
+
+// ── CREATOR SEARCH ────────────────────────────────────────────────────
+var creatorSearchQuery = '';
+
+function runCreatorSearch(val) {
+  creatorSearchQuery = val.trim().toLowerCase();
+  var clearBtn = document.getElementById('searchClear');
+  if (clearBtn) clearBtn.style.display = creatorSearchQuery ? 'block' : 'none';
+
+  // Switch to discovery screen if not already there
+  var discoveryScreen = document.getElementById('screen-discovery');
+  if (discoveryScreen && !discoveryScreen.classList.contains('active')) {
+    showScreen('discovery', document.querySelector('.nav-tab'));
+  }
+
+  renderCreatorGrid();
+}
+
+function clearCreatorSearch() {
+  var input = document.getElementById('creatorSearch');
+  if (input) input.value = '';
+  creatorSearchQuery = '';
+  var clearBtn = document.getElementById('searchClear');
+  if (clearBtn) clearBtn.style.display = 'none';
+  renderCreatorGrid();
 }
 
 // ── THEME TOGGLE ──────────────────────────────────────────────────────
