@@ -3154,6 +3154,273 @@ function showScreen(name, btn) {
   if(name==='simulator') { computeSimResults(); updateSimDisplay(); updateBandDisplays(); renderEfficiencyCurve(); }
 }
 
+
+// ── OBJECTIVES ────────────────────────────────────────────────────────
+function toggleChip(btn) {
+  btn.classList.toggle('active');
+  updateObjCount();
+  renderCreatorGrid();
+  updateSim();
+}
+
+function updateObjCount() {
+  const count = document.querySelectorAll('#objectiveGroups .chip.active').length;
+  const el = document.getElementById('objCount');
+  if (el) el.textContent = count + ' SELECTED';
+}
+
+function getSelectedObjectives() {
+  return [...document.querySelectorAll('#objectiveGroups .chip.active')].map(b => b.dataset.obj);
+}
+
+function getObjWeights() {
+  const objs = getSelectedObjectives();
+  const awareness  = ['Brand Awareness','Reach & Impressions','Content Virality','Sentiment Shift'];
+  const sales      = ['Direct Sales','App Install','Promo / Affiliate','Lead Generation'];
+  const engagement = ['Community Growth','Engagement Rate','Pre-launch Sign-up','Retention'];
+  const aW = objs.filter(o => awareness.includes(o)).length;
+  const sW = objs.filter(o => sales.includes(o)).length;
+  const eW = objs.filter(o => engagement.includes(o)).length;
+  const total = Math.max(aW + sW + eW, 1);
+  return { awarenessW: aW/total, salesW: sW/total, engagementW: eW/total };
+}
+
+// ── SIMULATION ────────────────────────────────────────────────────────
+let simScenario = 'base';
+let simResults  = null;
+
+function updateSim() {
+  const screen = document.getElementById('screen-simulator');
+  if (screen && screen.classList.contains('active')) {
+    computeSimResults();
+    updateSimDisplay();
+    renderEfficiencyCurve();
+  }
+}
+
+function updateTierLabel(v) {
+  const budget = parseInt(v) || 85000;
+  const el = document.getElementById('budgetLabel');
+  if (el) {
+    const format = (document.getElementById('format') || {value:'Integrated'}).value;
+    const fmtKey = format === 'Dedicated' ? 'ded' : format === 'Mixed' ? 'mix' : 'int';
+    const spent = [...selectedCreators].reduce((total, id) => {
+      const cr = CREATORS.find(x => x.id === id);
+      if (!cr) return total;
+      const e = computeCostEstimate(cr);
+      return total + Math.round((e.ranges[fmtKey][0] + e.ranges[fmtKey][1]) / 2);
+    }, 0);
+    const remaining = budget - spent;
+    if (selectedCreators.size > 0) {
+      const remColor = remaining < 0 ? '#FF3355' : remaining < budget * 0.2 ? '#FF7A00' : '#00C46A';
+      el.innerHTML = formatBudget(budget) +
+        ' <span style="font-size:10px;color:' + remColor + ';font-family:\'DM Mono\',monospace"> · ' +
+        (remaining >= 0 ? formatBudget(remaining) + ' left' : formatBudget(Math.abs(remaining)) + ' over') +
+        '</span>';
+    } else {
+      el.textContent = formatBudget(budget);
+    }
+  }
+  renderCreatorGrid();
+  updateSim();
+  updateBriefPanel();
+}
+
+function computeSimResults() {
+  const budget   = parseInt((document.getElementById('budget') || {value:'85000'}).value) || 85000;
+  const format   = (document.getElementById('format') || {value:'Integrated'}).value;
+  const genre    = getSelectedGenre() || 'Gaming & Esports';
+  const bench    = GENRE_BENCHMARKS[genre] || GENRE_BENCHMARKS['Gaming & Esports'];
+  const { awarenessW, salesW, engagementW } = getObjWeights();
+
+  const toSim = selectedCreators.size > 0
+    ? CREATORS.filter(cr => selectedCreators.has(cr.id))
+    : [...CREATORS].filter(cr => cr.genre === genre).sort((a,b) => b.cpi - a.cpi).slice(0, 5);
+
+  if (toSim.length === 0) {
+    simResults = null;
+    return;
+  }
+
+  const formatKey  = format === 'Dedicated' ? 'ded' : format === 'Mixed' ? 'mix' : 'int';
+  const formatMult = format === 'Dedicated' ? 1.4 : format === 'Mixed' ? 1.15 : 1.0;
+  const subModeMult = activeSubMode ? 1.08 : 1.0;
+
+  const crData = toSim.map(cr => {
+    const e       = computeCostEstimate(cr);
+    const midRate = (e.ranges[formatKey][0] + e.ranges[formatKey][1]) / 2;
+    return { cr, e, midRate };
+  });
+
+  const niche      = NICHE_SPONSOR_CPM[genre] || DEFAULT_CPM;
+  const cpmBase    = niche.med * (format === 'Dedicated' ? niche.dedMult : 1.0);
+  const avgCPI     = toSim.reduce((a, cr) => a + cr.cpi, 0) / toSim.length / 100;
+  const cpmActual  = cpmBase * Math.max(0.6, avgCPI);
+  const impressions = Math.round((budget / Math.max(cpmActual, 1)) * 1000 * subModeMult * formatMult);
+
+  const ctrMult    = avgCPI * (1 + awarenessW * 0.1 - salesW * 0.05);
+  const ctr        = Math.min(bench.ctrBase * ctrMult * formatMult, 15);
+  const cvr        = Math.min(bench.cvrBase * (1 + salesW * 0.3 - awarenessW * 0.1) * avgCPI, 20);
+  const clicks     = Math.round(impressions * ctr / 100);
+  const conversions = Math.round(clicks * cvr / 100);
+  const revenue    = conversions * 30;
+  const roas       = budget > 0 ? revenue / budget : 0;
+  const engRate    = Math.min(bench.engBase * (1 + engagementW * 0.2) * avgCPI, 20);
+
+  simResults = {
+    impressions,
+    ctr:    Math.round(ctr * 10) / 10,
+    cpM:    Math.round(cpmActual * 100) / 100,
+    cvr:    Math.round(cvr * 10) / 10,
+    conversions,
+    roas:   Math.round(roas * 10) / 10,
+    engRate: Math.round(engRate * 10) / 10,
+    clicks,
+    budget,
+    crData,
+    p10: { impressions: Math.round(impressions * 0.68), ctr: Math.round(ctr * 0.68 * 10) / 10, roas: Math.round(roas * 0.65 * 10) / 10 },
+    p50: { impressions, ctr: Math.round(ctr * 10) / 10, roas: Math.round(roas * 10) / 10 },
+    p90: { impressions: Math.round(impressions * 1.42), ctr: Math.round(ctr * 1.42 * 10) / 10, roas: Math.round(roas * 1.45 * 10) / 10 },
+  };
+}
+
+function updateSimDisplay() {
+  if (!simResults) { computeSimResults(); }
+  if (!simResults) return;
+  const r = simResults;
+  const budget  = parseInt((document.getElementById('budget') || {value:'85000'}).value) || 85000;
+  const format  = (document.getElementById('format') || {value:'Integrated'}).value;
+  const genre   = getSelectedGenre() || 'Gaming & Esports';
+  const bench   = GENRE_BENCHMARKS[genre] || GENRE_BENCHMARKS['Gaming & Esports'];
+  const fmtKey  = format === 'Dedicated' ? 'ded' : format === 'Mixed' ? 'mix' : 'int';
+
+  // P10 / P50 / P90 bands
+  const bands = {
+    worst: { el:'bandWorstImpr', sub:'bandWorstSub', data:r.p10, col:'#E60023' },
+    base:  { el:'bandBaseImpr',  sub:'bandBaseSub',  data:r.p50, col:'#FFD400' },
+    best:  { el:'bandBestImpr',  sub:'bandBestSub',  data:r.p90, col:'#00C46A' },
+  };
+  Object.keys(bands).forEach(function(k) {
+    const b = bands[k];
+    const impEl = document.getElementById(b.el);
+    const subEl = document.getElementById(b.sub);
+    if (impEl) impEl.textContent = fmtNum(b.data.impressions);
+    if (subEl) subEl.innerHTML = 'CTR <strong style="color:' + b.col + '">' + b.data.ctr + '%</strong> &nbsp; ROAS <strong style="color:' + b.col + '">' + b.data.roas + '×</strong>';
+  });
+
+  // Core metric cards
+  const metrics = [
+    { label:'Est. Impressions', val:fmtNum(r.impressions), sub:'Total reach',        color:'#0050FF' },
+    { label:'CTR',              val:r.ctr+'%',            sub:'Click-through rate',  color:'#00C46A' },
+    { label:'CPM',              val:'£'+r.cpM,            sub:'Cost per 1,000 imps', color:'#FF7A00' },
+    { label:'CVR',              val:r.cvr+'%',            sub:'Conversion rate',     color:'#9C27B0' },
+    { label:'Est. Conversions', val:fmtNum(r.conversions),sub:'Installs / leads',    color:'#E91E63' },
+    { label:'ROAS',             val:r.roas+'×',           sub:'Return on ad spend',  color:'#FFD400' },
+  ];
+  const simEl = document.getElementById('simResults');
+  if (simEl) simEl.innerHTML = metrics.map(function(m) {
+    return '<div class="sim-metric-card"><div style="font-family:\'DM Mono\',monospace;font-size:9px;color:var(--text-muted);letter-spacing:.1em;margin-bottom:8px">' + m.label + '</div>' +
+      '<div style="font-family:\'Space Grotesk\',sans-serif;font-size:28px;font-weight:700;color:' + m.color + '">' + m.val + '</div>' +
+      '<div style="font-size:11px;color:var(--text-muted);margin-top:4px">' + m.sub + '</div></div>';
+  }).join('');
+
+  // Per-creator forecast
+  const toShowSim = selectedCreators.size > 0
+    ? CREATORS.filter(function(cr) { return selectedCreators.has(cr.id); })
+    : CREATORS.filter(function(cr) { return cr.genre === genre; }).sort(function(a,b) { return b.cpi - a.cpi; }).slice(0, 5);
+
+  const creatorBreakdownEl = document.getElementById('creatorBreakdown');
+  if (creatorBreakdownEl && toShowSim.length > 0) {
+    const totalViews = toShowSim.reduce(function(a, cr) { return a + (parseViews(cr.avgViews) || 1); }, 0) || 1;
+    creatorBreakdownEl.innerHTML = toShowSim.map(function(cr) {
+      const crGfi   = cr.gfi || 75;
+      const crEst   = computeCostEstimate(cr);
+      const crViews = parseViews(cr.avgViews) || 1;
+      const budgetShare = Math.round(budget * (crViews / totalViews));
+      const niche2  = NICHE_SPONSOR_CPM[cr.genre] || DEFAULT_CPM;
+      const crCpm   = niche2.med * (format === 'Dedicated' ? niche2.dedMult : 1.0) * Math.max(0.5, cr.cpi/100);
+      const crImpr  = Math.round((budgetShare / Math.max(crCpm, 1)) * 1000);
+      const crCtr   = Math.round(bench.ctrBase * (cr.cpi/100) * (crGfi/100 + 0.5) * 10) / 10;
+      const crClicks= Math.round(crImpr * crCtr / 100);
+      const crCvr   = Math.round(bench.cvrBase * (cr.cpi/100) * 10) / 10;
+      const crConv  = Math.round(crClicks * crCvr / 100);
+      const crP10   = { impr: Math.round(crImpr * 0.68), ctr: Math.round(crCtr * 0.68 * 10) / 10 };
+      const crP90   = { impr: Math.round(crImpr * 1.42), ctr: Math.round(crCtr * 1.42 * 10) / 10 };
+      const gfiCol  = crGfi >= 80 ? '#00C46A' : crGfi >= 60 ? '#FF7A00' : '#FF3355';
+      const crRate  = crEst.ranges[fmtKey];
+
+      return '<div style="border-bottom:1px solid var(--border);padding:20px">' +
+        '<div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">' +
+          '<div style="width:44px;height:44px;border-radius:50%;background:' + cr.color + '22;color:' + cr.color + ';display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;flex-shrink:0;border:2px solid ' + cr.color + '44">' + cr.name.charAt(0) + '</div>' +
+          '<div style="flex:1;min-width:0">' +
+            '<div style="font-family:\'Space Grotesk\',sans-serif;font-size:16px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + cr.name + '</div>' +
+            '<div style="font-family:\'DM Mono\',monospace;font-size:10px;color:var(--text-muted);margin-top:2px">' + cr.handle + ' · ' + cr.platform + ' · ' + cr.subs + ' subs</div>' +
+          '</div>' +
+          '<div style="display:flex;gap:12px;align-items:center;flex-shrink:0">' +
+            '<div style="text-align:center"><div style="font-family:\'DM Mono\',monospace;font-size:9px;color:var(--text-muted)">CPI</div><div style="font-family:\'Space Grotesk\',sans-serif;font-size:22px;font-weight:700;color:' + cpiScoreColor(cr.cpi) + '">' + cr.cpi + '</div></div>' +
+            '<div style="text-align:center"><div style="font-family:\'DM Mono\',monospace;font-size:9px;color:var(--text-muted)">GFI</div><div style="font-family:\'Space Grotesk\',sans-serif;font-size:22px;font-weight:700;color:#fff;background:' + gfiCol + ';border-radius:4px;padding:0 6px">' + crGfi + '%</div></div>' +
+            '<div style="text-align:center"><div style="font-family:\'DM Mono\',monospace;font-size:9px;color:var(--text-muted)">BUDGET SHARE</div><div style="font-family:\'Space Grotesk\',sans-serif;font-size:18px;font-weight:700;color:#FFD400">' + crEst.fmt(budgetShare) + '</div></div>' +
+          '</div>' +
+        '</div>' +
+        '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:12px">' +
+          [['EST. IMPRESSIONS', fmtNum(crImpr), '#0050FF'],['CTR', crCtr+'%', '#00C46A'],['EST. CLICKS', fmtNum(crClicks), '#FF7A00'],['EST. CONVERSIONS', fmtNum(crConv), '#9C27B0'],['INTEGRATED RATE', crEst.fmt(crRate[0])+'–'+crEst.fmt(crRate[1]), '#FFD400']].map(function(item) {
+            return '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:12px;text-align:center"><div style="font-family:\'DM Mono\',monospace;font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px">' + item[0] + '</div><div style="font-family:\'Space Grotesk\',sans-serif;font-size:18px;font-weight:700;color:' + item[2] + '">' + item[1] + '</div></div>';
+          }).join('') +
+        '</div>' +
+        '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">' +
+          '<div style="background:rgba(230,0,35,0.06);border:1px solid rgba(230,0,35,0.2);border-radius:5px;padding:10px;text-align:center"><div style="font-family:\'DM Mono\',monospace;font-size:8px;color:#E60023;margin-bottom:4px">P10 WORST</div><div style="font-family:\'Space Grotesk\',sans-serif;font-size:16px;font-weight:700;color:#E60023">' + fmtNum(crP10.impr) + '</div><div style="font-size:10px;color:rgba(230,0,35,0.6)">' + crP10.ctr + '% CTR</div></div>' +
+          '<div style="background:rgba(255,212,0,0.06);border:1px solid rgba(255,212,0,0.3);border-radius:5px;padding:10px;text-align:center"><div style="font-family:\'DM Mono\',monospace;font-size:8px;color:#FFD400;margin-bottom:4px">P50 BASE</div><div style="font-family:\'Space Grotesk\',sans-serif;font-size:16px;font-weight:700;color:#FFD400">' + fmtNum(crImpr) + '</div><div style="font-size:10px;color:rgba(255,212,0,0.6)">' + crCtr + '% CTR</div></div>' +
+          '<div style="background:rgba(0,196,106,0.06);border:1px solid rgba(0,196,106,0.2);border-radius:5px;padding:10px;text-align:center"><div style="font-family:\'DM Mono\',monospace;font-size:8px;color:#00C46A;margin-bottom:4px">P90 BEST</div><div style="font-family:\'Space Grotesk\',sans-serif;font-size:16px;font-weight:700;color:#00C46A">' + fmtNum(crP90.impr) + '</div><div style="font-size:10px;color:rgba(0,196,106,0.6)">' + crP90.ctr + '% CTR</div></div>' +
+        '</div>' +
+      '</div>';
+    }).join('') +
+    '<div style="padding:14px 20px;font-family:\'DM Mono\',monospace;font-size:10px;color:var(--text-muted);text-align:center;letter-spacing:.06em;border-top:1px solid var(--border)">' +
+      toShowSim.length + ' CREATOR' + (toShowSim.length > 1 ? 'S' : '') + ' · TOTAL BUDGET ' + formatBudget(budget) + ' · BUDGET DISTRIBUTED PROPORTIONALLY BY AUDIENCE REACH' +
+    '</div>';
+  }
+
+  // Benchmark comparison
+  const pvaEl = document.getElementById('pvaPanel');
+  if (pvaEl) pvaEl.innerHTML = '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border-radius:4px;overflow:hidden;margin-top:8px">' +
+    [['CTR', r.ctr+'%', bench.ctrBase+'%'], ['ROAS', r.roas+'×', bench.roasBase+'×'], ['CVR', r.cvr+'%', bench.cvrBase+'%'], ['ENG', r.engRate+'%', bench.engBase+'%']].map(function(item) {
+      return '<div style="background:var(--bg3);padding:14px;text-align:center"><div style="font-family:\'DM Mono\',monospace;font-size:9px;color:var(--text-muted);margin-bottom:4px">' + item[0] + '</div><div style="font-size:18px;font-weight:700;color:#FFD400">' + item[1] + '</div><div style="font-size:10px;color:var(--text-muted);margin-top:4px">vs ' + item[2] + ' industry avg</div></div>';
+    }).join('') +
+  '</div>';
+
+  updateBandDisplays();
+}
+
+function runSimulation() {
+  computeSimResults();
+  showScreen('simulator', document.querySelector('.nav-tab:nth-child(4)'));
+  updateSimDisplay();
+  renderEfficiencyCurve();
+}
+
+function renderEfficiencyCurve() {
+  if (!simResults) return;
+  const r  = simResults;
+  const el = document.getElementById('efficiencyCurve');
+  if (!el) return;
+  const points = [r.p10.ctr, r.p10.ctr*1.1, r.p50.ctr*0.9, r.p50.ctr, r.p50.ctr*1.1, r.p90.ctr*0.9, r.p90.ctr];
+  const max = Math.max.apply(null, points) * 1.2 || 5;
+  const w = el.offsetWidth || 560, h = 140;
+  const px = function(i, arr) { return Math.round(i / (arr.length-1) * w); };
+  const py = function(v) { return Math.round(h - (v/max) * h * 0.8 - 10); };
+  const pts = points.map(function(v, i) { return px(i, points) + ',' + py(v); }).join(' ');
+  const areapts = '0,' + h + ' ' + pts + ' ' + w + ',' + h;
+  el.innerHTML = '<svg width="100%" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '">' +
+    '<defs><linearGradient id="curve-grad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0050FF" stop-opacity="0.3"/><stop offset="100%" stop-color="#0050FF" stop-opacity="0"/></linearGradient></defs>' +
+    '<polygon points="' + areapts + '" fill="url(#curve-grad)"/>' +
+    '<polyline points="' + pts + '" fill="none" stroke="#0050FF" stroke-width="2"/>' +
+    [[0,'P10'],[Math.floor(points.length/2),'P50'],[points.length-1,'P90']].map(function(item) {
+      return '<circle cx="' + px(item[0], points) + '" cy="' + py(points[item[0]]) + '" r="5" fill="#FFD400"/>' +
+        '<text x="' + px(item[0], points) + '" y="' + (py(points[item[0]])-10) + '" text-anchor="middle" font-family="DM Mono" font-size="10" fill="#FFD400">' + item[1] + ': ' + points[item[0]].toFixed(1) + '%</text>';
+    }).join('') +
+  '</svg>';
+}
+
+
 // ── SUB-MODES ─────────────────────────────────────────────────────────
 let activeSubMode = '';
 
