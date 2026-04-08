@@ -2957,13 +2957,16 @@ function renderCreatorGrid() {
     .filter(cr => {
       // When searching — bypass ALL filters, search across all 430 creators
       if (creatorSearchQuery) {
-        var q = creatorSearchQuery.toLowerCase().trim();
-        var haystack = (cr.name + ' ' + (cr.handle||'') + ' ' + (cr.bio||'') + ' ' + (cr.genre||'') + ' ' + cr.platform + ' ' + (cr.subs||'')).toLowerCase();
-        // Try full phrase match first
+        var q = creatorSearchQuery;
+        var haystack = (cr.name + ' ' + (cr.handle||'') + ' ' + (cr.bio||'') + ' ' + (cr.genre||'') + ' ' + cr.platform).toLowerCase();
+        // Full phrase match
         if (haystack.indexOf(q) !== -1) return true;
-        // Then try: ANY single word in the query matches
-        var words = q.split(/\s+/).filter(function(w) { return w.length >= 2; });
-        return words.some(function(w) { return haystack.indexOf(w) !== -1; });
+        // Any individual word match
+        var words = q.split(' ');
+        for (var wi = 0; wi < words.length; wi++) {
+          if (words[wi].length >= 2 && haystack.indexOf(words[wi]) !== -1) return true;
+        }
+        return false;
       }
       // Normal filters when not searching
       if (!passedBudgetFilter(cr)) return false;
