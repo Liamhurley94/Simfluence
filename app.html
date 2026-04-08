@@ -2953,20 +2953,55 @@ function renderCreatorGrid() {
   }
 
   // ── Build filtered + scored list ──────────────────────────────────
+  // ── SEARCH MODE: pure lookup, zero restrictions ──────────────────
+  if (window.__sfSearch) {
+    const sq = window.__sfSearch;
+    const display = CREATORS
+      .filter(cr => {
+        var hay = (cr.name + ' ' + cr.handle + ' ' + cr.genre + ' ' + cr.platform + ' ' + (cr.bio||'')).toLowerCase();
+        return hay.indexOf(sq) !== -1;
+      })
+      .sort((a,b) => a.name.localeCompare(b.name));
+
+    const totalHidden = CREATORS.length - display.length;
+    document.getElementById('discoveryMeta').textContent =
+      display.length + ' RESULT' + (display.length !== 1 ? 'S' : '') + ' FOR "' + sq.toUpperCase() + '" · ACROSS ALL ' + CREATORS.length + ' CREATORS';
+
+    document.getElementById('creatorGrid').innerHTML = display.map(cr => {
+      const selected  = selectedCreators.has(cr.id);
+      const gfi       = cr.gfi || computeGFI(cr);
+      const e         = computeCostEstimate(cr);
+      return `<div class="creator-card ${selected?'selected':''}" onclick="toggleCreator(${cr.id})" style="cursor:pointer;position:relative">
+        <div class="creator-card-header">
+          <div id="card-avatar-${cr.id}" class="creator-avatar" onclick="event.stopPropagation();openProfileOverlay(${cr.id})" style="background:${cr.color}22;color:${cr.color};${selected?'border:2px solid '+cr.color:''};cursor:zoom-in;overflow:hidden" title="View profile">${cr.name.charAt(0)}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${cr.name}</div>
+            <div style="font-size:11px;color:var(--text-dim)">${cr.handle} · ${cr.platform}</div>
+            <div style="font-size:10px;color:var(--text-muted);margin-top:2px">${cr.genre}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
+            ${tierBadgeHtml(cr)}
+            <button onclick="event.stopPropagation();openProfileOverlay(${cr.id})" style="font-family:'DM Mono',monospace;font-size:9px;padding:3px 8px;background:rgba(0,80,255,0.15);border:1px solid rgba(0,80,255,0.3);color:#6B9FFF;border-radius:3px;cursor:pointer;white-space:nowrap">VIEW ↗</button>
+          </div>
+        </div>
+        <div class="creator-stats">
+          <div class="stat"><div class="stat-label">SUBS</div><div class="stat-val">${cr.subs}</div></div>
+          <div class="stat"><div class="stat-label">AVG VIEWS</div><div class="stat-val">${cr.avgViews}</div></div>
+          <div class="stat"><div class="stat-label">ENG RATE</div><div class="stat-val">${cr.eng}</div></div>
+          <div class="stat"><div class="stat-label">CPI SCORE</div><div class="stat-val" style="color:${cpiScoreColor(cr.cpi)};font-size:22px;font-weight:700">${cr.cpi}</div></div>
+        </div>
+        <div style="margin-top:8px;font-size:10px;color:var(--text-muted);display:flex;justify-content:space-between">
+          <span style="color:var(--text-dim);font-weight:600;font-size:11px">Int: <strong style="color:#FFD400">${e.fmt(e.ranges.int[0])}–${e.fmt(e.ranges.int[1])}</strong></span>
+          <span style="color:var(--text-dim);font-weight:600;font-size:11px">Ded: <strong style="color:#FFD400">${e.fmt(e.ranges.ded[0])}–${e.fmt(e.ranges.ded[1])}</strong></span>
+        </div>
+      </div>`;
+    }).join('') || `<div style="padding:60px;text-align:center;color:var(--text-muted);font-family:'DM Mono',monospace;font-size:11px">NO CREATORS FOUND FOR "${sq.toUpperCase()}"</div>`;
+    return;
+  }
+
+  // ── NORMAL MODE: filtered + scored ───────────────────────────────
   const scored = CREATORS
     .filter(cr => {
-      // Search — runs across ALL creators, ignores all other filters
-      if (creatorSearchQuery) {
-        var searchIn = (cr.name + cr.handle + cr.genre + cr.platform + (cr.bio||'')).toLowerCase().split(' ').join('');
-        var searchInSpaced = (cr.name + ' ' + cr.handle + ' ' + cr.genre + ' ' + cr.platform + ' ' + (cr.bio||'')).toLowerCase();
-        var q = creatorSearchQuery.toLowerCase().split(' ').join('');
-        // Match compressed (no spaces) — catches "forcegaming" from "Force Gaming"
-        if (searchIn.indexOf(q) !== -1) return true;
-        // Match with spaces
-        if (searchInSpaced.indexOf(creatorSearchQuery.toLowerCase()) !== -1) return true;
-        return false;
-      }
-      // Normal filters when not searching
       if (!passedBudgetFilter(cr)) return false;
       if (!passedTierFilter(cr)) return false;
       if (genreScore(cr) < 0) return false;
@@ -2976,7 +3011,6 @@ function renderCreatorGrid() {
       const gScore  = genreScore(cr);
       const oScore  = objectiveScore(cr);
       const smScore = subModeScore(cr);
-      // Base sort score
       const base = sortMode==='gfi'  ? (cr.gfi || computeGFI(cr)) :
                    sortMode==='subs' ? parseSubs(cr.subs) / 1e6 :
                    cr.cpi;
@@ -2984,7 +3018,6 @@ function renderCreatorGrid() {
     })
     .sort((a,b) => b.total - a.total);
 
-  // ── Fallback: if filters too aggressive, show genre-matched only ──
   const display = scored.length >= 3 ? scored : CREATORS
     .filter(cr => cr.genre === genre)
     .map(cr => ({ cr, total: cr.cpi }))
@@ -4188,12 +4221,12 @@ async function injectLiveDataIntoProfile(creator) {
 
 
 // ── CREATOR SEARCH ────────────────────────────────────────────────────
-var creatorSearchQuery = '';
+var creatorSearchQuery = ''; window.__sfSearch = '';
 
 function runCreatorSearch(val) {
-  creatorSearchQuery = val.trim().toLowerCase();
+  window.__sfSearch = val.trim().toLowerCase();
   var clearBtn = document.getElementById('searchClear');
-  if (clearBtn) clearBtn.style.display = creatorSearchQuery ? 'block' : 'none';
+  if (clearBtn) clearBtn.style.display = window.__sfSearch ? 'block' : 'none';
 
   // Switch to discovery screen if not already there
   var discoveryScreen = document.getElementById('screen-discovery');
@@ -4207,7 +4240,7 @@ function runCreatorSearch(val) {
 function clearCreatorSearch() {
   var input = document.getElementById('creatorSearch');
   if (input) input.value = '';
-  creatorSearchQuery = '';
+  window.__sfSearch = '';
   var clearBtn = document.getElementById('searchClear');
   if (clearBtn) clearBtn.style.display = 'none';
   renderCreatorGrid();
