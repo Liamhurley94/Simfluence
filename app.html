@@ -3333,51 +3333,108 @@ function updateSimDisplay() {
   if (creatorBreakdownEl && toShowSim.length > 0) {
     const totalViews = toShowSim.reduce(function(a, cr) { return a + (parseViews(cr.avgViews) || 1); }, 0) || 1;
     creatorBreakdownEl.innerHTML = toShowSim.map(function(cr) {
-      const crGfi   = cr.gfi || 75;
-      const crEst   = computeCostEstimate(cr);
-      const crViews = parseViews(cr.avgViews) || 1;
-      const budgetShare = Math.round(budget * (crViews / totalViews));
-      const niche2  = NICHE_SPONSOR_CPM[cr.genre] || DEFAULT_CPM;
-      const crCpm   = niche2.med * (format === 'Dedicated' ? niche2.dedMult : 1.0) * Math.max(0.5, cr.cpi/100);
-      const crImpr  = Math.round((budgetShare / Math.max(crCpm, 1)) * 1000);
-      const crCtr   = Math.round(bench.ctrBase * (cr.cpi/100) * (crGfi/100 + 0.5) * 10) / 10;
-      const crClicks= Math.round(crImpr * crCtr / 100);
-      const crCvr   = Math.round(bench.cvrBase * (cr.cpi/100) * 10) / 10;
-      const crConv  = Math.round(crClicks * crCvr / 100);
-      const crP10   = { impr: Math.round(crImpr * 0.68), ctr: Math.round(crCtr * 0.68 * 10) / 10 };
-      const crP90   = { impr: Math.round(crImpr * 1.42), ctr: Math.round(crCtr * 1.42 * 10) / 10 };
-      const gfiCol  = crGfi >= 80 ? '#00C46A' : crGfi >= 60 ? '#FF7A00' : '#FF3355';
-      const crRate  = crEst.ranges[fmtKey];
+      var crGfi      = cr.gfi || 75;
+      var crEst      = computeCostEstimate(cr);
+      var crViews    = parseViews(cr.avgViews) || 1;
+      var budgetShare= Math.round(budget * (crViews / totalViews));
+      var niche2     = NICHE_SPONSOR_CPM[cr.genre] || DEFAULT_CPM;
+      var crCpm      = niche2.med * (format === 'Dedicated' ? niche2.dedMult : 1.0) * Math.max(0.5, cr.cpi/100);
+      var crImpr     = Math.round((budgetShare / Math.max(crCpm, 1)) * 1000);
+      var crCtr      = Math.round(bench.ctrBase * (cr.cpi/100) * (crGfi/100 + 0.5) * 10) / 10;
+      var crClicks   = Math.round(crImpr * crCtr / 100);
+      var crCvr      = Math.round(bench.cvrBase * (cr.cpi/100) * 10) / 10;
+      var crConv     = Math.round(crClicks * crCvr / 100);
+      var crRoas     = Math.round((crConv * 30 / Math.max(budgetShare, 1)) * 10) / 10;
+      var gfiCol     = crGfi >= 80 ? '#00C46A' : crGfi >= 60 ? '#FF7A00' : '#FF3355';
+      var crRate     = crEst.ranges[fmtKey];
+      var cardId     = 'crbd-' + cr.id;
 
-      return '<div style="border-bottom:1px solid var(--border);padding:20px">' +
-        '<div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">' +
-          '<div style="width:44px;height:44px;border-radius:50%;background:' + cr.color + '22;color:' + cr.color + ';display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;flex-shrink:0;border:2px solid ' + cr.color + '44">' + cr.name.charAt(0) + '</div>' +
-          '<div style="flex:1;min-width:0">' +
-            '<div style="font-family:\'Space Grotesk\',sans-serif;font-size:16px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + cr.name + '</div>' +
-            '<div style="font-family:\'DM Mono\',monospace;font-size:10px;color:var(--text-muted);margin-top:2px">' + cr.handle + ' · ' + cr.platform + ' · ' + cr.subs + ' subs</div>' +
-          '</div>' +
-          '<div style="display:flex;gap:12px;align-items:center;flex-shrink:0">' +
-            '<div style="text-align:center"><div style="font-family:\'DM Mono\',monospace;font-size:9px;color:var(--text-muted)">CPI</div><div style="font-family:\'Space Grotesk\',sans-serif;font-size:22px;font-weight:700;color:' + cpiScoreColor(cr.cpi) + '">' + cr.cpi + '</div></div>' +
-            '<div style="text-align:center"><div style="font-family:\'DM Mono\',monospace;font-size:9px;color:var(--text-muted)">GFI</div><div style="font-family:\'Space Grotesk\',sans-serif;font-size:22px;font-weight:700;color:#fff;background:' + gfiCol + ';border-radius:4px;padding:0 6px">' + crGfi + '%</div></div>' +
-            '<div style="text-align:center"><div style="font-family:\'DM Mono\',monospace;font-size:9px;color:var(--text-muted)">BUDGET SHARE</div><div style="font-family:\'Space Grotesk\',sans-serif;font-size:18px;font-weight:700;color:#FFD400">' + crEst.fmt(budgetShare) + '</div></div>' +
-          '</div>' +
-        '</div>' +
-        '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:12px">' +
-          [['EST. IMPRESSIONS', fmtNum(crImpr), '#0050FF'],['CTR', crCtr+'%', '#00C46A'],['EST. CLICKS', fmtNum(crClicks), '#FF7A00'],['EST. CONVERSIONS', fmtNum(crConv), '#9C27B0'],['INTEGRATED RATE', crEst.fmt(crRate[0])+'–'+crEst.fmt(crRate[1]), '#FFD400']].map(function(item) {
-            return '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:12px;text-align:center"><div style="font-family:\'DM Mono\',monospace;font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px">' + item[0] + '</div><div style="font-family:\'Space Grotesk\',sans-serif;font-size:18px;font-weight:700;color:' + item[2] + '">' + item[1] + '</div></div>';
-          }).join('') +
-        '</div>' +
-        '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">' +
-          '<div style="background:rgba(230,0,35,0.06);border:1px solid rgba(230,0,35,0.2);border-radius:5px;padding:10px;text-align:center"><div style="font-family:\'DM Mono\',monospace;font-size:8px;color:#E60023;margin-bottom:4px">P10 WORST</div><div style="font-family:\'Space Grotesk\',sans-serif;font-size:16px;font-weight:700;color:#E60023">' + fmtNum(crP10.impr) + '</div><div style="font-size:10px;color:rgba(230,0,35,0.6)">' + crP10.ctr + '% CTR</div></div>' +
-          '<div style="background:rgba(255,212,0,0.06);border:1px solid rgba(255,212,0,0.3);border-radius:5px;padding:10px;text-align:center"><div style="font-family:\'DM Mono\',monospace;font-size:8px;color:#FFD400;margin-bottom:4px">P50 BASE</div><div style="font-family:\'Space Grotesk\',sans-serif;font-size:16px;font-weight:700;color:#FFD400">' + fmtNum(crImpr) + '</div><div style="font-size:10px;color:rgba(255,212,0,0.6)">' + crCtr + '% CTR</div></div>' +
-          '<div style="background:rgba(0,196,106,0.06);border:1px solid rgba(0,196,106,0.2);border-radius:5px;padding:10px;text-align:center"><div style="font-family:\'DM Mono\',monospace;font-size:8px;color:#00C46A;margin-bottom:4px">P90 BEST</div><div style="font-family:\'Space Grotesk\',sans-serif;font-size:16px;font-weight:700;color:#00C46A">' + fmtNum(crP90.impr) + '</div><div style="font-size:10px;color:rgba(0,196,106,0.6)">' + crP90.ctr + '% CTR</div></div>' +
-        '</div>' +
-      '</div>';
-    }).join('') +
-    '<div style="padding:14px 20px;font-family:\'DM Mono\',monospace;font-size:10px;color:var(--text-muted);text-align:center;letter-spacing:.06em;border-top:1px solid var(--border)">' +
-      toShowSim.length + ' CREATOR' + (toShowSim.length > 1 ? 'S' : '') + ' · TOTAL BUDGET ' + formatBudget(budget) + ' · BUDGET DISTRIBUTED PROPORTIONALLY BY AUDIENCE REACH' +
-    '</div>';
+      var p10 = { impr: Math.round(crImpr*0.68), ctr: Math.round(crCtr*0.68*10)/10, clicks: Math.round(crClicks*0.68), conv: Math.round(crConv*0.68), roas: Math.round(crRoas*0.65*10)/10 };
+      var p50 = { impr: crImpr, ctr: crCtr, clicks: crClicks, conv: crConv, roas: crRoas };
+      var p90 = { impr: Math.round(crImpr*1.42), ctr: Math.round(crCtr*1.42*10)/10, clicks: Math.round(crClicks*1.42), conv: Math.round(crConv*1.42), roas: Math.round(crRoas*1.45*10)/10 };
+
+      var metrics = [
+        ['EST. IMPRESSIONS', fmtNum(crImpr), '#0050FF'],
+        ['CTR', crCtr+'%', '#00C46A'],
+        ['EST. CLICKS', fmtNum(crClicks), '#FF7A00'],
+        ['EST. CONVERSIONS', fmtNum(crConv), '#9C27B0'],
+        ['INTEGRATED RATE', crEst.fmt(crRate[0])+'–'+crEst.fmt(crRate[1]), '#FFD400']
+      ];
+
+      var metricBoxes = metrics.map(function(m) {
+        return '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:12px;text-align:center">'
+          + '<div style="font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px">' + m[0] + '</div>'
+          + '<div style="font-size:18px;font-weight:700;color:' + m[2] + '">' + m[1] + '</div>'
+          + '</div>';
+      }).join('');
+
+      var bandDetail = function(id, band, col, bgCol, borderCol, data, label, desc) {
+        return '<div id="' + id + '-' + band + '" style="display:none;background:' + bgCol + ';padding:16px">'
+          + '<div style="font-size:10px;font-weight:700;color:' + col + ';margin-bottom:12px;letter-spacing:.06em">' + label + '</div>'
+          + '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px">'
+          + [['Impressions',fmtNum(data.impr)],['CTR',data.ctr+'%'],['Est. Clicks',fmtNum(data.clicks)],['ROAS',data.roas+'×']].map(function(x) {
+              return '<div style="background:rgba(0,0,0,0.2);border-radius:5px;padding:10px;text-align:center">'
+                + '<div style="font-size:8px;color:' + col + '88;margin-bottom:4px">' + x[0] + '</div>'
+                + '<div style="font-size:18px;font-weight:700;color:' + col + '">' + x[1] + '</div>'
+                + '</div>';
+            }).join('')
+          + '</div>'
+          + '<div style="font-size:10px;color:' + col + '99;line-height:1.6">' + desc + '</div>'
+          + '</div>';
+      };
+
+      return '<div style="border-bottom:1px solid var(--border);padding:20px">'
+
+        // Clickable creator header
+        + '<div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;cursor:pointer" onclick="openProfileOverlay(' + cr.id + ')" title="Click to view full profile">'
+          + '<div style="width:44px;height:44px;border-radius:50%;background:' + cr.color + '22;color:' + cr.color + ';display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;flex-shrink:0;border:2px solid ' + cr.color + '">' + cr.name.charAt(0) + '</div>'
+          + '<div style="flex:1;min-width:0">'
+            + '<div style="font-size:16px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + cr.name + ' <span style="font-size:11px;color:var(--text-muted);font-weight:400">↗ view profile</span></div>'
+            + '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">' + cr.handle + ' · ' + cr.platform + ' · ' + cr.subs + ' subs</div>'
+          + '</div>'
+          + '<div style="display:flex;gap:12px;align-items:center;flex-shrink:0">'
+            + '<div style="text-align:center"><div style="font-size:9px;color:var(--text-muted)">CPI</div><div style="font-size:22px;font-weight:700;color:' + cpiScoreColor(cr.cpi) + '">' + cr.cpi + '</div></div>'
+            + '<div style="text-align:center"><div style="font-size:9px;color:var(--text-muted)">GFI</div><div style="font-size:22px;font-weight:700;color:#fff;background:' + gfiCol + ';border-radius:4px;padding:0 6px">' + crGfi + '%</div></div>'
+            + '<div style="text-align:center"><div style="font-size:9px;color:var(--text-muted)">BUDGET SHARE</div><div style="font-size:18px;font-weight:700;color:#FFD400">' + crEst.fmt(budgetShare) + '</div></div>'
+          + '</div>'
+        + '</div>'
+
+        // 5 metric boxes
+        + '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:14px">' + metricBoxes + '</div>'
+
+        // P10 / P50 / P90 clickable bands — use class + data attrs, handled by delegated listener
+        + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px">'
+          + '<div class="cr-band-btn" data-card="' + cardId + '" data-band="p10" style="background:rgba(230,0,35,0.06);border:1px solid rgba(230,0,35,0.25);border-radius:6px;padding:12px;text-align:center;cursor:pointer">'
+            + '<div style="font-size:9px;font-weight:700;color:#E60023;margin-bottom:6px;letter-spacing:.06em">P10 — WORST ↓</div>'
+            + '<div style="font-size:20px;font-weight:700;color:#E60023">' + fmtNum(p10.impr) + '</div>'
+            + '<div style="font-size:10px;color:rgba(230,0,35,0.7);margin-top:3px">' + p10.ctr + '% CTR &nbsp;·&nbsp; ' + p10.roas + '× ROAS</div>'
+          + '</div>'
+          + '<div class="cr-band-btn" data-card="' + cardId + '" data-band="p50" style="background:rgba(255,212,0,0.06);border:2px solid rgba(255,212,0,0.4);border-radius:6px;padding:12px;text-align:center;cursor:pointer">'
+            + '<div style="font-size:9px;font-weight:700;color:#FFD400;margin-bottom:6px;letter-spacing:.06em">P50 — BASE ↓</div>'
+            + '<div style="font-size:20px;font-weight:700;color:#FFD400">' + fmtNum(p50.impr) + '</div>'
+            + '<div style="font-size:10px;color:rgba(255,212,0,0.7);margin-top:3px">' + p50.ctr + '% CTR &nbsp;·&nbsp; ' + p50.roas + '× ROAS</div>'
+          + '</div>'
+          + '<div class="cr-band-btn" data-card="' + cardId + '" data-band="p90" style="background:rgba(0,196,106,0.06);border:1px solid rgba(0,196,106,0.25);border-radius:6px;padding:12px;text-align:center;cursor:pointer">'
+            + '<div style="font-size:9px;font-weight:700;color:#00C46A;margin-bottom:6px;letter-spacing:.06em">P90 — BEST ↓</div>'
+            + '<div style="font-size:20px;font-weight:700;color:#00C46A">' + fmtNum(p90.impr) + '</div>'
+            + '<div style="font-size:10px;color:rgba(0,196,106,0.7);margin-top:3px">' + p90.ctr + '% CTR &nbsp;·&nbsp; ' + p90.roas + '× ROAS</div>'
+          + '</div>'
+        + '</div>'
+
+        // Expandable detail panel — toggled by data-attribute listener
+        + '<div id="' + cardId + '" style="display:none;border-radius:6px;overflow:hidden;border:1px solid var(--border);margin-top:4px">'
+          + bandDetail(cardId,'p10','#E60023','rgba(230,0,35,0.06)','rgba(230,0,35,0.25)',p10,'P10 — WORST CASE BREAKDOWN','Conservative scenario: lower audience engagement, possible ad fatigue, off-peak timing. Build contingencies around this number.')
+          + bandDetail(cardId,'p50','#FFD400','rgba(255,212,0,0.05)','rgba(255,212,0,0.3)',p50,'P50 — BASE CASE BREAKDOWN','Most probable outcome based on creator CPI, GFI and genre benchmarks. This is your primary planning figure.')
+          + bandDetail(cardId,'p90','#00C46A','rgba(0,196,106,0.05)','rgba(0,196,106,0.25)',p90,'P90 — BEST CASE BREAKDOWN','Optimistic scenario: strong audience alignment, high engagement period, ideal timing. Treat as upside potential only.')
+        + '</div>'
+
+      + '</div>';
+    }).join('')
+    + '<div style="padding:14px 20px;font-size:10px;color:var(--text-muted);text-align:center;letter-spacing:.06em;border-top:1px solid var(--border)">'
+      + toShowSim.length + ' CREATOR' + (toShowSim.length > 1 ? 'S' : '') + ' · TOTAL BUDGET ' + formatBudget(budget) + ' · CLICK CREATOR TO VIEW PROFILE · CLICK P10/P50/P90 TO EXPAND'
+    + '</div>';
   }
+
 
   // Benchmark comparison
   const pvaEl = document.getElementById('pvaPanel');
@@ -3733,6 +3790,41 @@ function runFromBrief() {
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────
+
+// ── PER-CREATOR BAND TOGGLE — event delegation ────────────────────────
+document.addEventListener('click', function(e) {
+  var btn = e.target.closest('.cr-band-btn');
+  if (!btn) return;
+  var cardId = btn.dataset.card;
+  var band   = btn.dataset.band;
+  if (!cardId || !band) return;
+
+  var wrapper  = document.getElementById(cardId);
+  var p10Panel = document.getElementById(cardId + '-p10');
+  var p50Panel = document.getElementById(cardId + '-p50');
+  var p90Panel = document.getElementById(cardId + '-p90');
+  if (!wrapper) return;
+
+  var target  = document.getElementById(cardId + '-' + band);
+  var isOpen  = wrapper.style.display !== 'none';
+  var isSame  = isOpen && target && target.style.display !== 'none';
+
+  if (isSame) {
+    wrapper.style.display = 'none';
+    if (p10Panel) p10Panel.style.display = 'none';
+    if (p50Panel) p50Panel.style.display = 'none';
+    if (p90Panel) p90Panel.style.display = 'none';
+    return;
+  }
+
+  wrapper.style.display = 'block';
+  if (p10Panel) p10Panel.style.display = band === 'p10' ? 'block' : 'none';
+  if (p50Panel) p50Panel.style.display = band === 'p50' ? 'block' : 'none';
+  if (p90Panel) p90Panel.style.display = band === 'p90' ? 'block' : 'none';
+});
+
+function toggleCreatorBand(cardId, band) {} // legacy stub
+
 // ── THEME TOGGLE ──────────────────────────────────────────────────────
 function toggleTheme() {
   var isLight = document.body.classList.toggle('light');
@@ -3845,70 +3937,79 @@ document.addEventListener('DOMContentLoaded', () => {
 
 <!-- ══ FOOTER ══════════════════════════════════════════════════════ -->
 
-    <!-- FEATURE BLURBS SECTION -->
+    <!-- TERMINOLOGY KEY -->
     <div style="padding:40px 40px 0;border-top:1px solid var(--border);margin-top:40px">
-      <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#0050FF;margin-bottom:20px">Platform</div>
-      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:40px">
+      <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#0050FF;margin-bottom:24px">Terminology Key</div>
 
-        <!-- Creator Discovery -->
-        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:20px 22px 18px">
-          <div style="width:36px;height:36px;border-radius:6px;background:rgba(0,80,255,0.12);display:flex;align-items:center;justify-content:center;margin-bottom:14px">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="7" cy="7" r="4.5" stroke="#6B9FFF" stroke-width="1.4"/><path d="M10.5 10.5L14 14" stroke="#6B9FFF" stroke-width="1.4" stroke-linecap="round"/><path d="M5 7h4M7 5v4" stroke="#6B9FFF" stroke-width="1.2" stroke-linecap="round"/></svg>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:40px">
+
+        <!-- P10 -->
+        <div style="background:var(--bg2);border:1px solid rgba(230,0,35,0.3);border-radius:8px;padding:24px">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+            <div style="width:36px;height:36px;border-radius:6px;background:rgba(230,0,35,0.12);display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:#E60023">P10</div>
+            <div style="font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:#E60023">Worst Case</div>
           </div>
-          <div style="font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;margin-bottom:6px">Creator Discovery</div>
-          <div style="font-size:12px;color:var(--text-dim);line-height:1.7;margin-bottom:14px">Find creators by what they will deliver, not by how many follow them. Our database grows continuously — new creators added across every genre, platform and region as the influencer landscape evolves. Every result is ranked by CPI, updated in real time as verified deal data comes in.</div>
-          <div style="display:flex;gap:16px;border-top:1px solid var(--border);padding-top:12px">
-            <div><div style="font-size:16px;font-weight:600;color:var(--text)">12+</div><div style="font-size:10px;color:var(--text-muted);margin-top:2px">Platforms</div></div>
-            <div><div style="font-size:16px;font-weight:600;color:var(--text)">18</div><div style="font-size:10px;color:var(--text-muted);margin-top:2px">Genres</div></div>
-            <div><div style="font-size:16px;font-weight:600;color:var(--text)">53</div><div style="font-size:10px;color:var(--text-muted);margin-top:2px">Sub-modes</div></div>
+          <div style="font-size:12px;color:var(--text-dim);line-height:1.8">The <strong style="color:var(--text)">10th percentile</strong> outcome. If this campaign ran 100 times, only 10 would perform this poorly or worse. Use this as your <strong style="color:var(--text)">floor</strong> — if the campaign still makes sense here, you're in safe territory.</div>
+        </div>
+
+        <!-- P50 -->
+        <div style="background:var(--bg2);border:1px solid rgba(255,212,0,0.3);border-radius:8px;padding:24px">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+            <div style="width:36px;height:36px;border-radius:6px;background:rgba(255,212,0,0.12);display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:#FFD400">P50</div>
+            <div style="font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:#FFD400">Base Case</div>
+          </div>
+          <div style="font-size:12px;color:var(--text-dim);line-height:1.8">The <strong style="color:var(--text)">median outcome</strong>. Half the time you'd do better, half the time worse. This is the <strong style="color:var(--text)">most probable result</strong> and the number to use for planning, sign-off and budget justification.</div>
+        </div>
+
+        <!-- P90 -->
+        <div style="background:var(--bg2);border:1px solid rgba(0,196,106,0.3);border-radius:8px;padding:24px">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+            <div style="width:36px;height:36px;border-radius:6px;background:rgba(0,196,106,0.12);display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:#00C46A">P90</div>
+            <div style="font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:#00C46A">Best Case</div>
+          </div>
+          <div style="font-size:12px;color:var(--text-dim);line-height:1.8">The <strong style="color:var(--text)">90th percentile</strong> outcome. Only 1 in 10 campaigns would perform this well or better. This is your <strong style="color:var(--text)">upside ceiling</strong> — possible, but don't build targets around it.</div>
+        </div>
+
+        <!-- CPI -->
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:24px">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+            <div style="width:36px;height:36px;border-radius:6px;background:rgba(255,212,0,0.1);display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:700;color:#FFD400">CPI</div>
+            <div style="font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700">Creator Performance Index</div>
+          </div>
+          <div style="font-size:12px;color:var(--text-dim);line-height:1.8">A proprietary score from <strong style="color:var(--text)">0–100</strong> predicting a creator's ability to drive <strong style="color:var(--text)">commercial outcomes</strong> for your brief. Calculated from engagement rate, view-to-subscriber ratio, audience quality and verified deal history. Higher CPI = stronger predicted ROI.</div>
+          <div style="margin-top:12px;display:flex;gap:8px">
+            <span style="font-family:'DM Mono',monospace;font-size:9px;padding:3px 8px;background:rgba(0,212,122,0.15);border:1px solid rgba(0,212,122,0.3);color:#00D47A;border-radius:3px">80–100 &nbsp;Strong</span>
+            <span style="font-family:'DM Mono',monospace;font-size:9px;padding:3px 8px;background:rgba(255,149,0,0.15);border:1px solid rgba(255,149,0,0.3);color:#FF9500;border-radius:3px">40–79 &nbsp;Moderate</span>
+            <span style="font-family:'DM Mono',monospace;font-size:9px;padding:3px 8px;background:rgba(255,51,85,0.15);border:1px solid rgba(255,51,85,0.3);color:#FF3355;border-radius:3px">0–39 &nbsp;Weak</span>
           </div>
         </div>
 
-        <!-- CPI & GFI -->
-        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:20px 22px 18px">
-          <div style="width:36px;height:36px;border-radius:6px;background:rgba(100,80,200,0.12);display:flex;align-items:center;justify-content:center;margin-bottom:14px">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="10" width="3" height="6" rx="1" fill="#9B8FDD"/><rect x="7.5" y="6" width="3" height="10" rx="1" fill="#9B8FDD" opacity=".7"/><rect x="13" y="2" width="3" height="14" rx="1" fill="#9B8FDD" opacity=".4"/></svg>
+        <!-- GFI -->
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:24px">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+            <div style="width:36px;height:36px;border-radius:6px;background:rgba(0,196,106,0.1);display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:700;color:#00C46A">GFI</div>
+            <div style="font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700">Genre Fit Index</div>
           </div>
-          <div style="font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;margin-bottom:6px">CPI &amp; GFI Scoring</div>
-          <div style="font-size:12px;color:var(--text-dim);line-height:1.7;margin-bottom:14px">Two scores that do what follower count never could. The Creator Performance Index predicts commercial outcomes. The Genre Fit Index measures audience alignment to your campaign. Together, they make the shortlist obvious.</div>
-          <div style="display:flex;gap:16px;border-top:1px solid var(--border);padding-top:12px">
-            <div><div style="font-size:16px;font-weight:600;color:var(--text)">0–100</div><div style="font-size:10px;color:var(--text-muted);margin-top:2px">CPI scale</div></div>
-            <div><div style="font-size:16px;font-weight:600;color:var(--text)">90%</div><div style="font-size:10px;color:var(--text-muted);margin-top:2px">Confidence</div></div>
-            <div><div style="font-size:16px;font-weight:600;color:var(--text)">Live</div><div style="font-size:10px;color:var(--text-muted);margin-top:2px">Updates</div></div>
-          </div>
-        </div>
-
-        <!-- AI Persona Matching -->
-        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:20px 22px 18px">
-          <div style="width:36px;height:36px;border-radius:6px;background:rgba(0,160,100,0.12);display:flex;align-items:center;justify-content:center;margin-bottom:14px">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="6" r="3" stroke="#00C46A" stroke-width="1.4"/><path d="M3 16c0-3.314 2.686-5 6-5s6 1.686 6 5" stroke="#00C46A" stroke-width="1.4" stroke-linecap="round"/><path d="M13 8l1.5 1.5L16 8" stroke="#00C46A" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </div>
-          <div style="font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;margin-bottom:6px">AI Persona Matching</div>
-          <div style="font-size:12px;color:var(--text-dim);line-height:1.7;margin-bottom:14px">Every creator carries an audience archetype — the way their followers think, buy and respond to a call to action. Simfluence maps 100+ genre-native personas to your brand narrative so your message lands with the right psychology, not just the right demographic.</div>
-          <div style="display:flex;gap:16px;border-top:1px solid var(--border);padding-top:12px">
-            <div><div style="font-size:16px;font-weight:600;color:var(--text)">100+</div><div style="font-size:10px;color:var(--text-muted);margin-top:2px">Archetypes</div></div>
-            <div><div style="font-size:16px;font-weight:600;color:var(--text)">3</div><div style="font-size:10px;color:var(--text-muted);margin-top:2px">Per genre</div></div>
-            <div><div style="font-size:16px;font-weight:600;color:var(--text)">CTA</div><div style="font-size:10px;color:var(--text-muted);margin-top:2px">Mapped</div></div>
+          <div style="font-size:12px;color:var(--text-dim);line-height:1.8">Measures how well a creator's <strong style="color:var(--text)">audience aligns</strong> to your campaign's genre. A gaming creator running a travel campaign may have a strong CPI but a low GFI — meaning their audience is less likely to respond to that message. Always evaluate both scores together.</div>
+          <div style="margin-top:12px;display:flex;gap:8px">
+            <span style="font-family:'DM Mono',monospace;font-size:9px;padding:3px 8px;background:rgba(0,212,122,0.15);border:1px solid rgba(0,212,122,0.3);color:#00D47A;border-radius:3px">80%+ &nbsp;High fit</span>
+            <span style="font-family:'DM Mono',monospace;font-size:9px;padding:3px 8px;background:rgba(255,149,0,0.15);border:1px solid rgba(255,149,0,0.3);color:#FF9500;border-radius:3px">50–79% &nbsp;Moderate</span>
+            <span style="font-family:'DM Mono',monospace;font-size:9px;padding:3px 8px;background:rgba(255,51,85,0.15);border:1px solid rgba(255,51,85,0.3);color:#FF3355;border-radius:3px">Under 50% &nbsp;Low</span>
           </div>
         </div>
 
-        <!-- Campaign Simulator -->
-        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:20px 22px 18px">
-          <div style="width:36px;height:36px;border-radius:6px;background:rgba(255,122,0,0.12);display:flex;align-items:center;justify-content:center;margin-bottom:14px">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 14L6 9l3 3 3-5 4 5" stroke="#FF7A00" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6" cy="9" r="1.2" fill="#FF7A00"/><circle cx="9" cy="12" r="1.2" fill="#FF7A00"/><circle cx="12" cy="7" r="1.2" fill="#FF7A00"/></svg>
+        <!-- Budget Range -->
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:24px">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+            <div style="width:36px;height:36px;border-radius:6px;background:rgba(0,80,255,0.1);display:flex;align-items:center;justify-content:center;font-size:18px">£</div>
+            <div style="font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700">Estimated Rate Range</div>
           </div>
-          <div style="font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;margin-bottom:6px">Campaign Simulator</div>
-          <div style="font-size:12px;color:var(--text-dim);line-height:1.7;margin-bottom:14px">Input your brief. Get your forecast. Before any budget moves, you see predicted CTR, CPM, CVR and ROAS — with P10, P50 and P90 confidence bands. Swap creators, adjust budget, run what-if scenarios. Every number is a commitment you can interrogate before you make it real.</div>
-          <div style="display:flex;gap:16px;border-top:1px solid var(--border);padding-top:12px">
-            <div><div style="font-size:16px;font-weight:600;color:var(--text)">&lt;2 min</div><div style="font-size:10px;color:var(--text-muted);margin-top:2px">Full forecast</div></div>
-            <div><div style="font-size:16px;font-weight:600;color:var(--text)">P10–P90</div><div style="font-size:10px;color:var(--text-muted);margin-top:2px">Confidence</div></div>
-            <div><div style="font-size:16px;font-weight:600;color:var(--text)">4</div><div style="font-size:10px;color:var(--text-muted);margin-top:2px">Key metrics</div></div>
-          </div>
+          <div style="font-size:12px;color:var(--text-dim);line-height:1.8">The <strong style="color:var(--text)">estimated sponsorship cost</strong> per creator based on their average views, genre CPM benchmarks and platform. Shown as a low–high range. <strong style="color:var(--text)">Integrated</strong> = mention within existing content. <strong style="color:var(--text)">Dedicated</strong> = full video for your brand. Excludes exclusivity, usage rights and production fees.</div>
         </div>
 
       </div>
     </div>
-    <!-- END FEATURE BLURBS -->
+    <!-- END TERMINOLOGY KEY -->
 
 <footer class="site-footer">
   <div class="footer-grid">
