@@ -1576,12 +1576,29 @@
   body.light .run-btn { background: #003BB5; color: #fff; }
 
   /* Creator cards */
-  body.light .creator-card { background: #fff; border-color: rgba(0,0,0,0.1); }
-  body.light .creator-card:hover { border-color: rgba(0,59,181,0.3); background: #F8F9FF; }
-  body.light .creator-card.selected { border-color: #003BB5; background: #F0F4FF; }
+  body.light .creator-card {
+    background: #fff;
+    border: 2px solid rgba(0,0,0,0.14);
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.05);
+  }
+  body.light .creator-card:hover {
+    border-color: #003BB5;
+    background: #F8F9FF;
+    box-shadow: 0 4px 16px rgba(0,59,181,0.12), 0 1px 4px rgba(0,0,0,0.08);
+    transform: translateY(-1px);
+    transition: all .15s ease;
+  }
+  body.light .creator-card.selected {
+    border-color: #003BB5;
+    border-width: 2px;
+    background: #EEF3FF;
+    box-shadow: 0 4px 16px rgba(0,59,181,0.15);
+  }
   body.light .creator-avatar { color: inherit; }
-  body.light .stat-label { color: #505580; }
-  body.light .stat-val { color: #080A14; }
+  body.light .stat-label { color: #505580; font-weight: 600; }
+  body.light .stat-val { color: #080A14; font-weight: 700; }
+  body.light .creator-stats { border-top: 1px solid rgba(0,0,0,0.08); margin-top: 10px; padding-top: 10px; }
 
   /* Page titles */
   body.light .page-title { color: #080A14; }
