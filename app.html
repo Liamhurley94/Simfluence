@@ -3003,7 +3003,7 @@ function renderCreatorGrid() {
     return `<div class="creator-card ${selected?'selected':''}" onclick="toggleCreator(${cr.id})" style="cursor:pointer;position:relative">
       ${budgetBadge}
       <div class="creator-card-header">
-        <div class="creator-avatar" onclick="event.stopPropagation();openProfileOverlay(${cr.id})" style="background:${cr.color}22;color:${cr.color};${selected?'border:2px solid '+cr.color:''};cursor:zoom-in" title="View profile">${cr.name.charAt(0)}</div>
+        <div id="card-avatar-${cr.id}" class="creator-avatar" onclick="event.stopPropagation();openProfileOverlay(${cr.id})" style="background:${cr.color}22;color:${cr.color};${selected?'border:2px solid '+cr.color:''};cursor:zoom-in;overflow:hidden" title="View profile">${cr.name.charAt(0)}</div>
         <div style="flex:1;min-width:0">
           <div style="font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${cr.name}</div>
           <div style="font-size:11px;color:var(--text-dim)">${cr.handle} · ${cr.platform}</div>
@@ -3062,10 +3062,16 @@ function openProfileOverlay(id) {
       <div style="background:linear-gradient(135deg,${c.color}22,transparent);padding:32px;position:relative">
         <button onclick="closeProfileOverlay()" style="position:absolute;top:16px;right:16px;background:rgba(0,0,0,0.4);border:1px solid var(--border);color:var(--text-dim);border-radius:6px;padding:6px 12px;cursor:pointer;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.06em">✕ CLOSE</button>
         <div style="display:flex;gap:20px;align-items:center">
-          <div style="width:72px;height:72px;border-radius:50%;background:${c.color}33;border:3px solid ${c.color};display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;color:${c.color};flex-shrink:0;font-family:'Space Grotesk',sans-serif">${c.name.charAt(0)}</div>
+          <div id="profile-avatar-${c.id}" style="width:72px;height:72px;border-radius:50%;background:${c.color}33;border:3px solid ${c.color};display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;color:${c.color};flex-shrink:0;font-family:'Space Grotesk',sans-serif;overflow:hidden;flex-shrink:0">${c.name.charAt(0)}</div>
           <div>
             <div style="font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:600;letter-spacing:-.02em">${c.name}</div>
             <div style="font-size:13px;color:var(--text-dim);margin-top:4px">${c.handle} · ${c.allPlatforms ? c.allPlatforms.join(' · ') : c.platform}</div>
+            <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+              ${c.platform && c.platform.toLowerCase().includes('youtube') ? `<a href="https://youtube.com/${c.handle}" target="_blank" style="font-family:'DM Mono',monospace;font-size:9px;padding:3px 10px;background:rgba(255,0,0,0.12);border:1px solid rgba(255,0,0,0.3);color:#FF4444;border-radius:3px;text-decoration:none;letter-spacing:.04em">▶ YouTube →</a>` : ''}
+              ${c.platform && c.platform.toLowerCase().includes('twitch') ? `<a href="https://twitch.tv/${c.handle.replace('@','')}" target="_blank" style="font-family:'DM Mono',monospace;font-size:9px;padding:3px 10px;background:rgba(145,70,255,0.12);border:1px solid rgba(145,70,255,0.3);color:#9146FF;border-radius:3px;text-decoration:none;letter-spacing:.04em">▶ Twitch →</a>` : ''}
+              ${c.platform && c.platform.toLowerCase().includes('instagram') ? `<a href="https://instagram.com/${c.handle.replace('@','')}" target="_blank" style="font-family:'DM Mono',monospace;font-size:9px;padding:3px 10px;background:rgba(225,48,108,0.12);border:1px solid rgba(225,48,108,0.3);color:#E1306C;border-radius:3px;text-decoration:none;letter-spacing:.04em">▶ Instagram →</a>` : ''}
+              ${c.platform && c.platform.toLowerCase().includes('tiktok') ? `<a href="https://tiktok.com/${c.handle}" target="_blank" style="font-family:'DM Mono',monospace;font-size:9px;padding:3px 10px;background:rgba(0,242,234,0.12);border:1px solid rgba(0,242,234,0.3);color:#00F2EA;border-radius:3px;text-decoration:none;letter-spacing:.04em">▶ TikTok →</a>` : ''}
+            </div>
             <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
               ${tierBadgeHtml(c)}
               <span style="font-family:'DM Mono',monospace;font-size:9px;padding:3px 8px;border-radius:3px;background:rgba(0,80,255,0.15);border:1px solid rgba(0,80,255,0.3);color:#6B9FFF">${c.genre}</span>
@@ -4006,6 +4012,8 @@ var SUPABASE_ANON_YT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmF
 
 async function fetchCreatorYouTubeData(creator) {
   try {
+    // Try with handle first, then with @ stripped
+    var handle = creator.handle || '';
     var res = await fetch(SUPABASE_URL_YT + '/functions/v1/youtube-creator-data', {
       method: 'POST',
       headers: {
@@ -4014,12 +4022,16 @@ async function fetchCreatorYouTubeData(creator) {
       },
       body: JSON.stringify({
         creator_id:     creator.id,
-        channel_handle: creator.handle,
+        channel_handle: handle,
+        channel_id:     creator.channelId || null,
       }),
     });
-    if (!res.ok) return null;
+    // Read body regardless of status to get error details
     var result = await res.json();
-    return result.data || null;
+    if (result && result.data) return result.data;
+    // If channel not found, show a friendly message rather than null
+    if (result && result.error === 'Channel not found') return { _notFound: true };
+    return null;
   } catch (e) {
     return null;
   }
@@ -4042,6 +4054,10 @@ async function injectLiveDataIntoProfile(creator) {
     liveEl.innerHTML = '<span style="color:var(--text-muted)">Could not load live data</span>';
     return;
   }
+  if (data._notFound) {
+    liveEl.innerHTML = '<span style="color:var(--text-muted);font-size:11px">Channel ID not yet mapped — live data coming soon as we build out the creator database.</span>';
+    return;
+  }
 
   // Update subscriber count if live data available
   var subsEl = document.getElementById('profile-subs-' + creator.id);
@@ -4055,6 +4071,29 @@ async function injectLiveDataIntoProfile(creator) {
   if (viewsEl && data.avg_views_20 && data.avg_views_20 > 0) {
     var liveViews = fmtLive(data.avg_views_20);
     viewsEl.innerHTML = liveViews + ' <span style="font-size:10px;color:#00C46A">● 20 vid avg</span>';
+  }
+
+  // Inject profile photo — overlay and creator card
+  if (data.thumbnail_url) {
+    var avatarEl = document.getElementById('profile-avatar-' + creator.id);
+    if (avatarEl) {
+      var img1 = document.createElement('img');
+      img1.src = data.thumbnail_url;
+      img1.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%';
+      img1.onerror = function() { avatarEl.textContent = creator.name.charAt(0); };
+      avatarEl.innerHTML = '';
+      avatarEl.appendChild(img1);
+    }
+    var cardAvatarEl = document.getElementById('card-avatar-' + creator.id);
+    if (cardAvatarEl) {
+      var img2 = document.createElement('img');
+      img2.src = data.thumbnail_url;
+      img2.style.cssText = 'width:100%;height:100%;object-fit:cover';
+      img2.onerror = function() { cardAvatarEl.textContent = creator.name.charAt(0); };
+      cardAvatarEl.innerHTML = '';
+      cardAvatarEl.style.padding = '0';
+      cardAvatarEl.appendChild(img2);
+    }
   }
 
   // Build live content panel
