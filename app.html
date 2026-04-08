@@ -114,6 +114,15 @@
     letter-spacing: 0.05em;
   }
 
+  #creatorSearch:focus {
+    border-color: #0050FF !important;
+    box-shadow: 0 0 0 2px rgba(0,80,255,0.15);
+  }
+
+  #creatorSearch::placeholder {
+    color: var(--text-muted);
+  }
+
   /* MAIN LAYOUT */
   .app {
     display: grid;
@@ -1741,8 +1750,6 @@ document.getElementById('GP').focus();
       <span style="position:absolute;left:10px;color:var(--text-muted);font-size:13px;pointer-events:none">🔍</span>
       <input id="creatorSearch" type="text" placeholder="Search creators..." 
         oninput="runCreatorSearch(this.value)"
-        onfocus="this.style.borderColor='#0050FF'"
-        onblur="this.style.borderColor='var(--border)'"
         style="font-family:'DM Mono',monospace;font-size:11px;padding:7px 12px 7px 30px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;color:var(--text);width:220px;outline:none;transition:border-color .2s"
       >
       <button id="searchClear" onclick="clearCreatorSearch()" style="display:none;position:absolute;right:8px;background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:14px;padding:0;line-height:1">✕</button>
