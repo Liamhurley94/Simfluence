@@ -3025,6 +3025,7 @@ function renderCreatorGrid() {
         </div>
         ${highlight}
       </div>
+      ${renderCrossoverBadge(cr, genre)}
       <div style="margin-top:8px;font-size:10px;color:var(--text-muted);display:flex;justify-content:space-between">
         <span style="color:var(--text-dim);font-weight:600;font-size:11px">Int: <strong style="color:#FFD400">${e.fmt(e.ranges.int[0])}–${e.fmt(e.ranges.int[1])}</strong></span>
         <span style="color:var(--text-dim);font-weight:600;font-size:11px">Ded: <strong style="color:#FFD400">${e.fmt(e.ranges.ded[0])}–${e.fmt(e.ranges.ded[1])}</strong></span>
@@ -3068,19 +3069,62 @@ function openProfileOverlay(id) {
             <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
               ${tierBadgeHtml(c)}
               <span style="font-family:'DM Mono',monospace;font-size:9px;padding:3px 8px;border-radius:3px;background:rgba(0,80,255,0.15);border:1px solid rgba(0,80,255,0.3);color:#6B9FFF">${c.genre}</span>
+              ${(function(){
+                var sig = getCrossoverSignal(c, getSelectedGenre());
+                if (!sig) return '';
+                var col = sig.affinity >= 0.7 ? '#FFD400' : '#FF7A00';
+                return '<span style="font-family:\'DM Mono\',monospace;font-size:9px;padding:3px 8px;border-radius:3px;background:'+col+'18;border:1px solid '+col+'33;color:'+col+'">↔ CROSSOVER</span>';
+              })()}
             </div>
           </div>
         </div>
         ${c.bio ? `<p style="font-size:13px;color:var(--text-dim);margin-top:18px;line-height:1.7;max-width:540px">${c.bio}</p>` : ''}
+        ${(function(){
+          var sig = getCrossoverSignal(c, getSelectedGenre());
+          if (!sig || sig.affinity <= 0) return '';
+          var col = sig.affinity >= 0.7 ? '#FFD400' : '#FF7A00';
+          var signalStr = sig.signals.length > 0 ? sig.signals.join(', ') : sig.campaignGenre;
+          return '<div style="margin-top:14px;padding:12px 16px;background:'+col+'08;border:1px solid '+col+'22;border-radius:6px;max-width:540px">'
+            + '<div style="font-family:\'DM Mono\',monospace;font-size:9px;font-weight:700;color:'+col+';letter-spacing:.08em;margin-bottom:8px">↔ CROSSOVER CONTENT SIGNAL</div>'
+            + '<div style="font-size:12px;color:var(--text-dim);line-height:1.7">'
+            + 'Primarily a <strong style="color:var(--text)">'+sig.primaryGenre+'</strong> creator.'
+            + ' Content analysis suggests crossover into <strong style="color:'+col+'">'+signalStr+'</strong>.'
+            + '</div>'
+            + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">'
+            + '<div style="background:rgba(0,0,0,0.2);border-radius:4px;padding:8px 12px">'
+              + '<div style="font-size:9px;color:'+col+'88;letter-spacing:.06em;margin-bottom:3px">RECENT 10 VIDEOS</div>'
+              + '<div style="font-size:20px;font-weight:700;color:'+col+'">' + sig.recent10pct + '%</div>'
+              + '<div style="font-size:10px;color:var(--text-muted)">est. '+sig.campaignGenre+'-relevant</div>'
+            + '</div>'
+            + '<div style="background:rgba(0,0,0,0.2);border-radius:4px;padding:8px 12px">'
+              + '<div style="font-size:9px;color:'+col+'88;letter-spacing:.06em;margin-bottom:3px">RECENT 20 VIDEOS</div>'
+              + '<div style="font-size:20px;font-weight:700;color:'+col+'">' + sig.recent20pct + '%</div>'
+              + '<div style="font-size:10px;color:var(--text-muted)">est. '+sig.campaignGenre+'-relevant</div>'
+            + '</div>'
+            + '</div>'
+            + '<div style="margin-top:8px;font-size:9px;color:var(--text-muted);opacity:.7">Estimated from content signals · live YouTube video analysis coming in a future update</div>'
+          + '</div>';
+        })()}
       </div>
 
       <!-- STATS ROW -->
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border-top:1px solid var(--border)">
-        ${[['SUBSCRIBERS',c.subs,'var(--text)'],['AVG VIEWS',c.avgViews,'var(--text)'],['ENG RATE',c.eng,'#00C46A'],['CPI SCORE',c.cpi,cpiScoreColor(c.cpi)]].map(([l,v,col])=>`
-          <div style="background:var(--bg3);padding:20px;text-align:center">
-            <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px">${l}</div>
-            <div style="font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:600;color:${col}">${v}</div>
-          </div>`).join('')}
+        <div style="background:var(--bg3);padding:20px;text-align:center">
+          <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px">SUBSCRIBERS</div>
+          <div id="profile-subs-${c.id}" style="font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:600;color:var(--text)">${c.subs}</div>
+        </div>
+        <div style="background:var(--bg3);padding:20px;text-align:center">
+          <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px">AVG VIEWS</div>
+          <div id="profile-views-${c.id}" style="font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:600;color:var(--text)">${c.avgViews}</div>
+        </div>
+        <div style="background:var(--bg3);padding:20px;text-align:center">
+          <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px">ENG RATE</div>
+          <div style="font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:600;color:#00C46A">${c.eng}</div>
+        </div>
+        <div style="background:var(--bg3);padding:20px;text-align:center">
+          <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px">CPI SCORE</div>
+          <div style="font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:600;color:${cpiScoreColor(c.cpi)}">${c.cpi}</div>
+        </div>
       </div>
 
       <!-- SCORES + ESTIMATE -->
@@ -3153,6 +3197,17 @@ function openProfileOverlay(id) {
         </div>
       </div>
 
+      <!-- LIVE CONTENT ANALYSIS -->
+      <div style="padding:20px 24px;border-top:1px solid var(--border)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#0050FF">Live Content Analysis</div>
+          <div id="profile-ts-${c.id}" style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted)"></div>
+        </div>
+        <div id="profile-live-${c.id}" style="font-size:12px;color:var(--text-muted);font-family:'DM Mono',monospace;letter-spacing:.04em">
+          ${c.platform && c.platform.toLowerCase().includes('youtube') ? 'Fetching live data...' : 'Live data available for YouTube channels only'}
+        </div>
+      </div>
+
       <!-- ADD TO CAMPAIGN -->
       <div style="padding:20px 24px;border-top:1px solid var(--border);background:var(--bg3);display:flex;align-items:center;justify-content:space-between">
         <div style="font-size:13px;color:var(--text-dim)">Add to your campaign brief and run a simulation.</div>
@@ -3164,6 +3219,11 @@ function openProfileOverlay(id) {
 
   document.getElementById('profileOverlay').style.display = 'block';
   document.getElementById('profileOverlay').scrollTop = 0;
+
+  // Fire live YouTube data fetch asynchronously
+  if (c.platform && c.platform.toLowerCase().indexOf('youtube') !== -1) {
+    injectLiveDataIntoProfile(c);
+  }
 }
 
 function closeProfileOverlay() {
@@ -3183,6 +3243,91 @@ function showScreen(name, btn) {
   if(name==='simulator') { computeSimResults(); updateSimDisplay(); updateBandDisplays(); renderEfficiencyCurve(); }
 }
 
+
+
+// ── CROSSOVER CONTENT SIGNAL ─────────────────────────────────────────
+// Maps bio content keywords to readable genre labels
+const CONTENT_SIGNALS = {
+  // Gaming sub-genres
+  'RPG': 'RPG', 'ARPG': 'Action RPG', 'MMORPG': 'MMORPG', 'Action RPG': 'Action RPG',
+  'FPS': 'FPS', 'Shooter': 'FPS / Shooter', 'Battle Royale': 'Battle Royale',
+  'Survival': 'Survival', 'Building': 'Building / Sim', 'Strategy': 'Strategy',
+  'Horror': 'Horror', 'Simulation': 'Simulation', 'Sandbox': 'Sandbox',
+  'MOBA': 'MOBA', 'Roguelike': 'Roguelikes', 'Indie': 'Indie',
+  // Lifestyle crossovers
+  'IRL': 'IRL / Lifestyle', 'Vlog': 'Vlogging', 'Travel': 'Travel',
+  'Food': 'Food & Cooking', 'Fitness': 'Health & Fitness',
+  'Finance': 'Finance', 'Crypto': 'Finance / Crypto',
+  'Beauty': 'Beauty', 'Fashion': 'Fashion',
+  'Music': 'Music', 'Podcast': 'Podcasting',
+  'Tech': 'Tech & Gadgets', 'Unboxing': 'Unboxing',
+  'Anime': 'Anime / Entertainment', 'React': 'Reaction / Commentary',
+  'Commentary': 'Reaction / Commentary', 'Education': 'Education',
+  'Motivational': 'Motivational', 'Cooking': 'Food & Cooking',
+};
+
+function getCrossoverSignal(cr, campaignGenre) {
+  var bio    = cr.bio || '';
+  var genre  = cr.genre || '';
+
+  // If creator's native genre matches campaign — no crossover needed
+  if (genre === campaignGenre) return null;
+
+  // Parse bio for content type signals
+  var foundSignals = [];
+  var bioUpper = bio.toUpperCase();
+  Object.keys(CONTENT_SIGNALS).forEach(function(key) {
+    if (bio.indexOf(key) !== -1 || bioUpper.indexOf(key.toUpperCase()) !== -1) {
+      var label = CONTENT_SIGNALS[key];
+      if (foundSignals.indexOf(label) === -1) foundSignals.push(label);
+    }
+  });
+
+  // Estimate content split from affinity score
+  var affinityRaw = (GENRE_AFFINITY[genre] || {})[campaignGenre];
+  var affinity    = (affinityRaw !== undefined && affinityRaw !== null) ? affinityRaw : 0;
+
+  if (affinity <= 0) return null; // No meaningful crossover
+
+  // Convert affinity to rough video % estimates
+  // affinity 1.0 = 100%, 0.7 = ~25-35% crossover content, 0.6 = ~15-25%
+  var recent10pct, recent20pct;
+  if (affinity >= 0.9) {
+    recent10pct = 80; recent20pct = 75;
+  } else if (affinity >= 0.7) {
+    recent10pct = 30; recent20pct = 25;
+  } else if (affinity >= 0.6) {
+    recent10pct = 20; recent20pct = 15;
+  } else {
+    recent10pct = 10; recent20pct = 8;
+  }
+
+  return {
+    primaryGenre: genre,
+    campaignGenre: campaignGenre,
+    signals: foundSignals.slice(0, 3),
+    recent10pct: recent10pct,
+    recent20pct: recent20pct,
+    affinity: affinity,
+  };
+}
+
+function renderCrossoverBadge(cr, campaignGenre) {
+  var signal = getCrossoverSignal(cr, campaignGenre);
+  if (!signal) return '';
+
+  var col = signal.affinity >= 0.7 ? '#FFD400' : '#FF7A00';
+  var signalStr = signal.signals.length > 0
+    ? signal.signals.join(' · ')
+    : campaignGenre;
+
+  return '<div style="margin-top:8px;padding:7px 10px;background:' + col + '08;border:1px solid ' + col + '22;border-radius:4px;font-size:10px;color:var(--text-muted);line-height:1.5">'
+    + '<span style="color:' + col + ';font-weight:700;font-size:9px;letter-spacing:.06em">CROSSOVER</span> '
+    + 'Primarily <strong style="color:var(--text)">' + signal.primaryGenre.split(' ')[0] + '</strong> · '
+    + 'Est. <strong style="color:' + col + '">' + signal.recent10pct + '%</strong> of recent content covers <strong style="color:var(--text)">' + signalStr + '</strong>'
+    + '<span style="display:block;margin-top:3px;font-size:9px;color:var(--text-muted);opacity:.7">Based on content signals · live video analysis coming soon</span>'
+    + '</div>';
+}
 
 // ── OBJECTIVES ────────────────────────────────────────────────────────
 function toggleChip(btn) {
@@ -3853,6 +3998,123 @@ document.addEventListener('click', function(e) {
 });
 
 function toggleCreatorBand(cardId, band) {} // legacy stub
+
+
+// ── YOUTUBE LIVE DATA ─────────────────────────────────────────────────
+var SUPABASE_URL_YT  = 'https://iysjxslzlbojoivxjrce.supabase.co';
+var SUPABASE_ANON_YT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5c2p4c2x6bGJvam9pdnhqcmNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0OTkyNjksImV4cCI6MjA5MTA3NTI2OX0.gGW_qclPJZT4x3eevXg6PFllq5CQWVifJUEaI3rqKnw';
+
+async function fetchCreatorYouTubeData(creator) {
+  try {
+    var res = await fetch(SUPABASE_URL_YT + '/functions/v1/youtube-creator-data', {
+      method: 'POST',
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': 'Bearer ' + SUPABASE_ANON_YT,
+      },
+      body: JSON.stringify({
+        creator_id:     creator.id,
+        channel_handle: creator.handle,
+      }),
+    });
+    if (!res.ok) return null;
+    var result = await res.json();
+    return result.data || null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function fmtLive(n) {
+  if (!n || n === 0) return null;
+  if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+  if (n >= 1e3) return Math.round(n / 1e3) + 'K';
+  return String(n);
+}
+
+async function injectLiveDataIntoProfile(creator) {
+  var liveEl = document.getElementById('profile-live-' + creator.id);
+  if (!liveEl) return;
+
+  var data = await fetchCreatorYouTubeData(creator);
+
+  if (!data) {
+    liveEl.innerHTML = '<span style="color:var(--text-muted)">Could not load live data</span>';
+    return;
+  }
+
+  // Update subscriber count if live data available
+  var subsEl = document.getElementById('profile-subs-' + creator.id);
+  if (subsEl && data.subs_live && data.subs_live > 0) {
+    var liveSubs = fmtLive(data.subs_live);
+    subsEl.innerHTML = liveSubs + ' <span style="font-size:10px;color:#00C46A">● LIVE</span>';
+  }
+
+  // Update avg views
+  var viewsEl = document.getElementById('profile-views-' + creator.id);
+  if (viewsEl && data.avg_views_20 && data.avg_views_20 > 0) {
+    var liveViews = fmtLive(data.avg_views_20);
+    viewsEl.innerHTML = liveViews + ' <span style="font-size:10px;color:#00C46A">● 20 vid avg</span>';
+  }
+
+  // Build live content panel
+  var html = '';
+
+  // Genre breakdown
+  if (data.genre_signals && Object.keys(data.genre_signals).length > 0) {
+    var sorted = Object.entries(data.genre_signals).sort(function(a,b){ return b[1]-a[1]; }).slice(0,5);
+    var total  = data.video_count || 20;
+    html += '<div style="margin-bottom:14px">';
+    html += '<div style="font-size:9px;color:#0050FF;letter-spacing:.08em;margin-bottom:8px">CONTENT BREAKDOWN — LAST ' + total + ' VIDEOS</div>';
+    sorted.forEach(function(item) {
+      var genre = item[0]; var count = item[1];
+      var pct = Math.round((count / total) * 100);
+      html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">'
+        + '<div style="width:90px;font-size:11px;color:var(--text-dim)">' + genre + '</div>'
+        + '<div style="flex:1;background:var(--bg3);border-radius:2px;height:5px">'
+          + '<div style="width:' + pct + '%;height:100%;background:#0050FF;border-radius:2px"></div>'
+        + '</div>'
+        + '<div style="width:34px;text-align:right;font-size:11px;font-weight:700;color:#FFD400">' + pct + '%</div>'
+      + '</div>';
+    });
+    html += '</div>';
+  }
+
+  // Sponsorship frequency
+  if (data.sponsor_freq_pct !== null && data.sponsor_freq_pct !== undefined) {
+    var freq    = data.sponsor_freq_pct;
+    var freqCol = freq >= 40 ? '#FF7A00' : freq >= 20 ? '#FFD400' : '#00C46A';
+    var freqLbl = freq >= 40 ? 'High ad density' : freq >= 20 ? 'Moderate ad density' : 'Low ad density';
+    html += '<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:' + freqCol + '10;border:1px solid ' + freqCol + '30;border-radius:5px;margin-bottom:12px">'
+      + '<div style="font-size:24px;font-weight:700;color:' + freqCol + '">' + freq + '%</div>'
+      + '<div>'
+        + '<div style="font-size:11px;font-weight:600;color:' + freqCol + '">' + freqLbl + '</div>'
+        + '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">of recent videos contain sponsorship signals</div>'
+      + '</div>'
+    + '</div>';
+  }
+
+  // Recent titles
+  if (data.top_titles && data.top_titles.length > 0) {
+    html += '<div style="font-size:9px;color:#0050FF;letter-spacing:.08em;margin-bottom:6px">RECENT VIDEO TITLES</div>';
+    data.top_titles.forEach(function(title) {
+      html += '<div style="font-size:11px;color:var(--text-dim);padding:5px 0;border-bottom:1px solid var(--border);line-height:1.4">' + title + '</div>';
+    });
+  }
+
+  if (html) {
+    liveEl.innerHTML = html;
+  } else {
+    liveEl.innerHTML = '<span style="color:var(--text-muted)">No content signals found</span>';
+  }
+
+  // Timestamp
+  var tsEl = document.getElementById('profile-ts-' + creator.id);
+  if (tsEl && data.fetched_at) {
+    var ago = Math.round((Date.now() - new Date(data.fetched_at).getTime()) / 60000);
+    tsEl.textContent = ago < 2 ? 'just now' : ago + ' min ago';
+  }
+}
 
 // ── THEME TOGGLE ──────────────────────────────────────────────────────
 function toggleTheme() {
