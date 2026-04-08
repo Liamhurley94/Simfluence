@@ -2757,7 +2757,8 @@ function getSelectedGenre() {
 
 function computeGFI(creator) {
   const campaignGenre = getSelectedGenre() || 'Gaming & Esports';
-  const affinity = (GENRE_AFFINITY[creator.genre]||{})[campaignGenre] ?? 0.3;
+  const affinityRaw = (GENRE_AFFINITY[creator.genre]||{})[campaignGenre];
+  const affinity = (affinityRaw !== undefined && affinityRaw !== null) ? affinityRaw : 0.3;
   const base = creator.cpi * affinity;
   return Math.round(clamp(base + (Math.random()*6-3), 20, 98));
 }
@@ -2774,7 +2775,7 @@ function getCreatorTierIndex(c) {
 }
 
 function getSortedCreators() {
-  const sel = document.querySelector('.sort-mode-active')?.dataset?.sort || 'cpi';
+  const selEl = document.querySelector('.sort-mode-active'); const sel = (selEl && selEl.dataset && selEl.dataset.sort) || 'cpi';
   return [...CREATORS].sort((a,b) => {
     if(sel==='gfi') return computeGFI(b)-computeGFI(a);
     if(sel==='subs') return parseSubs(b.subs)-parseSubs(a.subs);
@@ -2926,7 +2927,8 @@ function renderCreatorGrid() {
   // ── Genre filter ──────────────────────────────────────────────────
   function genreScore(cr) {
     if (cr.genre === genre) return 30;
-    const affinity = (GENRE_AFFINITY[cr.genre]||{})[genre] ?? 0;
+    const affinityRaw2 = (GENRE_AFFINITY[cr.genre]||{})[genre];
+    const affinity = (affinityRaw2 !== undefined && affinityRaw2 !== null) ? affinityRaw2 : 0;
     if (affinity >= 0.6) return 10;
     return -999; // exclude
   }
@@ -3464,7 +3466,6 @@ function runFromBrief() {
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────
-window.add
 // ── THEME TOGGLE ──────────────────────────────────────────────────────
 function toggleTheme() {
   var isLight = document.body.classList.toggle('light');
