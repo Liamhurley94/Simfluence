@@ -658,8 +658,8 @@
   /* PERSONA PANEL */
   .persona-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 10px;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 16px;
   }
 
   .persona-card {
@@ -1903,37 +1903,54 @@ document.getElementById('GP').focus();
       <div class="page-header">
         <div>
           <div class="page-title">CPI &amp; GFI <em>Scoring</em></div>
-          <div class="page-meta">CAMPAIGN INTELLIGENCE SCORES</div>
+          <div class="page-meta" id="scoringMeta">CAMPAIGN INTELLIGENCE SCORES</div>
         </div>
         <button onclick="showScreen('personas',document.querySelector('.nav-tab:nth-child(3)'))" style="padding:10px 20px;background:#0050FF;color:#fff;border:none;border-radius:var(--radius);font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;letter-spacing:.05em">VIEW PERSONA MATCHES →</button>
       </div>
 
       <!-- OVERVIEW STAT CARDS -->
-      <div class="score-overview" style="margin-bottom:20px">
-        <div class="score-card"><div class="score-label">AVG CPI SCORE</div><div class="score-val" id="avgCPI" style="color:#FFD400">—</div></div>
-        <div class="score-card"><div class="score-label">AVG GFI SCORE</div><div class="score-val" id="avgGFI" style="color:#00C46A">—</div></div>
-        <div class="score-card"><div class="score-label">TOP CREATOR</div><div class="score-val" id="topCreator" style="font-size:16px;color:#fff">—</div></div>
-        <div class="score-card"><div class="score-label">DATA CONFIDENCE</div><div class="score-val" id="dataConf" style="color:#6B9FFF">—</div></div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px">
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:20px">
+          <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px">AVG CPI SCORE</div>
+          <div id="avgCPI" style="font-family:'Space Grotesk',sans-serif;font-size:40px;font-weight:700;color:#FFD400;line-height:1">—</div>
+          <div id="avgCPIBar" style="margin-top:10px;height:4px;background:var(--bg3);border-radius:2px"><div id="avgCPIFill" style="height:100%;border-radius:2px;background:#FFD400;width:0%;transition:width .8s ease"></div></div>
+        </div>
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:20px">
+          <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px">AVG GFI SCORE</div>
+          <div id="avgGFI" style="font-family:'Space Grotesk',sans-serif;font-size:40px;font-weight:700;color:#00C46A;line-height:1">—</div>
+          <div style="margin-top:10px;height:4px;background:var(--bg3);border-radius:2px"><div id="avgGFIFill" style="height:100%;border-radius:2px;background:#00C46A;width:0%;transition:width .8s ease"></div></div>
+        </div>
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:20px">
+          <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px">TOP CREATOR</div>
+          <div id="topCreator" style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:#fff;line-height:1.2">—</div>
+          <div id="topCreatorSub" style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);margin-top:8px">—</div>
+        </div>
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:20px">
+          <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px">DATA CONFIDENCE</div>
+          <div id="dataConf" style="font-family:'Space Grotesk',sans-serif;font-size:40px;font-weight:700;color:#6B9FFF;line-height:1">—</div>
+          <div id="dataConfSub" style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);margin-top:8px">Based on creator data quality</div>
+        </div>
       </div>
 
-      <!-- FULL CREATOR SCORE TABLE -->
-      <div class="panel" style="margin-bottom:20px;padding:0;overflow:hidden">
-        <div style="display:grid;grid-template-columns:1fr 80px 80px 120px;gap:0;background:var(--bg3);border-bottom:1px solid var(--border);padding:12px 20px">
+      <!-- FULL SCORE TABLE (hero element) -->
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:20px">
+        <div style="display:grid;grid-template-columns:2fr 100px 100px 1fr 120px;gap:0;background:var(--bg3);border-bottom:1px solid var(--border);padding:12px 20px">
           <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#0050FF">Creator</div>
           <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#0050FF;text-align:center">CPI</div>
           <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#0050FF;text-align:center">GFI</div>
-          <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#0050FF;text-align:right">CPI BAR</div>
+          <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#0050FF">Performance Bar</div>
+          <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#0050FF;text-align:right">Est. Rate</div>
         </div>
-        <div id="fullScoreTable" style="max-height:420px;overflow-y:auto"></div>
+        <div id="fullScoreTable" style="max-height:480px;overflow-y:auto"></div>
       </div>
 
-      <!-- GENRE BENCHMARK — BOLD AND OUTLINED -->
+      <!-- GENRE BENCHMARK -->
       <div style="border:2px solid #0050FF;border-radius:8px;overflow:hidden;margin-bottom:20px">
-        <div style="background:#0050FF;padding:12px 20px;display:flex;align-items:center;justify-content:space-between">
+        <div style="background:#0050FF;padding:14px 20px;display:flex;align-items:center;justify-content:space-between">
           <div style="font-family:'DM Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#fff">Genre Benchmark</div>
           <div id="benchGenreLabel" style="font-family:'DM Mono',monospace;font-size:11px;font-weight:700;color:#FFD400;letter-spacing:.06em"></div>
         </div>
-        <div id="benchmarkPanel" style="padding:8px"></div>
+        <div id="benchmarkPanel" style="padding:16px"></div>
       </div>
     </div>
 
@@ -2177,24 +2194,110 @@ const GENRE_SUBMODES = {
 const GENRE_PERSONAS = {
   'Gaming & Esports': {
     'RPG / Open World': [
-      { name:'The Lore Keeper', desc:'Deep narrative fans who engage with story-rich content', cta:'Unlock the story behind your brand', color:'#7B68EE' },
-      { name:'The Explorer', desc:'Completionists and open-world enthusiasts', cta:'Discover whats beyond the map', color:'#20B2AA' },
-      { name:'The Tactician', desc:'Strategy-first players who plan every move', cta:'Optimise your play', color:'#FF8C00' },
+      { name:'The Lore Keeper',    icon:'📖', desc:'Deep narrative fans driven by story, world-building and lore. High dwell time, reads everything, watches long-form content. Responds to mystery and backstory.', demo:'18–30 · 72% male · PC/console · Reddit-heavy', purchase:'Pre-orders, collector editions, story DLC, lore books', brands:'GOG, Narrative studios, tabletop RPG brands, fantasy book publishers', cta:'Unlock the story behind your brand', color:'#7B68EE', traits:['high_eng','long_form','narrative'] },
+      { name:'The Explorer',       icon:'🗺️', desc:'Completionists and open-world enthusiasts who play every quest and collect everything. Methodical, patient, brand-loyal once earned.', demo:'20–32 · 65% male · PC/console', purchase:'Season passes, map expansions, cosmetic packs', brands:'Travel brands, encyclopaedic apps, premium subscriptions', cta:'Discover what lies beyond the map', color:'#20B2AA', traits:['loyal','completionist','high_cpi'] },
+      { name:'The Tactician',      icon:'♟️', desc:'Min-maxers and build optimisers. Reads patch notes the day they drop. Engages with mechanical depth and data. Responds to efficiency and performance claims.', demo:'22–35 · 80% male · PC-dominant', purchase:'Peripherals, optimization tools, coaching services', brands:'Gaming peripherals, VPNs, PC hardware, analytical software', cta:'Optimise your setup. Dominate your build.', color:'#FF8C00', traits:['analytical','high_cpi','direct_sales'] },
+      { name:'The Solo Adventurer',icon:'🏔️', desc:'Single-player focused. Values atmosphere, silence, exploration. Avoids competitive content. High ad tolerance for quality products that enhance immersion.', demo:'25–38 · 58% male · varied platforms', purchase:'Premium games, atmospheric OSTs, quality headphones', brands:'Audio brands, solo game publishers, meditation/focus apps', cta:'Your world. Your pace. Your rules.', color:'#9B59B6', traits:['premium','immersive','long_form'] },
+      { name:'The Nostalgia Seeker',icon:'🕹️', desc:'Grew up gaming. Returns to the medium for comfort and familiarity. Highly responsive to retro aesthetics and "spiritual successors" messaging.', demo:'28–42 · 70% male · multi-platform', purchase:'Remasters, retro hardware, nostalgia merchandise', brands:'Classic IP revivals, retro peripheral makers, subscription services', cta:'Relive the magic. Remastered.', color:'#E67E22', traits:['nostalgia','loyal','mid_tier'] },
+    ],
+    'FPS / Tactical': [
+      { name:'The Competitor',     icon:'🎯', desc:'Win-rate obsessed. Tracks stats, watches VODs, optimises every variable. Extremely high engagement with performance content. First to adopt anything that gives edge.', demo:'16–28 · 85% male · PC/console', purchase:'Gaming mice, headsets, coaching, dietary supplements', brands:'Razer, SteelSeries, energy drinks, coaching platforms', cta:'Lower your ping. Raise your rank.', color:'#E60023', traits:['high_eng','direct_sales','competitive'] },
+      { name:'The Squad Leader',   icon:'📡', desc:'Social glue of a friend group. Organises sessions, recruits teammates, sets the meta for their circle. Word-of-mouth multiplier — if they adopt your brand, their squad follows.', demo:'18–30 · 75% male · console/PC', purchase:'Communication tools, group subscriptions, branded gear', brands:'Discord, gaming chairs, team-branded apparel', cta:'Get your squad set up right.', color:'#0050FF', traits:['community','virality','mid_tier'] },
+      { name:'The Grinder',        icon:'⚙️', desc:'Plays every day. Values consistency and marginal gains. High daily active usage, responds to loyalty programmes and progression systems.', demo:'17–26 · 82% male · PC', purchase:'Battle passes, XP boosts, monthly subscriptions', brands:'Energy drinks, snack brands, gaming chairs', cta:'Keep grinding. Stay fuelled.', color:'#2ECC71', traits:['retention','daily_active','high_cpi'] },
+    ],
+    'Battle Royale': [
+      { name:'The Highlight Hunter',icon:'🎬', desc:'Plays for clips. Shares moments. Heavy on social media, loves viral potential. Extremely receptive to anything that makes them look good or feel like a creator themselves.', demo:'14–24 · 70% male · console/PC/mobile', purchase:'Cosmetics, streaming gear, clip editors', brands:'Clip software, controller brands, clothing/streetwear', cta:'Make your next clip the one they all share.', color:'#F72585', traits:['virality','community','young'] },
+      { name:'The Casual Dropper', icon:'🪂', desc:'Plays several times a week for entertainment. Not chasing rank. Responds to fun, accessibility and social hooks rather than performance claims.', demo:'18–34 · 55% male · all platforms', purchase:'Cosmetics, casual merchandise, snacks', brands:'Snack brands, streaming services, casual lifestyle', cta:'Jump in. No pressure. Just play.', color:'#4CC9F0', traits:['casual','reach','broad_demo'] },
+    ],
+    'MOBA': [
+      { name:'The Analyst',        icon:'📊', desc:'Stat-obsessed strategist. Watches pro play, reads tier lists daily. Responds to data-driven claims and technical authority. Extremely high engagement with educational content.', demo:'20–32 · 88% male · PC', purchase:'Premium coaching, analytical tools, productivity software', brands:'Coaching platforms, mechanical keyboards, research tools', cta:'Data doesn\'t lie. Neither does your build.', color:'#9B59B6', traits:['analytical','high_eng','edu'] },
+      { name:'The Meta Chaser',    icon:'🔄', desc:'Always playing the strongest pick. Extremely reactive to patch notes and tier changes. If your product is "meta", they\'ll adopt it instantly and tell everyone.', demo:'18–28 · 83% male · PC', purchase:'Premium accounts, boosting services, mechanical peripherals', brands:'Peripheral brands, VPN services, game-adjacent software', cta:'Stay ahead of the patch. Every time.', color:'#E74C3C', traits:['early_adopter','direct_sales','competitive'] },
     ],
     default: [
-      { name:'The Competitor', desc:'Win-focused, high engagement, responds to performance claims', cta:'Upgrade your game', color:'#E60023' },
-      { name:'The Community Builder', desc:'Social, streamer-adjacent, values belonging', cta:'Join the squad', color:'#0050FF' },
-      { name:'The Enthusiast', desc:'Broad gaming interest, high purchase intent', cta:'Level up your setup', color:'#FFD400' },
+      { name:'The Competitor',     icon:'🎯', desc:'Win-focused, responds to performance claims, high purchase intent for anything that improves outcomes. First mover on new products endorsed by their favourite creators.', demo:'16–30 · 80% male · PC/console', purchase:'Peripherals, optimisation tools, supplements', brands:'Energy drinks, gaming hardware, coaching services', cta:'Upgrade your game.', color:'#E60023', traits:['high_eng','direct_sales'] },
+      { name:'The Community Builder',icon:'🤝', desc:'Social, streamer-adjacent, values belonging and shared identity. Brand endorsements work when tied to community events, challenges or group identity.', demo:'18–28 · 60% male · all platforms', purchase:'Branded merchandise, social subscriptions', brands:'Apparel, community platforms, team merchandise', cta:'Join the squad.', color:'#0050FF', traits:['community','virality'] },
+      { name:'The Enthusiast',     icon:'⭐', desc:'Broad gaming interest, high purchase intent, early adopter profile. Follows multiple genres and creators. Versatile target for most gaming-adjacent products.', demo:'20–35 · 70% male · multi-platform', purchase:'Full-price games, accessories, gaming furniture', brands:'Gaming chairs, headsets, game pass services', cta:'Level up your setup.', color:'#FFD400', traits:['broad','high_cpi','early_adopter'] },
+    ]
+  },
+  'Beauty & Skincare': {
+    default: [
+      { name:'The Skincare Devotee',icon:'🧴', desc:'Researches ingredients obsessively. Reads INCI lists. Trusts science-backed creators over influencer hype. Converts on proof, not aesthetics.', demo:'22–38 · 85% female · Instagram/YouTube', purchase:'Serums, sunscreens, clinical brands, supplements', brands:'The Ordinary, Paula\'s Choice, clinical skincare', cta:'Formulated for results. Proven by skin.', color:'#F9A8D4', traits:['high_eng','analytical','direct_sales'] },
+      { name:'The Glam Creator',   icon:'✨', desc:'Beauty as self-expression. Follows trends, experiments boldly, shares looks. High social sharing behaviour — a purchase is also a content opportunity.', demo:'18–32 · 90% female · TikTok/Instagram/YouTube', purchase:'Colour cosmetics, limited editions, trend-led drops', brands:'NYX, MAC, ColourPop, indie beauty brands', cta:'Make your look. Own the moment.', color:'#EC4899', traits:['virality','young','community'] },
+      { name:'The Minimalist',     icon:'🤍', desc:'Less but better. Values quality, longevity and clean ingredients. Will pay premium for products that simplify their routine. Sceptical of excessive claims.', demo:'28–42 · 80% female · YouTube/blogs', purchase:'Multi-use products, refillable formats, premium basics', brands:'Glossier, Aesop, sustainable beauty brands', cta:'One product. Every occasion. Simplified.', color:'#E9D5FF', traits:['premium','loyal','long_form'] },
+      { name:'The Deal Hunter',    icon:'💸', desc:'Follows dupes culture, reviews value products, shares price comparisons. Massive word-of-mouth reach at launch. Converts on price-per-quality positioning.', demo:'20–35 · 82% female · TikTok/Reddit', purchase:'Mid-market products, bundles, seasonal sets', brands:'e.l.f., Wet n Wild, drugstore alternatives', cta:'Premium results. Without the premium price.', color:'#FCD34D', traits:['reach','virality','promo'] },
+      { name:'The Wellness Crossover',icon:'🌿', desc:'Beauty meets health. Tracks ingredients, supplements, gut health. Sees skincare as preventative wellness. Highly engaged with holistic brand narratives.', demo:'25–40 · 78% female · YouTube/podcasts', purchase:'Supplement-beauty hybrids, SPF, gut-skin products', brands:'Hum Nutrition, Moon Juice, adaptogenic brands', cta:'Beauty starts from within.', color:'#6EE7B7', traits:['high_eng','premium','retention'] },
+    ]
+  },
+  'Travel & Adventure': {
+    default: [
+      { name:'The Experience Collector',icon:'📸', desc:'Travels for stories, not destinations. Documents everything. Highly influenced by creator content — if a creator went there, they want to go there. High LTV once brand-loyal.', demo:'25–40 · 55% female · Instagram/YouTube', purchase:'Experiences, gear, travel insurance, premium accommodation', brands:'GoPro, Away, travel insurance, boutique hotels', cta:'Collect the moment. Not just the photo.', color:'#F97316', traits:['virality','premium','loyal'] },
+      { name:'The Budget Explorer', icon:'🎒', desc:'Maximises adventure per pound spent. Follows hacks, deals, van life and free camping content. Massive audience, high engagement, responds to accessibility messaging.', demo:'20–32 · 50/50 · TikTok/YouTube', purchase:'Budget gear, travel cards, hostel bookings', brands:'Hostelworld, budget airlines, lightweight gear brands', cta:'Go further. Spend less.', color:'#34D399', traits:['reach','community','promo'] },
+      { name:'The Luxury Traveller',icon:'✈️', desc:'Aspirational travel consumer. Follows premium content, responds to exclusivity and curated experiences. High disposable income, low price sensitivity.', demo:'32–50 · 48% female · YouTube/Instagram', purchase:'Business class, luxury hotels, premium luggage', brands:'Bose, luxury hotel chains, premium credit cards', cta:'Because some journeys deserve to be exceptional.', color:'#C4B5FD', traits:['premium','high_cpi','direct_sales'] },
+      { name:'The Adventure Seeker',icon:'🏕️', desc:'Defined by physical challenge. Hiking, climbing, kayaking, wild camping. Brand trust built on endorsement by real adventurers, not polished content.', demo:'24–40 · 65% male · YouTube', purchase:'Technical gear, nutrition, safety equipment', brands:'Patagonia, Osprey, adventure nutrition brands', cta:'Built for the places roads don\'t go.', color:'#22D3EE', traits:['high_eng','direct_sales','loyal'] },
+    ]
+  },
+  'Health & Fitness': {
+    default: [
+      { name:'The Transformer',    icon:'💪', desc:'On a journey. Documenting progress. Highly emotionally engaged with content that validates their effort. Extremely receptive to before/after narratives and milestone products.', demo:'24–38 · 55% female · Instagram/YouTube', purchase:'Supplements, programmes, gym clothing', brands:'Huel, MyProtein, Gymshark, transformation apps', cta:'Your next level starts here.', color:'#EF4444', traits:['high_eng','retention','direct_sales'] },
+      { name:'The Optimiser',      icon:'📈', desc:'Biohacker mindset. Tracks everything — sleep, HRV, macros, VO2 max. Responds to data, science citations and measurable outcomes. High purchase intent for premium products.', demo:'28–42 · 70% male · YouTube/podcasts', purchase:'Wearables, nootropics, premium nutrition', brands:'Whoop, AG1, clinical nutrition brands', cta:'Measurable. Repeatable. Yours.', color:'#3B82F6', traits:['analytical','premium','high_cpi'] },
+      { name:'The Lifestyle Athlete',icon:'🏃', desc:'Fitness as identity but balanced with life. Follows creators who show training AND normal life. Brand fit requires authenticity — overtly "gym bro" brands repel them.', demo:'25–38 · 50/50 · Instagram/YouTube', purchase:'Athleisure, balanced nutrition, running gear', brands:'Lululemon, Huel, casual athletic brands', cta:'Train hard. Live fully.', color:'#10B981', traits:['loyal','community','mid_tier'] },
+      { name:'The Beginner',       icon:'🌱', desc:'Just starting. Overwhelmed by information. Trusts creators who make fitness feel accessible. Extremely high LTV if retained — will follow the same creator-brand ecosystem for years.', demo:'18–30 · 60% female · TikTok/Instagram', purchase:'Starter kits, beginner programmes, accessible gear', brands:'Accessible supplement brands, beginner-friendly apps', cta:'Start simple. Stay consistent.', color:'#FBBF24', traits:['reach','retention','broad_demo'] },
+    ]
+  },
+  'Food & Cooking': {
+    default: [
+      { name:'The Home Cook',      icon:'👨‍🍳', desc:'Cooks most nights, follows recipe creators, wants to improve skills. Purchases kitchen equipment, quality ingredients and meal planning tools. High repeat purchase behaviour.', demo:'25–45 · 60% female · YouTube/Instagram', purchase:'Kitchen equipment, quality ingredients, cookbooks', brands:'Ninja, Le Creuset, premium ingredient brands', cta:'Better ingredients. Better cooking. Every night.', color:'#F97316', traits:['loyal','retention','direct_sales'] },
+      { name:'The Food Explorer',  icon:'🌍', desc:'Cuisine as culture. Seeks authentic global food experiences. Follows travel/food crossover content. High engagement with storytelling around food origin and tradition.', demo:'28–42 · 55% female · YouTube/Instagram', purchase:'Specialist ingredients, cooking classes, food travel', brands:'Global spice brands, specialty food boxes, culinary travel', cta:'Every dish tells a story. Taste it.', color:'#DC2626', traits:['virality','community','premium'] },
+      { name:'The Health-Conscious Eater',icon:'🥗', desc:'Tracks macros or follows specific dietary approaches. High engagement with educational nutrition content. Converts on ingredient transparency and clean-label claims.', demo:'22–38 · 65% female · Instagram/TikTok', purchase:'Healthy meal kits, supplements, free-from products', brands:'Gousto, HelloFresh, plant-based brands', cta:'Clean ingredients. Clear conscience.', color:'#22C55E', traits:['high_eng','direct_sales','analytical'] },
+    ]
+  },
+  'Tech & Gadgets': {
+    default: [
+      { name:'The Early Adopter',  icon:'🚀', desc:'Buys on launch day. Watches unboxings before the product ships. Highly vocal online — a positive review multiplies through their network. Extremely high influence-to-purchase correlation.', demo:'22–38 · 82% male · YouTube/Twitter/X', purchase:'Latest smartphones, wearables, smart home', brands:'Premium consumer tech, crowdfunding projects', cta:'First look. First to own it.', color:'#6366F1', traits:['early_adopter','virality','direct_sales'] },
+      { name:'The Value Researcher',icon:'🔍', desc:'Spends weeks comparing before buying. Reads every review, watches every video. Creator credibility is essential — they can detect inauthenticity immediately. Converts slowly but surely.', demo:'25–40 · 75% male · YouTube/Reddit', purchase:'Mid-range tech with best price-performance ratio', brands:'Brands with strong value proposition, comparison-friendly', cta:'We did the research. So you don\'t have to.', color:'#0EA5E9', traits:['analytical','loyal','long_form'] },
+      { name:'The Power User',     icon:'⚡', desc:'Pushes every device to its limits. Modifies, customises, overclocks. Responds to specs, benchmarks and technical depth. Creator authority matters more than production quality.', demo:'20–35 · 90% male · YouTube/forums', purchase:'Premium hardware, developer tools, accessories', brands:'PC component brands, developer tools, enthusiast peripherals', cta:'Specs don\'t lie. Neither does performance.', color:'#F59E0B', traits:['analytical','high_cpi','premium'] },
+    ]
+  },
+  'Music': {
+    default: [
+      { name:'The Passionate Fan',  icon:'🎵', desc:'Artist-loyal to their core. Follows every post, streams every release, attends shows. For campaigns: fandoms move fast and spend big when activated correctly.', demo:'16–35 · 55% female · Spotify/YouTube/Instagram', purchase:'Merch, vinyl, concert tickets, fan experiences', brands:'Music streaming, fan platforms, artist-adjacent lifestyle brands', cta:'Be part of the story they\'re telling.', color:'#EC4899', traits:['high_eng','loyal','community'] },
+      { name:'The Discovery Addict',icon:'🔊', desc:'Always seeking new music. Curates playlists obsessively. High engagement with "hidden gems" and emerging artist content. Word-of-mouth amplifier within their taste network.', demo:'20–35 · 50/50 · Spotify/YouTube', purchase:'Music subscriptions, concert experiences, independent releases', brands:'Streaming platforms, independent labels, headphone brands', cta:'Find your next obsession.', color:'#8B5CF6', traits:['virality','community','mid_tier'] },
+    ]
+  },
+  'Finance & Investing': {
+    default: [
+      { name:'The Wealth Builder',  icon:'📈', desc:'Long-term thinker. Responds to compound growth narratives, disciplined frameworks and trust signals. Sceptical by nature — creator credibility is the primary conversion driver.', demo:'28–45 · 70% male · YouTube/podcasts', purchase:'Investment platforms, premium financial tools, courses', brands:'Index fund platforms, budgeting apps, financial education', cta:'Every day you wait is compounding against you.', color:'#10B981', traits:['high_cpi','long_form','analytical'] },
+      { name:'The Hustle Investor', icon:'💰', desc:'Higher risk tolerance. Follows crypto, options, high-yield plays. Moves fast on creator recommendations. Extremely high purchase intent — but also highly volatile audience.', demo:'22–35 · 78% male · YouTube/Twitter/X', purchase:'Trading platforms, crypto exchanges, signal services', brands:'Crypto exchanges, trading platforms, premium signals', cta:'The opportunity closes when you stop watching.', color:'#F59E0B', traits:['early_adopter','direct_sales','high_eng'] },
+      { name:'The Anxious Saver',  icon:'🏦', desc:'Worried about money. Seeking reassurance and simple frameworks. Responds to empathy-first messaging and step-by-step approaches. High conversion on products that reduce financial anxiety.', demo:'25–40 · 55% female · YouTube/Instagram', purchase:'Savings apps, debt payoff tools, financial planners', brands:'Budgeting apps, accessible investment platforms', cta:'Take control. One step at a time.', color:'#6B7280', traits:['retention','loyal','reach'] },
+    ]
+  },
+  'Kids & Family / Toys': {
+    default: [
+      { name:'The Involved Parent',  icon:'👨‍👩‍👧', desc:'Researches every purchase their child will interact with. Safety and education are primary purchase drivers. Converts on transparency, endorsements and educational value claims.', demo:'28–42 · 70% female · YouTube/Instagram', purchase:'Educational toys, learning apps, safe products', brands:'LEGO, educational subscription boxes, learning platforms', cta:'Because what they play with shapes who they become.', color:'#3B82F6', traits:['loyal','direct_sales','analytical'] },
+      { name:'The Child Influencer', icon:'⭐', desc:'The child themselves who influences household purchases. Content resonates through pester power. Product endorsement by a beloved creator = immediate "I want that" moment.', demo:'4–12 · 50/50 · YouTube Kids', purchase:'Toys, games, collectibles, themed merchandise', brands:'Toy brands, kids\' game publishers, collectibles', cta:'The toy they\'ll talk about all week.', color:'#F97316', traits:['virality','direct_sales','impulse'] },
+    ]
+  },
+  'Entertainment & Comedy': {
+    default: [
+      { name:'The Binge Watcher',  icon:'📺', desc:'Follows creators for entertainment, not information. High session duration, binge-watches full catalogues. Brand integration works best when it\'s part of the content, not adjacent to it.', demo:'16–34 · 50/50 · YouTube/TikTok', purchase:'Streaming subscriptions, snacks, lifestyle products', brands:'Streaming platforms, food delivery, casual lifestyle brands', cta:'Grab a snack. This one\'s worth watching.', color:'#EF4444', traits:['reach','retention','broad_demo'] },
+      { name:'The Sharer',         icon:'🔁', desc:'Lives to send content to friends. Measures their social capital by the quality of what they share. Virality multiplier — one share triggers chains. Comedy and shock value convert fastest.', demo:'18–30 · 55% male · TikTok/Instagram', purchase:'Trend-driven products, limited drops, meme-adjacent brands', brands:'Snack brands, streetwear, viral product launches', cta:'Send this to one person who needs to see it.', color:'#F472B6', traits:['virality','young','community'] },
+    ]
+  },
+  'Education & Self-Development': {
+    default: [
+      { name:'The Lifelong Learner',icon:'🎓', desc:'Treats every day as a curriculum. High podcast and long-form video consumption. Extremely loyal to trusted educators. Converts on credibility signals and knowledge depth.', demo:'25–45 · 55% male · YouTube/podcasts', purchase:'Online courses, books, premium subscriptions, tools', brands:'Skillshare, MasterClass, productivity tools, premium content', cta:'The person you\'ll be in 5 years depends on what you learn today.', color:'#8B5CF6', traits:['loyal','long_form','premium'] },
+      { name:'The Productivity Hacker',icon:'⏱️', desc:'Optimises every hour. Follows systems, frameworks and workflows. Responds to time-saving and output-maximising claims. High purchase intent for tools that demonstrably improve output.', demo:'22–38 · 65% male · YouTube/newsletters', purchase:'Productivity apps, automation tools, premium planners', brands:'Notion, Obsidian, time-tracking tools, automation platforms', cta:'Same 24 hours. Better results.', color:'#06B6D4', traits:['analytical','direct_sales','high_cpi'] },
     ]
   },
   default: {
     default: [
-      { name:'The Early Adopter', desc:'Seeks out new products and experiences first', cta:'Be first to know', color:'#0050FF' },
-      { name:'The Value Seeker', desc:'Researches thoroughly before purchasing', cta:'See the proof', color:'#00C46A' },
-      { name:'The Loyalist', desc:'Brand-committed, high lifetime value', cta:'Join the community', color:'#FFD400' },
+      { name:'The Early Adopter',  icon:'🚀', desc:'First to try new products, vocal about their discoveries. Trusted within their peer network as a taste-maker. High conversion velocity — moves fast when something resonates.', demo:'22–35 · mixed · all platforms', purchase:'New product launches, limited editions, premium tier products', brands:'Any brand with a strong launch story', cta:'Be first to know.', color:'#0050FF', traits:['early_adopter','virality','direct_sales'] },
+      { name:'The Value Seeker',   icon:'🔍', desc:'Researches thoroughly before purchasing. Responds to clear value propositions, comparisons and proof points. Slower to convert but extremely loyal once they do.', demo:'25–42 · mixed · YouTube/Reddit', purchase:'Mid-to-premium tier, comparison-friendly products', brands:'Brands with strong value narratives', cta:'See the proof. Make the call.', color:'#00C46A', traits:['analytical','loyal','long_form'] },
+      { name:'The Loyalist',       icon:'🏆', desc:'Already brand-committed. High lifetime value. Responds to community, recognition and exclusivity. Brand ambassador potential — they recruit others once fully activated.', demo:'28–45 · mixed · varied', purchase:'Repeat purchases, premium tiers, brand collections', brands:'Any brand with community and exclusivity signals', cta:'You\'re already part of this. Go deeper.', color:'#FFD400', traits:['loyal','community','retention'] },
     ]
   }
 };
+
 
 // ── CREATORS DATA ─────────────────────────────────────────────────────
 const CREATORS = [
@@ -3073,598 +3176,67 @@ function setSubMode(m, btn) {
 }
 
 // ── SCORING SCREEN ────────────────────────────────────────────────────
+// ── RENDER SCORING SCREEN ─────────────────────────────────────────────
 function renderScoringScreen() {
-  const toShow = selectedCreators.size > 0
-    ? CREATORS.filter(c => selectedCreators.has(c.id))
-    : CREATORS;
-
-  const avgCPI = Math.round(toShow.reduce((a,c)=>a+c.cpi,0)/toShow.length);
-  const avgGFI = Math.round(toShow.reduce((a,c)=>a+computeGFI(c),0)/toShow.length);
-  const top = [...toShow].sort((a,b)=>(b.cpi+computeGFI(b))-(a.cpi+computeGFI(a)))[0];
   const genre = getSelectedGenre() || 'Gaming & Esports';
   const benchmark = GENRE_BENCHMARKS[genre] || GENRE_BENCHMARKS['Gaming & Esports'];
 
-  document.getElementById('avgCPI').textContent = avgCPI;
-  document.getElementById('avgGFI').textContent = avgGFI;
-  document.getElementById('topCreator').textContent = top?.name || '—';
-  document.getElementById('dataConf').textContent = avgGFI >= 70 ? 'High' : avgGFI >= 50 ? 'Medium' : 'Low';
+  // Use selected creators, or ALL creators filtered by genre (same as discovery)
+  const toShow = selectedCreators.size > 0
+    ? CREATORS.filter(c => selectedCreators.has(c.id))
+    : CREATORS.filter(c => c.genre === genre || ((GENRE_AFFINITY[c.genre]||{})[genre]||0) >= 0.6).slice(0, 50);
 
-  document.getElementById('cpiMatrix').innerHTML = toShow.map(c => `
-    <div class="match-row">
-      <div class="match-creator">
-        <div style="width:8px;height:8px;border-radius:50%;background:${c.color};flex-shrink:0"></div>
-        ${c.name}
-      </div>
-      <div class="match-bar-track">
-        <div class="match-bar-fill" style="width:${c.cpi}%;background:linear-gradient(90deg,#001060,#0032A0,#0050FF)"></div>
-      </div>
-      <div class="match-score" style="color:${cpiScoreColor(c.cpi)};font-weight:700">${c.cpi}</div>
-    </div>`).join('');
+  if (toShow.length === 0) return;
 
-  document.getElementById('gfiMatrix').innerHTML = toShow.map(c => {
-    const gfi = computeGFI(c);
-    const color = gfi < GFI_DANGER_THRESHOLD ? '#E60023' : gfi < GFI_WARN_THRESHOLD ? '#FF7A00' : '#00C46A';
-    return `<div class="match-row">
-      <div class="match-creator"><div style="width:8px;height:8px;border-radius:50%;background:${c.color};flex-shrink:0"></div>${c.name}</div>
-      <div class="match-bar-track"><div class="match-bar-fill" style="width:${gfi}%;background:${color}"></div></div>
-      <div class="match-score" style="color:${color}">${gfi}%</div>
-    </div>`;
-  }).join('');
+  const avgCPI = Math.round(toShow.reduce((a,c)=>a+c.cpi,0)/toShow.length);
+  const avgGFI = Math.round(toShow.reduce((a,c)=>a+(c.gfi||75),0)/toShow.length);
+  const top    = [...toShow].sort((a,b)=>(b.cpi+(b.gfi||75))-(a.cpi+(a.gfi||75)))[0];
+  const conf   = avgGFI >= 70 ? 'HIGH' : avgGFI >= 50 ? 'MED' : 'LOW';
+  const confCol= avgGFI >= 70 ? '#00C46A' : avgGFI >= 50 ? '#FF7A00' : '#E60023';
 
-  document.getElementById('benchGenreLabel').textContent = '· ' + genre;
-  document.getElementById('benchmarkPanel').innerHTML = `
-    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:8px">
-      ${[['CTR',benchmark.ctrBase+'%'],['CPM','£'+benchmark.cpmBase],['CVR',benchmark.cvrBase+'%'],['ROAS',benchmark.roasBase+'×'],['ENG',benchmark.engBase+'%']].map(([l,v])=>
-        `<div style="text-align:center"><div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);margin-bottom:4px">${l}</div><div style="font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:700;color:#FFD400;line-height:1">${v}</div><div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);margin-top:4px;letter-spacing:.06em">INDUSTRY AVG</div></div>`
-      ).join('')}
-    </div>`;
-}
-
-// ── PERSONA SCREEN ────────────────────────────────────────────────────
-function renderPersonaScreen() {
-  const genre = getSelectedGenre() || 'Gaming & Esports';
-  const sm = activeSubMode;
-  const genreData = GENRE_PERSONAS[genre] || GENRE_PERSONAS['default'];
-  const personas = genreData[sm] || genreData['default'] || Object.values(genreData)[0] || [];
-
-  document.getElementById('personaGrid').innerHTML = personas.map((p,i) => `
-    <div class="persona-card" style="border-color:${p.color}44">
-      <div style="font-size:28px;margin-bottom:12px">👤</div>
-      <div style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:600;color:${p.color};margin-bottom:8px">${p.name}</div>
-      <div style="font-size:12px;color:var(--text-dim);line-height:1.6;margin-bottom:16px">${p.desc}</div>
-      <div style="font-family:'DM Mono',monospace;font-size:10px;padding:8px 12px;background:${p.color}11;border:1px solid ${p.color}33;border-radius:4px;color:${p.color}">${p.cta}</div>
-    </div>`).join('');
-}
-
-// ── OBJECTIVES ────────────────────────────────────────────────────────
-function toggleChip(btn) {
-  btn.classList.toggle('active');
-  updateObjCount();
-  renderCreatorGrid();
-  updateSim();
-}
-
-function updateObjCount() {
-  const count = document.querySelectorAll('#objectiveGroups .chip.active').length;
-  const el = document.getElementById('objCount');
-  if(el) el.textContent = count + ' SELECTED';
-}
-
-function getSelectedObjectives() {
-  return [...document.querySelectorAll('#objectiveGroups .chip.active')].map(b=>b.dataset.obj);
-}
-
-function getObjWeights() {
-  const objs = getSelectedObjectives();
-  const awareness  = ['Brand Awareness','Reach & Impressions','Content Virality','Sentiment Shift'];
-  const sales      = ['Direct Sales','App Install','Promo / Affiliate','Lead Generation'];
-  const engagement = ['Community Growth','Engagement Rate','Pre-launch Sign-up','Retention'];
-  const aW = objs.filter(o=>awareness.includes(o)).length;
-  const sW = objs.filter(o=>sales.includes(o)).length;
-  const eW = objs.filter(o=>engagement.includes(o)).length;
-  const total = Math.max(aW+sW+eW, 1);
-  return { awarenessW: aW/total, salesW: sW/total, engagementW: eW/total };
-}
-
-// ── SIMULATION ────────────────────────────────────────────────────────
-let simScenario = 'base';
-let simResults = null;
-
-function setScenario(s, btn) {
-  simScenario = s;
-  document.querySelectorAll('.scenario-btn').forEach(b=>b.classList.remove('active'));
-  if(btn) btn.classList.add('active');
-  updateSimDisplay();
-}
-
-function updateSim() {
-  if(document.getElementById('screen-simulator')?.classList.contains('active')) {
-    computeSimResults();
-    updateSimDisplay();
-    renderEfficiencyCurve();
+  // ── Stat cards ────────────────────────────────────────────────────
+  const avgCpiEl = document.getElementById('avgCPI');
+  if (avgCpiEl) {
+    avgCpiEl.textContent = avgCPI;
+    avgCpiEl.style.color = cpiScoreColor(avgCPI);
   }
-}
-
-function updateTierLabel(v) {
-  const budget = parseInt(v) || 85000;
-  const el = document.getElementById('budgetLabel');
-  if (el) {
-    // Compute committed spend from selected creators
-    const format = (document.getElementById('format')||{value:'Integrated'}).value;
-    const fmtKey = format==='Dedicated'?'ded':format==='Mixed'?'mix':'int';
-    const spent = [...selectedCreators].reduce((total, id) => {
-      const cr = CREATORS.find(x => x.id === id);
-      if (!cr) return total;
-      const e = computeCostEstimate(cr);
-      return total + Math.round((e.ranges[fmtKey][0] + e.ranges[fmtKey][1]) / 2);
-    }, 0);
-    const remaining = budget - spent;
-    if (selectedCreators.size > 0) {
-      const remColor = remaining < 0 ? '#FF3355' : remaining < budget * 0.2 ? '#FF7A00' : '#00C46A';
-      el.innerHTML = formatBudget(budget) +
-        ` <span style="font-size:10px;color:${remColor};font-family:'DM Mono',monospace"> · ${remaining>=0?formatBudget(remaining)+' left':formatBudget(Math.abs(remaining))+' over'}</span>`;
-    } else {
-      el.textContent = formatBudget(budget);
-    }
+  const avgGfiEl = document.getElementById('avgGFI');
+  if (avgGfiEl) {
+    avgGfiEl.textContent = avgGFI;
+    avgGfiEl.style.color = avgGFI>=80?'#00C46A':avgGFI>=60?'#FF7A00':'#E60023';
   }
-  renderCreatorGrid();
-  updateSim();
-  updateBriefPanel();
-}
+  const avgCpiFill = document.getElementById('avgCPIFill');
+  if (avgCpiFill) avgCpiFill.style.width = avgCPI + '%';
+  const avgGfiFill = document.getElementById('avgGFIFill');
+  if (avgGfiFill) { avgGfiFill.style.width = avgGFI + '%'; avgGfiFill.style.background = avgGFI>=80?'#00C46A':avgGFI>=60?'#FF7A00':'#E60023'; }
 
-function getActivePersonas() {
-  const genre = getSelectedGenre() || 'Gaming & Esports';
-  const gd = GENRE_PERSONAS[genre] || GENRE_PERSONAS['default'];
-  return (gd[activeSubMode] || gd['default'] || Object.values(gd)[0] || []).map(p=>p.name);
-}
+  const topEl = document.getElementById('topCreator');
+  const topSub = document.getElementById('topCreatorSub');
+  if (topEl && top) { topEl.textContent = top.name; }
+  if (topSub && top) { topSub.textContent = top.platform + ' · ' + top.subs + ' · CPI ' + top.cpi; }
 
-function getObjCategory(obj) {
-  return ['Brand Awareness','Reach & Impressions','Content Virality','Sentiment Shift'].includes(obj)?'awareness'
-       : ['Direct Sales','App Install','Promo / Affiliate','Lead Generation'].includes(obj)?'sales':'engagement';
-}
+  const confEl = document.getElementById('dataConf');
+  const confSubEl = document.getElementById('dataConfSub');
+  if (confEl) { confEl.textContent = conf; confEl.style.color = confCol; confEl.style.fontSize = '32px'; }
+  if (confSubEl) { confSubEl.textContent = toShow.length + ' creators in dataset'; }
 
-function computeSimResults() {
-  const budget    = parseInt((document.getElementById('budget')||{value:'85000'}).value)||85000;
-  const format    = (document.getElementById('format')||{value:'Integrated'}).value;
-  const genre     = getSelectedGenre() || 'Gaming & Esports';
-  const bench     = GENRE_BENCHMARKS[genre] || GENRE_BENCHMARKS['Gaming & Esports'];
-  const { awarenessW, salesW, engagementW } = getObjWeights();
-
-  // Use selected creators, or fall back to top 5 by CPI
-  const toSim = selectedCreators.size > 0
-    ? CREATORS.filter(cr => selectedCreators.has(cr.id))
-    : [...CREATORS].sort((a,b) => b.cpi - a.cpi).slice(0,5);
-
-  const formatKey   = format === 'Dedicated' ? 'ded' : format === 'Mixed' ? 'mix' : 'int';
-  const formatMult  = format === 'Dedicated' ? 1.4 : format === 'Mixed' ? 1.15 : 1.0;
-  const subModeMult = activeSubMode ? 1.08 : 1.0;
-
-  // Per-creator: allocate budget proportionally by their avg rate
-  // Sum estimated costs to see how many creators fit in budget
-  let totalEstCost = 0;
-  const crData = toSim.map(cr => {
-    const e = computeCostEstimate(cr);
-    const midRate = (e.ranges[formatKey][0] + e.ranges[formatKey][1]) / 2;
-    totalEstCost += midRate;
-    return { cr, e, midRate };
-  });
-
-  // Calculate aggregate impressions from budget and actual avg CPM
-  const niche  = NICHE_SPONSOR_CPM[genre] || DEFAULT_CPM;
-  const cpmBase= niche.med * (format === 'Dedicated' ? niche.dedMult : 1.0);
-
-  // Weighted avg CPI across selected creators
-  const avgCPI = toSim.reduce((a,cr) => a + cr.cpi, 0) / toSim.length / 100;
-  // Weighted avg views (proxy for reach per £ spent)
-  const avgViews = toSim.reduce((a,cr) => a + (parseViews(cr.avgViews)||0), 0) / toSim.length;
-
-  // Impressions = budget / CPM * 1000, boosted by creator CPI
-  const cpmActual  = cpmBase * Math.max(0.6, avgCPI);
-  const impressions = Math.round((budget / Math.max(cpmActual, 1)) * 1000 * subModeMult * formatMult);
-
-  const ctrMult    = avgCPI * (1 + awarenessW*0.1 - salesW*0.05);
-  const ctr        = Math.min(bench.ctrBase * ctrMult * formatMult, 15);
-  const cvr        = Math.min(bench.cvrBase * (1 + salesW*0.3 - awarenessW*0.1) * avgCPI, 20);
-  const clicks     = Math.round(impressions * ctr / 100);
-  const conversions= Math.round(clicks * cvr / 100);
-  const revenue    = conversions * 30;
-  const roas       = budget > 0 ? revenue / budget : 0;
-  const engRate    = Math.min(bench.engBase * (1 + engagementW*0.2) * avgCPI, 20);
-
-  simResults = {
-    impressions,
-    ctr:   Math.round(ctr*10)/10,
-    cpM:   Math.round(cpmActual*100)/100,
-    cvr:   Math.round(cvr*10)/10,
-    conversions,
-    roas:  Math.round(roas*10)/10,
-    engRate: Math.round(engRate*10)/10,
-    clicks,
-    budget,
-    crData,  // per-creator data for breakdown
-    // P10 / P50 / P90 confidence bands
-    p10: {
-      impressions: Math.round(impressions * 0.68),
-      ctr:  Math.round(ctr * 0.68 * 10)/10,
-      roas: Math.round(roas * 0.65 * 10)/10,
-    },
-    p50: {
-      impressions,
-      ctr:  Math.round(ctr*10)/10,
-      roas: Math.round(roas*10)/10,
-    },
-    p90: {
-      impressions: Math.round(impressions * 1.42),
-      ctr:  Math.round(ctr * 1.42 * 10)/10,
-      roas: Math.round(roas * 1.45 * 10)/10,
-    },
-  };
-}
-
-function updateSimDisplay() {
-  if (!simResults) computeSimResults();
-  const r = simResults;
-  const budget = parseInt((document.getElementById('budget')||{value:'85000'}).value)||85000;
-  const format = (document.getElementById('format')||{value:'Integrated'}).value;
-  const genre  = getSelectedGenre() || 'Gaming & Esports';
-  const bench  = GENRE_BENCHMARKS[genre] || GENRE_BENCHMARKS['Gaming & Esports'];
-  const formatKey = format === 'Dedicated' ? 'ded' : format === 'Mixed' ? 'mix' : 'int';
-
-  // ── BAND DISPLAYS (P10 / P50 / P90) ─────────────────────────────
-  const bands = {
-    worst: { el:'bandWorstImpr', sub:'bandWorstSub', data:r.p10, col:'#E60023' },
-    base:  { el:'bandBaseImpr',  sub:'bandBaseSub',  data:r.p50, col:'#FFD400' },
-    best:  { el:'bandBestImpr',  sub:'bandBestSub',  data:r.p90, col:'#00C46A' },
-  };
-  Object.values(bands).forEach(({el,sub,data,col}) => {
-    const impEl = document.getElementById(el);
-    const subEl = document.getElementById(sub);
-    if (impEl) impEl.textContent = fmtNum(data.impressions);
-    if (subEl) subEl.innerHTML =
-      `CTR <strong style="color:${col}">${data.ctr}%</strong> &nbsp; ROAS <strong style="color:${col}">${data.roas}×</strong>`;
-  });
-
-  // ── CORE METRIC CARDS ─────────────────────────────────────────────
-  const metrics = [
-    { label:'Est. Impressions', val:fmtNum(r.impressions), sub:'Total reach',        color:'#0050FF' },
-    { label:'CTR',              val:r.ctr+'%',            sub:'Click-through rate',  color:'#00C46A' },
-    { label:'CPM',              val:'£'+r.cpM,            sub:'Cost per 1,000 imps', color:'#FF7A00' },
-    { label:'CVR',              val:r.cvr+'%',            sub:'Conversion rate',     color:'#9C27B0' },
-    { label:'Est. Conversions', val:fmtNum(r.conversions),sub:'Installs / leads',    color:'#E91E63' },
-    { label:'ROAS',             val:r.roas+'×',           sub:'Return on ad spend',  color:'#FFD400' },
-  ];
-  const simEl = document.getElementById('simResults');
-  if (simEl) simEl.innerHTML = metrics.map(m => `
-    <div class="sim-metric-card">
-      <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);letter-spacing:.1em;margin-bottom:8px">${m.label}</div>
-      <div style="font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:700;color:${m.color}">${m.val}</div>
-      <div style="font-size:11px;color:var(--text-muted);margin-top:4px">${m.sub}</div>
-    </div>`).join('');
-
-  // ── PER-CREATOR INDIVIDUAL FORECAST ─────────────────────────────
-  // This is the HERO of the simulator
-  const toShowSim = selectedCreators.size > 0
-    ? CREATORS.filter(cr => selectedCreators.has(cr.id))
-    : [...CREATORS].sort((a,b)=>b.cpi-a.cpi).slice(0,5);
-
-  const creatorBreakdownEl = document.getElementById('creatorBreakdown');
-  if (creatorBreakdownEl && toShowSim.length > 0) {
-
-    // Distribute budget by each creator's share of combined avg views
-    const totalViews = toShowSim.reduce((a,cr)=>a+(parseViews(cr.avgViews)||1),0) || 1;
-
-    creatorBreakdownEl.innerHTML = toShowSim.map(cr => {
-      const crGfi     = cr.gfi || 75;
-      const crCpi     = cr.cpi;
-      const crEst     = computeCostEstimate(cr);
-      const crViews   = parseViews(cr.avgViews) || 1;
-
-      // Budget allocation proportional to avg views (bigger reach = more spend)
-      const budgetShare = Math.round(budget * (crViews / totalViews));
-      const crRate      = crEst.ranges[formatKey];
-      const fitsInShare = crRate[0] <= budgetShare;
-
-      // Per-creator impressions based on their budget share and CPM
-      const niche   = NICHE_SPONSOR_CPM[cr.genre] || DEFAULT_CPM;
-      const crCpm   = niche.med * (format==='Dedicated'?niche.dedMult:1.0) * Math.max(0.5, crCpi/100);
-      const crImpr  = Math.round((budgetShare / Math.max(crCpm,1)) * 1000);
-
-      // Per-creator CTR boosted by CPI/GFI
-      const crCtr   = Math.round(bench.ctrBase * (crCpi/100) * (crGfi/100 + 0.5) * 10) / 10;
-      const crClicks= Math.round(crImpr * crCtr / 100);
-
-      // Estimated conversions
-      const crCvr   = Math.round(bench.cvrBase * (crCpi/100) * 10) / 10;
-      const crConv  = Math.round(crClicks * crCvr / 100);
-
-      // P10/P50/P90 for this creator
-      const crP10   = { impr:Math.round(crImpr*0.68), ctr:Math.round(crCtr*0.68*10)/10 };
-      const crP90   = { impr:Math.round(crImpr*1.42), ctr:Math.round(crCtr*1.42*10)/10 };
-
-      const gfiCol  = crGfi>=80?'#00C46A':crGfi>=60?'#FF7A00':'#FF3355';
-      const cpiCol  = cpiScoreColor(crCpi);
-
-      return `<div style="border-bottom:1px solid var(--border);padding:20px">
-
-        <!-- Creator header -->
-        <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
-          <div style="width:44px;height:44px;border-radius:50%;background:${cr.color}22;color:${cr.color};
-            display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;
-            flex-shrink:0;font-family:'Space Grotesk',sans-serif;border:2px solid ${cr.color}44">${cr.name.charAt(0)}</div>
-          <div style="flex:1;min-width:0">
-            <div style="font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;
-              white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${cr.name}</div>
-            <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text-muted);margin-top:2px">
-              ${cr.handle} · ${cr.platform} · ${cr.subs} subscribers</div>
-          </div>
-          <div style="display:flex;gap:12px;align-items:center;flex-shrink:0">
-            <div style="text-align:center">
-              <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted)">CPI</div>
-              <div style="font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;color:${cpiCol}">${crCpi}</div>
-            </div>
-            <div style="text-align:center">
-              <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted)">GFI</div>
-              <div style="font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;
-                color:#fff;background:${gfiCol};border-radius:4px;padding:0 6px">${crGfi}%</div>
-            </div>
-            <div style="text-align:center">
-              <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted)">BUDGET SHARE</div>
-              <div style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;
-                color:${fitsInShare?'#FFD400':'#FF3355'}">${crEst.fmt(budgetShare)}</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Per-creator metrics grid -->
-        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:12px">
-          ${[
-            ['EST. IMPRESSIONS', fmtNum(crImpr),    '#0050FF'],
-            ['CTR',             crCtr+'%',          '#00C46A'],
-            ['EST. CLICKS',     fmtNum(crClicks),   '#FF7A00'],
-            ['EST. CONVERSIONS',fmtNum(crConv),     '#9C27B0'],
-            ['INTEGRATED RATE', crEst.fmt(crRate[0])+'–'+crEst.fmt(crRate[1]), '#FFD400'],
-          ].map(([l,v,col])=>`
-            <div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:12px;text-align:center">
-              <div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.08em;
-                text-transform:uppercase;color:var(--text-muted);margin-bottom:6px">${l}</div>
-              <div style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:${col}">${v}</div>
-            </div>`).join('')}
-        </div>
-
-        <!-- Mini P10/P50/P90 for this creator -->
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">
-          <div style="background:rgba(230,0,35,0.06);border:1px solid rgba(230,0,35,0.2);border-radius:5px;padding:10px;text-align:center">
-            <div style="font-family:'DM Mono',monospace;font-size:8px;color:#E60023;margin-bottom:4px">P10 WORST</div>
-            <div style="font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:#E60023">${fmtNum(crP10.impr)}</div>
-            <div style="font-size:10px;color:rgba(230,0,35,0.6)">${crP10.ctr}% CTR</div>
-          </div>
-          <div style="background:rgba(255,212,0,0.06);border:1px solid rgba(255,212,0,0.3);border-radius:5px;padding:10px;text-align:center">
-            <div style="font-family:'DM Mono',monospace;font-size:8px;color:#FFD400;margin-bottom:4px">P50 BASE</div>
-            <div style="font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:#FFD400">${fmtNum(crImpr)}</div>
-            <div style="font-size:10px;color:rgba(255,212,0,0.6)">${crCtr}% CTR</div>
-          </div>
-          <div style="background:rgba(0,196,106,0.06);border:1px solid rgba(0,196,106,0.2);border-radius:5px;padding:10px;text-align:center">
-            <div style="font-family:'DM Mono',monospace;font-size:8px;color:#00C46A;margin-bottom:4px">P90 BEST</div>
-            <div style="font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:#00C46A">${fmtNum(crP90.impr)}</div>
-            <div style="font-size:10px;color:rgba(0,196,106,0.6)">${crP90.ctr}% CTR</div>
-          </div>
-        </div>
-
-      </div>`;
-    }).join('') + `
-      <div style="padding:14px 20px;font-family:'DM Mono',monospace;font-size:10px;
-        color:var(--text-muted);text-align:center;letter-spacing:.06em;border-top:1px solid var(--border)">
-        ${toShowSim.length} CREATOR${toShowSim.length>1?'S':''} · TOTAL BUDGET ${formatBudget(budget)} ·
-        BUDGET DISTRIBUTED PROPORTIONALLY BY AUDIENCE REACH
-      </div>`;
-  }
-
-  // ── PVA BENCHMARK PANEL ───────────────────────────────────────────
-  const pvaEl = document.getElementById('pvaPanel');
-  if (pvaEl) pvaEl.innerHTML = `
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);
-      border-radius:4px;overflow:hidden;margin-top:8px">
-      ${[['CTR',r.ctr+'%',bench.ctrBase+'%'],['ROAS',r.roas+'×',bench.roasBase+'×'],
-         ['CVR',r.cvr+'%',bench.cvrBase+'%'],['ENG',r.engRate+'%',bench.engBase+'%']
-        ].map(([m,yours,industry])=>`
-        <div style="background:var(--bg3);padding:14px;text-align:center">
-          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);margin-bottom:4px">${m}</div>
-          <div style="font-size:18px;font-weight:700;color:#FFD400">${yours}</div>
-          <div style="font-size:10px;color:var(--text-muted);margin-top:4px">vs ${industry} industry avg</div>
+  // ── Benchmark panel ───────────────────────────────────────────────
+  const benchLabel = document.getElementById('benchGenreLabel');
+  if (benchLabel) benchLabel.textContent = '· ' + genre;
+  const benchPanel = document.getElementById('benchmarkPanel');
+  if (benchPanel) benchPanel.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;padding:8px">
+      ${[['CTR',benchmark.ctrBase+'%'],['CPM','£'+benchmark.cpmBase],['CVR',benchmark.cvrBase+'%'],['ROAS',benchmark.roasBase+'×'],['ENG RATE',benchmark.engBase+'%']].map(([l,v])=>`
+        <div style="text-align:center;padding:16px;background:var(--bg3);border-radius:6px">
+          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);margin-bottom:6px;letter-spacing:.08em">${l}</div>
+          <div style="font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:700;color:#FFD400;line-height:1">${v}</div>
+          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);margin-top:6px;letter-spacing:.06em">INDUSTRY AVG</div>
         </div>`).join('')}
     </div>`;
-
-  // Update P10/P50/P90 band cards
-  updateBandDisplays();
 }
 
-function renderEfficiencyCurve() {
-  if(!simResults) return;
-  const r = simResults;
-  const el = document.getElementById('efficiencyCurve');
-  if(!el) return;
-  const points = [r.p10.ctr, r.p10.ctr*1.1, r.p50.ctr*0.9, r.p50.ctr, r.p50.ctr*1.1, r.p90.ctr*0.9, r.p90.ctr];
-  const max = Math.max(...points)*1.2||5;
-  const w=el.offsetWidth||560, h=140;
-  const px=(i,arr)=>Math.round(i/(arr.length-1)*w);
-  const py=(v)=>Math.round(h - (v/max)*h*0.8 - 10);
-  const pts=points.map((v,i)=>`${px(i,points)},${py(v)}`).join(' ');
-  const areapts=`0,${h} ${pts} ${w},${h}`;
-  el.innerHTML = `<svg width="100%" height="${h}" viewBox="0 0 ${w} ${h}">
-    <defs><linearGradient id="curve-grad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#0050FF" stop-opacity="0.3"/>
-      <stop offset="100%" stop-color="#0050FF" stop-opacity="0"/>
-    </linearGradient></defs>
-    <polygon points="${areapts}" fill="url(#curve-grad)"/>
-    <polyline points="${pts}" fill="none" stroke="#0050FF" stroke-width="2"/>
-    ${[[0,'P10'],[Math.floor(points.length/2),'P50'],[points.length-1,'P90']].map(([i,l])=>
-      `<circle cx="${px(i,points)}" cy="${py(points[i])}" r="5" fill="#FFD400"/>
-       <text x="${px(i,points)}" y="${py(points[i])-10}" text-anchor="middle" font-family="DM Mono" font-size="10" fill="#FFD400">${l}: ${points[i].toFixed(1)}%</text>`
-    ).join('')}
-  </svg>`;
-}
+// ── RENDER FULL SCORE TABLE ────────────────────────────────────────────
 
-// ── RUN SIMULATION (sidebar button) ───────────────────────────────────
-function runSimulation() {
-  computeSimResults();
-  showScreen('simulator', document.querySelector('.nav-tab:nth-child(4)'));
-  updateSimDisplay();
-  renderEfficiencyCurve();
-}
-
-
-
-// ── PAGE MODALS (About, Terms, Legal) ────────────────────────────────
-function openPageModal(name) {
-  document.getElementById('modal-' + name).style.display = 'flex';
-  document.body.style.overflow = 'hidden';
-}
-
-function closePageModal(name) {
-  document.getElementById('modal-' + name).style.display = 'none';
-  document.body.style.overflow = '';
-}
-
-// Close on backdrop click
-document.addEventListener('click', (e) => {
-  ['about','terms','legal'].forEach(name => {
-    const overlay = document.getElementById('modal-' + name);
-    if (overlay && e.target === overlay) closePageModal(name);
-  });
-});
-
-// ── SIGN UP MODAL ─────────────────────────────────────────────────────
-function showSignUpModal() {
-  document.getElementById('signupOverlay').style.display = 'flex';
-}
-
-function hideSignUpModal() {
-  document.getElementById('signupOverlay').style.display = 'none';
-}
-
-function handleFreeSignUp() {
-  const company = document.getElementById('suCompany').value.trim();
-  const email   = document.getElementById('suEmail').value.trim();
-  const pass    = document.getElementById('suPass').value;
-
-  if (!company || !email.includes('@') || pass.length < 8) {
-    alert('Please fill in all fields. Password must be at least 8 characters.');
-    return;
-  }
-
-  // In production: POST to Supabase auth. Here: demo success state.
-  hideSignUpModal();
-  document.getElementById('freeTierBar').innerHTML = `
-    <div class="ftb-left">Signed in as <strong style="color:#00C46A">${email}</strong> · Free account · Upgrade to unlock the full simulator</div>
-    <div class="ftb-right">
-      <button class="ftb-cta" style="background:rgba(255,122,0,0.2);color:#FF7A00;border:1px solid rgba(255,122,0,0.3)" onclick="alert('Billing coming soon — contact liam@simfluence.io to upgrade')">UPGRADE PLAN →</button>
-    </div>
-  `;
-}
-
-// Close modal on backdrop click
-window.addEventListener('click', (e) => {
-  if (e.target.id === 'signupOverlay') hideSignUpModal();
-});
-
-
-// ── ONBOARDING ────────────────────────────────────────────────────────
-var obSelectedGenre = '';
-
-function obPick(btn, genre) {
-  // Clear all
-  document.querySelectorAll('.ob-genre').forEach(function(b) {
-    b.classList.remove('selected');
-  });
-  // Select this one
-  btn.classList.add('selected');
-  obSelectedGenre = genre.replace(/&amp;/g, '&');
-
-  // Enable launch button
-  var launchBtn = document.getElementById('obLaunchBtn');
-  launchBtn.classList.add('ready');
-}
-
-function obLaunch() {
-  if (!obSelectedGenre) return;
-
-  // Set the genre dropdown in the platform
-  var sel = document.getElementById('genre');
-  if (sel) {
-    for (var i = 0; i < sel.options.length; i++) {
-      if (sel.options[i].text.replace(/&amp;/g,'&') === obSelectedGenre ||
-          sel.options[i].text === obSelectedGenre) {
-        sel.selectedIndex = i;
-        break;
-      }
-    }
-    // Trigger genre change to update the grid
-    if (typeof onGenreChange === 'function') onGenreChange();
-    if (typeof renderCreatorGrid === 'function') renderCreatorGrid();
-  }
-
-  obDismiss();
-}
-
-function obSkip() {
-  obDismiss();
-}
-
-function obDismiss() {
-  var overlay = document.getElementById('sfOnboard');
-  if (!overlay) return;
-  overlay.classList.add('hiding');
-  setTimeout(function() {
-    overlay.style.display = 'none';
-  }, 600);
-}
-
-// Check if arriving from signup (URL param or sessionStorage)
-window.addEventListener('DOMContentLoaded', function() {
-  // Show onboarding by default for new visitors
-  // If they've visited before, skip straight to the platform
-  var hasVisited = sessionStorage.getItem('sf_visited');
-  if (hasVisited) {
-    var overlay = document.getElementById('sfOnboard');
-    if (overlay) overlay.style.display = 'none';
-  } else {
-    sessionStorage.setItem('sf_visited', '1');
-  }
-});
-
-
-// ── FULL SCORE TABLE (Scoring screen) ─────────────────────────────────
-function renderFullScoreTable() {
-  const toShow = selectedCreators.size > 0
-    ? CREATORS.filter(cr => selectedCreators.has(cr.id))
-    : [...CREATORS].sort((a,b) => b.cpi - a.cpi);
-
-  const el = document.getElementById('fullScoreTable');
-  if (!el) return;
-
-  el.innerHTML = toShow.map(cr => {
-    const gfi = cr.gfi || computeGFI(cr);
-    const gfiCol = gfi >= 80 ? '#00C46A' : gfi >= 60 ? '#FF7A00' : '#E60023';
-    const cpiBarW = cr.cpi;
-    return `<div style="display:grid;grid-template-columns:1fr 80px 80px 120px;gap:0;padding:12px 20px;border-bottom:1px solid var(--border);align-items:center;cursor:pointer" onclick="openProfileOverlay(${cr.id})" title="Click to view profile">
-      <div style="display:flex;align-items:center;gap:10px">
-        <div style="width:28px;height:28px;border-radius:50%;background:${cr.color}22;color:${cr.color};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0">${cr.name.charAt(0)}</div>
-        <div>
-          <div style="font-size:13px;font-weight:600;color:var(--text)">${cr.name}</div>
-          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted)">${cr.platform} · ${cr.subs}</div>
-        </div>
-      </div>
-      <div style="text-align:center;font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:${cpiScoreColor(cr.cpi)}">${cr.cpi}</div>
-      <div style="text-align:center;font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:#fff;background:${gfiCol}22;border-radius:4px;padding:2px 6px">${gfi}%</div>
-      <div style="padding-right:4px">
-        <div style="background:var(--bg3);border-radius:2px;height:6px">
-          <div style="height:100%;border-radius:2px;background:linear-gradient(90deg,#001060,#0050FF);width:${cpiBarW}%;transition:width .6s ease"></div>
-        </div>
-        <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--text-muted);margin-top:3px;text-align:right">${cr.eng} eng</div>
-      </div>
-    </div>`;
-  }).join('');
-}
 
 // ── BAND EXPANSION (Simulator) ─────────────────────────────────────────
 function expandBand(band) {
@@ -4309,4 +3881,121 @@ function checkGate() {
 </body>
 </html>
 </body>
-</html>
+</html// ── PERSONA SCREEN ────────────────────────────────────────────────────
+function renderPersonaScreen() {
+  const genre = getSelectedGenre() || 'Gaming & Esports';
+  const sm    = activeSubMode;
+  const genreData = GENRE_PERSONAS[genre] || GENRE_PERSONAS['default'];
+  const personas  = genreData[sm] || genreData['default'] || Object.values(genreData)[0] || [];
+
+  // Find creators that best match each persona
+  function creatorsForPersona(p) {
+    const traits = p.traits || [];
+    return CREATORS
+      .filter(cr => cr.genre === genre || ((GENRE_AFFINITY[cr.genre]||{})[genre]||0) >= 0.6)
+      .map(cr => {
+        let score = 0;
+        const eng  = parseFloat(cr.eng) || 2;
+        const subs = parseSubs(cr.subs);
+        if (traits.includes('high_eng') && eng >= 4)   score += 20;
+        if (traits.includes('high_eng') && eng >= 6)   score += 15;
+        if (traits.includes('early_adopter') && cr.cpi >= 85) score += 15;
+        if (traits.includes('analytical') && cr.cpi >= 80)    score += 12;
+        if (traits.includes('loyal') && subs >= 200e3) score += 10;
+        if (traits.includes('premium') && subs >= 500e3) score += 10;
+        if (traits.includes('reach') && subs >= 1e6)   score += 15;
+        if (traits.includes('virality')) score += Math.min(eng * 2, 12);
+        if (traits.includes('community') && eng >= 3)  score += 10;
+        if (traits.includes('direct_sales') && cr.cpi >= 82) score += 12;
+        if (traits.includes('mid_tier') && subs >= 50e3 && subs <= 2e6) score += 8;
+        if (traits.includes('young') && subs < 500e3) score += 6;
+        score += cr.cpi / 10; // baseline CPI factor
+        return { cr, score };
+      })
+      .sort((a,b) => b.score - a.score)
+      .slice(0, 3)
+      .map(x => x.cr);
+  }
+
+  const grid = document.getElementById('personaGrid');
+  if (!grid) return;
+
+  grid.innerHTML = personas.map((p, i) => {
+    const matchedCreators = creatorsForPersona(p);
+    return `
+    <div class="persona-card" style="border-color:${p.color}44;cursor:default">
+
+      <!-- Header -->
+      <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:16px">
+        <div style="font-size:32px;line-height:1;flex-shrink:0">${p.icon}</div>
+        <div>
+          <div style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:${p.color};margin-bottom:4px">${p.name}</div>
+          <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted)">${genre.toUpperCase()} · PERSONA ${i+1} OF ${personas.length}</div>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div style="font-size:12px;color:var(--text-dim);line-height:1.7;margin-bottom:14px">${p.desc}</div>
+
+      <!-- Demo + Purchase -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+        <div style="background:var(--bg3);border-radius:5px;padding:10px">
+          <div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:${p.color};margin-bottom:5px">Demographics</div>
+          <div style="font-size:11px;color:var(--text-dim);line-height:1.5">${p.demo}</div>
+        </div>
+        <div style="background:var(--bg3);border-radius:5px;padding:10px">
+          <div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:${p.color};margin-bottom:5px">Purchase Behaviour</div>
+          <div style="font-size:11px;color:var(--text-dim);line-height:1.5">${p.purchase}</div>
+        </div>
+      </div>
+
+      <!-- Brand fit -->
+      <div style="background:${p.color}08;border:1px solid ${p.color}22;border-radius:5px;padding:10px;margin-bottom:14px">
+        <div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:${p.color};margin-bottom:5px">Brand Fit Examples</div>
+        <div style="font-size:11px;color:var(--text-dim);line-height:1.5">${p.brands}</div>
+      </div>
+
+      <!-- CTA -->
+      <div style="font-family:'DM Mono',monospace;font-size:10px;padding:10px 14px;background:${p.color}15;border:1px solid ${p.color}35;border-radius:5px;color:${p.color};margin-bottom:16px;font-style:italic">"${p.cta}"</div>
+
+      <!-- Matched creators -->
+      ${matchedCreators.length > 0 ? `
+      <div style="border-top:1px solid var(--border);padding-top:12px">
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px">Best Creator Matches</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          ${matchedCreators.map(cr => `
+            <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--bg3);border-radius:5px;cursor:pointer" onclick="openProfileOverlay(${cr.id})">
+              <div style="width:28px;height:28px;border-radius:50%;background:${cr.color}22;color:${cr.color};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0">${cr.name.charAt(0)}</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${cr.name}</div>
+                <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted)">${cr.subs} · CPI ${cr.cpi}</div>
+              </div>
+              <div style="display:flex;gap:6px;flex-shrink:0">
+                <button onclick="event.stopPropagation();toggleCreator(${cr.id})" style="font-family:'DM Mono',monospace;font-size:8px;padding:3px 8px;background:${selectedCreators.has(cr.id)?'rgba(0,196,106,0.2)':'rgba(0,80,255,0.15)'};border:1px solid ${selectedCreators.has(cr.id)?'rgba(0,196,106,0.4)':'rgba(0,80,255,0.3)'};color:${selectedCreators.has(cr.id)?'#00C46A':'#6B9FFF'};border-radius:3px;cursor:pointer">
+                  ${selectedCreators.has(cr.id) ? '✓ ADDED' : '+ ADD'}
+                </button>
+              </div>
+            </div>`).join('')}
+        </div>
+        <button onclick="selectAllForPersona(${JSON.stringify(matchedCreators.map(c=>c.id))})" style="width:100%;margin-top:8px;padding:8px;background:${p.color}15;border:1px solid ${p.color}30;color:${p.color};border-radius:5px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;cursor:pointer">
+          + Add All ${matchedCreators.length} to Brief
+        </button>
+      </div>` : ''}
+
+    </div>`;
+  }).join('');
+}
+
+function selectAllForPersona(ids) {
+  ids.forEach(id => selectedCreators.add(id));
+  renderCreatorGrid();
+  updateSelectedBar();
+  updateBriefPanel();
+  renderPersonaScreen(); // refresh + button states
+}
+
+
+
+
+function renderFullScoreTable() { renderScoringScreen(); }
+>
