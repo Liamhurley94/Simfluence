@@ -4418,9 +4418,32 @@ function renderCreatorGrid() {
   // ── Language filter ──────────────────────────────────────────────
   var langEl = document.getElementById('langFilter');
   var selectedLang = langEl ? langEl.value : 'all';
+  // Language signal maps for inference when no language field set
+  var LANG_SIGNALS = {
+    'German':     ['german','deutsch','germany','deutschland','österreich','schweiz'],
+    'Spanish':    ['spanish','español','espanol','spain','mexico','latam','latin','habla'],
+    'French':     ['french','français','francais','france','quebec','belgique'],
+    'Portuguese': ['portuguese','português','brazil','brasil','pt-br'],
+    'Korean':     ['korean','korea','한국'],
+    'Japanese':   ['japanese','japan','日本'],
+    'Russian':    ['russian','russia','русский'],
+    'Turkish':    ['turkish','türkçe','turkey','türkiye'],
+    'Arabic':     ['arabic','arab','عربي'],
+    'Italian':    ['italian','italiano','italy','italia'],
+    'Polish':     ['polish','polska','poland'],
+    'Chinese':    ['chinese','china','中文','台灣'],
+  };
+
   function passedLangFilter(cr) {
     if (!selectedLang || selectedLang === 'all') return true;
-    return (cr.language || 'English') === selectedLang;
+    // If creator has explicit language field, use it
+    if (cr.language) return cr.language === selectedLang;
+    // Otherwise infer from bio + name + handle
+    if (selectedLang === 'English') return true; // default for pre-v4 creators
+    var signals = LANG_SIGNALS[selectedLang] || [];
+    if (!signals.length) return false;
+    var hay = ((cr.bio||'') + ' ' + cr.name + ' ' + cr.handle).toLowerCase();
+    return signals.some(function(s) { return hay.indexOf(s) !== -1; });
   }
 
   // ── Genre filter ──────────────────────────────────────────────────
@@ -4484,7 +4507,10 @@ function renderCreatorGrid() {
   const scored = CREATORS
     .filter(cr => {
       if (!passedBudgetFilter(cr)) return false;
-      if (!passedTierFilter(cr)) return false;
+      // When filtering by a specific language, bypass tier/budget limits
+      // so brands can see all creators in that language
+      var langOnly = selectedLang && selectedLang !== 'all' && selectedLang !== 'English';
+      if (!langOnly && !passedTierFilter(cr)) return false;
       if (!passedLangFilter(cr)) return false;
       if (genreScore(cr) < 0) return false;
       return true;
@@ -4586,9 +4612,10 @@ function renderCreatorGrid() {
   const tierLabels = ['Micro Only','Mid-Tier','Established','Megastar','All Tiers'];
   const tierLabel  = tierLabels[tierMix] || 'All Tiers';
   const objLabel   = activeObjs.length > 0 ? ' · ' + activeObjs.slice(0,2).join(' + ') : '';
+  var langLabel = selectedLang && selectedLang !== 'all' ? ' · ' + selectedLang.toUpperCase() : '';
   document.getElementById('discoveryMeta').textContent =
     display.length + ' CREATORS · ' + genre.toUpperCase() + ' · ' + tierLabel.toUpperCase() +
-    (totalHidden > 0 ? ' · ' + totalHidden + ' FILTERED OUT' : '') + objLabel.toUpperCase();
+    langLabel + (totalHidden > 0 ? ' · ' + totalHidden + ' FILTERED OUT' : '') + objLabel.toUpperCase();
 }
 
 
