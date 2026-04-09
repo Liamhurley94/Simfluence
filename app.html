@@ -4124,28 +4124,7 @@ function openProfileOverlay(id) {
       </div>
 
       <!-- TWITCH CONTEXT PANEL -->
-      ${c.platform==='Twitch' ? `
-      <div style="padding:16px 24px;border-top:1px solid var(--border);background:rgba(145,70,255,0.05);border-left:3px solid #9146FF">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-          <div style="font-size:16px">🟣</div>
-          <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;color:#9146FF">TWITCH PLATFORM CONTEXT</div>
-        </div>
-        <div style="font-size:11px;color:var(--text-dim);line-height:1.6">
-          Twitch engagement works differently to YouTube. A streamer's CPI reflects their <strong>live concurrent viewership</strong> — not passive views. Live viewers are actively watching in real time, creating a highly attentive audience ideal for integrated sponsorships, product mentions, and affiliate codes.
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">
-          <div style="background:var(--bg3);border-radius:5px;padding:10px">
-            <div style="font-size:9px;color:var(--text-muted);margin-bottom:4px">LIVE VIEWERS</div>
-            <div style="font-size:18px;font-weight:700;color:#9146FF" id="twitch-live-viewers-${c.id}">${(window.__twitchLive && window.__twitchLive[c.handle.replace('@','').toLowerCase()] && window.__twitchLive[c.handle.replace('@','').toLowerCase()].live) ? window.__twitchLive[c.handle.replace('@','').toLowerCase()].viewerCount.toLocaleString() + ' LIVE' : c.avgViews + ' avg'}</div>
-            <div style="font-size:8px;color:var(--text-muted)">${(window.__twitchLive && window.__twitchLive[c.handle.replace('@','').toLowerCase()] && window.__twitchLive[c.handle.replace('@','').toLowerCase()].live) ? '🔴 streaming now' : 'avg concurrent'}</div>
-          </div>
-          <div style="background:var(--bg3);border-radius:5px;padding:10px">
-            <div style="font-size:9px;color:var(--text-muted);margin-bottom:4px">CHANNEL SCORE</div>
-            <div style="font-size:18px;font-weight:700;color:#9146FF">${getTwitchCPIContext(c.cpi)}</div>
-            <div style="font-size:8px;color:var(--text-muted)">Twitch performance tier</div>
-          </div>
-        </div>
-      </div>` : ''}
+      ${c.platform==='Twitch' ? getTwitchPanel(c) : ''}
 
       <!-- LIVE CONTENT ANALYSIS -->
       <div style="padding:20px 24px;border-top:1px solid var(--border)">
@@ -5277,10 +5256,6 @@ function renderLivePanel() {
     return;
   }
 
-  // Store live creators globally so inline onclick can reference them
-  window.__liveCreatorMap = {};
-  liveCreators.forEach(function(cr) { window.__liveCreatorMap[cr.id] = cr; });
-
   // Group by genre
   var byGenre = {};
   liveCreators.forEach(function(cr) {
@@ -5289,33 +5264,55 @@ function renderLivePanel() {
   });
 
   var html = '';
+
+  // Header explanation
+  html += '<div style="font-size:9px;color:var(--text-muted);padding:6px 0 10px;line-height:1.5">'
+    + 'CPI scores reflect <strong style="color:var(--text)">live viewer engagement</strong> right now — updated every 90s.'
+    + '</div>';
+
   Object.keys(byGenre).sort().forEach(function(genre) {
     var creators = byGenre[genre];
-    html += '<div style="margin-bottom:12px">';
-    html += '<div style="font-size:8px;letter-spacing:.1em;color:var(--text-muted);margin-bottom:6px;padding:4px 0;border-bottom:1px solid var(--border)">' + genre.toUpperCase() + '</div>';
+
+    // Genre header — bold, coloured, clearly labelled
+    html += '<div style="margin-bottom:14px">';
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 8px;background:rgba(0,80,255,0.08);border-left:3px solid #0050FF;border-radius:0 4px 4px 0;margin-bottom:6px">'
+      + '<div style="font-size:9px;font-weight:700;color:#0050FF;letter-spacing:.06em">' + genre.toUpperCase() + '</div>'
+      + '<div style="font-size:8px;color:var(--text-muted)">LIVE CPI · GENRE FIT</div>'
+    + '</div>';
+
     creators.forEach(function(cr) {
       var liveData    = window.__twitchLive[cr.handle.replace('@','').toLowerCase()] || {};
       var viewers     = liveData.viewerCount ? liveData.viewerCount.toLocaleString() : '0';
       var game        = liveData.gameName || cr.genre;
       var liveCPI     = computeLiveCPI(cr, liveData.viewerCount || 0);
+      var liveGFI     = computeGFI(cr);
       var cpiCol      = liveCPI >= 70 ? '#00C46A' : liveCPI >= 55 ? '#FF7A00' : '#E60023';
+      var gfiCol      = liveGFI >= 70 ? '#00C46A' : liveGFI >= 45 ? '#FF7A00' : '#E60023';
       var twitchLogin = cr.handle.replace('@','').toLowerCase();
 
-      html += '<div style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:5px;cursor:pointer;margin-bottom:3px" onclick="openProfileOverlay(' + cr.id + ')">'
-        + '<div style="width:6px;height:6px;border-radius:50%;background:#E60023;flex-shrink:0;animation:livePulse 1.4s infinite"></div>'
+      html += '<div style="display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:5px;cursor:pointer;margin-bottom:3px;border:1px solid var(--border);background:var(--bg2)" onclick="openProfileOverlay(' + cr.id + ')">'
+
+        // Pulse dot + name + game
+        + '<div style="width:7px;height:7px;border-radius:50%;background:#E60023;flex-shrink:0;animation:livePulse 1.4s infinite"></div>'
         + '<div style="flex:1;min-width:0">'
-          + '<div style="font-size:11px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + cr.name + '</div>'
+          + '<div style="font-size:11px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + cr.name + '</div>'
           + '<div style="font-size:9px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + game + '</div>'
+          + '<div style="font-size:8px;color:#E60023;font-weight:600;margin-top:1px">' + viewers + ' watching now</div>'
         + '</div>'
-        + '<div style="text-align:right;flex-shrink:0">'
-          + '<div style="font-size:10px;font-weight:700;color:#E60023">' + viewers + '</div>'
-          + '<div style="font-size:8px;color:var(--text-muted)">viewers</div>'
+
+        // Live CPI + GFI scores
+        + '<div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;min-width:36px">'
+          + '<div style="font-size:16px;font-weight:700;color:' + cpiCol + ';line-height:1">' + liveCPI + '</div>'
+          + '<div style="font-size:7px;color:var(--text-muted);letter-spacing:.04em;margin-top:1px">LIVE CPI</div>'
         + '</div>'
-        + '<div style="text-align:right;flex-shrink:0;margin-left:4px">'
-          + '<div style="font-size:10px;font-weight:700;color:' + cpiCol + '">' + liveCPI + '</div>'
-          + '<div style="font-size:8px;color:var(--text-muted)">CPI</div>'
+        + '<div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;min-width:36px">'
+          + '<div style="font-size:16px;font-weight:700;color:' + gfiCol + ';line-height:1">' + liveGFI + '%</div>'
+          + '<div style="font-size:7px;color:var(--text-muted);letter-spacing:.04em;margin-top:1px">GENRE FIT</div>'
         + '</div>'
-        + '<a href="https://twitch.tv/' + twitchLogin + '" target="_blank" onclick="event.stopPropagation()" style="margin-left:6px;padding:3px 7px;background:#9146FF;border-radius:3px;font-size:9px;font-weight:700;color:#fff;text-decoration:none;flex-shrink:0;white-space:nowrap">&#9654; WATCH</a>'
+
+        // Watch button
+        + '<a href="https://twitch.tv/' + twitchLogin + '" target="_blank" onclick="event.stopPropagation()" style="padding:4px 8px;background:#9146FF;border-radius:3px;font-size:9px;font-weight:700;color:#fff;text-decoration:none;flex-shrink:0;white-space:nowrap">&#9654;</a>'
+
       + '</div>';
     });
     html += '</div>';
@@ -5325,18 +5322,26 @@ function renderLivePanel() {
 }
 
 function computeLiveCPI(cr, currentViewers) {
-  var followers = parseSubs(cr.subs) * (cr.subs.indexOf('M') > -1 ? 1000000 : cr.subs.indexOf('K') > -1 ? 1000 : 1);
-  var ratio = followers > 0 ? currentViewers / followers : 0;
-  var cpi   = 50;
+  // parseSubs already returns the full number (e.g. 261000 for '261K')
+  var followers = parseSubs(cr.subs);
+  var ratio     = followers > 0 ? currentViewers / followers : 0;
+  var cpi       = 50;
+  // Live viewer count is the primary signal
   if (currentViewers >= 50000) cpi += 30;
   else if (currentViewers >= 10000) cpi += 24;
   else if (currentViewers >= 5000)  cpi += 18;
   else if (currentViewers >= 1000)  cpi += 12;
   else if (currentViewers >= 500)   cpi += 8;
   else if (currentViewers >= 100)   cpi += 4;
-  if (ratio >= 0.10) cpi += 10;
+  // Live engagement ratio bonus
+  if (ratio >= 0.10)      cpi += 10;
   else if (ratio >= 0.05) cpi += 6;
   else if (ratio >= 0.02) cpi += 3;
+  // Follower scale bonus (brand recognition)
+  if (followers >= 5000000)      cpi += 15;
+  else if (followers >= 1000000) cpi += 12;
+  else if (followers >= 500000)  cpi += 8;
+  else if (followers >= 100000)  cpi += 5;
   return Math.min(98, Math.round(cpi));
 }
 
@@ -5377,6 +5382,76 @@ function getLiveBadge(cr) {
   div.innerHTML = '<div style="width:5px;height:5px;border-radius:50%;background:#E60023;animation:livePulse 1.4s infinite"></div>'
     + '<div style="font-size:8px;color:#E60023;font-weight:700">LIVE · ' + viewers + '</div>';
   return div.outerHTML;
+}
+
+
+// ── TWITCH PROFILE PANEL ──────────────────────────────────────────────
+function getTwitchPanel(cr) {
+  var liveData    = window.__twitchLive && window.__twitchLive[cr.handle.replace('@','').toLowerCase()];
+  var isLive      = liveData && liveData.live;
+  var storedCPI   = cr.cpi;
+  var liveCPI     = isLive ? computeLiveCPI(cr, liveData.viewerCount || 0) : null;
+  var delta       = isLive ? liveCPI - storedCPI : null;
+  var deltaCol    = delta > 0 ? '#00C46A' : delta < 0 ? '#E60023' : '#FFD400';
+  var deltaSign   = delta > 0 ? '+' : '';
+  var deltaLabel  = delta > 0 ? '&#9650; +' + delta + ' outperforming' : delta < 0 ? '&#9660; ' + delta + ' underperforming' : '&#8594; on track';
+  var viewers     = isLive ? liveData.viewerCount.toLocaleString() : null;
+  var streamTitle = isLive ? (liveData.title || '').slice(0, 80) : null;
+  var gameName    = isLive ? liveData.gameName : null;
+  var liveColour  = liveCPI >= 70 ? '#00C46A' : liveCPI >= 55 ? '#FF7A00' : '#E60023';
+
+  var liveBlock = '';
+  if (isLive) {
+    liveBlock = '<div style="background:rgba(230,0,35,0.06);border:1px solid rgba(230,0,35,0.2);border-radius:6px;padding:12px 14px;margin-bottom:14px">'
+      + '<div style="font-size:9px;color:#E60023;font-weight:700;letter-spacing:.06em;margin-bottom:10px">LIVE STREAM PERFORMANCE</div>'
+      + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border);border-radius:4px;overflow:hidden;margin-bottom:10px">'
+        + '<div style="background:var(--bg3);text-align:center;padding:10px 6px">'
+          + '<div style="font-size:20px;font-weight:700;color:var(--text-muted);line-height:1">' + storedCPI + '</div>'
+          + '<div style="font-size:7px;color:var(--text-muted);margin-top:4px;letter-spacing:.04em">PREDICTED CPI</div>'
+        + '</div>'
+        + '<div style="background:var(--bg3);text-align:center;padding:10px 6px">'
+          + '<div style="font-size:13px;font-weight:700;color:' + deltaCol + ';line-height:1.2">' + deltaLabel + '</div>'
+          + '<div style="font-size:7px;color:var(--text-muted);margin-top:4px;letter-spacing:.04em">VS PREDICTION</div>'
+        + '</div>'
+        + '<div style="background:var(--bg3);text-align:center;padding:10px 6px">'
+          + '<div style="font-size:20px;font-weight:700;color:' + liveColour + ';line-height:1">' + liveCPI + '</div>'
+          + '<div style="font-size:7px;color:var(--text-muted);margin-top:4px;letter-spacing:.04em">LIVE CPI NOW</div>'
+        + '</div>'
+      + '</div>'
+      + '<div style="font-size:10px;color:var(--text-dim);margin-bottom:4px"><strong style="color:#E60023">' + viewers + ' watching live</strong> &middot; ' + gameName + '</div>'
+      + (streamTitle ? '<div style="font-size:9px;color:var(--text-muted);font-style:italic">&ldquo;' + streamTitle + '&rdquo;</div>' : '')
+    + '</div>';
+  } else {
+    liveBlock = '<div style="font-size:11px;color:var(--text-dim);line-height:1.6;margin-bottom:14px">'
+      + 'Twitch engagement is measured through <strong>live concurrent viewership</strong> &mdash; not passive views. '
+      + 'Live viewers are actively watching in real time, creating a highly attentive audience ideal for integrated sponsorships, product mentions, and affiliate codes.'
+    + '</div>';
+  }
+
+  var liveNowBadge = isLive
+    ? '<div style="display:flex;align-items:center;gap:4px;padding:2px 8px;background:rgba(230,0,35,0.15);border:1px solid rgba(230,0,35,0.4);border-radius:3px;margin-left:auto"><div style="width:5px;height:5px;border-radius:50%;background:#E60023;animation:livePulse 1.4s infinite"></div><div style="font-size:8px;color:#E60023;font-weight:700">LIVE NOW</div></div>'
+    : '';
+
+  return '<div style="padding:16px 24px;border-top:1px solid var(--border);background:rgba(145,70,255,0.05);border-left:3px solid #9146FF">'
+    + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">'
+      + '<div style="font-size:16px">&#x1F7E3;</div>'
+      + '<div style="font-family:\'DM Mono\',monospace;font-size:9px;letter-spacing:.1em;color:#9146FF">TWITCH PLATFORM CONTEXT</div>'
+      + liveNowBadge
+    + '</div>'
+    + liveBlock
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
+      + '<div style="background:var(--bg3);border-radius:5px;padding:10px">'
+        + '<div style="font-size:9px;color:var(--text-muted);margin-bottom:4px">FOLLOWERS</div>'
+        + '<div style="font-size:18px;font-weight:700;color:#9146FF">' + cr.subs + '</div>'
+        + '<div style="font-size:8px;color:var(--text-muted)">total channel</div>'
+      + '</div>'
+      + '<div style="background:var(--bg3);border-radius:5px;padding:10px">'
+        + '<div style="font-size:9px;color:var(--text-muted);margin-bottom:4px">PERFORMANCE TIER</div>'
+        + '<div style="font-size:18px;font-weight:700;color:#9146FF">' + getTwitchCPIContext(cr.cpi) + '</div>'
+        + '<div style="font-size:8px;color:var(--text-muted)">Twitch scale</div>'
+      + '</div>'
+    + '</div>'
+  + '</div>';
 }
 
 // ── THEME TOGGLE ──────────────────────────────────────────────────────
