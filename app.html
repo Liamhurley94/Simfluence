@@ -2259,24 +2259,25 @@ const GENRE_BENCHMARKS = {
 
 // ── GENRE SUB-MODES ───────────────────────────────────────────────────
 const GENRE_SUBMODES = {
-  'Gaming & Esports': ['RPG / Open World','FPS / Tactical','Battle Royale','MOBA','Horror','Sports Games','Indie','Retro / Classics'],
-  'Health & Fitness': ['Gym / Strength','Running / Cardio','Wellness / Mindfulness','Sports Performance'],
-  'Beauty & Skincare': ['Makeup / Glam','Skincare / Routine','Hair','Mens Grooming'],
-  'Food & Cooking': ['Home Cook','Foodie / Reviews','Specialist Diet','Street Food'],
-  'Travel & Adventure': ['Cinematic Travel','Budget Travel','Luxury Travel','Adventure / Outdoor'],
-  'Finance & Investing': ['Stock Market','Personal Finance','Crypto / Web3','FX / Forex'],
-  'Tech & Gadgets': ['Consumer Tech','AI / Software','Dev Tools','Value Reviews'],
-  'Lifestyle & Vlogs': ['Day-in-life','Family / Couples','Minimalism','Productivity'],
-  'Entertainment & Comedy': ['Sketch / Comedy','React / Commentary','Podcasts','Compilations'],
-  'Automotive': ['Supercars','Modified / JDM','Track / Racing','EV / Future Tech'],
-  'Trading Cards (TCG)': ['Pack Opening','Competitive Play','Collecting / Investing'],
-  'Unboxing': ['Tech Unboxing','Luxury / Fashion','Toys / Collectibles'],
-  'Gaming Setup & Peripherals': ['PC Builds','Peripherals','Desk Setups'],
-  'Drinks & Beverages': ['Energy Drinks','Coffee / Tea','Spirits / Cocktails'],
-  'Kids & Family / Toys': ['Toy Reviews','Family Vlogs','Educational'],
-  'Education & Self-Development': ['Study / Productivity','Career / Business','Language Learning'],
-  'Music': ['Artists / Performers','DJs / Production','Music Reviews'],
-  'Theatre & Performing Arts': ['Stage Productions','Live Events','Cultural'],
+  'Gaming & Esports':           ['RPG / Open World','FPS / Tactical','Battle Royale','MOBA','Horror','Sports Games','Indie','Retro / Classics'],
+  'Health & Fitness':           ['Gym / Strength','Running & Cardio','Wellness & Mindfulness','Nutrition & Diet','Sports Performance','Weight Loss'],
+  'Beauty & Skincare':          ['Skincare & Routine','Makeup & Glam','Hair Care','Nail Art','Mens Grooming','Clean Beauty'],
+  'Food & Cooking':             ['Home Cooking','Restaurant & Reviews','Baking & Pastry','Healthy Eating','Street Food','International Cuisine'],
+  'Travel & Adventure':         ['Cinematic Travel','Budget Travel','Luxury Travel','Adventure & Outdoor','Solo Travel','Van Life & Nomadic'],
+  'Finance & Investing':        ['Stock Market','Personal Finance','Crypto & Web3','Real Estate','Side Hustles','Financial Independence'],
+  'Tech & Gadgets':             ['Smartphone & Tablets','PC & Laptops','AI & Software','Smart Home','Wearables','Budget Tech'],
+  'Lifestyle & Vlogs':          ['Day-in-the-life','Family & Parenting','Minimalism','Productivity','Morning Routines','Home & Interiors'],
+  'Entertainment & Comedy':     ['Sketch & Comedy','Reaction & Commentary','Podcasts','Challenges & Pranks','True Crime','Pop Culture'],
+  'Automotive':                 ['Supercars & Hypercars','Modified & JDM','Track & Racing','EV & Future Tech','4x4 & Off-Road','Car Reviews'],
+  'Trading Cards (TCG)':        ['Pack Opening','Competitive Play','Collecting & Investing','Grading & Authentication'],
+  'Unboxing':                   ['Tech Unboxing','Luxury & Fashion','Toys & Collectibles','Mystery Boxes','ASMR Unboxing'],
+  'Gaming Setup & Peripherals': ['PC Builds','Peripherals & Mice','Desk Setups','Console Setups','Budget Builds'],
+  'Drinks & Beverages':         ['Energy Drinks','Coffee & Tea','Spirits & Cocktails','Wine & Beer','Health Drinks'],
+  'Kids & Family / Toys':       ['Toy Reviews','Family Vlogs','Educational Content','Kids Gaming','Arts & Crafts'],
+  'Education & Self-Development':['Study & Productivity','Career & Business','Language Learning','Science & History','Online Courses'],
+  'Music':                      ['Artists & Performers','DJs & Production','Music Reviews & Theory','Covers & Remixes','Behind the Scenes'],
+  'Theatre & Performing Arts':  ['Stage Productions','Live Events','Dance','Cultural & Heritage'],
+  'Music':                      ['Artists & Performers','DJs & Production','Music Reviews & Theory','Covers & Remixes'],
 };
 
 // ── PERSONA DATA ──────────────────────────────────────────────────────
@@ -2903,18 +2904,173 @@ function getSelectedGenre() {
   return (document.getElementById('genre')||{value:'Gaming & Esports'}).value || 'Gaming & Esports';
 }
 
+
+// ── SUB-MODE KEYWORD MAP ──────────────────────────────────────────────
+// Maps each sub-mode to bio/content keywords that indicate a creator covers it
+const SUBMODE_KEYWORDS = {
+  // Gaming
+  'RPG / Open World':    ['rpg','open world','elden ring','witcher','skyrim','diablo','path of exile','crimson desert','final fantasy','dragon','baldur','last epoch','no rest','action rpg','mmorpg','wow','world of warcraft','lost ark','guild wars','black desert','fellowship'],
+  'FPS / Tactical':      ['fps','first person','counter-strike','cs2','valorant','overwatch','call of duty','cod','warzone','rainbow six','siege','apex','battlefield','halo','marathon','arc raiders'],
+  'Battle Royale':       ['battle royale','fortnite','pubg','apex legends','warzone','hunt showdown'],
+  'MOBA':                ['moba','league of legends','lol','dota','smite','deadlock','mechabellum','heroes'],
+  'Horror':              ['horror','resident evil','dead by daylight','phasmophobia','silent hill','dread','reanimal','darkwood','little nightmares','scorn','hellmouth'],
+  'Sports Games':        ['fifa','nba','football manager','f1','rocket league','nfl','sports','madden'],
+  'Indie':               ['indie','hytale','core keeper','timberborn','manor lords','stardew','hollow knight','celeste','among us','fall guys'],
+  'Retro / Classics':    ['retro','classic','nes','snes','nintendo','pokemon','nostalgia','old school','runescape','osrs'],
+  'Survival':            ['survival','minecraft','valheim','rust','ark','enshrouded','project zomboid','palworld','terraria','grounded','sons of the forest','aska','lightyear'],
+  'Strategy':            ['strategy','civilization','age of empires','starcraft','slay the spire','command conquer','total war','rts','auto-battler','mechabellum','captain of industry'],
+
+  // Beauty
+  'Skincare & Routine':  ['skincare','routine','serum','moisturiser','spf','sunscreen','ingredients','inci','ordinary','paula','clinical','dermatologist'],
+  'Makeup & Glam':       ['makeup','glam','eyeshadow','foundation','contour','tutorial','look','nyx','mac','colourpop','lipstick'],
+  'Hair Care':           ['hair','haircare','shampoo','conditioner','curly','blonde','extensions','scalp'],
+  'Nail Art':            ['nail','nails','nail art','manicure','gel','acrylic'],
+  'Mens Grooming':       ['mens grooming','grooming','beard','shaving','skincare men'],
+  'Clean Beauty':        ['clean beauty','natural','organic','vegan','cruelty free','sustainable','refillable'],
+
+  // Travel
+  'Cinematic Travel':    ['cinematic','travel','vlog','destination','explore','adventure'],
+  'Budget Travel':       ['budget','cheap','backpack','hostel','van life','free camping','hacks'],
+  'Luxury Travel':       ['luxury','business class','hotel','five star','resort','premium'],
+  'Adventure & Outdoor': ['hiking','climbing','kayak','wild camp','trail','outdoor','expedition'],
+  'Solo Travel':         ['solo travel','solo female','solo trip','travelling alone'],
+  'Van Life & Nomadic':  ['van life','nomad','rv','campervan','road trip','full time travel'],
+
+  // Finance
+  'Stock Market':        ['stocks','investing','etf','index fund','dividends','portfolio','s&p','nyse'],
+  'Personal Finance':    ['personal finance','budget','savings','debt','money','financial'],
+  'Crypto & Web3':       ['crypto','bitcoin','ethereum','defi','nft','web3','blockchain'],
+  'Real Estate':         ['real estate','property','rental','mortgage','landlord','investing in property'],
+  'Side Hustles':        ['side hustle','passive income','dropshipping','freelance','ecommerce'],
+  'Financial Independence':['fire','financial independence','retire early','financial freedom'],
+
+  // Health
+  'Gym / Strength':      ['gym','weightlifting','strength','powerlifting','bodybuilding','bench press','squat'],
+  'Running & Cardio':    ['running','cardio','marathon','cycling','vo2','half marathon','5k'],
+  'Wellness & Mindfulness':['wellness','mindfulness','meditation','breathwork','mental health','yoga'],
+  'Nutrition & Diet':    ['nutrition','macros','protein','diet','meal prep','calories','supplements'],
+  'Sports Performance':  ['athlete','performance','sport','training','coaching','conditioning'],
+  'Weight Loss':         ['weight loss','transformation','calorie deficit','fat loss','cut'],
+
+  // Tech
+  'Smartphone & Tablets':['smartphone','iphone','android','samsung','pixel','ipad','tablet'],
+  'PC & Laptops':        ['pc','laptop','cpu','gpu','processor','gaming pc','build','rtx','amd','intel'],
+  'AI & Software':       ['ai','artificial intelligence','chatgpt','software','app','tools','automation'],
+  'Smart Home':          ['smart home','alexa','google home','iot','automation','nest','ring'],
+  'Wearables':           ['wearable','smartwatch','apple watch','fitbit','whoop','garmin'],
+  'Budget Tech':         ['budget','value','affordable','cheap','best for money','under £100'],
+
+  // Food
+  'Home Cooking':        ['home cook','recipe','cooking','kitchen','meal','dinner','homemade'],
+  'Restaurant & Reviews':['restaurant','review','foodie','michelin','tasting','dining'],
+  'Baking & Pastry':     ['baking','bread','pastry','cake','dessert','sourdough'],
+  'Healthy Eating':      ['healthy','clean eating','plant based','vegan','meal prep','nutrition'],
+  'Street Food':         ['street food','food truck','market','local food','fast food'],
+  'International Cuisine':['international','asian','italian','indian','mexican','japanese','thai','cuisine'],
+
+  // Entertainment
+  'Sketch & Comedy':     ['sketch','comedy','funny','skit','humor','parody'],
+  'Reaction & Commentary':['react','reaction','commentary','analysis','breakdown','essay'],
+  'Podcasts':            ['podcast','discussion','interview','talk show','long form'],
+  'Challenges & Pranks': ['challenge','prank','dare','experiment','social experiment'],
+  'True Crime':          ['true crime','mystery','unsolved','crime','documentary'],
+  'Pop Culture':         ['pop culture','celebrity','entertainment','movies','tv','film','review'],
+
+  // Lifestyle
+  'Day-in-the-life':     ['day in my life','daily vlog','routine','morning','evening'],
+  'Family & Parenting':  ['family','parenting','kids','mum','dad','baby','children','couples'],
+  'Minimalism':          ['minimalism','declutter','simple living','capsule','less is more'],
+  'Productivity':        ['productivity','notion','systems','workflow','second brain','deep work'],
+  'Morning Routines':    ['morning routine','5am','wake up','habits','rituals'],
+  'Home & Interiors':    ['home','interior','decor','renovation','aesthetic','room tour'],
+
+  // Automotive
+  'Supercars & Hypercars':['supercar','hypercar','ferrari','lamborghini','mclaren','porsche','bugatti'],
+  'Modified & JDM':      ['jdm','modified','tuner','drift','stance','honda','toyota','nissan','subaru'],
+  'Track & Racing':      ['track','racing','motorsport','formula','lap time','circuit'],
+  'EV & Future Tech':    ['electric','ev','tesla','rivian','hyundai','battery','charging'],
+  '4x4 & Off-Road':      ['4x4','off road','overlanding','land rover','jeep','mud','trail'],
+  'Car Reviews':         ['car review','test drive','road test','new car','specs'],
+
+  // Kids
+  'Toy Reviews':         ['toy','unboxing','lego','playmobil','barbie','hot wheels','review'],
+  'Family Vlogs':        ['family vlog','kids','children','parenting','family life'],
+  'Educational Content': ['educational','learning','kids learn','school','numbers','letters','abcdefg'],
+  'Kids Gaming':         ['roblox','minecraft','gaming kids','fortnite','among us'],
+  'Arts & Crafts':       ['arts','crafts','drawing','painting','diy','kids craft'],
+
+  // Unboxing
+  'Tech Unboxing':       ['tech','unboxing','review','gadget','smartphone','laptop','setup'],
+  'Luxury & Fashion':    ['luxury','fashion','designer','gucci','louis vuitton','unbox'],
+  'Toys & Collectibles': ['toys','collectibles','funko','trading cards','pokemon','mystery'],
+  'Mystery Boxes':       ['mystery box','blind bag','surprise','random','whats inside'],
+  'ASMR Unboxing':       ['asmr','satisfying','no talking','sounds','tapping'],
+
+  // Music
+  'Artists & Performers':['music','artist','singer','performer','album','release','tour'],
+  'DJs & Production':    ['dj','producer','edm','electronic','beats','mix','studio'],
+  'Music Reviews & Theory':['music review','theory','analyse','breakdown','reaction','album review'],
+  'Covers & Remixes':    ['cover','remix','acoustic','version','tribute'],
+};
+
+// Compute sub-mode alignment score for a creator (0-100)
+function computeSubModeAlignment(creator, subMode) {
+  if (!subMode) return 50; // no sub-mode selected = neutral
+  const keywords = SUBMODE_KEYWORDS[subMode] || [];
+  if (!keywords.length) return 50;
+
+  const bio    = (creator.bio || '').toLowerCase();
+  const handle = (creator.handle || '').toLowerCase();
+  const name   = (creator.name || '').toLowerCase();
+  const haystack = bio + ' ' + handle + ' ' + name;
+
+  var matches = 0;
+  for (var i = 0; i < keywords.length; i++) {
+    if (haystack.indexOf(keywords[i]) !== -1) matches++;
+  }
+
+  if (matches === 0) return 8;  // creator has no signal for this sub-mode
+  if (matches === 1) return 35; // weak signal
+  if (matches === 2) return 60; // moderate signal
+  if (matches === 3) return 78; // strong signal
+  return Math.min(95, 78 + (matches - 3) * 5); // very strong
+}
+
+
 function computeGFI(creator) {
   const campaignGenre = getSelectedGenre() || 'Gaming & Esports';
-  // If creator's native genre matches campaign — use their stored gfi (native score)
+  const subMode       = activeSubMode || '';
+
+  // Step 1: Genre-level affinity (0–1)
+  var genreAffinity;
   if (creator.genre === campaignGenre) {
-    return creator.gfi || Math.round(clamp(creator.cpi * 1.0, 50, 98));
+    genreAffinity = 1.0;
+  } else {
+    const raw = (GENRE_AFFINITY[creator.genre]||{})[campaignGenre];
+    genreAffinity = (raw !== undefined && raw !== null) ? raw : 0.05;
   }
-  // Otherwise compute from affinity map
-  const affinityRaw = (GENRE_AFFINITY[creator.genre]||{})[campaignGenre];
-  // No entry in affinity map = truly unrelated genres, very low score
-  const affinity = (affinityRaw !== undefined && affinityRaw !== null) ? affinityRaw : 0.05;
-  const base = creator.cpi * affinity;
-  return Math.round(clamp(base, 5, 65));
+
+  // Step 2: Sub-mode alignment (0–100)
+  const subModeScore = computeSubModeAlignment(creator, subMode);
+
+  // Step 3: Combine — genre is the gate, sub-mode refines within it
+  // If genre affinity is low, sub-mode can't save it
+  // If genre affinity is high, sub-mode determines whether it's a 60 or a 95
+  const genreBase = creator.cpi * genreAffinity;
+
+  var gfi;
+  if (genreAffinity >= 0.9) {
+    // Same genre — weight sub-mode heavily (60% sub-mode, 40% genre base)
+    gfi = (genreBase * 0.4) + (subModeScore * 0.6);
+  } else if (genreAffinity >= 0.6) {
+    // Related genre — genre base dominant, sub-mode adds nuance
+    gfi = (genreBase * 0.65) + (subModeScore * 0.35);
+  } else {
+    // Unrelated genre — genre affinity caps the score, sub-mode barely matters
+    gfi = genreBase * 0.85;
+  }
+
+  return Math.round(clamp(gfi, 5, 97));
 }
 
 function getMismatch(creator) {
@@ -3873,10 +4029,12 @@ function onGenreChange() {
   const genre = getSelectedGenre();
   const modes = GENRE_SUBMODES[genre] || [];
   const container = document.getElementById('subModeChips');
+  const field     = document.getElementById('subModeField');
   if(!container) return;
+  if (field) field.style.display = modes.length ? 'block' : 'none';
   activeSubMode = modes[0] || '';
   container.innerHTML = modes.map((m,i) =>
-    `<button class="chip ${i===0?'active':''}" onclick="setSubMode('${m.replace(/'/g,"\\'")}',this)">${m}</button>`
+    `<button class="chip ${i===0?'active':''}" onclick="setSubMode('${m.replace(/'/g,"\'")}',this)">${m}</button>`
   ).join('');
   renderCreatorGrid();
   updateBriefPanel();
@@ -3892,62 +4050,126 @@ function setSubMode(m, btn) {
 // ── SCORING SCREEN ────────────────────────────────────────────────────
 // ── RENDER SCORING SCREEN ─────────────────────────────────────────────
 function renderScoringScreen() {
-  const genre = getSelectedGenre() || 'Gaming & Esports';
+  const genre     = getSelectedGenre() || 'Gaming & Esports';
+  const subMode   = activeSubMode || '';
   const benchmark = GENRE_BENCHMARKS[genre] || GENRE_BENCHMARKS['Gaming & Esports'];
+  const hasBrief  = selectedCreators.size > 0;
 
-  // Use selected creators, or ALL creators filtered by genre (same as discovery)
-  const toShow = selectedCreators.size > 0
-    ? CREATORS.filter(c => selectedCreators.has(c.id))
-    : CREATORS.filter(c => c.genre === genre || ((GENRE_AFFINITY[c.genre]||{})[genre]||0) >= 0.6).slice(0, 50);
+  // What are we scoring?
+  // If brief has creators — score those specifically
+  // If not — score all genre-matched creators sorted by GFI
+  const toShow = hasBrief
+    ? CREATORS.filter(cr => selectedCreators.has(cr.id))
+    : CREATORS
+        .filter(cr => cr.genre === genre || ((GENRE_AFFINITY[cr.genre]||{})[genre]||0) >= 0.6)
+        .sort((a,b) => computeGFI(b) - computeGFI(a))
+        .slice(0, 30);
 
   if (toShow.length === 0) return;
 
-  const avgCPI = Math.round(toShow.reduce((a,c)=>a+c.cpi,0)/toShow.length);
-  const avgGFI = Math.round(toShow.reduce((a,c)=>a+computeGFI(c),0)/toShow.length);
-  const top    = [...toShow].sort((a,b)=>(b.cpi+(b.gfi||75))-(a.cpi+(a.gfi||75)))[0];
-  const conf   = avgGFI >= 70 ? 'HIGH' : avgGFI >= 50 ? 'MED' : 'LOW';
-  const confCol= avgGFI >= 70 ? '#00C46A' : avgGFI >= 50 ? '#FF7A00' : '#E60023';
+  // Compute GFI for each (respects sub-mode)
+  const withGFI = toShow.map(cr => ({ cr, gfi: computeGFI(cr) }));
+  const avgCPI  = Math.round(withGFI.reduce((a,x)=>a+x.cr.cpi,0)/withGFI.length);
+  const avgGFI  = Math.round(withGFI.reduce((a,x)=>a+x.gfi,0)/withGFI.length);
+  const top     = withGFI.sort((a,b)=>(b.cr.cpi+b.gfi)-(a.cr.cpi+a.gfi))[0];
+  const conf    = avgGFI >= 70 ? 'HIGH' : avgGFI >= 50 ? 'MED' : 'LOW';
+  const confCol = avgGFI >= 70 ? '#00C46A' : avgGFI >= 50 ? '#FF7A00' : '#E60023';
 
-  // ── Stat cards ────────────────────────────────────────────────────
+  // Update page meta to explain what's being shown
+  const metaEl = document.getElementById('scoringMeta');
+  if (metaEl) {
+    metaEl.textContent = hasBrief
+      ? selectedCreators.size + ' CREATORS IN YOUR BRIEF · ' + genre.toUpperCase() + (subMode ? ' · ' + subMode.toUpperCase() : '')
+      : 'TOP ' + toShow.length + ' CREATORS · ' + genre.toUpperCase() + (subMode ? ' · ' + subMode.toUpperCase() : '') + ' · NO BRIEF SELECTED';
+  }
+
+  // Stat cards
   const avgCpiEl = document.getElementById('avgCPI');
-  if (avgCpiEl) {
-    avgCpiEl.textContent = avgCPI;
-    avgCpiEl.style.color = cpiScoreColor(avgCPI);
-  }
+  if (avgCpiEl) { avgCpiEl.textContent = avgCPI; avgCpiEl.style.color = cpiScoreColor(avgCPI); }
   const avgGfiEl = document.getElementById('avgGFI');
-  if (avgGfiEl) {
-    avgGfiEl.textContent = avgGFI;
-    avgGfiEl.style.color = avgGFI>=80?'#00C46A':avgGFI>=60?'#FF7A00':'#E60023';
-  }
+  if (avgGfiEl) { avgGfiEl.textContent = avgGFI; avgGfiEl.style.color = avgGFI>=70?'#00C46A':avgGFI>=50?'#FF7A00':'#E60023'; }
   const avgCpiFill = document.getElementById('avgCPIFill');
   if (avgCpiFill) avgCpiFill.style.width = avgCPI + '%';
   const avgGfiFill = document.getElementById('avgGFIFill');
-  if (avgGfiFill) { avgGfiFill.style.width = avgGFI + '%'; avgGfiFill.style.background = avgGFI>=80?'#00C46A':avgGFI>=60?'#FF7A00':'#E60023'; }
-
-  const topEl = document.getElementById('topCreator');
+  if (avgGfiFill) { avgGfiFill.style.width = avgGFI + '%'; avgGfiFill.style.background = avgGFI>=70?'#00C46A':avgGFI>=50?'#FF7A00':'#E60023'; }
+  const topEl  = document.getElementById('topCreator');
   const topSub = document.getElementById('topCreatorSub');
-  if (topEl && top) { topEl.textContent = top.name; }
-  if (topSub && top) { topSub.textContent = top.platform + ' · ' + top.subs + ' · CPI ' + top.cpi; }
-
-  const confEl = document.getElementById('dataConf');
+  if (topEl && top) topEl.textContent = top.cr.name;
+  if (topSub && top) topSub.textContent = top.cr.platform + ' · ' + top.cr.subs + ' · CPI ' + top.cr.cpi + ' · GFI ' + top.gfi + '%';
+  const confEl    = document.getElementById('dataConf');
   const confSubEl = document.getElementById('dataConfSub');
   if (confEl) { confEl.textContent = conf; confEl.style.color = confCol; confEl.style.fontSize = '32px'; }
-  if (confSubEl) { confSubEl.textContent = toShow.length + ' creators in dataset'; }
+  if (confSubEl) confSubEl.textContent = toShow.length + ' creators scored · ' + genre;
 
-  // ── Benchmark panel ───────────────────────────────────────────────
+  // Benchmark panel
   const benchLabel = document.getElementById('benchGenreLabel');
   if (benchLabel) benchLabel.textContent = '· ' + genre;
   const benchPanel = document.getElementById('benchmarkPanel');
-  if (benchPanel) benchPanel.innerHTML = `
-    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;padding:8px">
-      ${[['CTR',benchmark.ctrBase+'%'],['CPM','£'+benchmark.cpmBase],['CVR',benchmark.cvrBase+'%'],['ROAS',benchmark.roasBase+'×'],['ENG RATE',benchmark.engBase+'%']].map(([l,v])=>`
-        <div style="text-align:center;padding:16px;background:var(--bg3);border-radius:6px">
-          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);margin-bottom:6px;letter-spacing:.08em">${l}</div>
-          <div style="font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:700;color:#FFD400;line-height:1">${v}</div>
-          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);margin-top:6px;letter-spacing:.06em">INDUSTRY AVG</div>
-        </div>`).join('')}
-    </div>`;
+  if (benchPanel) benchPanel.innerHTML = '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;padding:8px">'
+    + [['CTR',benchmark.ctrBase+'%'],['CPM','£'+benchmark.cpmBase],['CVR',benchmark.cvrBase+'%'],['ROAS',benchmark.roasBase+'×'],['ENG RATE',benchmark.engBase+'%']].map(function(pair){var l=pair[0],v=pair[1]; return '<div style="text-align:center;padding:16px;background:var(--bg3);border-radius:6px"><div style="font-size:9px;color:var(--text-muted);margin-bottom:6px;letter-spacing:.08em">' + l + '</div><div style="font-size:28px;font-weight:700;color:#FFD400;line-height:1">' + v + '</div><div style="font-size:9px;color:var(--text-muted);margin-top:6px">INDUSTRY AVG</div></div>'; }).join('') + '</div>';
+
+  // Full score table — THIS is the key piece that was empty
+  const tableEl = document.getElementById('fullScoreTable');
+  if (!tableEl) return;
+
+  // Re-sort for table: by GFI desc
+  const sorted = withGFI.sort((a,b) => b.gfi - a.gfi);
+
+  tableEl.innerHTML = sorted.map(({cr, gfi}) => {
+    const gfiCol  = gfi >= 70 ? '#00C46A' : gfi >= 45 ? '#FF7A00' : '#E60023';
+    const e       = computeCostEstimate(cr);
+    const subAlign = computeSubModeAlignment(cr, subMode);
+    const subAlignCol = subAlign >= 60 ? '#00C46A' : subAlign >= 35 ? '#FF7A00' : '#E60023';
+    const subAlignLabel = subAlign >= 60 ? '✓ Strong fit' : subAlign >= 35 ? '~ Partial fit' : '✗ Weak fit';
+
+    return '<div style="display:grid;grid-template-columns:2fr 80px 80px 1fr 140px;gap:0;padding:14px 20px;border-bottom:1px solid var(--border);align-items:center;cursor:pointer" onclick="openProfileOverlay(' + cr.id + ')">'  
+
+      // Creator info
+      + '<div style="display:flex;align-items:center;gap:12px">'
+        + '<div id="card-avatar-' + cr.id + '" style="width:34px;height:34px;border-radius:50%;background:' + cr.color + '22;color:' + cr.color + ';display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;border:1px solid ' + cr.color + '44;overflow:hidden">' + cr.name.charAt(0) + '</div>'
+        + '<div>'
+          + '<div style="font-size:13px;font-weight:600;color:var(--text)">' + cr.name + '</div>'
+          + '<div style="font-size:inherit;font-size:9px;color:var(--text-muted);margin-top:2px">' + cr.platform + ' · ' + cr.subs + ' · ' + cr.genre + '</div>'
+          + (subMode ? '<div style="font-size:inherit;font-size:8px;margin-top:3px;color:' + subAlignCol + '">' + subAlignLabel + ' for ' + subMode + '</div>' : '')
+        + '</div>'
+      + '</div>'
+
+      // CPI
+      + '<div style="text-align:center">'
+        + '<div style="font-size:inherit;font-size:24px;font-weight:700;color:' + cpiScoreColor(cr.cpi) + ';line-height:1">' + cr.cpi + '</div>'
+        + '<div style="font-size:inherit;font-size:8px;color:var(--text-muted);margin-top:3px">' + cr.eng + ' eng</div>'
+      + '</div>'
+
+      // GFI
+      + '<div style="text-align:center">'
+        + '<div style="font-size:inherit;font-size:24px;font-weight:700;color:' + gfiCol + ';line-height:1">' + gfi + '%</div>'
+        + '<div style="font-size:inherit;font-size:8px;color:var(--text-muted);margin-top:3px">genre fit</div>'
+      + '</div>'
+
+      // Performance bars
+      + '<div style="padding:0 12px">'
+        + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">'
+          + '<div style="font-size:inherit;font-size:8px;color:var(--text-muted);width:28px">CPI</div>'
+          + '<div style="flex:1;background:var(--bg3);border-radius:2px;height:5px;overflow:hidden"><div style="height:100%;border-radius:2px;background:' + cpiScoreColor(cr.cpi) + ';width:' + cr.cpi + '%;transition:width .6s ease"></div></div>'
+        + '</div>'
+        + '<div style="display:flex;align-items:center;gap:8px">'
+          + '<div style="font-size:inherit;font-size:8px;color:var(--text-muted);width:28px">GFI</div>'
+          + '<div style="flex:1;background:var(--bg3);border-radius:2px;height:5px;overflow:hidden"><div style="height:100%;border-radius:2px;background:' + gfiCol + ';width:' + gfi + '%;transition:width .6s ease"></div></div>'
+        + '</div>'
+      + '</div>'
+
+      // Rate
+      + '<div style="text-align:right">'
+        + '<div style="font-size:inherit;font-size:13px;font-weight:700;color:#FFD400">' + e.fmt(e.ranges.int[0]) + '–' + e.fmt(e.ranges.int[1]) + '</div>'
+        + '<div style="font-size:inherit;font-size:8px;color:var(--text-muted);margin-top:2px">INTEGRATED</div>'
+        + '<div style="font-size:inherit;font-size:11px;color:var(--text-dim);margin-top:2px">' + e.fmt(e.ranges.ded[0]) + '–' + e.fmt(e.ranges.ded[1]) + ' ded</div>'
+      + '</div>'
+
+    + '</div>';
+  }).join('')
+  || '<div style="padding:40px;text-align:center;color:var(--text-muted);font-size:inherit;font-size:11px">NO CREATORS TO SCORE · ADD CREATORS TO YOUR BRIEF OR CHANGE GENRE</div>';
 }
+
 
 // ── RENDER FULL SCORE TABLE ────────────────────────────────────────────
 
