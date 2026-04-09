@@ -3836,7 +3836,7 @@ function renderCreatorGrid() {
           </div>
           <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
             ${tierBadgeHtml(cr)}
-            ${window.__twitchLive && window.__twitchLive[cr.handle.replace('@','').toLowerCase()] && window.__twitchLive[cr.handle.replace('@','').toLowerCase()].live ? '<div style="display:flex;align-items:center;gap:4px;padding:2px 7px;background:rgba(230,0,35,0.15);border:1px solid rgba(230,0,35,0.4);border-radius:3px;margin-bottom:2px"><div style="width:5px;height:5px;border-radius:50%;background:#E60023;animation:livePulse 1.4s infinite"></div><div style="font-family:\'DM Mono\',monospace;font-size:8px;color:#E60023;font-weight:700">LIVE · ' + window.__twitchLive[cr.handle.replace('@','').toLowerCase()].viewerCount.toLocaleString() + '</div></div>' : ''}
+            ${getLiveBadge(cr)}
             <button onclick="event.stopPropagation();openProfileOverlay(${cr.id})" style="font-family:'DM Mono',monospace;font-size:9px;padding:3px 8px;background:rgba(0,80,255,0.15);border:1px solid rgba(0,80,255,0.3);color:#6B9FFF;border-radius:3px;cursor:pointer;white-space:nowrap">VIEW ↗</button>
           </div>
         </div>
@@ -5297,7 +5297,8 @@ function renderLivePanel() {
       var cpiCol   = liveCPI >= 70 ? '#00C46A' : liveCPI >= 55 ? '#FF7A00' : '#E60023';
       var row = document.createElement('div');
       row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:5px;cursor:pointer;margin-bottom:3px';
-      row.onclick = (function(id) { return function() { openProfileOverlay(id); }; })(cr.id);
+      row.onclick = (function(id, login) { return function() { openProfileOverlay(id); }; })(cr.id, cr.handle.replace('@',''));
+      var twitchLogin = cr.handle.replace('@','').toLowerCase();
       row.innerHTML = '<div style="width:6px;height:6px;border-radius:50%;background:#E60023;flex-shrink:0;animation:livePulse 1.4s infinite"></div>'
         + '<div style="flex:1;min-width:0">'
           + '<div style="font-size:11px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + cr.name + '</div>'
@@ -5310,7 +5311,8 @@ function renderLivePanel() {
         + '<div style="text-align:right;flex-shrink:0;margin-left:4px">'
           + '<div style="font-size:10px;font-weight:700;color:' + cpiCol + '">' + liveCPI + '</div>'
           + '<div style="font-size:8px;color:var(--text-muted)">CPI</div>'
-        + '</div>';
+        + '</div>'
+        + '<a href="https://twitch.tv/' + twitchLogin + '" target="_blank" onclick="event.stopPropagation()" style="margin-left:6px;padding:3px 7px;background:#9146FF;border-radius:3px;font-size:9px;font-weight:700;color:#fff;text-decoration:none;flex-shrink:0;white-space:nowrap">▶ WATCH</a>';
       html += row.outerHTML;
     });
     html += '</div>';
@@ -5358,6 +5360,21 @@ function updateLiveUI() {
 
   // Refresh discovery grid to show/update live badges
   renderCreatorGrid();
+}
+
+
+// Live badge helper — avoids template literal nesting issues
+function getLiveBadge(cr) {
+  var data = window.__twitchLive && window.__twitchLive[cr.handle.replace('@','').toLowerCase()];
+  if (!data || !data.live) return '';
+  var login   = cr.handle.replace('@','');
+  var viewers = data.viewerCount ? data.viewerCount.toLocaleString() : '0';
+  var div = document.createElement('div');
+  div.style.cssText = 'display:flex;align-items:center;gap:4px;padding:2px 7px;background:rgba(230,0,35,0.15);border:1px solid rgba(230,0,35,0.4);border-radius:3px;margin-bottom:2px;cursor:pointer';
+  div.setAttribute('onclick', 'event.stopPropagation();window.open("https://twitch.tv/' + login + '","_blank")');
+  div.innerHTML = '<div style="width:5px;height:5px;border-radius:50%;background:#E60023;animation:livePulse 1.4s infinite"></div>'
+    + '<div style="font-size:8px;color:#E60023;font-weight:700">LIVE · ' + viewers + '</div>';
+  return div.outerHTML;
 }
 
 // ── THEME TOGGLE ──────────────────────────────────────────────────────
