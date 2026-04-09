@@ -1938,6 +1938,27 @@ document.getElementById('GP').focus();
             <option value="4">Mixed tiers</option>
           </select>
         </div>
+
+        <div class="field" style="margin-top:10px">
+          <label>Creator Language</label>
+          <select id="langFilter" onchange="renderCreatorGrid()">
+            <option value="all">All Languages</option>
+            <option value="English">English</option>
+            <option value="Spanish">Spanish</option>
+            <option value="French">French</option>
+            <option value="German">German</option>
+            <option value="Portuguese">Portuguese</option>
+            <option value="Korean">Korean</option>
+            <option value="Japanese">Japanese</option>
+            <option value="Chinese">Chinese</option>
+            <option value="Russian">Russian</option>
+            <option value="Arabic">Arabic</option>
+            <option value="Turkish">Turkish</option>
+            <option value="Italian">Italian</option>
+            <option value="Polish">Polish</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
       </div>
     </div>
 
@@ -4394,6 +4415,14 @@ function renderCreatorGrid() {
     return e.ranges.int[0] <= budget;
   }
 
+  // ── Language filter ──────────────────────────────────────────────
+  var langEl = document.getElementById('langFilter');
+  var selectedLang = langEl ? langEl.value : 'all';
+  function passedLangFilter(cr) {
+    if (!selectedLang || selectedLang === 'all') return true;
+    return (cr.language || 'English') === selectedLang;
+  }
+
   // ── Genre filter ──────────────────────────────────────────────────
   function genreScore(cr) {
     if (cr.genre === genre) return 30;
@@ -4427,7 +4456,7 @@ function renderCreatorGrid() {
           <div id="card-avatar-${cr.id}" class="creator-avatar" onclick="event.stopPropagation();openProfileOverlay(${cr.id})" style="background:${cr.color}22;color:${cr.color};${selected?'border:2px solid '+cr.color:''};cursor:zoom-in;overflow:hidden" title="View profile">${cr.name.charAt(0)}</div>
           <div style="flex:1;min-width:0">
             <div style="font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${cr.name}</div>
-            <div style="font-size:11px;color:var(--text-dim)">${cr.handle} · ${cr.platform}</div>
+            <div style="font-size:11px;color:var(--text-dim)">${cr.handle} · ${cr.platform}${cr.language && cr.language !== 'English' ? ' <span style="color:#FFD400;font-size:9px">· ' + cr.language + '</span>' : ''}</div>
             <div style="font-size:10px;color:var(--text-muted);margin-top:2px">${cr.genre}</div>
           </div>
           <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
@@ -4456,6 +4485,7 @@ function renderCreatorGrid() {
     .filter(cr => {
       if (!passedBudgetFilter(cr)) return false;
       if (!passedTierFilter(cr)) return false;
+      if (!passedLangFilter(cr)) return false;
       if (genreScore(cr) < 0) return false;
       return true;
     })
