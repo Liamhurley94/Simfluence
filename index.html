@@ -269,7 +269,7 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
 <body>
 
 <nav>
-  <a href="#" class="nav-logo">Sim<em>fluence</em></a>
+  <a href="#" onclick="window.scrollTo({top:0,behavior:'smooth'});return false;" class="nav-logo">Sim<em>fluence</em></a>
   <ul class="nav-center">
     <li><a href="#how">How it works</a></li>
     <li><a href="#features">Features</a></li>
@@ -583,7 +583,7 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
 
 <footer>
   <div>
-    <a href="#" class="f-logo">Sim<em>fluence</em></a>
+    <a href="index.html" class="f-logo">Sim<em>fluence</em></a>
     <p class="f-tag">AI-powered campaign intelligence. Know your CTR, CPM, CVR and ROAS before a single dollar is spent.</p>
     <p class="f-email">Contact: <a href="mailto:Liam@Simfluence.AI">Liam@Simfluence.AI</a></p>
   </div>
@@ -599,10 +599,10 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
   <div>
     <div class="f-col-title">Company</div>
     <div class="f-links">
-      <a href="mailto:Liam@Simfluence.AI" class="f-link">About</a>
-      <a href="mailto:Liam@Simfluence.AI" class="f-link">Contact</a>
-      <a href="app.html" class="f-link">Terms of Use</a>
-      <a href="app.html" class="f-link">Legal Notice</a>
+      <a href="mailto:Liam@Simfluence.AI" class="f-link">About Simfluence</a>
+      <a href="mailto:Liam@Simfluence.AI" class="f-link">Contact Us</a>
+      <a href="app.html" target="_blank" class="f-link">Terms of Use</a>
+      <a href="app.html" target="_blank" class="f-link">Legal Notice</a>
     </div>
   </div>
   <div>
@@ -618,8 +618,8 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
   <div class="f-bottom">
     <span class="f-copy">© 2025 Simfluence Ltd · Dubai, UAE · All rights reserved</span>
     <div class="f-legal">
-      <a href="app.html">Terms</a>
-      <a href="app.html">Legal</a>
+      <a href="app.html" target="_blank">Terms</a>
+      <a href="app.html" target="_blank">Legal</a>
       <a href="mailto:Liam@Simfluence.AI">Contact</a>
     </div>
   </div>
@@ -861,14 +861,4 @@ function toggleTheme(){
 }
 (function(){ try{if(localStorage.getItem('sf_theme')==='light'){document.body.classList.add('light');}}catch(e){} })();
 
-/* ── Scroll reveal ───────────────────────────────────────── */
-function initReveal(){
-  var els=document.querySelectorAll('.reveal');
-  els.forEach(function(el){ el.classList.add('visible'); });
-}
-if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',initReveal);}else{initReveal();}
-setTimeout(initReveal,300); setTimeout(initReveal,800);
-
-/* ── Hero canvas ─────────────────────────────────────────── */
-var W,H,particles=[];
-var canvas=document.getElementById
+/* ── Scroll reveal ───────�
