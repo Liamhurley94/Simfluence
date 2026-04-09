@@ -2965,7 +2965,7 @@ const CREATORS = [
   { id:531, name:'Elite500', handle:'@elite500', platform:'Twitch', allPlatforms:['Twitch'], subs:'299K', avgViews:'495', eng:'0.2%', genre:'Gaming & Esports', cpi:60, gfi:60, color:'#00C46A', verifiedDeals:0, sponsorHistory:[], bio:'Gaming & Esports · League of Legends · 299K followers · avg 495 viewers' },
   { id:532, name:'DETHRIIDGE', handle:'@dethriidge', platform:'Twitch', allPlatforms:['Twitch'], subs:'285K', avgViews:'62', eng:'0.0%', genre:'Gaming & Esports', cpi:56, gfi:56, color:'#00C46A', verifiedDeals:0, sponsorHistory:[], bio:'Gaming & Esports · Minecraft · 285K followers · avg 62 viewers' },
   { id:533, name:'keanelol', handle:'@keanelol', platform:'Twitch', allPlatforms:['Twitch'], subs:'275K', avgViews:'736', eng:'0.3%', genre:'Gaming & Esports', cpi:64, gfi:64, color:'#00C46A', verifiedDeals:0, sponsorHistory:[], bio:'Gaming & Esports · Teamfight Tactics · 275K followers · avg 736 viewers' },
-  { id:534, name:'Jukeyz', handle:'@jukeyz', platform:'Twitch', allPlatforms:['Twitch'], subs:'261K', avgViews:'117', eng:'0.0%', genre:'Gaming & Esports', cpi:60, gfi:60, color:'#00C46A', verifiedDeals:0, sponsorHistory:[], bio:'Gaming & Esports · Call of Duty: Warzone · 261K followers · avg 117 viewers' },
+  { id:534, name:'Jukeyz', handle:'@jukeyz', platform:'Twitch', allPlatforms:['Twitch'], subs:'261K', avgViews:'117', eng:'0.0%', genre:'Gaming & Esports', cpi:60, gfi:60, color:'#00C46A', verifiedDeals:0, sponsorHistory:[], bio:'FPS & Battle Royale · Warzone · Call of Duty · CoD · fps · battle royale · 261K followers · avg 117 viewers' },
   { id:535, name:'Guzu', handle:'@guzu', platform:'Twitch', allPlatforms:['Twitch'], subs:'256K', avgViews:'709', eng:'0.3%', genre:'Gaming & Esports', cpi:64, gfi:64, color:'#00C46A', verifiedDeals:0, sponsorHistory:[], bio:'Gaming & Esports · World of Warcraft · 256K followers · avg 709 viewers' },
   { id:536, name:'JoblessGarrett', handle:'@joblessgarrett', platform:'Twitch', allPlatforms:['Twitch'], subs:'251K', avgViews:'1K', eng:'0.5%', genre:'Gaming & Esports', cpi:68, gfi:68, color:'#00C46A', verifiedDeals:0, sponsorHistory:[], bio:'Gaming & Esports · World of Warcraft · 251K followers · avg 1K viewers' },
   { id:537, name:'Crystalst', handle:'@crystalst', platform:'Twitch', allPlatforms:['Twitch'], subs:'241K', avgViews:'260', eng:'0.1%', genre:'Gaming & Esports', cpi:60, gfi:60, color:'#00C46A', verifiedDeals:0, sponsorHistory:[], bio:'Gaming & Esports · Grand Theft Auto V · 241K followers · avg 260 viewers' },
@@ -3590,23 +3590,30 @@ function computeGFI(creator) {
     genreAffinity = (raw !== undefined && raw !== null) ? raw : 0.05;
   }
 
-  // Step 2: Sub-mode alignment (0–100)
-  const subModeScore = computeSubModeAlignment(creator, subMode);
+  // Step 2: Sub-mode alignment — check bio AND live stream game
+  var subModeScore = computeSubModeAlignment(creator, subMode);
 
-  // Step 3: Combine — genre is the gate, sub-mode refines within it
-  // If genre affinity is low, sub-mode can't save it
-  // If genre affinity is high, sub-mode determines whether it's a 60 or a 95
+  // Live boost: if creator is currently streaming a game that matches the sub-mode,
+  // that is definitive proof of sub-mode fit — override with high score
+  if (subMode && window.__twitchLive && creator.platform === 'Twitch') {
+    var liveData = window.__twitchLive[creator.handle.replace('@','').toLowerCase()];
+    if (liveData && liveData.live && liveData.gameName) {
+      var gameKeywords = SUBMODE_KEYWORDS[subMode] || [];
+      var gameLower    = liveData.gameName.toLowerCase();
+      var liveMatch    = gameKeywords.some(function(kw) { return gameLower.indexOf(kw) !== -1; });
+      if (liveMatch) subModeScore = Math.max(subModeScore, 92); // streaming it RIGHT NOW = near-perfect fit
+    }
+  }
+
+  // Step 3: Combine
   const genreBase = creator.cpi * genreAffinity;
 
   var gfi;
   if (genreAffinity >= 0.9) {
-    // Same genre — weight sub-mode heavily (60% sub-mode, 40% genre base)
     gfi = (genreBase * 0.4) + (subModeScore * 0.6);
   } else if (genreAffinity >= 0.6) {
-    // Related genre — genre base dominant, sub-mode adds nuance
     gfi = (genreBase * 0.65) + (subModeScore * 0.35);
   } else {
-    // Unrelated genre — genre affinity caps the score, sub-mode barely matters
     gfi = genreBase * 0.85;
   }
 
