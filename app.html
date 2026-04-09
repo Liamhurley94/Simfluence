@@ -3630,8 +3630,8 @@ function getSortedCreators() {
     if(sel==='gfi')  return computeGFI(b)-computeGFI(a);
     if(sel==='subs') return parseSubs(b.subs)-parseSubs(a.subs);
     if(sel==='live') {
-      var la = window.__twitchLive && window.__twitchLive[a.handle.toLowerCase()];
-      var lb = window.__twitchLive && window.__twitchLive[b.handle.toLowerCase()];
+      var la = window.__twitchLive && window.__twitchLive[a.handle.replace('@','').toLowerCase()];
+      var lb = window.__twitchLive && window.__twitchLive[b.handle.replace('@','').toLowerCase()];
       var aLive = la && la.live ? 1 : 0;
       var bLive = lb && lb.live ? 1 : 0;
       if (bLive !== aLive) return bLive - aLive;
@@ -3836,7 +3836,7 @@ function renderCreatorGrid() {
           </div>
           <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
             ${tierBadgeHtml(cr)}
-            ${window.__twitchLive && window.__twitchLive[cr.handle.toLowerCase()] && window.__twitchLive[cr.handle.toLowerCase()].live ? '<div style="display:flex;align-items:center;gap:4px;padding:2px 7px;background:rgba(230,0,35,0.15);border:1px solid rgba(230,0,35,0.4);border-radius:3px;margin-bottom:2px"><div style="width:5px;height:5px;border-radius:50%;background:#E60023;animation:livePulse 1.4s infinite"></div><div style="font-family:\'DM Mono\',monospace;font-size:8px;color:#E60023;font-weight:700">LIVE · ' + window.__twitchLive[cr.handle.toLowerCase()].viewerCount.toLocaleString() + '</div></div>' : ''}
+            ${window.__twitchLive && window.__twitchLive[cr.handle.replace('@','').toLowerCase()] && window.__twitchLive[cr.handle.replace('@','').toLowerCase()].live ? '<div style="display:flex;align-items:center;gap:4px;padding:2px 7px;background:rgba(230,0,35,0.15);border:1px solid rgba(230,0,35,0.4);border-radius:3px;margin-bottom:2px"><div style="width:5px;height:5px;border-radius:50%;background:#E60023;animation:livePulse 1.4s infinite"></div><div style="font-family:\'DM Mono\',monospace;font-size:8px;color:#E60023;font-weight:700">LIVE · ' + window.__twitchLive[cr.handle.replace('@','').toLowerCase()].viewerCount.toLocaleString() + '</div></div>' : ''}
             <button onclick="event.stopPropagation();openProfileOverlay(${cr.id})" style="font-family:'DM Mono',monospace;font-size:9px;padding:3px 8px;background:rgba(0,80,255,0.15);border:1px solid rgba(0,80,255,0.3);color:#6B9FFF;border-radius:3px;cursor:pointer;white-space:nowrap">VIEW ↗</button>
           </div>
         </div>
@@ -4136,8 +4136,8 @@ function openProfileOverlay(id) {
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">
           <div style="background:var(--bg3);border-radius:5px;padding:10px">
             <div style="font-size:9px;color:var(--text-muted);margin-bottom:4px">LIVE VIEWERS</div>
-            <div style="font-size:18px;font-weight:700;color:#9146FF" id="twitch-live-viewers-${c.id}">${(window.__twitchLive && window.__twitchLive[c.handle.toLowerCase()] && window.__twitchLive[c.handle.toLowerCase()].live) ? window.__twitchLive[c.handle.toLowerCase()].viewerCount.toLocaleString() + ' LIVE' : c.avgViews + ' avg'}</div>
-            <div style="font-size:8px;color:var(--text-muted)">${(window.__twitchLive && window.__twitchLive[c.handle.toLowerCase()] && window.__twitchLive[c.handle.toLowerCase()].live) ? '🔴 streaming now' : 'avg concurrent'}</div>
+            <div style="font-size:18px;font-weight:700;color:#9146FF" id="twitch-live-viewers-${c.id}">${(window.__twitchLive && window.__twitchLive[c.handle.replace('@','').toLowerCase()] && window.__twitchLive[c.handle.replace('@','').toLowerCase()].live) ? window.__twitchLive[c.handle.replace('@','').toLowerCase()].viewerCount.toLocaleString() + ' LIVE' : c.avgViews + ' avg'}</div>
+            <div style="font-size:8px;color:var(--text-muted)">${(window.__twitchLive && window.__twitchLive[c.handle.replace('@','').toLowerCase()] && window.__twitchLive[c.handle.replace('@','').toLowerCase()].live) ? '🔴 streaming now' : 'avg concurrent'}</div>
           </div>
           <div style="background:var(--bg3);border-radius:5px;padding:10px">
             <div style="font-size:9px;color:var(--text-muted);margin-bottom:4px">CHANNEL SCORE</div>
@@ -5264,11 +5264,11 @@ function renderLivePanel() {
   if (!listEl) return;
 
   var liveCreators = CREATORS.filter(function(cr) {
-    var data = window.__twitchLive[cr.handle.toLowerCase()];
+    var data = window.__twitchLive[cr.handle.replace('@','').toLowerCase()];
     return data && data.live;
   }).sort(function(a, b) {
-    var va = (window.__twitchLive[a.handle.toLowerCase()] || {}).viewerCount || 0;
-    var vb = (window.__twitchLive[b.handle.toLowerCase()] || {}).viewerCount || 0;
+    var va = (window.__twitchLive[a.handle.replace('@','').toLowerCase()] || {}).viewerCount || 0;
+    var vb = (window.__twitchLive[b.handle.replace('@','').toLowerCase()] || {}).viewerCount || 0;
     return vb - va;
   });
 
@@ -5290,7 +5290,7 @@ function renderLivePanel() {
     html += '<div style="margin-bottom:12px">';
     html += '<div style="font-size:8px;letter-spacing:.1em;color:var(--text-muted);margin-bottom:6px;padding:4px 0;border-bottom:1px solid var(--border)">' + genre.toUpperCase() + '</div>';
     creators.forEach(function(cr) {
-      var liveData = window.__twitchLive[cr.handle.toLowerCase()] || {};
+      var liveData = window.__twitchLive[cr.handle.replace('@','').toLowerCase()] || {};
       var viewers  = liveData.viewerCount ? liveData.viewerCount.toLocaleString() : '0';
       var game     = liveData.gameName || cr.genre;
       var liveCPI  = computeLiveCPI(cr, liveData.viewerCount || 0);
@@ -5339,7 +5339,7 @@ function computeLiveCPI(cr, currentViewers) {
 // Update live dot and count in panel header + refresh grid
 function updateLiveUI() {
   var liveCreators = CREATORS.filter(function(cr) {
-    var data = window.__twitchLive[cr.handle.toLowerCase()];
+    var data = window.__twitchLive[cr.handle.replace('@','').toLowerCase()];
     return data && data.live;
   });
   var count = liveCreators.length;
