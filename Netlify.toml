@@ -1,0 +1,11 @@
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    # Disable Cloudflare email obfuscation which breaks onclick handlers
+    # and rewrites mailto: links to cdn-cgi/l/email-protection
+    Cache-Control = "no-transform"
+ 
+[build]
+  publish = "."
+ 
