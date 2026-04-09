@@ -119,7 +119,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:cen
 .toggle-saving-badge{font-family:"DM Mono",monospace;font-size:10px;letter-spacing:0.06em;padding:4px 12px;border-radius:20px;background:rgba(0,196,106,0.12);border:1px solid rgba(0,196,106,0.3);color:#00C46A;transition:opacity 0.3s;}
 
 /* Cards grid */
-.pricing-cards{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;align-items:start;}
+.pricing-cards{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;align-items:stretch;}
 
 .p-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:26px 20px;display:flex;flex-direction:column;transition:border-color 0.25s,transform 0.25s;position:relative;overflow:hidden;}
 .p-card::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;opacity:0;transition:opacity 0.25s;}
@@ -134,9 +134,9 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:cen
 .p-card.silver::after{background:linear-gradient(90deg,#888,#C0C0C0,#E8E8E8);}
 .p-card.silver:hover{border-color:rgba(192,192,192,0.45);}
 
-.p-card.gold-tier{border-color:rgba(255,212,0,0.4);background:rgba(255,212,0,0.025);transform:scale(1.025);}
+.p-card.gold-tier{border-color:rgba(255,212,0,0.4);background:rgba(255,212,0,0.025);}
 .p-card.gold-tier::after{background:linear-gradient(90deg,#B8960A,#FFD400,#FFE566);opacity:1;}
-.p-card.gold-tier:hover{border-color:rgba(255,212,0,0.7);transform:scale(1.025) translateY(-5px);}
+.p-card.gold-tier:hover{border-color:rgba(255,212,0,0.7);transform:translateY(-5px);}
 
 .p-card.platinum{border-color:rgba(229,228,226,0.2);}
 .p-card.platinum::after{background:linear-gradient(90deg,#888,#C8C8C6,#E5E4E2);}
@@ -147,6 +147,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:cen
 .p-card.diamond:hover{border-color:rgba(185,242,255,0.4);}
 
 .p-popular{font-family:"DM Mono",monospace;font-size:9px;letter-spacing:0.08em;text-transform:uppercase;padding:3px 10px;border-radius:3px;background:rgba(255,212,0,0.12);color:#FFD400;display:inline-block;margin-bottom:8px;}
+.p-popular-spacer{display:block;height:22px;margin-bottom:8px;}
 .p-medal{font-size:24px;margin-bottom:8px;line-height:1;}
 .p-tier-name{font-family:"DM Mono",monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:14px;font-weight:500;}
 .p-price{font-family:"Clash Display",sans-serif;font-size:38px;font-weight:600;line-height:1;letter-spacing:-0.03em;}
@@ -236,7 +237,6 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
 
 @media(max-width:1200px){
   .pricing-cards{grid-template-columns:repeat(3,1fr);}
-  .p-card.gold-tier{transform:none;}
   .p-card.gold-tier:hover{transform:translateY(-5px);}
   .pricing-callout{grid-template-columns:1fr 1fr;gap:16px;}
   .pcb-cell{border-right:none;padding:0 0 16px 0;border-bottom:1px solid var(--border);}
@@ -437,6 +437,7 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
 
       <!-- BRONZE -->
       <div class="p-card bronze">
+        <div class="p-popular-spacer"></div>
         <div class="p-medal">🥉</div>
         <div class="p-tier-name" style="color:#CD7F32">Bronze</div>
         <div>
@@ -457,6 +458,7 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
 
       <!-- SILVER -->
       <div class="p-card silver">
+        <div class="p-popular-spacer"></div>
         <div class="p-medal">🥈</div>
         <div class="p-tier-name" style="color:#C0C0C0">Silver</div>
         <div>
@@ -498,7 +500,8 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
 
       <!-- PLATINUM -->
       <div class="p-card platinum">
-        <div class="p-medal">💎</div>
+        <div class="p-popular-spacer"></div>
+        <div class="p-medal">🏆</div>
         <div class="p-tier-name" style="color:#E5E4E2">Platinum</div>
         <div>
           <span class="p-price" id="platinumPrice" style="color:#E5E4E2">$15,000</span><span class="p-price-sub">/mo</span>
@@ -518,7 +521,8 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
 
       <!-- DIAMOND -->
       <div class="p-card diamond">
-        <div class="p-medal">✨</div>
+        <div class="p-popular-spacer"></div>
+        <div class="p-medal">💎</div>
         <div class="p-tier-name" style="color:#B9F2FF">Diamond</div>
         <div>
           <span class="p-price" style="color:#B9F2FF;font-size:26px;line-height:1.3">Talk<br>to us</span>
@@ -533,7 +537,7 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
           <div class="p-feat"><span class="p-feat-dash">—</span>SSO &amp; enterprise security</div>
           <div class="p-feat"><span class="p-feat-dash">—</span>Bespoke pricing &amp; terms</div>
         </div>
-        <a href="mailto:hello@simfluence.ai" class="p-btn p-btn-diamond">Contact us</a>
+        <a href="/cdn-cgi/l/email-protection#7018151c1c1f3003191d161c05151e13155e1119" class="p-btn p-btn-diamond">Contact us</a>
       </div>
 
     </div><!-- /pricing-cards -->
@@ -571,16 +575,16 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
   <p class="cta-sub">Run your brief. See your numbers. Launch knowing what to expect.</p>
   <div class="cta-btns">
     <button onclick="openSignup()" class="btn-xl">Get started</button>
-    <a href="mailto:hello@simfluence.ai" class="btn-xl-ghost">Book a live demo</a>
+    <a href="/cdn-cgi/l/email-protection#fe969b929291be8d979398928b9b909d9bd09f97" class="btn-xl-ghost">Book a live demo</a>
   </div>
-  <p class="cta-note">Cancel anytime · hello@simfluence.ai</p>
+  <p class="cta-note">Cancel anytime · <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="a3cbc6cfcfcce3d0cacec5cfd6c6cdc0c68dc2ca">[email&#160;protected]</a></p>
 </section>
 
 <footer>
   <div>
     <a href="#" class="f-logo">Sim<em>fluence</em></a>
     <p class="f-tag">AI-powered campaign intelligence. Know your CTR, CPM, CVR and ROAS before a single dollar is spent.</p>
-    <p class="f-email">Contact: <a href="mailto:hello@simfluence.ai">hello@simfluence.ai</a></p>
+    <p class="f-email">Contact: <a href="/cdn-cgi/l/email-protection#137b767f7f7c53607a7e757f66767d70763d727a"><span class="__cf_email__" data-cfemail="7119141d1d1e3102181c171d04141f12145f1018">[email&#160;protected]</span></a></p>
   </div>
   <div>
     <div class="f-col-title">Platform</div>
@@ -594,8 +598,8 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
   <div>
     <div class="f-col-title">Company</div>
     <div class="f-links">
-      <a href="mailto:hello@simfluence.ai" class="f-link">About</a>
-      <a href="mailto:hello@simfluence.ai" class="f-link">Contact</a>
+      <a href="/cdn-cgi/l/email-protection#89e1ece5e5e6c9fae0e4efe5fcece7eaeca7e8e0" class="f-link">About</a>
+      <a href="/cdn-cgi/l/email-protection#076f626b6b6847746e6a616b726269646229666e" class="f-link">Contact</a>
       <a href="app.html" class="f-link">Terms of Use</a>
       <a href="app.html" class="f-link">Legal Notice</a>
     </div>
@@ -607,7 +611,7 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
       <button onclick="openSignup('silver')"   class="f-link">Silver — $3,500/mo</button>
       <button onclick="openSignup('gold')"     class="f-link">Gold — $7,500/mo</button>
       <button onclick="openSignup('platinum')" class="f-link">Platinum — $15,000/mo</button>
-      <a href="mailto:hello@simfluence.ai"     class="f-link">Diamond — Talk to us</a>
+      <a href="/cdn-cgi/l/email-protection#8de5e8e1e1e2cdfee4e0ebe1f8e8e3eee8a3ece4" class="f-link">Diamond — Talk to us</a>
     </div>
   </div>
   <div class="f-bottom">
@@ -615,7 +619,7 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
     <div class="f-legal">
       <a href="app.html">Terms</a>
       <a href="app.html">Legal</a>
-      <a href="mailto:hello@simfluence.ai">Contact</a>
+      <a href="/cdn-cgi/l/email-protection#d9b1bcb5b5b699aab0b4bfb5acbcb7babcf7b8b0">Contact</a>
     </div>
   </div>
 </footer>
@@ -685,7 +689,7 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
   </div>
 </div>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 /* ── Pricing data ────────────────────────────────────────── */
 var PRICES = {
   bronze:   { monthly:1500,  annual:1500,  annualTotal:18000,  discount:0  },
@@ -877,13 +881,4 @@ if(canvas){
   function initParticles(){particles=[];var count=Math.floor((W*H)/14000);for(var i=0;i<count;i++) particles.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-0.5)*0.3,vy:(Math.random()-0.5)*0.3,r:Math.random()*1.5+0.5,alpha:Math.random()*0.5+0.1});}
   function draw(){
     ctx.clearRect(0,0,W,H);
-    for(var i=0;i<particles.length;i++){for(var j=i+1;j<particles.length;j++){var dx=particles[i].x-particles[j].x,dy=particles[i].y-particles[j].y,dist=Math.sqrt(dx*dx+dy*dy);if(dist<120){ctx.beginPath();ctx.moveTo(particles[i].x,particles[i].y);ctx.lineTo(particles[j].x,particles[j].y);ctx.strokeStyle='rgba(0,80,255,'+(1-dist/120)*0.15+')';ctx.lineWidth=0.5;ctx.stroke();}}}
-    particles.forEach(function(p){ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle='rgba(0,80,255,'+p.alpha+')';ctx.fill();p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>W)p.vx*=-1;if(p.y<0||p.y>H)p.vy*=-1;});
-    requestAnimationFrame(draw);
-  }
-  resize();initParticles();draw();
-  window.addEventListener('resize',function(){resize();initParticles();});
-}
-</script>
-</body>
-</html>
+    for(var i=0;i<particles.length;i++){for(var j=i+1;j<particles.length;j++){var dx=particles[i].x-particles[j].x,dy=particles[i].y-particles[j].y,dist
