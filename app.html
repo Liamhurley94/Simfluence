@@ -1994,7 +1994,7 @@ document.getElementById('GP').focus();
           <div class="page-title">CPI &amp; GFI <em>Scoring</em></div>
           <div class="page-meta" id="scoringMeta">CAMPAIGN INTELLIGENCE SCORES</div>
         </div>
-        <button onclick="showScreen('personas',document.querySelector('.nav-tab:nth-child(3)'))" style="padding:10px 20px;background:#0050FF;color:#fff;border:none;border-radius:var(--radius);font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;letter-spacing:.05em">VIEW PERSONA MATCHES →</button>
+        <button onclick="if(selectedCreators.size===0){personaAutoSelect();} showScreen('personas',document.querySelector('.nav-tab:nth-child(3)'));" style="padding:10px 20px;background:#0050FF;color:#fff;border:none;border-radius:var(--radius);font-size:11px;cursor:pointer;letter-spacing:.05em">VIEW PERSONA MATCHES →</button>
       </div>
 
       <!-- OVERVIEW STAT CARDS -->
@@ -2065,6 +2065,9 @@ document.getElementById('GP').focus();
           <button onclick="document.getElementById('personaRecommendation').style.display='none'" style="padding:8px 16px;background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:4px;font-family:'DM Mono',monospace;font-size:10px;cursor:pointer">DISMISS</button>
         </div>
       </div>
+
+      <!-- Selected creators banner -->
+      <div id="personaBanner" style="display:none;background:rgba(0,80,255,0.06);border:1px solid rgba(0,80,255,0.2);border-radius:8px;padding:14px 18px;margin-bottom:20px"></div>
 
       <div id="personaGrid" class="persona-grid"></div>
     </div>
@@ -5127,6 +5130,35 @@ function renderPersonaScreen() {
 
   const grid = document.getElementById('personaGrid');
   if (!grid) return;
+
+  // Selected creators banner
+  const selectedList = CREATORS.filter(cr => selectedCreators.has(cr.id));
+  const bannerEl = document.getElementById('personaBanner');
+  if (bannerEl) {
+    if (selectedList.length > 0) {
+      bannerEl.style.display = 'block';
+      bannerEl.innerHTML = '<div style="font-size:9px;color:#0050FF;letter-spacing:.1em;margin-bottom:10px">YOUR BRIEF · ' + selectedList.length + ' CREATOR' + (selectedList.length>1?'S':'') + ' BEING MATCHED</div>'
+        + '<div style="display:flex;gap:8px;flex-wrap:wrap">'
+        + selectedList.map(function(cr) {
+          var gfi = computeGFI(cr);
+          var gfiCol = gfi>=70?'#00C46A':gfi>=45?'#FF7A00':'#E60023';
+          return '<div style="display:flex;align-items:center;gap:8px;padding:6px 12px;background:var(--bg2);border:1px solid ' + cr.color + '44;border-radius:20px;cursor:pointer" onclick="openProfileOverlay(' + cr.id + ')">'
+            + '<div style="width:24px;height:24px;border-radius:50%;background:' + cr.color + '22;color:' + cr.color + ';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700">' + cr.name.charAt(0) + '</div>'
+            + '<div style="font-size:12px;font-weight:600;color:var(--text)">' + cr.name + '</div>'
+            + '<div style="font-size:9px;color:var(--text-muted)">' + cr.subs + '</div>'
+            + '<div style="font-size:9px;font-weight:700;color:' + gfiCol + '">' + gfi + '% GFI</div>'
+          + '</div>';
+        }).join('')
+        + '</div>';
+    } else {
+      bannerEl.style.display = 'block';
+      bannerEl.innerHTML = '<div style="display:flex;align-items:center;gap:12px">'
+        + '<div style="font-size:18px">⚡</div>'
+        + '<div><div style="font-size:12px;font-weight:600;color:#FFD400">Auto-matched top creators for ' + genre + '</div>'
+        + '<div style="font-size:9px;color:var(--text-muted);margin-top:2px">Add creators to your brief for personalised persona matching</div></div>'
+      + '</div>';
+    }
+  }
 
   grid.innerHTML = personas.map((p, i) => {
     const matchedCreators = creatorsForPersona(p);
