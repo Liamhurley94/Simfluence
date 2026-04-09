@@ -109,7 +109,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:cen
 .pricing-header{text-align:center;margin-bottom:32px;}
 
 /* Billing toggle */
-.billing-toggle{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:64px;}
+.billing-toggle{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:64px;cursor:pointer;user-select:none;}
 .toggle-label{font-family:"DM Mono",monospace;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);transition:color 0.2s;}
 .toggle-label.active{color:var(--text);}
 .toggle-track{width:48px;height:26px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:13px;position:relative;cursor:pointer;transition:background 0.2s;}
@@ -424,13 +424,13 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
     </div>
 
     <!-- Monthly / Annual toggle -->
-    <div class="billing-toggle">
+    <div class="billing-toggle" onclick="toggleBilling()" style="cursor:pointer">
       <span class="toggle-label active" id="labelMonthly">Monthly</span>
-      <div class="toggle-track" id="billingToggle" onclick="toggleBilling()">
+      <div class="toggle-track" id="billingToggle">
         <div class="toggle-thumb"></div>
       </div>
       <span class="toggle-label" id="labelAnnual">Annual</span>
-      <span class="toggle-saving-badge" id="savingBadge" style="opacity:0">Save up to 35%</span>
+      <span class="toggle-saving-badge" id="savingBadge" style="opacity:0;pointer-events:none">Save up to 35%</span>
     </div>
 
     <!-- 5 Tier cards -->
