@@ -197,8 +197,8 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
 .f-email a{color:#6B9FFF;text-decoration:none;}
 .f-col-title{font-family:"DM Mono",monospace;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--blue);margin-bottom:20px;}
 .f-links{display:flex;flex-direction:column;gap:12px;}
-.f-link{font-size:14px;color:var(--muted);text-decoration:none;background:none;border:none;cursor:pointer;text-align:left;padding:0;font-family:"Satoshi",sans-serif;transition:color 0.15s;font-weight:300;}
-.f-link:hover{color:var(--text);}
+.f-link{font-size:14px;color:var(--muted);text-decoration:none;background:none;border:none;cursor:pointer;text-align:left;padding:0;font-family:"Satoshi",sans-serif;transition:color 0.15s,opacity 0.15s;font-weight:300;}
+.f-link:hover{color:var(--text);opacity:0.9;text-decoration:underline;text-underline-offset:3px;}
 .f-bottom{grid-column:1/-1;border-top:1px solid var(--border);padding-top:24px;display:flex;justify-content:space-between;align-items:center;}
 .f-copy{font-family:"DM Mono",monospace;font-size:10px;color:var(--dim);letter-spacing:0.04em;}
 .f-legal{display:flex;gap:24px;}
@@ -607,11 +607,11 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
   <div>
     <div class="f-col-title">Plans</div>
     <div class="f-links">
-      <button onclick="openSignup('bronze')"   class="f-link">Bronze — $1,500/mo</button>
-      <button onclick="openSignup('silver')"   class="f-link">Silver — $3,500/mo</button>
-      <button onclick="openSignup('gold')"     class="f-link">Gold — $7,500/mo</button>
-      <button onclick="openSignup('platinum')" class="f-link">Platinum — $15,000/mo</button>
-      <a href="/cdn-cgi/l/email-protection#8de5e8e1e1e2cdfee4e0ebe1f8e8e3eee8a3ece4" class="f-link">Diamond — Talk to us</a>
+      <button onclick="openSignup('bronze')"   class="f-link" style="color:#CD7F32">Bronze — $1,500/mo</button>
+      <button onclick="openSignup('silver')"   class="f-link" style="color:#C0C0C0">Silver — $3,500/mo</button>
+      <button onclick="openSignup('gold')"     class="f-link" style="color:#FFD400">Gold — $7,500/mo</button>
+      <button onclick="openSignup('platinum')" class="f-link" style="color:#E5E4E2">Platinum — $15,000/mo</button>
+      <a href="mailto:hello@simfluence.ai"     class="f-link" style="color:#B9F2FF">Diamond — Talk to us</a>
     </div>
   </div>
   <div class="f-bottom">
