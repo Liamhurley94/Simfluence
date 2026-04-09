@@ -416,14 +416,14 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
 <section id="pricing">
   <div class="section-pricing">
 
-    <div class="pricing-header reveal">
+    <div class="pricing-header">
       <span class="section-eyebrow" style="display:inline-block">Pricing</span>
       <h2 class="section-h2" style="margin-top:16px;font-size:clamp(52px,7vw,96px)">Simple.<br><em>Transparent.</em><br>No surprises.</h2>
       <p style="font-size:18px;color:var(--muted);margin-top:20px;font-weight:300;max-width:520px;margin-left:auto;margin-right:auto">Five tiers built for every scale of brand. Annual billing saves you up to 35%.</p>
     </div>
 
     <!-- Monthly / Annual toggle -->
-    <div class="billing-toggle reveal">
+    <div class="billing-toggle">
       <span class="toggle-label active" id="labelMonthly">Monthly</span>
       <div class="toggle-track" id="billingToggle" onclick="toggleBilling()">
         <div class="toggle-thumb"></div>
@@ -433,7 +433,7 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
     </div>
 
     <!-- 5 Tier cards -->
-    <div class="pricing-cards reveal">
+    <div class="pricing-cards">
 
       <!-- BRONZE -->
       <div class="p-card bronze">
@@ -543,7 +543,7 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
     </div><!-- /pricing-cards -->
 
     <!-- Annual savings callout -->
-    <div class="pricing-callout reveal">
+    <div class="pricing-callout">
       <div class="pcb-cell">
         <div class="pcb-label">Silver annual</div>
         <div class="pcb-val" style="color:#C0C0C0">$2,625<span style="font-size:13px;font-weight:300;color:var(--muted)">/mo</span></div>
@@ -863,10 +863,10 @@ function toggleTheme(){
 /* ── Scroll reveal ───────────────────────────────────────── */
 function initReveal(){
   var els=document.querySelectorAll('.reveal');
-  els.forEach(function(el){ var rect=el.getBoundingClientRect(); if(rect.top<window.innerHeight+100) el.classList.add('visible'); });
+  els.forEach(function(el){ el.classList.add('visible'); });
   if('IntersectionObserver' in window){
-    var obs=new IntersectionObserver(function(entries){ entries.forEach(function(e){ if(e.isIntersecting){e.target.classList.add('visible');obs.unobserve(e.target);} }); },{threshold:0.05,rootMargin:'0px 0px -20px 0px'});
-    els.forEach(function(el){ if(!el.classList.contains('visible')) obs.observe(el); });
+    var obs=new IntersectionObserver(function(entries){ entries.forEach(function(e){ if(e.isIntersecting){e.target.classList.add('visible');obs.unobserve(e.target);} }); },{threshold:0.01,rootMargin:'0px 0px 100px 0px'});
+    els.forEach(function(el){ obs.observe(el); });
   }
 }
 if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',initReveal);}else{initReveal();}
