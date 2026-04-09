@@ -5277,6 +5277,10 @@ function renderLivePanel() {
     return;
   }
 
+  // Store live creators globally so inline onclick can reference them
+  window.__liveCreatorMap = {};
+  liveCreators.forEach(function(cr) { window.__liveCreatorMap[cr.id] = cr; });
+
   // Group by genre
   var byGenre = {};
   liveCreators.forEach(function(cr) {
@@ -5290,16 +5294,15 @@ function renderLivePanel() {
     html += '<div style="margin-bottom:12px">';
     html += '<div style="font-size:8px;letter-spacing:.1em;color:var(--text-muted);margin-bottom:6px;padding:4px 0;border-bottom:1px solid var(--border)">' + genre.toUpperCase() + '</div>';
     creators.forEach(function(cr) {
-      var liveData = window.__twitchLive[cr.handle.replace('@','').toLowerCase()] || {};
-      var viewers  = liveData.viewerCount ? liveData.viewerCount.toLocaleString() : '0';
-      var game     = liveData.gameName || cr.genre;
-      var liveCPI  = computeLiveCPI(cr, liveData.viewerCount || 0);
-      var cpiCol   = liveCPI >= 70 ? '#00C46A' : liveCPI >= 55 ? '#FF7A00' : '#E60023';
-      var row = document.createElement('div');
-      row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:5px;cursor:pointer;margin-bottom:3px';
-      row.onclick = (function(id, login) { return function() { openProfileOverlay(id); }; })(cr.id, cr.handle.replace('@',''));
+      var liveData    = window.__twitchLive[cr.handle.replace('@','').toLowerCase()] || {};
+      var viewers     = liveData.viewerCount ? liveData.viewerCount.toLocaleString() : '0';
+      var game        = liveData.gameName || cr.genre;
+      var liveCPI     = computeLiveCPI(cr, liveData.viewerCount || 0);
+      var cpiCol      = liveCPI >= 70 ? '#00C46A' : liveCPI >= 55 ? '#FF7A00' : '#E60023';
       var twitchLogin = cr.handle.replace('@','').toLowerCase();
-      row.innerHTML = '<div style="width:6px;height:6px;border-radius:50%;background:#E60023;flex-shrink:0;animation:livePulse 1.4s infinite"></div>'
+
+      html += '<div style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:5px;cursor:pointer;margin-bottom:3px" onclick="openProfileOverlay(' + cr.id + ')">'
+        + '<div style="width:6px;height:6px;border-radius:50%;background:#E60023;flex-shrink:0;animation:livePulse 1.4s infinite"></div>'
         + '<div style="flex:1;min-width:0">'
           + '<div style="font-size:11px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + cr.name + '</div>'
           + '<div style="font-size:9px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + game + '</div>'
@@ -5312,8 +5315,8 @@ function renderLivePanel() {
           + '<div style="font-size:10px;font-weight:700;color:' + cpiCol + '">' + liveCPI + '</div>'
           + '<div style="font-size:8px;color:var(--text-muted)">CPI</div>'
         + '</div>'
-        + '<a href="https://twitch.tv/' + twitchLogin + '" target="_blank" onclick="event.stopPropagation()" style="margin-left:6px;padding:3px 7px;background:#9146FF;border-radius:3px;font-size:9px;font-weight:700;color:#fff;text-decoration:none;flex-shrink:0;white-space:nowrap">▶ WATCH</a>';
-      html += row.outerHTML;
+        + '<a href="https://twitch.tv/' + twitchLogin + '" target="_blank" onclick="event.stopPropagation()" style="margin-left:6px;padding:3px 7px;background:#9146FF;border-radius:3px;font-size:9px;font-weight:700;color:#fff;text-decoration:none;flex-shrink:0;white-space:nowrap">&#9654; WATCH</a>'
+      + '</div>';
     });
     html += '</div>';
   });
@@ -5321,7 +5324,6 @@ function renderLivePanel() {
   listEl.innerHTML = html;
 }
 
-// Compute live CPI using actual current viewer count
 function computeLiveCPI(cr, currentViewers) {
   var followers = parseSubs(cr.subs) * (cr.subs.indexOf('M') > -1 ? 1000000 : cr.subs.indexOf('K') > -1 ? 1000 : 1);
   var ratio = followers > 0 ? currentViewers / followers : 0;
