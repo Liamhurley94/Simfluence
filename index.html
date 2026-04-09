@@ -548,7 +548,7 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
           <div class="p-feat"><span class="p-feat-dash">—</span>Bespoke pricing &amp; contract terms</div>
           <div class="p-feat"><span class="p-feat-dash">—</span>Dedicated implementation team</div>
         </div>
-        <a href="/cdn-cgi/l/email-protection#8ac6e3ebe7cad9e3e7ece6ffefe4e9efa4cbc3" class="p-btn p-btn-diamond">Contact us</a>
+        <a href="mailto:Liam@Simfluence.AI" class="p-btn p-btn-diamond">Contact us</a>
       </div>
 
     </div><!-- /pricing-cards -->
@@ -569,7 +569,7 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
   <div>
     <a href="index.html" class="f-logo">Sim<em>fluence</em></a>
     <p class="f-tag">AI-powered campaign intelligence. Know your CTR, CPM, CVR and ROAS before a single dollar is spent.</p>
-    <p class="f-email">Contact: <a href="/cdn-cgi/l/email-protection#6824010905283b01050e041d0d060b0d462921"><span class="__cf_email__" data-cfemail="1b57727a765b4872767d776e7e75787e355a52">[email&#160;protected]</span></a></p>
+    <p class="f-email">Contact: <a href="mailto:Liam@Simfluence.AI">Liam@Simfluence.AI</a></p>
   </div>
   <div>
     <div class="f-col-title">Platform</div>
@@ -584,7 +584,7 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
     <div class="f-col-title">Company</div>
     <div class="f-links">
       <button data-fm="about" class="f-link">About Simfluence</button>
-      <a href="/cdn-cgi/l/email-protection#ce82a7afa38e9da7a3a8a2bbaba0adabe08f87" class="f-link">Contact Us</a>
+      <button data-email="contact" class="f-link">Contact Us</button>
       <button data-fm="terms" class="f-link">Terms of Use</button>
       <button data-fm="legal" class="f-link">Legal Notice</button>
     </div>
@@ -596,7 +596,7 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
       <a   class="f-link" style="color:#C0C0C0">Silver — $3,500/mo</button>
       <a     class="f-link" style="color:#FFD400">Gold — $7,500/mo</button>
       <a class="f-link" style="color:#E5E4E2">Platinum — $15,000/mo</button>
-      <a href="/cdn-cgi/l/email-protection#99d5f0f8f4d9caf0f4fff5ecfcf7fafcb7d8d0" class="f-link" style="color:#B9F2FF">Diamond — Talk to us</a>
+      <a href="mailto:Liam@Simfluence.AI" class="f-link" style="color:#B9F2FF">Diamond — Talk to us</a>
     </div>
   </div>
   <div class="f-bottom">
@@ -604,7 +604,7 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
     <div class="f-legal">
       <a href="app.html">Terms</a>
       <a href="app.html">Legal</a>
-      <a href="/cdn-cgi/l/email-protection#a7ebcec6cae7f4cecac1cbd2c2c9c4c289e6ee">Contact</a>
+      <a href="mailto:Liam@Simfluence.AI">Contact</a>
     </div>
   </div>
 </footer>
@@ -674,7 +674,7 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
   </div>
 </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
 /* ── Pricing data ────────────────────────────────────────── */
 var PRICES = {
   bronze:   { monthly:1500,  annual:1500,  annualTotal:18000,  discount:0  },
@@ -864,7 +864,7 @@ resize();initParticles();drawParticles();
 
 <!-- ══ FEATURE MODALS ════════════════════════════════════════════════ -->
 <style>
-#featureModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9998;overflow-y:auto;backdrop-filter:blur(6px);}
+#featureModal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:9998;overflow-y:auto;}
 .fm-box{background:#0A0A10;border:1px solid rgba(255,255,255,0.1);border-radius:20px;width:100%;max-width:580px;margin:60px auto;position:relative;overflow:hidden;}
 .fm-top-bar{height:3px;width:100%;}
 .fm-body{padding:40px 44px 44px;}
@@ -1048,7 +1048,7 @@ function openFeatureModal(key) {
   document.getElementById('fmPoints').innerHTML = d.points.map(function(p){
     return '<div class="fm-point"><div class="fm-point-dot" style="background:'+d.color+'"></div><span>'+p+'</span></div>';
   }).join('');
-  document.getElementById('featureModal').style.cssText = 'display:block;position:fixed;inset:0;background:rgb(0,0,0,0.85);z-index:9998;overflow-y:auto;backdrop-filter:blur(6px);';
+  document.getElementById('featureModal').style.cssText = 'display:block;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:9998;overflow-y:auto;';
   document.body.style.overflow = 'hidden';
 }
 
@@ -1064,6 +1064,8 @@ document.addEventListener('click', function(e) {
   if (e.target && e.target.id === 'featureModal') closeFeatureModal();
   // Close button
   if (e.target && e.target.closest('[data-fm-close]')) closeFeatureModal();
+  // Contact email button
+  if (e.target && e.target.closest && e.target.closest('[data-email]')) { window.location.href = 'mailto:Liam@Simfluence.AI'; return; }
   // Open modal via data-fm
   var btn = e.target && e.target.closest ? e.target.closest('[data-fm]') : null;
   if (btn && btn.getAttribute('data-fm')) openFeatureModal(btn.getAttribute('data-fm'));
