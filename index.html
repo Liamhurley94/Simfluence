@@ -583,7 +583,7 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
   <div>
     <div class="f-col-title">Company</div>
     <div class="f-links">
-      <a href="/cdn-cgi/l/email-protection#98d4f1f9f5d8cbf1f5fef4edfdf6fbfdb6d9d1" class="f-link">About Simfluence</a>
+      <button onclick="openFeatureModal('about')" class="f-link">About Simfluence</button>
       <a href="/cdn-cgi/l/email-protection#7e32171f133e2d171318120b1b101d1b503f37" class="f-link">Contact Us</a>
       <a href="app.html" target="_blank" class="f-link">Terms of Use</a>
       <a href="app.html" target="_blank" class="f-link">Legal Notice</a>
@@ -903,6 +903,24 @@ resize();initParticles();drawParticles();
 
 <script>
 var FM_DATA = {
+  about: {
+    color: '#FFD400',
+    eyebrow: 'About Simfluence',
+    title: 'The intelligence layer behind high-performance creator campaigns.',
+    desc: 'Founded in 2025, Simfluence gives brands the tools to forecast, score and simulate creator campaigns before a single dollar is spent. Confidence-backed predictions across CTR, CPM, CVR and ROAS, thousands of scored creators and an automated learning loop to improve every campaign you run — so each brief is sharper and more accurate than the last.',
+    stats: [
+      { n: '2 min', l: 'Brief to forecast' },
+      { n: '1,000s', l: 'Scored creators' },
+      { n: 'Auto', l: 'Learning loop' },
+      { n: '2025', l: 'Founded' }
+    ],
+    points: [
+      'Probabilistic P10/P50/P90 forecasting across CTR, CPM, CVR and ROAS',
+      'Thousands of creators across YouTube, Twitch, Instagram, TikTok and more — scored daily',
+      'Automated learning loop — every completed campaign feeds back into the model, making each new brief more accurate than the last',
+      'Built for brands who treat marketing as a discipline, not a gamble'
+    ]
+  },
   discovery: {
     color: '#6B9FFF',
     eyebrow: 'Feature 01 · Creator Discovery',
