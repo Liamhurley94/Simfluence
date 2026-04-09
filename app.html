@@ -3450,8 +3450,8 @@ function getSelectedGenre() {
 const SUBMODE_KEYWORDS = {
   // Gaming
   'RPG / Open World':    ['rpg','open world','elden ring','witcher','skyrim','diablo','path of exile','crimson desert','final fantasy','dragon','baldur','last epoch','no rest','action rpg','mmorpg','wow','world of warcraft','lost ark','guild wars','black desert','fellowship'],
-  'FPS / Tactical':      ['fps','first person','counter-strike','cs2','valorant','overwatch','call of duty','cod','warzone','rainbow six','siege','apex','battlefield','halo','marathon','arc raiders'],
-  'Battle Royale':       ['battle royale','fortnite','pubg','apex legends','warzone','hunt showdown'],
+  'FPS / Tactical':      ['fps','first person','counter-strike','cs2','valorant','overwatch','rainbow six','siege','battlefield','halo','marathon','arc raiders'],
+  'Battle Royale':       ['battle royale','fortnite','pubg','apex legends','warzone','call of duty','cod','hunt showdown','apex','br'],
   'MOBA':                ['moba','league of legends','lol','dota','smite','deadlock','mechabellum','heroes'],
   'Horror':              ['horror','resident evil','dead by daylight','phasmophobia','silent hill','dread','reanimal','darkwood','little nightmares','scorn','hellmouth'],
   'Sports Games':        ['fifa','nba','football manager','f1','rocket league','nfl','sports','madden'],
@@ -5392,9 +5392,15 @@ function getTwitchPanel(cr) {
   var storedCPI   = cr.cpi;
   var liveCPI     = isLive ? computeLiveCPI(cr, liveData.viewerCount || 0) : null;
   var delta       = isLive ? liveCPI - storedCPI : null;
-  var deltaCol    = delta > 0 ? '#00C46A' : delta < 0 ? '#E60023' : '#FFD400';
+
   var deltaSign   = delta > 0 ? '+' : '';
-  var deltaLabel  = delta > 0 ? '&#9650; +' + delta + ' outperforming' : delta < 0 ? '&#9660; ' + delta + ' underperforming' : '&#8594; on track';
+  var absD = Math.abs(delta);
+  var deltaLabel = absD <= 5
+    ? '&#8594; on track'
+    : delta > 0
+      ? '&#9650; +' + delta + ' outperforming'
+      : '&#9660; ' + delta + ' underperforming';
+  var deltaCol = absD <= 5 ? '#FFD400' : delta > 0 ? '#00C46A' : '#E60023';
   var viewers     = isLive ? liveData.viewerCount.toLocaleString() : null;
   var streamTitle = isLive ? (liveData.title || '').slice(0, 80) : null;
   var gameName    = isLive ? liveData.gameName : null;
