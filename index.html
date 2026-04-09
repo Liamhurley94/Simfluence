@@ -548,7 +548,7 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
           <div class="p-feat"><span class="p-feat-dash">—</span>Bespoke pricing &amp; contract terms</div>
           <div class="p-feat"><span class="p-feat-dash">—</span>Dedicated implementation team</div>
         </div>
-        <a href="/cdn-cgi/l/email-protection#bff3d6ded2ffecd6d2d9d3cadad1dcda91fef6" class="p-btn p-btn-diamond">Contact us</a>
+        <a href="mailto:Liam@Simfluence.AI" class="p-btn p-btn-diamond">Contact us</a>
       </div>
 
     </div><!-- /pricing-cards -->
@@ -569,7 +569,7 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
   <div>
     <a href="index.html" class="f-logo">Sim<em>fluence</em></a>
     <p class="f-tag">AI-powered campaign intelligence. Know your CTR, CPM, CVR and ROAS before a single dollar is spent.</p>
-    <p class="f-email">Contact: <a href="/cdn-cgi/l/email-protection#cb87a2aaa68b98a2a6ada7beaea5a8aee58a82"><span class="__cf_email__" data-cfemail="c08ca9a1ad8093a9ada6acb5a5aea3a5ee8189">[email&#160;protected]</span></a></p>
+    <p class="f-email">Contact: <a href="mailto:Liam@Simfluence.AI">Liam@Simfluence.AI</a></p>
   </div>
   <div>
     <div class="f-col-title">Platform</div>
@@ -584,9 +584,9 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
     <div class="f-col-title">Company</div>
     <div class="f-links">
       <button onclick="openFeatureModal('about')" class="f-link">About Simfluence</button>
-      <a href="/cdn-cgi/l/email-protection#7e32171f133e2d171318120b1b101d1b503f37" class="f-link">Contact Us</a>
-      <a href="app.html" target="_blank" class="f-link">Terms of Use</a>
-      <a href="app.html" target="_blank" class="f-link">Legal Notice</a>
+      <a href="mailto:Liam@Simfluence.AI" class="f-link">Contact Us</a>
+      <button onclick="openFeatureModal('terms')" class="f-link">Terms of Use</button>
+      <button onclick="openFeatureModal('legal')" class="f-link">Legal Notice</button>
     </div>
   </div>
   <div>
@@ -596,7 +596,7 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
       <a   class="f-link" style="color:#C0C0C0">Silver — $3,500/mo</button>
       <a     class="f-link" style="color:#FFD400">Gold — $7,500/mo</button>
       <a class="f-link" style="color:#E5E4E2">Platinum — $15,000/mo</button>
-      <a href="/cdn-cgi/l/email-protection#98d4f1f9f5d8cbf1f5fef4edfdf6fbfdb6d9d1" class="f-link" style="color:#B9F2FF">Diamond — Talk to us</a>
+      <a href="mailto:Liam@Simfluence.AI" class="f-link" style="color:#B9F2FF">Diamond — Talk to us</a>
     </div>
   </div>
   <div class="f-bottom">
@@ -604,7 +604,7 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
     <div class="f-legal">
       <a href="app.html">Terms</a>
       <a href="app.html">Legal</a>
-      <a href="/cdn-cgi/l/email-protection#e9a5808884a9ba80848f859c8c878a8cc7a8a0">Contact</a>
+      <a href="mailto:Liam@Simfluence.AI">Contact</a>
     </div>
   </div>
 </footer>
@@ -674,7 +674,7 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
   </div>
 </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
 /* ── Pricing data ────────────────────────────────────────── */
 var PRICES = {
   bronze:   { monthly:1500,  annual:1500,  annualTotal:18000,  discount:0  },
@@ -973,6 +973,44 @@ var FM_DATA = {
       'Each persona includes demographics, purchase drivers and brand receptivity signals',
       'Auto-matched to creator profiles — no manual tagging required',
       'Platinum and above includes custom persona builds for your specific brand'
+    ]
+  },
+  terms: {
+    color: '#6B9FFF',
+    eyebrow: 'Legal · Terms of Use',
+    title: 'Terms of Use',
+    desc: 'By accessing or using Simfluence, you agree to the following terms. Simfluence is a subscription-based platform providing creator intelligence and campaign forecasting tools. Access is granted on a per-subscription basis and may not be shared or transferred.',
+    stats: [
+      { n: '2025', l: 'Effective date' },
+      { n: 'Dubai', l: 'Jurisdiction' },
+      { n: 'Monthly', l: 'Billing cycle' },
+      { n: 'UAE', l: 'Registered entity' }
+    ],
+    points: [
+      'All forecasts and scores are probabilistic models — not guarantees of campaign performance',
+      'Subscription access is non-transferable and limited to the registered organisation',
+      'Data displayed within the platform is proprietary to Simfluence and may not be redistributed',
+      'Simfluence reserves the right to update pricing, features and access tiers with 30 days notice',
+      'For full terms or legal queries, contact Liam@Simfluence.AI'
+    ]
+  },
+  legal: {
+    color: '#9B8FDD',
+    eyebrow: 'Legal · Legal Notice',
+    title: 'Legal Notice',
+    desc: 'Simfluence Ltd is a technology company incorporated in Dubai, UAE. All intellectual property, forecasting models, scoring methodologies and platform content are the exclusive property of Simfluence Ltd.',
+    stats: [
+      { n: 'LLC', l: 'Entity type' },
+      { n: 'Dubai', l: 'Registered office' },
+      { n: 'UAE', l: 'Jurisdiction' },
+      { n: '2025', l: 'Incorporated' }
+    ],
+    points: [
+      'Simfluence, CPI (Creator Performance Index) and GFI (Genre Fit Index) are proprietary methodologies of Simfluence Ltd',
+      'All platform data, scoring models and forecasting outputs are protected intellectual property',
+      'Unauthorised reproduction, distribution or commercial use of any platform content is strictly prohibited',
+      'Simfluence Ltd accepts no liability for campaign outcomes based on platform forecasts',
+      'All disputes are subject to the laws and courts of the Dubai International Financial Centre (DIFC)'
     ]
   },
   simulator: {
