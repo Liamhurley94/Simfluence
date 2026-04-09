@@ -2828,13 +2828,71 @@ const CREATORS = [
 
 // ── GENRE AFFINITY ────────────────────────────────────────────────────
 const GENRE_AFFINITY = {
-  'Gaming & Esports':             { 'Gaming & Esports':1.0,'Tech & Gadgets':0.7,'Entertainment & Comedy':0.6,'Energy & Lifestyle':0.5,'Drinks & Beverages':0.6 },
-  'Health & Fitness':             { 'Health & Fitness':1.0,'Food & Cooking':0.6,'Lifestyle & Vlogs':0.7,'Beauty & Skincare':0.5 },
-  'Beauty & Skincare':            { 'Beauty & Skincare':1.0,'Lifestyle & Vlogs':0.7,'Food & Cooking':0.5,'Travel & Adventure':0.5 },
-  'Food & Cooking':               { 'Food & Cooking':1.0,'Lifestyle & Vlogs':0.7,'Travel & Adventure':0.6,'Health & Fitness':0.6 },
-  'Finance & Investing':          { 'Finance & Investing':1.0,'Education & Self-Development':0.8,'Tech & Gadgets':0.6,'Lifestyle & Vlogs':0.5 },
-  'Tech & Gadgets':               { 'Tech & Gadgets':1.0,'Gaming & Esports':0.7,'Finance & Investing':0.5,'Education & Self-Development':0.6 },
-  'Education & Self-Development': { 'Education & Self-Development':1.0,'Finance & Investing':0.7,'Tech & Gadgets':0.6,'Lifestyle & Vlogs':0.6 },
+  // Each key is the CREATOR'S native genre
+  // Values are affinity scores for each CAMPAIGN genre (only list non-zero relationships)
+  'Gaming & Esports': {
+    'Gaming & Esports':1.0, 'Tech & Gadgets':0.65, 'Entertainment & Comedy':0.55,
+    'Drinks & Beverages':0.5, 'Unboxing':0.5, 'Gaming Setup & Peripherals':0.9,
+  },
+  'Beauty & Skincare': {
+    'Beauty & Skincare':1.0, 'Lifestyle & Vlogs':0.65, 'Health & Fitness':0.4,
+    'Food & Cooking':0.3, 'Travel & Adventure':0.35,
+  },
+  'Health & Fitness': {
+    'Health & Fitness':1.0, 'Food & Cooking':0.6, 'Lifestyle & Vlogs':0.6,
+    'Beauty & Skincare':0.4, 'Travel & Adventure':0.4,
+  },
+  'Food & Cooking': {
+    'Food & Cooking':1.0, 'Lifestyle & Vlogs':0.65, 'Health & Fitness':0.5,
+    'Travel & Adventure':0.5, 'Drinks & Beverages':0.6,
+  },
+  'Finance & Investing': {
+    'Finance & Investing':1.0, 'Education & Self-Development':0.75,
+    'Tech & Gadgets':0.5, 'Lifestyle & Vlogs':0.35,
+  },
+  'Tech & Gadgets': {
+    'Tech & Gadgets':1.0, 'Gaming & Esports':0.65, 'Gaming Setup & Peripherals':0.7,
+    'Finance & Investing':0.45, 'Education & Self-Development':0.55, 'Unboxing':0.6,
+  },
+  'Education & Self-Development': {
+    'Education & Self-Development':1.0, 'Finance & Investing':0.65,
+    'Tech & Gadgets':0.5, 'Lifestyle & Vlogs':0.5, 'Health & Fitness':0.4,
+  },
+  'Travel & Adventure': {
+    'Travel & Adventure':1.0, 'Lifestyle & Vlogs':0.65, 'Food & Cooking':0.5,
+    'Health & Fitness':0.4,
+  },
+  'Entertainment & Comedy': {
+    'Entertainment & Comedy':1.0, 'Gaming & Esports':0.5, 'Lifestyle & Vlogs':0.6,
+    'Music':0.5, 'Drinks & Beverages':0.4,
+  },
+  'Music': {
+    'Music':1.0, 'Entertainment & Comedy':0.55, 'Lifestyle & Vlogs':0.5,
+  },
+  'Lifestyle & Vlogs': {
+    'Lifestyle & Vlogs':1.0, 'Beauty & Skincare':0.55, 'Health & Fitness':0.5,
+    'Food & Cooking':0.5, 'Travel & Adventure':0.55, 'Entertainment & Comedy':0.5,
+  },
+  'Unboxing': {
+    'Unboxing':1.0, 'Tech & Gadgets':0.6, 'Gaming & Esports':0.45,
+    'Kids & Family / Toys':0.65,
+  },
+  'Kids & Family / Toys': {
+    'Kids & Family / Toys':1.0, 'Entertainment & Comedy':0.45, 'Unboxing':0.55,
+  },
+  'Automotive': {
+    'Automotive':1.0, 'Tech & Gadgets':0.5, 'Lifestyle & Vlogs':0.35,
+  },
+  'Gaming Setup & Peripherals': {
+    'Gaming Setup & Peripherals':1.0, 'Gaming & Esports':0.85, 'Tech & Gadgets':0.7,
+  },
+  'Trading Cards (TCG)': {
+    'Trading Cards (TCG)':1.0, 'Gaming & Esports':0.55, 'Entertainment & Comedy':0.4,
+  },
+  'Drinks & Beverages': {
+    'Drinks & Beverages':1.0, 'Food & Cooking':0.55, 'Lifestyle & Vlogs':0.5,
+    'Gaming & Esports':0.4, 'Entertainment & Comedy':0.4,
+  },
 };
 
 // ── GFI CONFIG ────────────────────────────────────────────────────────
@@ -2847,10 +2905,16 @@ function getSelectedGenre() {
 
 function computeGFI(creator) {
   const campaignGenre = getSelectedGenre() || 'Gaming & Esports';
+  // If creator's native genre matches campaign — use their stored gfi (native score)
+  if (creator.genre === campaignGenre) {
+    return creator.gfi || Math.round(clamp(creator.cpi * 1.0, 50, 98));
+  }
+  // Otherwise compute from affinity map
   const affinityRaw = (GENRE_AFFINITY[creator.genre]||{})[campaignGenre];
-  const affinity = (affinityRaw !== undefined && affinityRaw !== null) ? affinityRaw : 0.3;
+  // No entry in affinity map = truly unrelated genres, very low score
+  const affinity = (affinityRaw !== undefined && affinityRaw !== null) ? affinityRaw : 0.05;
   const base = creator.cpi * affinity;
-  return Math.round(clamp(base + (Math.random()*6-3), 20, 98));
+  return Math.round(clamp(base, 5, 65));
 }
 
 function getMismatch(creator) {
@@ -3040,7 +3104,7 @@ function renderCreatorGrid() {
 
     document.getElementById('creatorGrid').innerHTML = display.map(cr => {
       const selected  = selectedCreators.has(cr.id);
-      const gfi       = cr.gfi || computeGFI(cr);
+      const gfi       = computeGFI(cr);
       const e         = computeCostEstimate(cr);
       return `<div class="creator-card ${selected?'selected':''}" onclick="toggleCreator(${cr.id})" style="cursor:pointer;position:relative">
         <div class="creator-card-header">
@@ -3082,7 +3146,7 @@ function renderCreatorGrid() {
       const gScore  = genreScore(cr);
       const oScore  = objectiveScore(cr);
       const smScore = subModeScore(cr);
-      const base = sortMode==='gfi'  ? (cr.gfi || computeGFI(cr)) :
+      const base = sortMode==='gfi'  ? (computeGFI(cr)) :
                    sortMode==='subs' ? parseSubs(cr.subs) / 1e6 :
                    cr.cpi;
       return { cr, total: base + gScore + oScore + smScore };
@@ -3115,7 +3179,7 @@ function renderCreatorGrid() {
   // ── Render ────────────────────────────────────────────────────────
   document.getElementById('creatorGrid').innerHTML = display.map(({cr}) => {
     const selected   = selectedCreators.has(cr.id);
-    const gfi        = cr.gfi || computeGFI(cr);
+    const gfi        = computeGFI(cr);
     const mismatch   = getMismatch(cr);
     const e          = computeCostEstimate(cr);
     const highlight  = getHighlightLabel(cr);
@@ -3187,7 +3251,7 @@ function openProfileOverlay(id) {
   const c = CREATORS.find(x=>x.id===id);
   if(!c) return;
   const e = computeCostEstimate(c);
-  const gfi = c.gfi || computeGFI(c);
+  const gfi = computeGFI(c);
   const genre = getSelectedGenre() || 'Gaming & Esports';
 
   document.getElementById('profileContent').innerHTML = `
@@ -3830,7 +3894,7 @@ function renderScoringScreen() {
   if (toShow.length === 0) return;
 
   const avgCPI = Math.round(toShow.reduce((a,c)=>a+c.cpi,0)/toShow.length);
-  const avgGFI = Math.round(toShow.reduce((a,c)=>a+(c.gfi||75),0)/toShow.length);
+  const avgGFI = Math.round(toShow.reduce((a,c)=>a+computeGFI(c),0)/toShow.length);
   const top    = [...toShow].sort((a,b)=>(b.cpi+(b.gfi||75))-(a.cpi+(a.gfi||75)))[0];
   const conf   = avgGFI >= 70 ? 'HIGH' : avgGFI >= 50 ? 'MED' : 'LOW';
   const confCol= avgGFI >= 70 ? '#00C46A' : avgGFI >= 50 ? '#FF7A00' : '#E60023';
