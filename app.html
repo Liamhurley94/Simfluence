@@ -4625,13 +4625,16 @@ function onGenreChange() {
   ).join('');
   renderCreatorGrid();
   updateBriefPanel();
+  if (window.__livePanelOpen) renderLivePanel();
 }
 
 function setSubMode(m, btn) {
   activeSubMode = m;
   document.querySelectorAll('#subModeChips .chip').forEach(c=>c.classList.remove('active'));
   if(btn) btn.classList.add('active');
+  if (window.__livePanelOpen) renderLivePanel();
   renderCreatorGrid();
+  if (window.__livePanelOpen) renderLivePanel();
 }
 
 // ── SCORING SCREEN ────────────────────────────────────────────────────
@@ -5261,81 +5264,115 @@ function renderLivePanel() {
   var listEl = document.getElementById('liveChannelsList');
   if (!listEl) return;
 
-  var liveCreators = CREATORS.filter(function(cr) {
+  var campaignGenre = getSelectedGenre() || '';
+  var subMode       = activeSubMode || '';
+
+  // All live creators
+  var allLive = CREATORS.filter(function(cr) {
     var data = window.__twitchLive[cr.handle.replace('@','').toLowerCase()];
     return data && data.live;
-  }).sort(function(a, b) {
+  });
+
+  if (!allLive.length) {
+    listEl.innerHTML = '<div style="padding:12px 0;color:var(--text-muted);font-size:10px">No creators live right now — check back later</div>';
+    return;
+  }
+
+  // If campaign genre selected, split into: matching genre, other
+  var matchingLive = allLive;
+  var otherLive    = [];
+  var isFiltered   = false;
+
+  if (campaignGenre) {
+    isFiltered   = true;
+    matchingLive = allLive.filter(function(cr) {
+      var aff = cr.genre === campaignGenre ? 1.0 : ((GENRE_AFFINITY[cr.genre]||{})[campaignGenre]||0);
+      return aff >= 0.5;
+    });
+    otherLive = allLive.filter(function(cr) {
+      var aff = cr.genre === campaignGenre ? 1.0 : ((GENRE_AFFINITY[cr.genre]||{})[campaignGenre]||0);
+      return aff < 0.5;
+    });
+  }
+
+  // Sort matching by GFI desc, others by viewer count
+  matchingLive.sort(function(a, b) { return computeGFI(b) - computeGFI(a); });
+  otherLive.sort(function(a, b) {
     var va = (window.__twitchLive[a.handle.replace('@','').toLowerCase()] || {}).viewerCount || 0;
     var vb = (window.__twitchLive[b.handle.replace('@','').toLowerCase()] || {}).viewerCount || 0;
     return vb - va;
   });
 
-  if (!liveCreators.length) {
-    listEl.innerHTML = '<div style="padding:12px 0;color:var(--text-muted);font-size:10px">No creators live right now</div>';
-    return;
-  }
-
-  // Group by genre
-  var byGenre = {};
-  liveCreators.forEach(function(cr) {
-    if (!byGenre[cr.genre]) byGenre[cr.genre] = [];
-    byGenre[cr.genre].push(cr);
-  });
-
   var html = '';
 
   // Header explanation
-  html += '<div style="font-size:9px;color:var(--text-muted);padding:6px 0 10px;line-height:1.5">'
-    + 'CPI scores reflect <strong style="color:var(--text)">live viewer engagement</strong> right now — updated every 90s.'
+  if (isFiltered && subMode) {
+    html += '<div style="font-size:9px;padding:6px 8px;background:rgba(0,80,255,0.08);border-radius:4px;margin-bottom:10px;color:var(--text-dim)">'
+      + '<strong style="color:#0050FF">' + campaignGenre + ' · ' + subMode + '</strong> — sorted by genre fit'
     + '</div>';
-
-  Object.keys(byGenre).sort().forEach(function(genre) {
-    var creators = byGenre[genre];
-
-    // Genre header — bold, coloured, clearly labelled
-    html += '<div style="margin-bottom:14px">';
-    html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 8px;background:rgba(0,80,255,0.08);border-left:3px solid #0050FF;border-radius:0 4px 4px 0;margin-bottom:6px">'
-      + '<div style="font-size:9px;font-weight:700;color:#0050FF;letter-spacing:.06em">' + genre.toUpperCase() + '</div>'
-      + '<div style="font-size:8px;color:var(--text-muted)">LIVE CPI · GENRE FIT</div>'
+  } else if (isFiltered) {
+    html += '<div style="font-size:9px;padding:6px 8px;background:rgba(0,80,255,0.08);border-radius:4px;margin-bottom:10px;color:var(--text-dim)">'
+      + 'Showing <strong style="color:#0050FF">' + campaignGenre + '</strong> creators first'
     + '</div>';
+  }
 
-    creators.forEach(function(cr) {
-      var liveData    = window.__twitchLive[cr.handle.replace('@','').toLowerCase()] || {};
-      var viewers     = liveData.viewerCount ? liveData.viewerCount.toLocaleString() : '0';
-      var game        = liveData.gameName || cr.genre;
-      var liveCPI     = computeLiveCPI(cr, liveData.viewerCount || 0);
-      var liveGFI     = computeGFI(cr);
-      var cpiCol      = liveCPI >= 70 ? '#00C46A' : liveCPI >= 55 ? '#FF7A00' : '#E60023';
-      var gfiCol      = liveGFI >= 70 ? '#00C46A' : liveGFI >= 45 ? '#FF7A00' : '#E60023';
-      var twitchLogin = cr.handle.replace('@','').toLowerCase();
+  function renderCreatorRow(cr, showGFI) {
+    var liveData    = window.__twitchLive[cr.handle.replace('@','').toLowerCase()] || {};
+    var viewers     = liveData.viewerCount ? liveData.viewerCount.toLocaleString() : '0';
+    var game        = liveData.gameName || cr.genre;
+    var liveCPI     = computeLiveCPI(cr, liveData.viewerCount || 0);
+    var liveGFI     = showGFI ? computeGFI(cr) : null;
+    var cpiCol      = liveCPI >= 70 ? '#00C46A' : liveCPI >= 55 ? '#FF7A00' : '#E60023';
+    var gfiCol      = liveGFI >= 80 ? '#00C46A' : liveGFI >= 60 ? '#FFD400' : '#FF7A00';
+    var twitchLogin = cr.handle.replace('@','').toLowerCase();
 
-      html += '<div style="display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:5px;cursor:pointer;margin-bottom:3px;border:1px solid var(--border);background:var(--bg2)" onclick="openProfileOverlay(' + cr.id + ')">'
+    return '<div style="display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:5px;cursor:pointer;margin-bottom:3px;border:1px solid var(--border);background:var(--bg2)" onclick="openProfileOverlay(' + cr.id + ')">'
+      + '<div style="width:7px;height:7px;border-radius:50%;background:#E60023;flex-shrink:0;animation:livePulse 1.4s infinite"></div>'
+      + '<div style="flex:1;min-width:0">'
+        + '<div style="font-size:11px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + cr.name + '</div>'
+        + '<div style="font-size:9px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + game + '</div>'
+        + '<div style="font-size:8px;color:#E60023;font-weight:600;margin-top:1px">' + viewers + ' watching</div>'
+      + '</div>'
+      + (showGFI && liveGFI !== null
+        ? '<div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;min-width:34px">'
+            + '<div style="font-size:15px;font-weight:700;color:' + gfiCol + ';line-height:1">' + liveGFI + '%</div>'
+            + '<div style="font-size:7px;color:var(--text-muted);letter-spacing:.03em">GFI</div>'
+          + '</div>'
+        : '')
+      + '<div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;min-width:34px">'
+        + '<div style="font-size:15px;font-weight:700;color:' + cpiCol + ';line-height:1">' + liveCPI + '</div>'
+        + '<div style="font-size:7px;color:var(--text-muted);letter-spacing:.03em">LIVE CPI</div>'
+      + '</div>'
+      + '<a href="https://twitch.tv/' + twitchLogin + '" target="_blank" onclick="event.stopPropagation()" style="padding:4px 7px;background:#9146FF;border-radius:3px;font-size:9px;font-weight:700;color:#fff;text-decoration:none;flex-shrink:0">&#9654;</a>'
+    + '</div>';
+  }
 
-        // Pulse dot + name + game
-        + '<div style="width:7px;height:7px;border-radius:50%;background:#E60023;flex-shrink:0;animation:livePulse 1.4s infinite"></div>'
-        + '<div style="flex:1;min-width:0">'
-          + '<div style="font-size:11px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + cr.name + '</div>'
-          + '<div style="font-size:9px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + game + '</div>'
-          + '<div style="font-size:8px;color:#E60023;font-weight:600;margin-top:1px">' + viewers + ' watching now</div>'
-        + '</div>'
-
-        // Live CPI + GFI scores
-        + '<div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;min-width:36px">'
-          + '<div style="font-size:16px;font-weight:700;color:' + cpiCol + ';line-height:1">' + liveCPI + '</div>'
-          + '<div style="font-size:7px;color:var(--text-muted);letter-spacing:.04em;margin-top:1px">LIVE CPI</div>'
-        + '</div>'
-        + '<div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;min-width:36px">'
-          + '<div style="font-size:16px;font-weight:700;color:' + gfiCol + ';line-height:1">' + liveGFI + '%</div>'
-          + '<div style="font-size:7px;color:var(--text-muted);letter-spacing:.04em;margin-top:1px">GENRE FIT</div>'
-        + '</div>'
-
-        // Watch button
-        + '<a href="https://twitch.tv/' + twitchLogin + '" target="_blank" onclick="event.stopPropagation()" style="padding:4px 8px;background:#9146FF;border-radius:3px;font-size:9px;font-weight:700;color:#fff;text-decoration:none;flex-shrink:0;white-space:nowrap">&#9654;</a>'
-
+  // Render campaign-matched creators first
+  if (matchingLive.length) {
+    if (isFiltered) {
+      html += '<div style="font-size:8px;font-weight:700;color:#0050FF;letter-spacing:.08em;margin-bottom:6px;padding:4px 8px;background:rgba(0,80,255,0.06);border-left:3px solid #0050FF;border-radius:0 3px 3px 0">'
+        + (subMode ? subMode.toUpperCase() : campaignGenre.toUpperCase()) + ' · ' + matchingLive.length + ' LIVE'
       + '</div>';
+    }
+    matchingLive.forEach(function(cr) {
+      html += renderCreatorRow(cr, isFiltered);
     });
+  }
+
+  // Render other live creators (different genre) collapsed
+  if (otherLive.length) {
+    html += '<div style="margin-top:12px">';
+    html += '<div style="font-size:8px;color:var(--text-muted);letter-spacing:.08em;margin-bottom:6px;padding:4px 8px;border-left:3px solid var(--border);border-radius:0 3px 3px 0">'
+      + 'OTHER GENRES · ' + otherLive.length + ' LIVE'
+    + '</div>';
+    otherLive.slice(0, 5).forEach(function(cr) {
+      html += renderCreatorRow(cr, false);
+    });
+    if (otherLive.length > 5) {
+      html += '<div style="font-size:9px;color:var(--text-muted);padding:4px 8px">+ ' + (otherLive.length - 5) + ' more...</div>';
+    }
     html += '</div>';
-  });
+  }
 
   listEl.innerHTML = html;
 }
