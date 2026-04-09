@@ -3612,9 +3612,14 @@ function computeSimResults() {
   const bench    = GENRE_BENCHMARKS[genre] || GENRE_BENCHMARKS['Gaming & Esports'];
   const { awarenessW, salesW, engagementW } = getObjWeights();
 
+  // When creators are manually selected, validate GFI — warn but include
+  // When auto-selecting defaults, only use creators that genuinely fit the genre
   const toSim = selectedCreators.size > 0
     ? CREATORS.filter(cr => selectedCreators.has(cr.id))
-    : [...CREATORS].filter(cr => cr.genre === genre).sort((a,b) => b.cpi - a.cpi).slice(0, 5);
+    : [...CREATORS]
+        .filter(cr => cr.genre === genre || ((GENRE_AFFINITY[cr.genre]||{})[genre]||0) >= 0.6)
+        .sort((a,b) => (b.cpi + computeGFI(b)) - (a.cpi + computeGFI(a)))
+        .slice(0, 5);
 
   if (toSim.length === 0) {
     simResults = null;
@@ -3706,7 +3711,11 @@ function updateSimDisplay() {
   // Per-creator forecast
   const toShowSim = selectedCreators.size > 0
     ? CREATORS.filter(function(cr) { return selectedCreators.has(cr.id); })
-    : CREATORS.filter(function(cr) { return cr.genre === genre; }).sort(function(a,b) { return b.cpi - a.cpi; }).slice(0, 5);
+    : CREATORS.filter(function(cr) {
+        return cr.genre === genre || ((GENRE_AFFINITY[cr.genre]||{})[genre]||0) >= 0.6;
+      }).sort(function(a,b) {
+        return (b.cpi + computeGFI(b)) - (a.cpi + computeGFI(a));
+      }).slice(0, 5);
 
   const creatorBreakdownEl = document.getElementById('creatorBreakdown');
   if (creatorBreakdownEl && toShowSim.length > 0) {
@@ -3994,9 +4003,10 @@ function expandBand(band) {
 function personaAutoSelect() {
   const genre = getSelectedGenre() || 'Gaming & Esports';
 
-  // Sort by combined CPI + GFI score, pick top 5
+  // Filter to genre-relevant creators only, then rank by CPI + GFI
   const top = [...CREATORS]
-    .sort((a,b) => (b.cpi + (b.gfi||0)) - (a.cpi + (a.gfi||0)))
+    .filter(cr => cr.genre === genre || ((GENRE_AFFINITY[cr.genre]||{})[genre]||0) >= 0.6)
+    .sort((a,b) => (b.cpi + computeGFI(b)) - (a.cpi + computeGFI(a)))
     .slice(0, 5);
 
   // Select them
