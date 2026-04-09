@@ -548,7 +548,7 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
           <div class="p-feat"><span class="p-feat-dash">—</span>Bespoke pricing &amp; contract terms</div>
           <div class="p-feat"><span class="p-feat-dash">—</span>Dedicated implementation team</div>
         </div>
-        <a href="mailto:Liam@Simfluence.AI" class="p-btn p-btn-diamond">Contact us</a>
+        <a href="/cdn-cgi/l/email-protection#bff3d6ded2ffecd6d2d9d3cadad1dcda91fef6" class="p-btn p-btn-diamond">Contact us</a>
       </div>
 
     </div><!-- /pricing-cards -->
@@ -569,22 +569,22 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
   <div>
     <a href="index.html" class="f-logo">Sim<em>fluence</em></a>
     <p class="f-tag">AI-powered campaign intelligence. Know your CTR, CPM, CVR and ROAS before a single dollar is spent.</p>
-    <p class="f-email">Contact: <a href="mailto:Liam@Simfluence.AI">Liam@Simfluence.AI</a></p>
+    <p class="f-email">Contact: <a href="/cdn-cgi/l/email-protection#cb87a2aaa68b98a2a6ada7beaea5a8aee58a82"><span class="__cf_email__" data-cfemail="c08ca9a1ad8093a9ada6acb5a5aea3a5ee8189">[email&#160;protected]</span></a></p>
   </div>
   <div>
     <div class="f-col-title">Platform</div>
     <div class="f-links">
-      <a href="app.html" target="_blank" class="f-link">Creator Discovery</a>
-      <a href="app.html" target="_blank" class="f-link">CPI &amp; GFI Scoring</a>
-      <a href="app.html" target="_blank" class="f-link">AI Persona Matching</a>
-      <a href="app.html" target="_blank" class="f-link">Campaign Simulator</a>
+      <button onclick="openFeatureModal('discovery')" class="f-link">Creator Discovery</button>
+      <button onclick="openFeatureModal('scoring')" class="f-link">CPI &amp; GFI Scoring</button>
+      <button onclick="openFeatureModal('persona')" class="f-link">AI Persona Matching</button>
+      <button onclick="openFeatureModal('simulator')" class="f-link">Campaign Simulator</button>
     </div>
   </div>
   <div>
     <div class="f-col-title">Company</div>
     <div class="f-links">
-      <a href="mailto:Liam@Simfluence.AI" class="f-link">About Simfluence</a>
-      <a href="mailto:Liam@Simfluence.AI" class="f-link">Contact Us</a>
+      <a href="/cdn-cgi/l/email-protection#98d4f1f9f5d8cbf1f5fef4edfdf6fbfdb6d9d1" class="f-link">About Simfluence</a>
+      <a href="/cdn-cgi/l/email-protection#7e32171f133e2d171318120b1b101d1b503f37" class="f-link">Contact Us</a>
       <a href="app.html" target="_blank" class="f-link">Terms of Use</a>
       <a href="app.html" target="_blank" class="f-link">Legal Notice</a>
     </div>
@@ -596,7 +596,7 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
       <a   class="f-link" style="color:#C0C0C0">Silver — $3,500/mo</button>
       <a     class="f-link" style="color:#FFD400">Gold — $7,500/mo</button>
       <a class="f-link" style="color:#E5E4E2">Platinum — $15,000/mo</button>
-      <a href="mailto:Liam@Simfluence.AI" class="f-link" style="color:#B9F2FF">Diamond — Talk to us</a>
+      <a href="/cdn-cgi/l/email-protection#98d4f1f9f5d8cbf1f5fef4edfdf6fbfdb6d9d1" class="f-link" style="color:#B9F2FF">Diamond — Talk to us</a>
     </div>
   </div>
   <div class="f-bottom">
@@ -604,7 +604,7 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
     <div class="f-legal">
       <a href="app.html">Terms</a>
       <a href="app.html">Legal</a>
-      <a href="mailto:Liam@Simfluence.AI">Contact</a>
+      <a href="/cdn-cgi/l/email-protection#e9a5808884a9ba80848f859c8c878a8cc7a8a0">Contact</a>
     </div>
   </div>
 </footer>
@@ -674,7 +674,7 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
   </div>
 </div>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 /* ── Pricing data ────────────────────────────────────────── */
 var PRICES = {
   bronze:   { monthly:1500,  annual:1500,  annualTotal:18000,  discount:0  },
@@ -855,10 +855,156 @@ setTimeout(initReveal,300); setTimeout(initReveal,800);
 
 /* ── Hero canvas ─────────────────────────────────────────── */
 var W,H,particles=[];
-var canvas=document.getElementById
-var canvas=document.getElementById('heroCanvas');
-var ctx=canvas?canvas.getContext('2d'):null;
-function resize(){if(!canvas)return;W=canvas.width=canvas.offsetWidth;H=canvas.height=canvas.offsetHeight;}
-function initParticles(){particles=[];for(var 
+var 
 i++){particles.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-0.5)*0.4,vy:(Math.random()-0.5)*0.4,r:Math.random()*1.5+0.5,o:Math.random()*0.3+0.1});}}
-f
+function drawParticles(){if(!ctx)return;ctx.clearRect(0,0,W,H);particles.forEach(function(p){p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>W)p.vx*=-1;if(p.y<0||p.y>H)p.vy*=-1;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle='rgba(255,255,255,'+p.o+')';ctx.fill();});requestAnimationFrame(drawParticles);}
+window.addEventListener('resize',function(){resize();initParticles();});
+resize();initParticles();drawParticles();
+</script>
+
+<!-- ══ FEATURE MODALS ════════════════════════════════════════════════ -->
+<style>
+#featureModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9998;overflow-y:auto;backdrop-filter:blur(6px);}
+.fm-box{background:#0A0A10;border:1px solid rgba(255,255,255,0.1);border-radius:20px;width:100%;max-width:580px;margin:60px auto;position:relative;overflow:hidden;}
+.fm-top-bar{height:3px;width:100%;}
+.fm-body{padding:40px 44px 44px;}
+.fm-close{position:absolute;top:16px;right:16px;width:32px;height:32px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:8px;cursor:pointer;font-size:14px;color:rgba(255,255,255,0.5);display:flex;align-items:center;justify-content:center;transition:all 0.15s;font-family:"DM Mono",monospace;}
+.fm-close:hover{background:rgba(255,255,255,0.1);color:#fff;}
+.fm-eyebrow{font-family:"DM Mono",monospace;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.fm-eyebrow-dot{width:6px;height:6px;border-radius:50%;}
+.fm-title{font-family:"Clash Display",sans-serif;font-size:32px;font-weight:600;line-height:1.05;letter-spacing:-0.025em;margin-bottom:14px;}
+.fm-desc{font-size:15px;color:rgba(255,255,255,0.5);line-height:1.75;font-weight:300;margin-bottom:28px;}
+.fm-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:28px;}
+.fm-stat{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:16px 18px;}
+.fm-stat-n{font-family:"Clash Display",sans-serif;font-size:26px;font-weight:600;letter-spacing:-0.02em;line-height:1;margin-bottom:5px;}
+.fm-stat-l{font-family:"DM Mono",monospace;font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:rgba(255,255,255,0.35);}
+.fm-points{display:flex;flex-direction:column;gap:8px;margin-bottom:28px;}
+.fm-point{display:flex;gap:12px;align-items:flex-start;font-size:13px;color:rgba(255,255,255,0.55);line-height:1.6;}
+.fm-point-dot{width:5px;height:5px;border-radius:50%;margin-top:6px;flex-shrink:0;}
+.fm-cta{display:block;text-align:center;padding:13px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;font-family:"DM Mono",monospace;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:rgba(255,255,255,0.5);text-decoration:none;transition:all 0.2s;}
+.fm-cta:hover{background:rgba(255,255,255,0.1);color:#fff;border-color:rgba(255,255,255,0.3);}
+@media(max-width:600px){.fm-box{margin:20px;}.fm-body{padding:28px 24px 32px;}.fm-grid{grid-template-columns:1fr 1fr;gap:8px;}}
+</style>
+
+<div id="featureModal">
+  <div class="fm-box">
+    <div class="fm-top-bar" id="fmBar"></div>
+    <div class="fm-body">
+      <button class="fm-close" onclick="closeFeatureModal()">✕</button>
+      <div class="fm-eyebrow"><div class="fm-eyebrow-dot" id="fmDot"></div><span id="fmEyebrow"></span></div>
+      <div class="fm-title" id="fmTitle"></div>
+      <div class="fm-desc" id="fmDesc"></div>
+      <div class="fm-grid" id="fmGrid"></div>
+      <div class="fm-points" id="fmPoints"></div>
+      <a href="preview.html" class="fm-cta">See it in action →</a>
+    </div>
+  </div>
+</div>
+
+<script>
+var FM_DATA = {
+  discovery: {
+    color: '#6B9FFF',
+    eyebrow: 'Feature 01 · Creator Discovery',
+    title: 'Find creators by what they deliver.',
+    desc: 'Thousands of creators across YouTube, Twitch, Instagram, TikTok and more — searchable by genre, sub-mode, tier, language, budget and campaign objective. Every profile shows real engagement data, not just follower counts.',
+    stats: [
+      { n: '1,000s', l: 'Creators indexed' },
+      { n: '18', l: 'Content genres' },
+      { n: '53', l: 'Campaign sub-modes' },
+      { n: 'Daily', l: 'Database updates' }
+    ],
+    points: [
+      'Filter by genre, platform, tier, language and budget simultaneously',
+      'Live Twitch CPI scoring against current viewer count — not historical averages',
+      'Genres and sub-modes reviewed and updated daily based on trending content',
+      'Every creator has a full CPI, GFI and audience persona profile attached'
+    ]
+  },
+  scoring: {
+    color: '#9B8FDD',
+    eyebrow: 'Feature 02 · CPI & GFI Scoring',
+    title: 'Two scores that replace guesswork.',
+    desc: 'The Creator Performance Index (CPI) predicts commercial outcomes. The Genre Fit Index (GFI) measures how well a creator's audience aligns to your specific campaign territory. Together they replace follower-count theatre with real signal.',
+    stats: [
+      { n: '0–100', l: 'CPI scale' },
+      { n: '0–100%', l: 'GFI range' },
+      { n: '90%', l: 'Statistical confidence' },
+      { n: 'Live', l: 'Twitch CPI updates' }
+    ],
+    points: [
+      'CPI 80+ = strong commercial performer · 40–79 = moderate · below 40 = weak',
+      'GFI 80%+ = high audience alignment · below 50% = low genre fit',
+      'Scores computed from engagement rate, view-to-subscriber ratio, sponsorship history and audience quality',
+      'Twitch creators scored in real time against their current live viewer count'
+    ]
+  },
+  persona: {
+    color: '#00C46A',
+    eyebrow: 'Feature 03 · AI Persona Matching',
+    title: 'Know exactly who you're reaching.',
+    desc: 'Every creator's audience is mapped to detailed buyer personas — demographics, purchase behaviour and brand fit signals. Match your campaign message to the right psychology, not just the right age bracket.',
+    stats: [
+      { n: '53', l: 'Audience personas' },
+      { n: '18', l: 'Genre territories' },
+      { n: 'Auto', l: 'Creator-to-persona match' },
+      { n: 'Real', l: 'Audience behaviour data' }
+    ],
+    points: [
+      'Personas span Gaming, Beauty, Finance, Tech, Travel, Food and 12 more genres',
+      'Each persona includes demographics, purchase drivers and brand receptivity signals',
+      'Auto-matched to creator profiles — no manual tagging required',
+      'Platinum and above includes custom persona builds for your specific brand'
+    ]
+  },
+  simulator: {
+    color: '#FF7A00',
+    eyebrow: 'Feature 04 · Campaign Simulator',
+    title: 'See your ROAS before you spend.',
+    desc: 'Select creators, set your budget and format, and Simfluence models probabilistic outcomes across CTR, CPM, CVR and ROAS — with P10, P50 and P90 confidence bands. Run what-if scenarios before a single dollar moves.',
+    stats: [
+      { n: '2 min', l: 'Brief to forecast' },
+      { n: 'P10–P90', l: 'Confidence bands' },
+      { n: '4', l: 'Core metrics modelled' },
+      { n: '∞', l: 'Scenario variations' }
+    ],
+    points: [
+      'P10 = worst case · P50 = base case · P90 = best case — plan around P50, budget around P10',
+      'Outputs: CTR, CPM, CVR, ROAS, total impressions and estimated reach',
+      'Swap creators or adjust budget and the model recalculates instantly',
+      'Gold tier and above includes prediction vs actual feedback loop after campaign completion'
+    ]
+  }
+};
+
+function openFeatureModal(key) {
+  var d = FM_DATA[key];
+  if (!d) return;
+  document.getElementById('fmBar').style.background = d.color;
+  document.getElementById('fmDot').style.background = d.color;
+  document.getElementById('fmEyebrow').textContent = d.eyebrow;
+  document.getElementById('fmEyebrow').style.color = d.color;
+  document.getElementById('fmTitle').textContent = d.title;
+  document.getElementById('fmDesc').textContent = d.desc;
+  document.getElementById('fmGrid').innerHTML = d.stats.map(function(s){
+    return '<div class="fm-stat"><div class="fm-stat-n" style="color:'+d.color+'">'+s.n+'</div><div class="fm-stat-l">'+s.l+'</div></div>';
+  }).join('');
+  document.getElementById('fmPoints').innerHTML = d.points.map(function(p){
+    return '<div class="fm-point"><div class="fm-point-dot" style="background:'+d.color+'"></div><span>'+p+'</span></div>';
+  }).join('');
+  document.getElementById('featureModal').style.cssText = 'display:block;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9998;overflow-y:auto;backdrop-filter:blur(6px);';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeFeatureModal() {
+  document.getElementById('featureModal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('click', function(e) {
+  if (e.target && e.target.id === 'featureModal') closeFeatureModal();
+});
+</script>
+
+</body>
+</html>
