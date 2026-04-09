@@ -244,7 +244,7 @@ section{padding:120px 48px;}
       <p class="ph-sub fade-up fade-up-3">Real creators. Real CPI &amp; GFI scores. Real campaign simulation — before you commit a single dollar. Our database grows by nearly 5,000 creators every day, with genres and sub-modes reviewed and updated daily based on trending content across YouTube and Twitch.</p>
       <div class="ph-cta-group fade-up fade-up-4">
         <a href="#request-access" class="ph-btn">Request Access →</a>
-        <a href="/cdn-cgi/l/email-protection#1f53767e725f4c767279736a7a717c7a315e56" class="ph-btn-ghost">Book a live demo</a>
+        <a href="/cdn-cgi/l/email-protection#317d58505c7162585c575d44545f52541f7078" class="ph-btn-ghost">Book a live demo</a>
       </div>
     </div>
     <div class="ph-stats fade-up fade-up-3">
@@ -835,13 +835,13 @@ section{padding:120px 48px;}
           <div id="ra-err" style="font-family:'DM Mono',monospace;font-size:10px;color:#ff5555;display:none;margin-bottom:12px;"></div>
 
           <button class="form-submit" onclick="submitAccessRequest()">Submit Request →</button>
-          <div class="form-note">We respond within 24 hours · No card required · <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="c18da8a0ac8192a8aca7adb4a4afa2a4ef8088">[email&#160;protected]</a></div>
+          <div class="form-note">We respond within 24 hours · No card required · <a href="/cdn-cgi/l/email-protection#81cde8e0ecc1d2e8ece7edf4e4efe2e4afc0c8"><span class="__cf_email__" data-cfemail="b8f4d1d9d5f8ebd1d5ded4cdddd6dbdd96f9f1">[email&#160;protected]</span></a></div>
         </div>
 
         <div class="success-box" id="access-success">
           <div class="success-icon">✓</div>
           <div class="success-title">Request received.</div>
-          <div class="success-sub">Thanks — we'll review your details and come back to you within 24 hours to discuss access. In the meantime, feel free to reach us directly at <a href="/cdn-cgi/l/email-protection#cb87a2aaa68b98a2a6ada7beaea5a8aee58a82" style="color:#6B9FFF;text-decoration:none;"><span class="__cf_email__" data-cfemail="a6eacfc7cbe6f5cfcbc0cad3c3c8c5c388e7ef">[email&#160;protected]</span></a>.</div>
+          <div class="success-sub">Thanks — we'll review your details and come back to you within 24 hours to discuss access. In the meantime, feel free to reach us directly at <a href="/cdn-cgi/l/email-protection#7c30151d113c2f15111a100919121f19523d35" style="color:#6B9FFF;text-decoration:none;"><span class="__cf_email__" data-cfemail="2c60454d416c7f45414a405949424f49026d65">[email&#160;protected]</span></a>.</div>
         </div>
       </div>
     </div>
@@ -852,11 +852,57 @@ section{padding:120px 48px;}
 <div class="preview-footer">
   <div class="pf-logo">Sim<em>fluence</em></div>
   <div class="pf-copy">© 2025 Simfluence Ltd · Dubai, UAE</div>
-  <a href="/cdn-cgi/l/email-protection#1a56737b775a4973777c766f7f74797f345b53" class="pf-link"><span class="__cf_email__" data-cfemail="f9b5909894b9aa90949f958c9c979a9cd7b8b0">[email&#160;protected]</span></a>
+  <a href="/cdn-cgi/l/email-protection#7b37121a163b2812161d170e1e15181e553a32" class="pf-link"><span class="__cf_email__" data-cfemail="501c39313d1003393d363c25353e33357e1119">[email&#160;protected]</span></a>
   <a href="index.html" class="pf-link">← Back to main site</a>
 </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
+// ── PLAN PRE-SELECT FROM URL ─────────────────────────────────────────
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  var plan   = params.get('plan');
+  if (!plan) return;
+
+  // Map plan param to the exact option value in the select
+  var planMap = {
+    bronze:   'bronze',
+    silver:   'silver',
+    gold:     'gold',
+    platinum: 'platinum',
+    diamond:  'diamond'
+  };
+
+  var planLabels = {
+    bronze:   '🥉 Bronze — $1,500/mo',
+    silver:   '🥈 Silver — $3,500/mo',
+    gold:     '🥇 Gold — $7,500/mo (Most Popular)',
+    platinum: '🏆 Platinum — $15,000/mo',
+    diamond:  '💎 Diamond — Enterprise'
+  };
+
+  if (!planMap[plan]) return;
+
+  // Wait for DOM then set the select value and show a pre-fill banner
+  document.addEventListener('DOMContentLoaded', function() {
+    var select = document.getElementById('ra-plan');
+    if (select) {
+      select.value = planMap[plan];
+      // Add a subtle highlight so user sees it's pre-filled
+      select.style.borderColor = 'rgba(0,80,255,0.5)';
+      select.style.background  = 'rgba(0,80,255,0.07)';
+    }
+
+    // Insert a small pre-fill banner above the form
+    var formBody = document.getElementById('access-form-body');
+    if (formBody && planLabels[plan]) {
+      var banner = document.createElement('div');
+      banner.style.cssText = 'display:flex;align-items:center;gap:10px;padding:12px 16px;background:rgba(0,80,255,0.08);border:1px solid rgba(0,80,255,0.25);border-radius:8px;margin-bottom:20px;font-family:"DM Mono",monospace;font-size:11px;letter-spacing:0.06em;color:#6B9FFF;';
+      banner.innerHTML = '<span>✓</span><span>Plan pre-selected: <strong>' + planLabels[plan] + '</strong> — you can change this below.</span>';
+      formBody.insertBefore(banner, formBody.firstChild);
+    }
+  });
+})();
+
 // ── SUPABASE ────────────────────────────────────────────────────────
 var SUPABASE_URL  = 'https://iysjxslzlbojoivxjrce.supabase.co';
 var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5c2p4c2x6bGJvam9pdnhqcmNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0OTkyNjksImV4cCI6MjA5MTA3NTI2OX0.gGW_qclPJZT4x3eevXg6PFllq5CQWVifJUEaI3rqKnw';
@@ -912,19 +958,4 @@ async function submitAccessRequest() {
   }
 }
 
-// ── SCROLL REVEAL ───────────────────────────────────────────────────
-var io = new IntersectionObserver(function(entries) {
-  entries.forEach(function(entry) {
-    if (entry.isIntersecting) {
-      entry.target.style.opacity = '1';
-      entry.target.style.transform = 'translateY(0)';
-    }
-  });
-}, { threshold: 0.1 });
-
-document.querySelectorAll('.fade-up').forEach(function(el) {
-  el.style.transition = 'opacity 0.7s ease, transform 0.7s ease';
-  io.observe(el);
-});
-
-// Animate score
+// ── SCROLL REVEAL ────────�
