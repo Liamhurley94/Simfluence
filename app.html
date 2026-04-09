@@ -3581,7 +3581,8 @@ function computeGFI(creator) {
   const campaignGenre = getSelectedGenre() || 'Gaming & Esports';
   const subMode       = activeSubMode || '';
 
-  // Step 1: Genre-level affinity (0–1)
+  // Step 1: Genre-level affinity (0.0–1.0)
+  // This is purely about whether the creator's AUDIENCE overlaps with the campaign genre
   var genreAffinity;
   if (creator.genre === campaignGenre) {
     genreAffinity = 1.0;
@@ -3590,31 +3591,42 @@ function computeGFI(creator) {
     genreAffinity = (raw !== undefined && raw !== null) ? raw : 0.05;
   }
 
-  // Step 2: Sub-mode alignment — check bio AND live stream game
+  // If genre affinity is too low, no amount of sub-mode match can save it
+  if (genreAffinity < 0.15) return Math.round(clamp(genreAffinity * 100, 5, 14));
+
+  // Step 2: Sub-mode alignment (0–100) — based purely on content signals
   var subModeScore = computeSubModeAlignment(creator, subMode);
 
-  // Live boost: if creator is currently streaming a game that matches the sub-mode,
-  // that is definitive proof of sub-mode fit — override with high score
+  // Live boost: currently streaming a matching game = definitive proof of fit
   if (subMode && window.__twitchLive && creator.platform === 'Twitch') {
     var liveData = window.__twitchLive[creator.handle.replace('@','').toLowerCase()];
     if (liveData && liveData.live && liveData.gameName) {
       var gameKeywords = SUBMODE_KEYWORDS[subMode] || [];
       var gameLower    = liveData.gameName.toLowerCase();
       var liveMatch    = gameKeywords.some(function(kw) { return gameLower.indexOf(kw) !== -1; });
-      if (liveMatch) subModeScore = Math.max(subModeScore, 96); // streaming it RIGHT NOW = near-perfect fit
+      if (liveMatch) subModeScore = Math.max(subModeScore, 96);
     }
   }
 
-  // Step 3: Combine
-  const genreBase = creator.cpi * genreAffinity;
-
+  // Step 3: GFI = genre gate × sub-mode alignment
+  // GFI is NOT derived from CPI — it's pure audience alignment
+  // Same genre: sub-mode is the primary signal
+  // Related genre: genre affinity reduces the ceiling
+  // Unrelated: hard cap regardless of content
   var gfi;
   if (genreAffinity >= 0.9) {
-    gfi = (genreBase * 0.4) + (subModeScore * 0.6);
+    // Same genre — sub-mode determines everything (85% weight)
+    // Floor of 55% just for being in the right genre
+    gfi = 55 + (subModeScore * 0.45);
   } else if (genreAffinity >= 0.6) {
-    gfi = (genreBase * 0.65) + (subModeScore * 0.35);
+    // Related genre — genre affinity as ceiling modifier
+    gfi = (subModeScore * genreAffinity * 0.8);
+  } else if (genreAffinity >= 0.3) {
+    // Weak crossover
+    gfi = (subModeScore * genreAffinity * 0.5);
   } else {
-    gfi = genreBase * 0.85;
+    // Unrelated — very low cap
+    gfi = genreAffinity * 30;
   }
 
   return Math.round(clamp(gfi, 5, 98));
