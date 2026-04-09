@@ -574,36 +574,36 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
   <div>
     <div class="f-col-title">Platform</div>
     <div class="f-links">
-      <button data-fm="discovery" class="f-link">Creator Discovery</button>
-      <button data-fm="scoring" class="f-link">CPI &amp; GFI Scoring</button>
-      <button data-fm="persona" class="f-link">AI Persona Matching</button>
-      <button data-fm="simulator" class="f-link">Campaign Simulator</button>
+      <a href="javascript:openFeatureModal('discovery')" class="f-link">Creator Discovery</a>
+      <a href="javascript:openFeatureModal('scoring')" class="f-link">CPI &amp; GFI Scoring</a>
+      <a href="javascript:openFeatureModal('persona')" class="f-link">AI Persona Matching</a>
+      <a href="javascript:openFeatureModal('simulator')" class="f-link">Campaign Simulator</a>
     </div>
   </div>
   <div>
     <div class="f-col-title">Company</div>
     <div class="f-links">
-      <button data-fm="about" class="f-link">About Simfluence</button>
-      <button data-email="contact" class="f-link">Contact Us</button>
-      <button data-fm="terms" class="f-link">Terms of Use</button>
-      <button data-fm="legal" class="f-link">Legal Notice</button>
+      <a href="javascript:openFeatureModal('about')" class="f-link">About Simfluence</a>
+      <a href="mailto:Liam@Simfluence.AI" class="f-link">Contact Us</a>
+      <a href="javascript:openFeatureModal('terms')" class="f-link">Terms of Use</a>
+      <a href="javascript:openFeatureModal('legal')" class="f-link">Legal Notice</a>
     </div>
   </div>
   <div>
     <div class="f-col-title">Plans</div>
     <div class="f-links">
-      <a   class="f-link" style="color:#CD7F32">Bronze — $1,500/mo</button>
-      <a   class="f-link" style="color:#C0C0C0">Silver — $3,500/mo</button>
-      <a     class="f-link" style="color:#FFD400">Gold — $7,500/mo</button>
-      <a class="f-link" style="color:#E5E4E2">Platinum — $15,000/mo</button>
+      <a href="preview.html?plan=bronze#request-access" class="f-link" style="color:#CD7F32">Bronze — $1,500/mo</a>
+      <a href="preview.html?plan=silver#request-access" class="f-link" style="color:#C0C0C0">Silver — $3,500/mo</a>
+      <a href="preview.html?plan=gold#request-access" class="f-link" style="color:#FFD400">Gold — $7,500/mo</a>
+      <a href="preview.html?plan=platinum#request-access" class="f-link" style="color:#E5E4E2">Platinum — $15,000/mo</a>
       <a href="mailto:Liam@Simfluence.AI" class="f-link" style="color:#B9F2FF">Diamond — Talk to us</a>
     </div>
   </div>
   <div class="f-bottom">
     <span class="f-copy">© 2025 Simfluence Ltd · Dubai, UAE · All rights reserved</span>
     <div class="f-legal">
-      <a href="app.html">Terms</a>
-      <a href="app.html">Legal</a>
+      <a href="javascript:openFeatureModal('terms')">Terms</a>
+      <a href="javascript:openFeatureModal('legal')">Legal</a>
       <a href="mailto:Liam@Simfluence.AI">Contact</a>
     </div>
   </div>
@@ -890,7 +890,7 @@ resize();initParticles();drawParticles();
   <div class="fm-box">
     <div class="fm-top-bar" id="fmBar"></div>
     <div class="fm-body">
-      <button class="fm-close" data-fm-close="1">✕</button>
+      <button onclick="closeFeatureModal()" class="fm-close">✕</button>
       <div class="fm-eyebrow"><div class="fm-eyebrow-dot" id="fmDot"></div><span id="fmEyebrow"></span></div>
       <div class="fm-title" id="fmTitle"></div>
       <div class="fm-desc" id="fmDesc"></div>
