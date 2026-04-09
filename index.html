@@ -279,7 +279,7 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
   <div class="nav-right">
     <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn" title="Toggle mode">🌙</button>
     <a href="app.html" target="_blank" class="nav-login">Sign in</a>
-    <a href="preview.html" class="nav-cta">Get started →</a>
+    <button href="preview.html" class="nav-cta">Get started →</a>
   </div>
 </nav>
 
@@ -290,8 +290,7 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
     <h1 class="hero-h1">Know<br>before you<br><span class="gold">spend.</span></h1>
     <p class="hero-sub">Predict your CTR, CPM, CVR and ROAS before a single penny is committed. Model your campaign. Know your outcome. Launch with certainty.</p>
     <div class="hero-actions">
-      <a href="preview.html" class="btn-xl">Get started</a>
-      <a href="preview.html" class="btn-xl-ghost">See the platform ↓</a>
+      <button href="preview.html" class="btn-xl">Get started</a>
     </div>
   </div>
   <div class="hero-scroll"><span>Scroll</span><div class="scroll-line"></div></div>
@@ -299,9 +298,9 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
 
 <div class="stats-bar reveal">
   <div class="stat-cell"><div class="stat-n" style="color:var(--gold)">68%</div><div class="stat-l">of campaigns underperform<br>without a forecast</div></div>
-  <div class="stat-cell"><div class="stat-n" style="color:var(--blue)">&lt;2m</div><div class="stat-l">from brief<br>to full forecast</div></div>
+  <div class="stat-cell"><div class="stat-n" style="color:var(--blue)">2 min</div><div class="stat-l">From brief<br>to full forecast</div></div>
   <div class="stat-cell"><div class="stat-n" style="color:var(--green)">90%</div><div class="stat-l">statistical confidence<br>on all outputs</div></div>
-  <div class="stat-cell"><div class="stat-n" style="color:var(--orange)">1,491</div><div class="stat-l">creators across<br>YouTube &amp; Twitch</div></div>
+  <div class="stat-cell"><div class="stat-n" style="color:var(--orange)">000s</div><div class="stat-l">of creators · YouTube, Twitch,<br>Instagram, TikTok &amp; more</div></div>
 </div>
 
 <div class="ticker">
@@ -367,7 +366,7 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
       <div class="feature-block">
         <div class="feat-icon" style="background:rgba(0,80,255,0.12)"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="9" cy="9" r="6" stroke="#6B9FFF" stroke-width="1.6"/><path d="M13.5 13.5L18 18" stroke="#6B9FFF" stroke-width="1.6" stroke-linecap="round"/><path d="M7 9h4M9 7v4" stroke="#6B9FFF" stroke-width="1.4" stroke-linecap="round"/></svg></div>
         <div class="feat-title">Creator Discovery</div>
-        <div class="feat-desc">Find creators by what they will deliver, not by how many follow them. 1,491 creators across YouTube and Twitch — continuously updated across every genre, platform and region.</div>
+        <div class="feat-desc">Find creators by what they will deliver, not by how many follow them. Thousands of creators across YouTube, Twitch, Instagram, TikTok and more — continuously updated across every genre, platform and region.</div>
         <span class="feat-tag" style="background:rgba(0,80,255,0.1);color:#6B9FFF">18 genres · 53 sub-modes · YouTube &amp; Twitch</span>
       </div>
       <div class="feature-block">
@@ -424,14 +423,14 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
     </div>
 
     <!-- Monthly / Annual toggle -->
-    <div class="billing-toggle" onclick="toggleBilling()" style="cursor:pointer">
+    <button class="billing-toggle" onclick="toggleBilling()" style="cursor:pointer;background:none;border:none;padding:0;">
       <span class="toggle-label active" id="labelMonthly">Monthly</span>
       <div class="toggle-track" id="billingToggle">
         <div class="toggle-thumb"></div>
       </div>
       <span class="toggle-label" id="labelAnnual">Annual</span>
       <span class="toggle-saving-badge" id="savingBadge" style="opacity:0;pointer-events:none">Save up to 35%</span>
-    </div>
+    </button>
 
     <!-- 5 Tier cards -->
     <div class="pricing-cards">
@@ -448,14 +447,14 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
         <div class="p-saving-line" id="bronzeSaving">&nbsp;</div>
         <div class="p-divider"></div>
         <div class="p-features">
-          <div class="p-feat"><span class="p-feat-dash">—</span>Full creator database (1,491+)</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Full creator database (thousands+)</div>
           <div class="p-feat"><span class="p-feat-dash">—</span>CPI &amp; GFI scores for every creator</div>
           <div class="p-feat"><span class="p-feat-dash">—</span>Filter by genre, platform &amp; tier</div>
           <div class="p-feat"><span class="p-feat-dash">—</span>Campaign brief builder</div>
           <div class="p-feat"><span class="p-feat-dash">—</span>5 campaign briefs per month</div>
           <div class="p-feat"><span class="p-feat-dash">—</span>Email support</div>
         </div>
-        <a href="preview.html?plan=bronze#request-access" class="p-btn p-btn-bronze">Get started</a>
+        <button href="preview.html?plan=bronze#request-access" class="p-btn p-btn-bronze">Get started</a>
       </div>
 
       <!-- SILVER -->
@@ -470,7 +469,7 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
         <div class="p-saving-line" id="silverSaving" style="color:#00C46A">&nbsp;</div>
         <div class="p-divider"></div>
         <div class="p-features">
-          <div class="p-feat"><span class="p-feat-dash">—</span>Full creator database (1,491+)</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Full creator database (thousands+)</div>
           <div class="p-feat"><span class="p-feat-dash">—</span>CPI &amp; GFI scores + live Twitch CPI</div>
           <div class="p-feat"><span class="p-feat-dash">—</span>Filter by language, budget &amp; sub-genre</div>
           <div class="p-feat"><span class="p-feat-dash">—</span>AI audience persona matching</div>
@@ -478,7 +477,7 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
           <div class="p-feat"><span class="p-feat-dash">—</span>20 campaign briefs per month</div>
           <div class="p-feat"><span class="p-feat-dash">—</span>Priority support</div>
         </div>
-        <a href="preview.html?plan=silver#request-access" class="p-btn p-btn-silver">Get started</a>
+        <button href="preview.html?plan=silver#request-access" class="p-btn p-btn-silver">Get started</a>
       </div>
 
       <!-- GOLD — featured -->
@@ -493,7 +492,7 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
         <div class="p-saving-line" id="goldSaving" style="color:#00C46A">&nbsp;</div>
         <div class="p-divider"></div>
         <div class="p-features">
-          <div class="p-feat"><span class="p-feat-dash">—</span>Full creator database (1,491+)</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Full creator database (thousands+)</div>
           <div class="p-feat"><span class="p-feat-dash">—</span>CPI, GFI &amp; live Twitch CPI scoring</div>
           <div class="p-feat"><span class="p-feat-dash">—</span>All filters incl. objectives &amp; sub-genre</div>
           <div class="p-feat"><span class="p-feat-dash">—</span>AI persona matching across 53 sub-modes</div>
@@ -502,7 +501,7 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
           <div class="p-feat"><span class="p-feat-dash">—</span>Unlimited campaign briefs</div>
           <div class="p-feat"><span class="p-feat-dash">—</span>Dedicated account manager</div>
         </div>
-        <a href="preview.html?plan=gold#request-access" class="p-btn p-btn-gold">Get started</a>
+        <button href="preview.html?plan=gold#request-access" class="p-btn p-btn-gold">Get started</a>
       </div>
 
       <!-- PLATINUM -->
@@ -517,7 +516,7 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
         <div class="p-saving-line" id="platinumSaving" style="color:#00C46A">&nbsp;</div>
         <div class="p-divider"></div>
         <div class="p-features">
-          <div class="p-feat"><span class="p-feat-dash">—</span>Full creator database (1,491+)</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Full creator database (thousands+)</div>
           <div class="p-feat"><span class="p-feat-dash">—</span>CPI, GFI &amp; live Twitch CPI scoring</div>
           <div class="p-feat"><span class="p-feat-dash">—</span>All filters + saved audience segments</div>
           <div class="p-feat"><span class="p-feat-dash">—</span>AI persona matching + custom persona builds</div>
@@ -526,7 +525,7 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
           <div class="p-feat"><span class="p-feat-dash">—</span>Unlimited campaigns &amp; multi-brand workspaces</div>
           <div class="p-feat"><span class="p-feat-dash">—</span>API access + strategic onboarding session</div>
         </div>
-        <a href="preview.html?plan=platinum#request-access" class="p-btn p-btn-platinum">Get started</a>
+        <button href="preview.html?plan=platinum#request-access" class="p-btn p-btn-platinum">Get started</a>
       </div>
 
       <!-- DIAMOND -->
@@ -541,7 +540,7 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
         <div class="p-saving-line">&nbsp;</div>
         <div class="p-divider"></div>
         <div class="p-features">
-          <div class="p-feat"><span class="p-feat-dash">—</span>Full creator database (1,491+)</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Full creator database (thousands+)</div>
           <div class="p-feat"><span class="p-feat-dash">—</span>CPI, GFI &amp; live Twitch CPI scoring</div>
           <div class="p-feat"><span class="p-feat-dash">—</span>Custom data &amp; platform integrations</div>
           <div class="p-feat"><span class="p-feat-dash">—</span>Co-development &amp; product roadmap input</div>
@@ -554,7 +553,25 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
 
     </div><!-- /pricing-cards -->
 
-
+            <div class="pcb-val" style="color:#C0C0C0">$2,625<span style="font-size:13px;font-weight:300;color:var(--muted)">/mo</span></div>
+        <div class="pcb-note">$31,500/yr · Save $10,500 vs monthly</div>
+      </div>
+      <div class="pcb-cell">
+        <div class="pcb-label">Gold annual</div>
+        <div class="pcb-val" style="color:#FFD400">$5,250<span style="font-size:13px;font-weight:300;color:var(--muted)">/mo</span></div>
+        <div class="pcb-note">$63,000/yr · Save $27,000 vs monthly</div>
+      </div>
+      <div class="pcb-cell">
+        <div class="pcb-label">Platinum annual</div>
+        <div class="pcb-val" style="color:#E5E4E2">$9,750<span style="font-size:13px;font-weight:300;color:var(--muted)">/mo</span></div>
+        <div class="pcb-note">$117,000/yr · Save $63,000 vs monthly</div>
+      </div>
+      <div class="pcb-cell">
+        <div class="pcb-label">The kicker</div>
+        <div class="pcb-val" style="color:var(--green)">Annual Pt ≈ Monthly Gold</div>
+        <div class="pcb-note">$9,750/mo annual Platinum vs $7,500/mo monthly Gold</div>
+      </div>
+    </div>
 
   </div>
 </section>
@@ -564,17 +581,17 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
   <h2 class="cta-h2">Your next campaign<br>already has<br>a <em>forecast.</em></h2>
   <p class="cta-sub">Run your brief. See your numbers. Launch knowing what to expect.</p>
   <div class="cta-btns">
-    <a href="preview.html" class="btn-xl">Get started</a>
+    <button href="preview.html" class="btn-xl">Get started</a>
     <a href="mailto:Liam@Simfluence.AI" class="btn-xl-ghost">Book a live demo</a>
   </div>
-  <p class="cta-note">Cancel anytime · <a href="mailto:Liam@Simfluence.AI" style="color:rgba(255,255,255,0.4)"><span class="__cf_email__" data-cfemail="34785d555974675d59525841515a57511a757d">[email&#160;protected]</span></a></p>
+  <p class="cta-note">Cancel anytime · <a href="mailto:Liam@Simfluence.AI" style="color:rgba(255,255,255,0.4)">Liam@Simfluence.AI</a></p>
 </section>
 
 <footer>
   <div>
     <a href="index.html" class="f-logo">Sim<em>fluence</em></a>
     <p class="f-tag">AI-powered campaign intelligence. Know your CTR, CPM, CVR and ROAS before a single dollar is spent.</p>
-    <p class="f-email">Contact: <a href="mailto:Liam@Simfluence.AI"><span class="__cf_email__" data-cfemail="abe7c2cac6ebf8c2c6cdc7decec5c8ce85eae2">[email&#160;protected]</span></a></p>
+    <p class="f-email">Contact: <a href="mailto:Liam@Simfluence.AI">Liam@Simfluence.AI</a></p>
   </div>
   <div>
     <div class="f-col-title">Platform</div>
@@ -597,18 +614,18 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
   <div>
     <div class="f-col-title">Plans</div>
     <div class="f-links">
-      <a href="preview.html?plan=bronze#request-access" class="f-link" style="color:#CD7F32">Bronze — $1,500/mo</a>
-      <a href="preview.html?plan=silver#request-access" class="f-link" style="color:#C0C0C0">Silver — $3,500/mo</a>
-      <a href="preview.html?plan=gold#request-access" class="f-link" style="color:#FFD400">Gold — $7,500/mo</a>
-      <a href="preview.html?plan=platinum#request-access" class="f-link" style="color:#E5E4E2">Platinum — $15,000/mo</a>
+      <a   class="f-link" style="color:#CD7F32">Bronze — $1,500/mo</button>
+      <a   class="f-link" style="color:#C0C0C0">Silver — $3,500/mo</button>
+      <a     class="f-link" style="color:#FFD400">Gold — $7,500/mo</button>
+      <a class="f-link" style="color:#E5E4E2">Platinum — $15,000/mo</button>
       <a href="mailto:Liam@Simfluence.AI" class="f-link" style="color:#B9F2FF">Diamond — Talk to us</a>
     </div>
   </div>
   <div class="f-bottom">
     <span class="f-copy">© 2025 Simfluence Ltd · Dubai, UAE · All rights reserved</span>
     <div class="f-legal">
-      <a href="app.html" target="_blank">Terms</a>
-      <a href="app.html" target="_blank">Legal</a>
+      <a href="app.html">Terms</a>
+      <a href="app.html">Legal</a>
       <a href="mailto:Liam@Simfluence.AI">Contact</a>
     </div>
   </div>
@@ -679,7 +696,7 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
   </div>
 </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
 /* ── Pricing data ────────────────────────────────────────── */
 var PRICES = {
   bronze:   { monthly:1500,  annual:1500,  annualTotal:18000,  discount:0  },
@@ -839,4 +856,35 @@ function sfLaunch(){
   window.open('app.html','_blank');
 }
 
-document.addEventListener('click',function(e){ if(e.target&&e.targe
+document.addEventListener('click',function(e){ if(e.target&&e.target.id==='sfModal') sfClose(); });
+
+/* ── Theme ───────────────────────────────────────────────── */
+function toggleTheme(){
+  var isLight=document.body.classList.toggle('light');
+  var btn=document.getElementById('themeBtn');
+  if(btn) btn.textContent=isLight?'🌑':'🌙';
+  try{localStorage.setItem('sf_theme',isLight?'light':'dark');}catch(e){}
+}
+(function(){ try{if(localStorage.getItem('sf_theme')==='light'){document.body.classList.add('light');}}catch(e){} })();
+
+/* ── Scroll reveal ───────────────────────────────────────── */
+function initReveal(){
+  var els=document.querySelectorAll('.reveal');
+  els.forEach(function(el){ el.classList.add('visible'); });
+}
+if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',initReveal);}else{initReveal();}
+setTimeout(initReveal,300); setTimeout(initReveal,800);
+
+/* ── Hero canvas ─────────────────────────────────────────── */
+var W,H,particles=[];
+var canvas=document.getElementById
+var canvas=document.getElementById('heroCanvas');
+var ctx=canvas?canvas.getContext('2d'):null;
+function resize(){if(!canvas)return;W=canvas.width=canvas.offsetWidth;H=canvas.height=canvas.offsetHeight;}
+function initParticles(){particles=[];for(var i=0;i<60;i++){particles.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-0.5)*0.4,vy:(Math.random()-0.5)*0.4,r:Math.random()*1.5+0.5,o:Math.random()*0.4+0.1});}}
+function drawParticles(){if(!ctx)return;ctx.clearRect(0,0,W,H);particles.forEach(function(p){p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>W)p.vx*=-1;if(p.y<0||p.y>H)p.vy*=-1;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle='rgba(255,255,255,'+p.o+')';ctx.fill();});requestAnimationFrame(drawParticles);}
+window.addEventListener('resize',function(){resize();initParticles();});
+resize();initParticles();drawParticles();
+</script>
+</body>
+</html>
