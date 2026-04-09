@@ -300,7 +300,7 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
   <div class="stat-cell"><div class="stat-n" style="color:var(--gold)">68%</div><div class="stat-l">of campaigns underperform<br>without a forecast</div></div>
   <div class="stat-cell"><div class="stat-n" style="color:var(--blue)">2 min</div><div class="stat-l">From brief<br>to full forecast</div></div>
   <div class="stat-cell"><div class="stat-n" style="color:var(--green)">90%</div><div class="stat-l">statistical confidence<br>on all outputs</div></div>
-  <div class="stat-cell"><div class="stat-n" style="color:var(--orange)">1000s</div><div class="stat-l">of creators · YouTube, Twitch,<br>Instagram, TikTok &amp; more</div></div>
+  <div class="stat-cell"><div class="stat-n" style="color:var(--orange)">Thousands</div><div class="stat-l">of creators · YouTube, Twitch,<br>Instagram, TikTok &amp; more</div></div>
 </div>
 
 <div class="ticker">
@@ -861,9 +861,4 @@ var ctx=canvas?canvas.getContext('2d'):null;
 function resize(){if(!canvas)return;W=canvas.width=canvas.offsetWidth;H=canvas.height=canvas.offsetHeight;}
 function initParticles(){particles=[];for(var 
 i++){particles.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-0.5)*0.4,vy:(Math.random()-0.5)*0.4,r:Math.random()*1.5+0.5,o:Math.random()*0.3+0.1});}}
-function drawParticles(){if(!ctx)return;ctx.clearRect(0,0,W,H);particles.forEach(function(p){p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>W)p.vx*=-1;if(p.y<0||p.y>H)p.vy*=-1;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle='rgba(255,255,255,'+p.o+')';ctx.fill();});requestAnimationFrame(drawParticles);}
-window.addEventListener('resize',function(){resize();initParticles();});
-resize();initParticles();drawParticles();
-</script>
-</body>
-</html>
+f
