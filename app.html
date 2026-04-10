@@ -6472,6 +6472,25 @@ function getSortedCreators() {
 
 let sortMode = 'cpi';
 
+function sfRenderPagination(elId, totalPages) {
+  var el = document.getElementById(elId);
+  if (!el) return;
+  if (totalPages <= 1) { el.innerHTML = ''; return; }
+  var btns = '';
+  var prevDis = currentPage === 1;
+  var nextDis = currentPage === totalPages;
+  btns += '<button onmousedown="changePage('+(currentPage-1)+')" '+(prevDis?'disabled':'')+' style="padding:6px 12px;background:'+(prevDis?'rgba(255,255,255,0.03)':'rgba(0,80,255,0.12)')+';border:1px solid rgba(255,255,255,0.1);color:'+(prevDis?'rgba(255,255,255,0.2)':'#6B9FFF')+';border-radius:5px;cursor:'+(prevDis?'default':'pointer')+';font-family:DM Mono,monospace;font-size:10px;letter-spacing:.06em">← PREV</button>';
+  for (var p = Math.max(1,currentPage-2); p <= Math.min(totalPages,currentPage+2); p++) {
+    var isActive = p === currentPage;
+    btns += '<button onmousedown="changePage('+p+')" style="padding:6px 12px;background:'+(isActive?'#0050FF':'rgba(255,255,255,0.03)')+';border:1px solid '+(isActive?'#0050FF':'rgba(255,255,255,0.1)')+';color:'+(isActive?'#fff':'rgba(255,255,255,0.4)')+';border-radius:5px;cursor:pointer;font-family:DM Mono,monospace;font-size:10px;">'+p+'</button>';
+  }
+  btns += '<button onmousedown="changePage('+(currentPage+1)+')" '+(nextDis?'disabled':'')+' style="padding:6px 12px;background:'+(nextDis?'rgba(255,255,255,0.03)':'rgba(0,80,255,0.12)')+';border:1px solid rgba(255,255,255,0.1);color:'+(nextDis?'rgba(255,255,255,0.2)':'#6B9FFF')+';border-radius:5px;cursor:'+(nextDis?'default':'pointer')+';font-family:DM Mono,monospace;font-size:10px;letter-spacing:.06em">NEXT →</button>';
+  btns += '<span style="margin-left:16px;color:rgba(255,255,255,0.3);font-size:10px;font-family:DM Mono,monospace">SHOW:</span>';
+  btns += '<button onmousedown="setPageSize(25)" style="padding:6px 10px;background:'+(pageSize===25?'rgba(255,212,0,0.12)':'rgba(255,255,255,0.03)')+';border:1px solid '+(pageSize===25?'rgba(255,212,0,0.3)':'rgba(255,255,255,0.1)')+';color:'+(pageSize===25?'#FFD400':'rgba(255,255,255,0.3)')+';border-radius:5px;cursor:pointer;font-family:DM Mono,monospace;font-size:10px;">25</button>';
+  btns += '<button onmousedown="setPageSize(50)" style="padding:6px 10px;background:'+(pageSize===50?'rgba(255,212,0,0.12)':'rgba(255,255,255,0.03)')+';border:1px solid '+(pageSize===50?'rgba(255,212,0,0.3)':'rgba(255,255,255,0.1)')+';color:'+(pageSize===50?'#FFD400':'rgba(255,255,255,0.3)')+';border-radius:5px;cursor:pointer;font-family:DM Mono,monospace;font-size:10px;">50</button>';
+  el.innerHTML = btns;
+}
+
 function changePage(p) {
   var totalPages = Math.ceil(
     (window.__sfSearch ? CREATORS.filter(cr => {
@@ -6824,33 +6843,12 @@ function renderCreatorGrid(keepPage) {
 
   // ── Render ────────────────────────────────────────────────────────
   // ── Pagination ────────────────────────────────────────────────────
-  const totalPages = Math.ceil(display.length / pageSize);
+  var totalPages = Math.ceil(display.length / pageSize);
   if (currentPage > totalPages) currentPage = 1;
-  const pageStart = (currentPage - 1) * pageSize;
-  const pageDisplay = display.slice(pageStart, pageStart + pageSize);
+  var pageStart = (currentPage - 1) * pageSize;
+  var pageDisplay = display.slice(pageStart, pageStart + pageSize);
 
-  // Pagination controls
-  function renderPagination(elId) {
-    var el = document.getElementById(elId);
-    if (!el) return;
-    if (totalPages <= 1) { el.innerHTML = ''; return; }
-    var btns = '';
-    // Prev
-    btns += '<button onclick="changePage('+(currentPage-1)+')" style="padding:6px 12px;background:'+(currentPage===1?'rgba(255,255,255,0.03)':'rgba(0,80,255,0.12)')+';border:1px solid rgba(255,255,255,0.1);color:'+(currentPage===1?'var(--text-muted)':'#6B9FFF')+';border-radius:5px;cursor:'+(currentPage===1?'default':'pointer')+';font-family:\'DM Mono\',monospace;font-size:10px;" '+(currentPage===1?'disabled':'')+'>← PREV</button>';
-    // Page numbers
-    for (var p = Math.max(1,currentPage-2); p <= Math.min(totalPages,currentPage+2); p++) {
-      btns += '<button onclick="changePage('+p+')" style="padding:6px 12px;background:'+(p===currentPage?'#0050FF':'rgba(255,255,255,0.03)')+';border:1px solid '+(p===currentPage?'#0050FF':'rgba(255,255,255,0.1)')+';color:'+(p===currentPage?'#fff':'var(--text-muted)')+';border-radius:5px;cursor:pointer;font-family:\'DM Mono\',monospace;font-size:10px;">'+p+'</button>';
-    }
-    // Next
-    btns += '<button onclick="changePage('+(currentPage+1)+')" style="padding:6px 12px;background:'+(currentPage===totalPages?'rgba(255,255,255,0.03)':'rgba(0,80,255,0.12)')+';border:1px solid rgba(255,255,255,0.1);color:'+(currentPage===totalPages?'var(--text-muted)':'#6B9FFF')+';border-radius:5px;cursor:'+(currentPage===totalPages?'default':'pointer')+';font-family:\'DM Mono\',monospace;font-size:10px;" '+(currentPage===totalPages?'disabled':'')+'>NEXT →</button>';
-    // Page size toggle
-    btns += '<span style="margin-left:12px;color:var(--text-muted)">Show: </span>';
-    btns += '<button onclick="setPageSize(25)" style="padding:6px 10px;background:'+(pageSize===25?'rgba(255,212,0,0.12)':'rgba(255,255,255,0.03)')+';border:1px solid '+(pageSize===25?'rgba(255,212,0,0.3)':'rgba(255,255,255,0.1)')+';color:'+(pageSize===25?'#FFD400':'var(--text-muted)')+';border-radius:5px;cursor:pointer;font-family:\'DM Mono\',monospace;font-size:10px;">25</button>';
-    btns += '<button onclick="setPageSize(50)" style="padding:6px 10px;background:'+(pageSize===50?'rgba(255,212,0,0.12)':'rgba(255,255,255,0.03)')+';border:1px solid '+(pageSize===50?'rgba(255,212,0,0.3)':'rgba(255,255,255,0.1)')+';color:'+(pageSize===50?'#FFD400':'var(--text-muted)')+';border-radius:5px;cursor:pointer;font-family:\'DM Mono\',monospace;font-size:10px;">50</button>';
-    el.innerHTML = btns;
-  }
-
-  renderPagination('paginationTop');
+  sfRenderPagination('paginationTop', totalPages);
 
   document.getElementById('creatorGrid').innerHTML = pageDisplay.map(({cr}) => {
     const selected   = selectedCreators.has(cr.id);
@@ -6912,7 +6910,7 @@ function renderCreatorGrid(keepPage) {
     <span style="font-size:10px;margin-top:8px;display:block;opacity:.6">Try increasing your budget, changing the tier mix, or adjusting the genre</span>
   </div>`;
 
-  renderPagination('paginationBottom');
+  sfRenderPagination('paginationBottom', Math.ceil(display.length / pageSize));
 
   // ── Update meta label ─────────────────────────────────────────────
   const tierLabels = ['Micro Only','Mid-Tier','Established','Megastar','All Tiers'];
