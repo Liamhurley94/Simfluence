@@ -2049,9 +2049,8 @@ document.getElementById('GP').focus();
         <span id="selectedCount">0 creators selected</span>
         <button onclick="clearSelection()" style="font-family:'DM Mono',monospace;font-size:9px;padding:4px 10px;background:transparent;border:1px solid var(--border);border-radius:3px;color:var(--text-muted);cursor:pointer">CLEAR</button>
       </div>
-      <div id="paginationTop" style="display:flex;align-items:center;justify-content:space-between;padding:10px 0 8px;font-family:'DM Mono',monospace;font-size:10px;color:var(--text-muted);"></div>
-<div id="creatorGrid" class="creator-grid"></div>
-<div id="paginationBottom" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:24px 0;font-family:'DM Mono',monospace;font-size:10px;"></div>
+      <div id="creatorGrid" class="creator-grid"></div>
+      <div id="paginationControls" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:24px 0;font-family:'DM Mono',monospace;font-size:10px;"></div>
     </div>
 
     <!-- SCORING SCREEN -->
@@ -6755,12 +6754,8 @@ function renderCreatorGrid(keepPage) {
     document.getElementById('discoveryMeta').textContent =
       display.length + ' RESULT' + (display.length !== 1 ? 'S' : '') + ' FOR "' + sq.toUpperCase() + '" · ACROSS ALL ' + CREATORS.length + ' CREATORS';
 
-    const totalPagesS = Math.ceil(display.length / pageSize);
-    if (currentPage > totalPagesS) currentPage = 1;
-    const pageDisplayS = display.slice((currentPage-1)*pageSize, currentPage*pageSize);
-    document.getElementById('paginationTop').innerHTML = '';
-    document.getElementById('paginationBottom').innerHTML = '';
-    document.getElementById('creatorGrid').innerHTML = pageDisplayS.map(cr => {
+    document.getElementById('paginationControls') && (document.getElementById('paginationControls').innerHTML = '');
+    document.getElementById('creatorGrid').innerHTML = display.map(cr => {
       const selected  = selectedCreators.has(cr.id);
       const gfi       = computeGFI(cr);
       const e         = computeCostEstimate(cr);
@@ -6842,13 +6837,11 @@ function renderCreatorGrid(keepPage) {
   }
 
   // ── Render ────────────────────────────────────────────────────────
-  // ── Pagination ────────────────────────────────────────────────────
+  // ── Pagination ──────────────────────────────────────────────────
   var totalPages = Math.ceil(display.length / pageSize);
   if (currentPage > totalPages) currentPage = 1;
   var pageStart = (currentPage - 1) * pageSize;
   var pageDisplay = display.slice(pageStart, pageStart + pageSize);
-
-  sfRenderPagination('paginationTop', totalPages);
 
   document.getElementById('creatorGrid').innerHTML = pageDisplay.map(({cr}) => {
     const selected   = selectedCreators.has(cr.id);
@@ -6910,7 +6903,24 @@ function renderCreatorGrid(keepPage) {
     <span style="font-size:10px;margin-top:8px;display:block;opacity:.6">Try increasing your budget, changing the tier mix, or adjusting the genre</span>
   </div>`;
 
-  sfRenderPagination('paginationBottom', Math.ceil(display.length / pageSize));
+  // Render pagination controls
+  var pcEl = document.getElementById('paginationControls');
+  if (pcEl) {
+    if (totalPages <= 1) {
+      pcEl.innerHTML = '';
+    } else {
+      var pHtml = '';
+      pHtml += '<button onmousedown="changePage('+(currentPage-1)+')" '+(currentPage===1?'disabled':'')+' style="padding:6px 14px;background:rgba(0,80,255,0.12);border:1px solid rgba(0,80,255,0.25);color:#6B9FFF;border-radius:5px;cursor:pointer;font-family:DM Mono,monospace;font-size:10px;letter-spacing:.06em;'+(currentPage===1?'opacity:.3;cursor:default;':'')+'">← PREV</button>';
+      for (var pi=Math.max(1,currentPage-2); pi<=Math.min(totalPages,currentPage+2); pi++) {
+        pHtml += '<button onmousedown="changePage('+pi+')" style="padding:6px 12px;background:'+(pi===currentPage?'#0050FF':'transparent')+';border:1px solid '+(pi===currentPage?'#0050FF':'rgba(255,255,255,0.1)')+';color:'+(pi===currentPage?'#fff':'rgba(255,255,255,0.4)')+';border-radius:5px;cursor:pointer;font-family:DM Mono,monospace;font-size:10px;">'+pi+'</button>';
+      }
+      pHtml += '<button onmousedown="changePage('+(currentPage+1)+')" '+(currentPage===totalPages?'disabled':'')+' style="padding:6px 14px;background:rgba(0,80,255,0.12);border:1px solid rgba(0,80,255,0.25);color:#6B9FFF;border-radius:5px;cursor:pointer;font-family:DM Mono,monospace;font-size:10px;letter-spacing:.06em;'+(currentPage===totalPages?'opacity:.3;cursor:default;':'')+'">NEXT →</button>';
+      pHtml += '<span style="margin-left:16px;color:rgba(255,255,255,0.25);font-size:9px;letter-spacing:.08em;">SHOW:</span>';
+      pHtml += '<button onmousedown="setPageSize(25)" style="padding:5px 10px;background:'+(pageSize===25?'rgba(255,212,0,0.12)':'transparent')+';border:1px solid '+(pageSize===25?'rgba(255,212,0,0.3)':'rgba(255,255,255,0.1)')+';color:'+(pageSize===25?'#FFD400':'rgba(255,255,255,0.3)')+';border-radius:4px;cursor:pointer;font-family:DM Mono,monospace;font-size:9px;">25</button>';
+      pHtml += '<button onmousedown="setPageSize(50)" style="padding:5px 10px;background:'+(pageSize===50?'rgba(255,212,0,0.12)':'transparent')+';border:1px solid '+(pageSize===50?'rgba(255,212,0,0.3)':'rgba(255,255,255,0.1)')+';color:'+(pageSize===50?'#FFD400':'rgba(255,255,255,0.3)')+';border-radius:4px;cursor:pointer;font-family:DM Mono,monospace;font-size:9px;">50</button>';
+      pcEl.innerHTML = pHtml;
+    }
+  }
 
   // ── Update meta label ─────────────────────────────────────────────
   const tierLabels = ['Micro Only','Mid-Tier','Established','Megastar','All Tiers'];
