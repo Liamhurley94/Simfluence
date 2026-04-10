@@ -2050,7 +2050,6 @@ document.getElementById('GP').focus();
         <button onclick="clearSelection()" style="font-family:'DM Mono',monospace;font-size:9px;padding:4px 10px;background:transparent;border:1px solid var(--border);border-radius:3px;color:var(--text-muted);cursor:pointer">CLEAR</button>
       </div>
       <div id="creatorGrid" class="creator-grid"></div>
-      <div id="paginationControls" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:24px 0;font-family:'DM Mono',monospace;font-size:10px;"></div>
     </div>
 
     <!-- SCORING SCREEN -->
@@ -6756,7 +6755,6 @@ function renderCreatorGrid(keepPage) {
     document.getElementById('discoveryMeta').textContent =
       display.length + ' RESULT' + (display.length !== 1 ? 'S' : '') + ' FOR "' + sq.toUpperCase() + '" · ACROSS ALL ' + CREATORS.length + ' CREATORS';
 
-    document.getElementById('paginationControls') && (document.getElementById('paginationControls').innerHTML = '');
     document.getElementById('creatorGrid').innerHTML = display.map(cr => {
       const selected  = selectedCreators.has(cr.id);
       const gfi       = computeGFI(cr);
@@ -6838,14 +6836,13 @@ function renderCreatorGrid(keepPage) {
     return '';
   }
 
-  // ── Render ────────────────────────────────────────────────────────
-  // ── Pagination ──────────────────────────────────────────────────
-  var totalPages = Math.ceil(display.length / pageSize);
-  if (currentPage > totalPages) currentPage = 1;
-  var pageStart = (currentPage - 1) * pageSize;
-  var pageDisplay = display.slice(pageStart, pageStart + pageSize);
+  // ── Render with pagination ───────────────────────────────────────
+  var _totalPages = Math.ceil(display.length / pageSize);
+  if (currentPage > _totalPages) currentPage = 1;
+  var _pageStart = (currentPage - 1) * pageSize;
+  var _pageItems = display.slice(_pageStart, _pageStart + pageSize);
 
-  document.getElementById('creatorGrid').innerHTML = pageDisplay.map(({cr}) => {
+  document.getElementById('creatorGrid').innerHTML = _pageItems.map(({cr}) => {
     const selected   = selectedCreators.has(cr.id);
     const gfi        = computeGFI(cr);
     const mismatch   = getMismatch(cr);
@@ -6905,23 +6902,20 @@ function renderCreatorGrid(keepPage) {
     <span style="font-size:10px;margin-top:8px;display:block;opacity:.6">Try increasing your budget, changing the tier mix, or adjusting the genre</span>
   </div>`;
 
-  // Render pagination controls
-  var pcEl = document.getElementById('paginationControls');
-  if (pcEl) {
-    if (totalPages <= 1) {
-      pcEl.innerHTML = '';
-    } else {
-      var pHtml = '';
-      pHtml += '<button onmousedown="changePage('+(currentPage-1)+')" '+(currentPage===1?'disabled':'')+' style="padding:6px 14px;background:rgba(0,80,255,0.12);border:1px solid rgba(0,80,255,0.25);color:#6B9FFF;border-radius:5px;cursor:pointer;font-family:DM Mono,monospace;font-size:10px;letter-spacing:.06em;'+(currentPage===1?'opacity:.3;cursor:default;':'')+'">← PREV</button>';
-      for (var pi=Math.max(1,currentPage-2); pi<=Math.min(totalPages,currentPage+2); pi++) {
-        pHtml += '<button onmousedown="changePage('+pi+')" style="padding:6px 12px;background:'+(pi===currentPage?'#0050FF':'transparent')+';border:1px solid '+(pi===currentPage?'#0050FF':'rgba(255,255,255,0.1)')+';color:'+(pi===currentPage?'#fff':'rgba(255,255,255,0.4)')+';border-radius:5px;cursor:pointer;font-family:DM Mono,monospace;font-size:10px;">'+pi+'</button>';
-      }
-      pHtml += '<button onmousedown="changePage('+(currentPage+1)+')" '+(currentPage===totalPages?'disabled':'')+' style="padding:6px 14px;background:rgba(0,80,255,0.12);border:1px solid rgba(0,80,255,0.25);color:#6B9FFF;border-radius:5px;cursor:pointer;font-family:DM Mono,monospace;font-size:10px;letter-spacing:.06em;'+(currentPage===totalPages?'opacity:.3;cursor:default;':'')+'">NEXT →</button>';
-      pHtml += '<span style="margin-left:16px;color:rgba(255,255,255,0.25);font-size:9px;letter-spacing:.08em;">SHOW:</span>';
-      pHtml += '<button onmousedown="setPageSize(25)" style="padding:5px 10px;background:'+(pageSize===25?'rgba(255,212,0,0.12)':'transparent')+';border:1px solid '+(pageSize===25?'rgba(255,212,0,0.3)':'rgba(255,255,255,0.1)')+';color:'+(pageSize===25?'#FFD400':'rgba(255,255,255,0.3)')+';border-radius:4px;cursor:pointer;font-family:DM Mono,monospace;font-size:9px;">25</button>';
-      pHtml += '<button onmousedown="setPageSize(50)" style="padding:5px 10px;background:'+(pageSize===50?'rgba(255,212,0,0.12)':'transparent')+';border:1px solid '+(pageSize===50?'rgba(255,212,0,0.3)':'rgba(255,255,255,0.1)')+';color:'+(pageSize===50?'#FFD400':'rgba(255,255,255,0.3)')+';border-radius:4px;cursor:pointer;font-family:DM Mono,monospace;font-size:9px;">50</button>';
-      pcEl.innerHTML = pHtml;
+  // Append pagination after grid
+  var _gridEl = document.getElementById('creatorGrid');
+  if (_gridEl && _totalPages > 1) {
+    var _ph = '<div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:24px 0;font-family:DM Mono,monospace;font-size:10px;">';
+    _ph += '<button onmousedown="changePage('+(currentPage-1)+')" style="padding:6px 14px;background:rgba(0,80,255,0.12);border:1px solid rgba(0,80,255,0.25);color:#6B9FFF;border-radius:5px;cursor:pointer;font-size:10px;'+(currentPage===1?'opacity:.3;pointer-events:none;':'')+'">← PREV</button>';
+    for (var _pi=Math.max(1,currentPage-2);_pi<=Math.min(_totalPages,currentPage+2);_pi++){
+      _ph += '<button onmousedown="changePage('+_pi+')" style="padding:6px 12px;background:'+(_pi===currentPage?'#0050FF':'transparent')+';border:1px solid '+(_pi===currentPage?'#0050FF':'rgba(255,255,255,0.1)')+';color:'+(_pi===currentPage?'#fff':'rgba(255,255,255,0.4)')+';border-radius:5px;cursor:pointer;font-size:10px;">'+_pi+'</button>';
     }
+    _ph += '<button onmousedown="changePage('+(currentPage+1)+')" style="padding:6px 14px;background:rgba(0,80,255,0.12);border:1px solid rgba(0,80,255,0.25);color:#6B9FFF;border-radius:5px;cursor:pointer;font-size:10px;'+(currentPage===_totalPages?'opacity:.3;pointer-events:none;':'')+'">NEXT →</button>';
+    _ph += '<span style="margin-left:12px;color:rgba(255,255,255,0.25);font-size:9px;">SHOW:</span>';
+    _ph += '<button onmousedown="setPageSize(25)" style="padding:5px 10px;background:'+(pageSize===25?'rgba(255,212,0,0.12)':'transparent')+';border:1px solid '+(pageSize===25?'rgba(255,212,0,0.3)':'rgba(255,255,255,0.1)')+';color:'+(pageSize===25?'#FFD400':'rgba(255,255,255,0.3)')+';border-radius:4px;cursor:pointer;font-size:9px;">25</button>';
+    _ph += '<button onmousedown="setPageSize(50)" style="padding:5px 10px;background:'+(pageSize===50?'rgba(255,212,0,0.12)':'transparent')+';border:1px solid '+(pageSize===50?'rgba(255,212,0,0.3)':'rgba(255,255,255,0.1)')+';color:'+(pageSize===50?'#FFD400':'rgba(255,255,255,0.3)')+';border-radius:4px;cursor:pointer;font-size:9px;">50</button>';
+    _ph += '</div>';
+    _gridEl.insertAdjacentHTML('afterend', _ph);
   }
 
   // ── Update meta label ─────────────────────────────────────────────
