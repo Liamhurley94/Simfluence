@@ -2049,7 +2049,9 @@ document.getElementById('GP').focus();
         <span id="selectedCount">0 creators selected</span>
         <button onclick="clearSelection()" style="font-family:'DM Mono',monospace;font-size:9px;padding:4px 10px;background:transparent;border:1px solid var(--border);border-radius:3px;color:var(--text-muted);cursor:pointer">CLEAR</button>
       </div>
-      <div id="creatorGrid" class="creator-grid"></div>
+      <div id="paginationTop" style="display:flex;align-items:center;justify-content:space-between;padding:10px 0 8px;font-family:'DM Mono',monospace;font-size:10px;color:var(--text-muted);"></div>
+<div id="creatorGrid" class="creator-grid"></div>
+<div id="paginationBottom" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:24px 0;font-family:'DM Mono',monospace;font-size:10px;"></div>
     </div>
 
     <!-- SCORING SCREEN -->
@@ -6469,6 +6471,25 @@ function getSortedCreators() {
 }
 
 let sortMode = 'cpi';
+
+function changePage(p) {
+  var totalPages = Math.ceil(
+    (window.__sfSearch ? CREATORS.filter(cr => {
+      var hay = (cr.name+' '+cr.handle+' '+cr.genre+' '+cr.platform+' '+(cr.bio||'')).toLowerCase();
+      return hay.indexOf(window.__sfSearch) !== -1;
+    }).length : CREATORS.length) / pageSize
+  );
+  if (p < 1 || p > totalPages) return;
+  currentPage = p;
+  renderCreatorGrid(true);
+  document.getElementById('screen-discovery').scrollTop = 0;
+}
+
+function setPageSize(n) {
+  pageSize = n;
+  currentPage = 1;
+  renderCreatorGrid(true);
+}
 function setSortMode(v) { sortMode=v; renderCreatorGrid(); }
 
 // ── SELECTED CREATORS ─────────────────────────────────────────────────
@@ -6558,7 +6579,8 @@ function avgViewsLabel(cr) {
   return cr.platform === 'Twitch' ? 'LIVE VIEWERS' : 'AVG VIEWS';
 }
 
-function renderCreatorGrid() {
+function renderCreatorGrid(keepPage) {
+  if (!keepPage) currentPage = 1;
   const genre   = getSelectedGenre();
   const budget  = parseInt((document.getElementById('budget')||{value:'85000'}).value)||85000;
   const tierMix = parseInt((document.getElementById('tierMix')||{value:'4'}).value);
@@ -6714,7 +6736,12 @@ function renderCreatorGrid() {
     document.getElementById('discoveryMeta').textContent =
       display.length + ' RESULT' + (display.length !== 1 ? 'S' : '') + ' FOR "' + sq.toUpperCase() + '" · ACROSS ALL ' + CREATORS.length + ' CREATORS';
 
-    document.getElementById('creatorGrid').innerHTML = display.map(cr => {
+    const totalPagesS = Math.ceil(display.length / pageSize);
+    if (currentPage > totalPagesS) currentPage = 1;
+    const pageDisplayS = display.slice((currentPage-1)*pageSize, currentPage*pageSize);
+    document.getElementById('paginationTop').innerHTML = '';
+    document.getElementById('paginationBottom').innerHTML = '';
+    document.getElementById('creatorGrid').innerHTML = pageDisplayS.map(cr => {
       const selected  = selectedCreators.has(cr.id);
       const gfi       = computeGFI(cr);
       const e         = computeCostEstimate(cr);
@@ -6796,7 +6823,36 @@ function renderCreatorGrid() {
   }
 
   // ── Render ────────────────────────────────────────────────────────
-  document.getElementById('creatorGrid').innerHTML = display.map(({cr}) => {
+  // ── Pagination ────────────────────────────────────────────────────
+  const totalPages = Math.ceil(display.length / pageSize);
+  if (currentPage > totalPages) currentPage = 1;
+  const pageStart = (currentPage - 1) * pageSize;
+  const pageDisplay = display.slice(pageStart, pageStart + pageSize);
+
+  // Pagination controls
+  function renderPagination(elId) {
+    var el = document.getElementById(elId);
+    if (!el) return;
+    if (totalPages <= 1) { el.innerHTML = ''; return; }
+    var btns = '';
+    // Prev
+    btns += '<button onclick="changePage('+(currentPage-1)+')" style="padding:6px 12px;background:'+(currentPage===1?'rgba(255,255,255,0.03)':'rgba(0,80,255,0.12)')+';border:1px solid rgba(255,255,255,0.1);color:'+(currentPage===1?'var(--text-muted)':'#6B9FFF')+';border-radius:5px;cursor:'+(currentPage===1?'default':'pointer')+';font-family:\'DM Mono\',monospace;font-size:10px;" '+(currentPage===1?'disabled':'')+'>← PREV</button>';
+    // Page numbers
+    for (var p = Math.max(1,currentPage-2); p <= Math.min(totalPages,currentPage+2); p++) {
+      btns += '<button onclick="changePage('+p+')" style="padding:6px 12px;background:'+(p===currentPage?'#0050FF':'rgba(255,255,255,0.03)')+';border:1px solid '+(p===currentPage?'#0050FF':'rgba(255,255,255,0.1)')+';color:'+(p===currentPage?'#fff':'var(--text-muted)')+';border-radius:5px;cursor:pointer;font-family:\'DM Mono\',monospace;font-size:10px;">'+p+'</button>';
+    }
+    // Next
+    btns += '<button onclick="changePage('+(currentPage+1)+')" style="padding:6px 12px;background:'+(currentPage===totalPages?'rgba(255,255,255,0.03)':'rgba(0,80,255,0.12)')+';border:1px solid rgba(255,255,255,0.1);color:'+(currentPage===totalPages?'var(--text-muted)':'#6B9FFF')+';border-radius:5px;cursor:'+(currentPage===totalPages?'default':'pointer')+';font-family:\'DM Mono\',monospace;font-size:10px;" '+(currentPage===totalPages?'disabled':'')+'>NEXT →</button>';
+    // Page size toggle
+    btns += '<span style="margin-left:12px;color:var(--text-muted)">Show: </span>';
+    btns += '<button onclick="setPageSize(25)" style="padding:6px 10px;background:'+(pageSize===25?'rgba(255,212,0,0.12)':'rgba(255,255,255,0.03)')+';border:1px solid '+(pageSize===25?'rgba(255,212,0,0.3)':'rgba(255,255,255,0.1)')+';color:'+(pageSize===25?'#FFD400':'var(--text-muted)')+';border-radius:5px;cursor:pointer;font-family:\'DM Mono\',monospace;font-size:10px;">25</button>';
+    btns += '<button onclick="setPageSize(50)" style="padding:6px 10px;background:'+(pageSize===50?'rgba(255,212,0,0.12)':'rgba(255,255,255,0.03)')+';border:1px solid '+(pageSize===50?'rgba(255,212,0,0.3)':'rgba(255,255,255,0.1)')+';color:'+(pageSize===50?'#FFD400':'var(--text-muted)')+';border-radius:5px;cursor:pointer;font-family:\'DM Mono\',monospace;font-size:10px;">50</button>';
+    el.innerHTML = btns;
+  }
+
+  renderPagination('paginationTop');
+
+  document.getElementById('creatorGrid').innerHTML = pageDisplay.map(({cr}) => {
     const selected   = selectedCreators.has(cr.id);
     const gfi        = computeGFI(cr);
     const mismatch   = getMismatch(cr);
@@ -6855,6 +6911,8 @@ function renderCreatorGrid() {
     NO CREATORS MATCH CURRENT FILTERS<br>
     <span style="font-size:10px;margin-top:8px;display:block;opacity:.6">Try increasing your budget, changing the tier mix, or adjusting the genre</span>
   </div>`;
+
+  renderPagination('paginationBottom');
 
   // ── Update meta label ─────────────────────────────────────────────
   const tierLabels = ['Micro Only','Mid-Tier','Established','Megastar','All Tiers'];
@@ -8616,15 +8674,7 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>
     </div>
 
-    <div>
-      <div class="footer-col-title">Platform</div>
-      <div class="footer-links">
-        <button class="footer-link" onclick="showScreen('discovery',document.querySelector('.nav-tab'))">Creator Discovery</button>
-        <button class="footer-link" onclick="showScreen('scoring',document.querySelectorAll('.nav-tab')[1])">CPI &amp; GFI Scoring</button>
-        <button class="footer-link" onclick="showScreen('personas',document.querySelectorAll('.nav-tab')[2])">AI Persona Matching</button>
-        <button class="footer-link" onclick="showScreen('simulator',document.querySelectorAll('.nav-tab')[3])">Campaign Simulator</button>
-      </div>
-    </div>
+
 
     <div>
       <div class="footer-col-title">Company</div>
