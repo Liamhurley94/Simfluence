@@ -6470,6 +6470,8 @@ function getSortedCreators() {
 }
 
 let sortMode = 'cpi';
+var currentPage = 1;
+var pageSize = 25;
 
 function sfRenderPagination(elId, totalPages) {
   var el = document.getElementById(elId);
