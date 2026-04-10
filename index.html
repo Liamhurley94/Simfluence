@@ -1483,7 +1483,7 @@ setTimeout(initReveal,300); setTimeout(initReveal,800);
   <div class="fm-box">
     <div class="fm-bar" id="fmBar"></div>
     <div class="fm-body">
-      <div class="fm-x" id="fmX">✕</div>
+      <div class="fm-x" id="fmX" onmousedown="closeFeatureModal()" style="cursor:pointer">✕</div>
       <div class="fm-eye" id="fmEye"></div>
       <div class="fm-ttl" id="fmTtl"></div>
       <div class="fm-dsc" id="fmDsc"></div>
@@ -1509,13 +1509,12 @@ function openFeatureModal(key){
   var m=MODALS[key];
   if(!m) return;
   var el=document.getElementById('featureModal');
-  var overlay=document.getElementById('featureOverlay');
-  if(!el||!overlay) return;
-  document.getElementById('fmColor').style.background=m.c;
-  document.getElementById('fmEyebrow').textContent=m.e;
-  document.getElementById('fmTitle').textContent=m.t;
-  document.getElementById('fmDesc').textContent=m.d;
-  var stats=document.getElementById('fmStats');
+  if(!el) return;
+  document.getElementById('fmBar').style.background=m.c;
+  document.getElementById('fmEye').textContent=m.e;
+  document.getElementById('fmTtl').textContent=m.t;
+  document.getElementById('fmDsc').textContent=m.d;
+  var stats=document.getElementById('fmG');
   stats.innerHTML=m.s.map(function(s){return '<div class="fm-stat"><div class="fm-stat-n">'+s.n+'</div><div class="fm-stat-l">'+s.l+'</div></div>';}).join('');
-  var points=document.getElementById('fmPoints');
+  var points=document.getElementById('fmPts');
   points.innerHTML=m.p.map(function(p){return '<li>'+p+'</li>';}).join('');
