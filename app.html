@@ -8250,11 +8250,23 @@ function sfExpandLive() {
     toggle.style.display = 'none';
   }
 }
+var __twitchPollOffset = 0;
+
 function getTwitchHandles() {
-  return CREATORS
+  // Sort by CPI desc so we check highest quality creators across rotations
+  var allTwitch = CREATORS
     .filter(function(cr) { return cr.platform === 'Twitch' || (cr.allPlatforms && cr.allPlatforms.includes('Twitch')); })
-    .map(function(cr) { return cr.handle.replace('@','').toLowerCase(); })
-    .slice(0, 100);
+    .sort(function(a, b) { return b.cpi - a.cpi; })
+    .map(function(cr) { return cr.handle.replace('@','').toLowerCase(); });
+
+  // Rotate through all creators — each poll checks next 100
+  var batch = allTwitch.slice(__twitchPollOffset, __twitchPollOffset + 100);
+  __twitchPollOffset = (__twitchPollOffset + 100) % allTwitch.length;
+
+  // Always include top 50 by CPI in every batch for reliability
+  var top50 = allTwitch.slice(0, 50);
+  var combined = top50.concat(batch.filter(function(h) { return top50.indexOf(h) === -1; }));
+  return combined.slice(0, 100);
 }
 
 // Fetch live status for all Twitch creators
@@ -8332,33 +8344,63 @@ function renderLivePanel() {
   if (campaignGenre) {
     isFiltered = true;
 
+    // Strictly equivalent genre pairs — these creator genres serve the same audience
+    // e.g. a Gaming Setup creator IS relevant to a Gaming campaign and vice versa
+    var GENRE_EQUIVALENTS = {
+      'Gaming & Esports':          ['Gaming & Esports', 'Gaming Setup & Peripherals'],
+      'Gaming Setup & Peripherals':['Gaming Setup & Peripherals', 'Gaming & Esports'],
+      'Talk & Entertainment':      ['Talk & Entertainment', 'Entertainment & Comedy'],
+      'Entertainment & Comedy':    ['Entertainment & Comedy', 'Talk & Entertainment'],
+    };
+
+    var allowedGenres = GENRE_EQUIVALENTS[campaignGenre] || [campaignGenre];
+
     matchingLive = allLive.filter(function(cr) {
-      // Primary: exact genre match
-      if (cr.genre === campaignGenre) return true;
-      // Secondary: strong affinity crossover (>=0.7) — e.g. Gaming Setup <-> Gaming
-      var aff = (GENRE_AFFINITY[cr.genre] || {})[campaignGenre] || 0;
-      return aff >= 0.7;
+      // Must be in allowed genres for this campaign
+      if (allowedGenres.indexOf(cr.genre) === -1) return false;
+
+      // If sub-mode selected, apply keyword filter
+      // Check bio first, then what they are currently streaming
+      if (subMode) {
+        var keywords = SUBMODE_KEYWORDS[subMode] || [];
+        if (keywords.length) {
+          var hay = ((cr.bio||'') + ' ' + cr.name + ' ' + cr.handle).toLowerCase();
+          var bioMatch = keywords.some(function(kw) { return hay.indexOf(kw.toLowerCase()) !== -1; });
+
+          var liveEntry = window.__twitchLive[cr.handle.replace('@','').toLowerCase()] || {};
+          var gameLower = (liveEntry.gameName || '').toLowerCase();
+          var titleLower = (liveEntry.title || '').toLowerCase();
+          var liveMatch = keywords.some(function(kw) {
+            return gameLower.indexOf(kw.toLowerCase()) !== -1 || titleLower.indexOf(kw.toLowerCase()) !== -1;
+          });
+
+          // Include if bio matches OR currently streaming/titling relevant content
+          // If neither matches, still include if they're the right genre — sub-mode is a boost not a gate
+          // (creators don't always stream only their niche content)
+          return bioMatch || liveMatch || true; // genre match is the gate, sub-mode affects GFI ranking
+        }
+      }
+      return true;
     });
 
-    // Other live = everyone else, shown below as context
+    // Everyone else — different genre entirely
     otherLive = allLive.filter(function(cr) {
-      var aff = cr.genre === campaignGenre ? 1.0 : ((GENRE_AFFINITY[cr.genre] || {})[campaignGenre] || 0);
-      return aff < 0.7;
+      return allowedGenres.indexOf(cr.genre) === -1;
     });
   }
-
-  // Sort matching: GFI descending first, then CPI descending as tiebreaker
+  // Sort matching: GFI primary, then CPI as tiebreaker
   matchingLive.sort(function(a, b) {
-    var gfiDiff = computeGFI(b) - computeGFI(a);
-    if (Math.abs(gfiDiff) > 3) return gfiDiff;
+    var gfiA = computeGFI(a);
+    var gfiB = computeGFI(b);
+    if (gfiB !== gfiA) return gfiB - gfiA;
     return b.cpi - a.cpi;
   });
 
-  // Sort others: GFI desc then CPI desc as well
+  // Sort others by viewer count (they're not genre-relevant so just show biggest)
   otherLive.sort(function(a, b) {
-    var gfiDiff = computeGFI(b) - computeGFI(a);
-    if (Math.abs(gfiDiff) > 3) return gfiDiff;
-    return b.cpi - a.cpi;
+    var va = (window.__twitchLive[a.handle.replace('@','').toLowerCase()] || {}).viewerCount || 0;
+    var vb = (window.__twitchLive[b.handle.replace('@','').toLowerCase()] || {}).viewerCount || 0;
+    return vb - va;
   });
 
   var html = '';
@@ -8422,10 +8464,14 @@ function renderLivePanel() {
     });
   }
 
+  // No match message
+  if (!matchingLive.length && isFiltered) {
+    html += '<div style="font-size:9px;color:var(--text-muted);padding:6px 8px;font-family:DM Mono,monospace;">No ' + campaignGenre + ' creators live — check back later</div>';
+  }
   // Render other live creators (different genre) collapsed
   if (otherLive.length) {
-    html += '<div style="margin-top:12px">';
-    html += '<div style="font-size:8px;color:var(--text-muted);letter-spacing:.08em;margin-bottom:6px;padding:4px 8px;border-left:3px solid var(--border);border-radius:0 3px 3px 0">'
+    html += '<div style="margin-top:' + (matchingLive.length ? 12 : 4) + 'px">';
+    html += '<div style="font-size:8px;color:var(--text-muted);letter-spacing:.08em;margin-bottom:6px;padding:4px 8px;border-left:3px solid var(--border);border-radius:0 3px 3px 0">'      + 'OTHER GENRES · ' + otherLive.length + ' LIVE'    + '</div>';der-left:3px solid var(--border);border-radius:0 3px 3px 0">'
       + 'OTHER GENRES · ' + otherLive.length + ' LIVE'
     + '</div>';
     otherLive.slice(0, 5).forEach(function(cr) {
