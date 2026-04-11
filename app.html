@@ -2188,8 +2188,7 @@ document.addEventListener('DOMContentLoaded', function() {
   <div style="display:flex;align-items:center;gap:8px;position:relative">
     <div style="position:relative;display:flex;align-items:center">
       <span style="position:absolute;left:10px;color:var(--text-muted);font-size:13px;pointer-events:none">🔍</span>
-      <input id="creatorSearch" type="text" placeholder="Search creators..." 
-        oninput="runCreatorSearch(this.value)"
+      <input id="creatorSearch" type="text" placeholder="Search creators..."
         style="font-family:'DM Mono',monospace;font-size:11px;padding:7px 12px 7px 30px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;color:var(--text);width:220px;outline:none;transition:border-color .2s"
       >
       <button id="searchClear" data-oc="clearCreatorSearch()" style="display:none;position:absolute;right:8px;background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:14px;padding:0;line-height:1">✕</button>
@@ -2287,7 +2286,7 @@ document.addEventListener('DOMContentLoaded', function() {
               <span class="range-val" id="budgetLabel">£85,000</span>
               <span style="font-size:11px;color:var(--text-dim)">£500K</span>
             </div>
-            <input type="range" id="budget" min="5000" max="500000" step="5000" value="85000" oninput="updateTierLabel(this.value)">
+            <input type="range" id="budget" min="5000" max="500000" step="5000" value="85000" >
           </div>
         </div>
 
@@ -2498,7 +2497,7 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
         <div style="display:flex;align-items:center;gap:16px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 16px">
           <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted)">DURATION</div>
-          <input type="range" id="campaignDuration" min="1" max="12" value="4" step="1" style="width:100px;accent-color:#0050FF;cursor:pointer" oninput="document.getElementById('durationLabel').textContent=this.value+(this.value==1?' week':' weeks')">
+          <input type="range" id="campaignDuration" min="1" max="12" value="4" step="1" style="width:100px;accent-color:#0050FF;cursor:pointer" id="campaignDuration">
           <span id="durationLabel" style="font-family:'DM Mono',monospace;font-size:11px;font-weight:700;color:#FFD400;min-width:56px">4 weeks</span>
         </div>
         <button id="reRunSimBtn" style="padding:10px 20px;background:#FF7A00;color:#fff;border:none;border-radius:var(--radius);font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;letter-spacing:.05em;font-weight:700">▶ RE-RUN</button>
@@ -6998,7 +6997,7 @@ function multiPlatformCpiHtml(cr) {
 function tierBadgeHtml(c) {
   const t = getTier(c);
   const colors = { Megastar:'#FFD400',Established:'#FF7A00','Mid-tier':'#0050FF',Micro:'#00C46A' };
-  return `<span style="font-family:'DM Mono',monospace;font-size:9px;padding:2px 7px;border-radius:2px;background:${colors[t]}22;color:${colors[t]};border:1px solid ${colors[t]}44">${t.toUpperCase()}</span>`;
+  return `<span style="font-family:DM Mono,monospace;font-size:9px;padding:2px 7px;border-radius:2px;background:${colors[t]}22;color:${colors[t]};border:1px solid ${colors[t]}44">${t.toUpperCase()}</span>`;
 }
 
 // ── RENDER CREATOR GRID ───────────────────────────────────────────────
@@ -7187,7 +7186,7 @@ function renderCreatorGrid(keepPage) {
         <div class="creator-card-header">
           <div id="card-avatar-${cr.id}" class="creator-avatar" style="background:${cr.color}22;color:${cr.color};${selected?'border:2px solid '+cr.color:''};cursor:zoom-in;overflow:hidden">${cr.name.charAt(0)}</div>
           <div style="flex:1;min-width:0">
-            <div style="font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${cr.name}</div>
+            <div style="font-family:Space Grotesk,sans-serif;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${cr.name}</div>
             <div style="font-size:11px;color:var(--text-dim)">${cr.handle}${cr.language && cr.language !== 'English' ? ' <span style="color:#FFD400;font-size:9px">· ' + cr.language + '</span>' : ''}</div>
             ${platformBadgesHtml(cr)}
             <div style="font-size:10px;color:var(--text-muted);margin-top:2px">${cr.genre}</div>
@@ -7195,7 +7194,7 @@ function renderCreatorGrid(keepPage) {
           <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
             ${tierBadgeHtml(cr)}
             ${getLiveBadge(cr)}
-            <button data-oc="event.stopPropagation();toggleCreator(${cr.id})" style="font-family:'DM Mono',monospace;font-size:9px;padding:3px 8px;background:${selected?'rgba(0,196,106,0.15)'  :'rgba(0,80,255,0.15)'};border:1px solid ${selected?'rgba(0,196,106,0.3)'  :'rgba(0,80,255,0.3)'};color:${selected?'#00C46A':'#6B9FFF'};border-radius:3px;cursor:pointer;white-space:nowrap">${selected?'✓ SELECTED':'+ SELECT'}</button>
+            <button data-oc="event.stopPropagation();toggleCreator(${cr.id})" style="font-family:DM Mono,monospace;font-size:9px;padding:3px 8px;background:${selected?'rgba(0,196,106,0.15)'  :'rgba(0,80,255,0.15)'};border:1px solid ${selected?'rgba(0,196,106,0.3)'  :'rgba(0,80,255,0.3)'};color:${selected?'#00C46A':'#6B9FFF'};border-radius:3px;cursor:pointer;white-space:nowrap">${selected?'✓ SELECTED':'+ SELECT'}</button>
           </div>
         </div>
         <div class="creator-stats">
@@ -7210,7 +7209,7 @@ function renderCreatorGrid(keepPage) {
           <span style="color:var(--text-dim);font-weight:600;font-size:11px">Ded: <strong style="color:#FFD400">${e.fmt(e.ranges.ded[0])}–${e.fmt(e.ranges.ded[1])}</strong></span>
         </div>
       </div>`;
-    }).join('') || `<div style="padding:60px;text-align:center;color:var(--text-muted);font-family:'DM Mono',monospace;font-size:11px">NO CREATORS FOUND FOR "${sq.toUpperCase()}"</div>`;
+    }).join('') || `<div style="padding:60px;text-align:center;color:var(--text-muted);font-family:DM Mono,monospace;font-size:11px">NO CREATORS FOUND FOR "${sq.toUpperCase()}"</div>`;
     return;
   }
 
@@ -7250,13 +7249,13 @@ function renderCreatorGrid(keepPage) {
     const engPct = parseFloat(cr.eng) || 2;
     const subs   = parseSubs(cr.subs);
     if ((hasObj('Content Virality') || hasObj('Engagement Rate')) && engPct >= 5)
-      return `<span style="font-family:'DM Mono',monospace;font-size:8px;padding:2px 6px;background:rgba(0,196,106,0.15);border:1px solid rgba(0,196,106,0.3);color:#00C46A;border-radius:2px">⚡ HIGH ENGAGEMENT</span>`;
+      return `<span style="font-family:DM Mono,monospace;font-size:8px;padding:2px 6px;background:rgba(0,196,106,0.15);border:1px solid rgba(0,196,106,0.3);color:#00C46A;border-radius:2px">⚡ HIGH ENGAGEMENT</span>`;
     if ((hasObj('Brand Awareness') || hasObj('Reach & Impressions')) && subs >= 1e6)
-      return `<span style="font-family:'DM Mono',monospace;font-size:8px;padding:2px 6px;background:rgba(0,80,255,0.15);border:1px solid rgba(0,80,255,0.3);color:#6B9FFF;border-radius:2px">📡 MASS REACH</span>`;
+      return `<span style="font-family:DM Mono,monospace;font-size:8px;padding:2px 6px;background:rgba(0,80,255,0.15);border:1px solid rgba(0,80,255,0.3);color:#6B9FFF;border-radius:2px">📡 MASS REACH</span>`;
     if ((hasObj('Direct Sales') || hasObj('App Install')) && cr.cpi >= 85)
-      return `<span style="font-family:'DM Mono',monospace;font-size:8px;padding:2px 6px;background:rgba(255,122,0,0.15);border:1px solid rgba(255,122,0,0.3);color:#FF7A00;border-radius:2px">💰 HIGH CONVERSION</span>`;
+      return `<span style="font-family:DM Mono,monospace;font-size:8px;padding:2px 6px;background:rgba(255,122,0,0.15);border:1px solid rgba(255,122,0,0.3);color:#FF7A00;border-radius:2px">💰 HIGH CONVERSION</span>`;
     if (subMode && subModeScore(cr) > 0)
-      return `<span style="font-family:'DM Mono',monospace;font-size:8px;padding:2px 6px;background:rgba(255,212,0,0.12);border:1px solid rgba(255,212,0,0.25);color:#FFD400;border-radius:2px">✓ SUB-MODE MATCH</span>`;
+      return `<span style="font-family:DM Mono,monospace;font-size:8px;padding:2px 6px;background:rgba(255,212,0,0.12);border:1px solid rgba(255,212,0,0.25);color:#FFD400;border-radius:2px">✓ SUB-MODE MATCH</span>`;
     return '';
   }
 
@@ -7289,7 +7288,7 @@ function renderCreatorGrid(keepPage) {
     const wouldOverrun = !selected && (alreadySpent + thisMid > budget);
 
     const budgetBadge = wouldOverrun
-      ? `<div style="position:absolute;top:8px;left:8px;font-family:'DM Mono',monospace;font-size:8px;padding:2px 7px;background:rgba(255,122,0,0.12);border:1px solid rgba(255,122,0,0.3);color:#FF7A00;border-radius:2px;z-index:1">WOULD OVERSPEND</div>`
+      ? `<div style="position:absolute;top:8px;left:8px;font-family:DM Mono,monospace;font-size:8px;padding:2px 7px;background:rgba(255,122,0,0.12);border:1px solid rgba(255,122,0,0.3);color:#FF7A00;border-radius:2px;z-index:1">WOULD OVERSPEND</div>`
       : '';
 
     return `<div class="creator-card ${selected?'selected':''}" data-oc="openProfileOverlay(${cr.id})" style="cursor:pointer;position:relative">
@@ -7297,13 +7296,13 @@ function renderCreatorGrid(keepPage) {
       <div class="creator-card-header">
         <div id="card-avatar-${cr.id}" class="creator-avatar" style="background:${cr.color}22;color:${cr.color};${selected?'border:2px solid '+cr.color:''};overflow:hidden">${cr.name.charAt(0)}</div>
         <div style="flex:1;min-width:0">
-          <div style="font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${cr.name}</div>
+          <div style="font-family:Space Grotesk,sans-serif;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${cr.name}</div>
           <div style="font-size:11px;color:var(--text-dim)">${cr.handle}</div>
           ${platformBadgesHtml(cr)}
         </div>
         <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
           ${tierBadgeHtml(cr)}
-          <button data-oc="event.stopPropagation();toggleCreator(${cr.id})" style="font-family:'DM Mono',monospace;font-size:9px;padding:3px 8px;background:${selected?'rgba(0,196,106,0.15)'  :'rgba(0,80,255,0.15)'};border:1px solid ${selected?'rgba(0,196,106,0.3)'  :'rgba(0,80,255,0.3)'};color:${selected?'#00C46A':'#6B9FFF'};border-radius:3px;cursor:pointer;white-space:nowrap">${selected?'✓ SELECTED':'+ SELECT'}</button>
+          <button data-oc="event.stopPropagation();toggleCreator(${cr.id})" style="font-family:DM Mono,monospace;font-size:9px;padding:3px 8px;background:${selected?'rgba(0,196,106,0.15)'  :'rgba(0,80,255,0.15)'};border:1px solid ${selected?'rgba(0,196,106,0.3)'  :'rgba(0,80,255,0.3)'};color:${selected?'#00C46A':'#6B9FFF'};border-radius:3px;cursor:pointer;white-space:nowrap">${selected?'✓ SELECTED':'+ SELECT'}</button>
         </div>
       </div>
       <div class="creator-stats">
@@ -7314,14 +7313,14 @@ function renderCreatorGrid(keepPage) {
       ${multiPlatformCpiHtml(cr)}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
         <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:10px 12px;">
-          <div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.08em;color:rgba(255,255,255,0.35);margin-bottom:4px;">CREATOR SCORE</div>
-          <div style="font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:700;line-height:1;color:${cpiScoreColor(cr.cpi)}">${cr.cpi}</div>
-          <div style="font-family:'DM Mono',monospace;font-size:8px;color:rgba(255,255,255,0.3);margin-top:3px">${cr.cpi>=80?'Strong commercial performer':cr.cpi>=60?'Moderate performer':'Developing creator'}</div>
+          <div style="font-family:DM Mono,monospace;font-size:8px;letter-spacing:.08em;color:rgba(255,255,255,0.35);margin-bottom:4px;">CREATOR SCORE</div>
+          <div style="font-family:Space Grotesk,sans-serif;font-size:26px;font-weight:700;line-height:1;color:${cpiScoreColor(cr.cpi)}">${cr.cpi}</div>
+          <div style="font-family:DM Mono,monospace;font-size:8px;color:rgba(255,255,255,0.3);margin-top:3px">${cr.cpi>=80?'Strong commercial performer':cr.cpi>=60?'Moderate performer':'Developing creator'}</div>
         </div>
         <div style="background:rgba(255,255,255,0.03);border:1px solid ${gfi>=80?'rgba(0,212,122,0.25)':gfi>=60?'rgba(255,149,0,0.25)':'rgba(255,51,85,0.25)'};border-radius:8px;padding:10px 12px;">
-          <div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.08em;color:rgba(255,255,255,0.35);margin-bottom:4px;">GENRE FIT</div>
-          <div style="font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:700;line-height:1;color:${gfi>=80?'#00D47A':gfi>=60?'#FF9500':'#FF3355'}">${gfi}%</div>
-          <div style="font-family:'DM Mono',monospace;font-size:8px;color:rgba(255,255,255,0.3);margin-top:3px">${gfi>=80?'Strong fit for this campaign':gfi>=60?'Moderate fit — usable':mismatch?'Low fit · '+mismatch:'Low genre alignment'}</div>
+          <div style="font-family:DM Mono,monospace;font-size:8px;letter-spacing:.08em;color:rgba(255,255,255,0.35);margin-bottom:4px;">GENRE FIT</div>
+          <div style="font-family:Space Grotesk,sans-serif;font-size:26px;font-weight:700;line-height:1;color:${gfi>=80?'#00D47A':gfi>=60?'#FF9500':'#FF3355'}">${gfi}%</div>
+          <div style="font-family:DM Mono,monospace;font-size:8px;color:rgba(255,255,255,0.3);margin-top:3px">${gfi>=80?'Strong fit for this campaign':gfi>=60?'Moderate fit — usable':mismatch?'Low fit · '+mismatch:'Low genre alignment'}</div>
         </div>
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;gap:6px;flex-wrap:wrap">
@@ -7334,7 +7333,7 @@ function renderCreatorGrid(keepPage) {
         <span style="color:var(--text-dim);font-weight:600;font-size:11px">Ded: <strong style="color:#FFD400">${e.fmt(e.ranges.ded[0])}–${e.fmt(e.ranges.ded[1])}</strong></span>
       </div>
     </div>`;
-  }).join('') || `<div style="padding:60px;text-align:center;color:var(--text-muted);font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.08em">
+  }).join('') || `<div style="padding:60px;text-align:center;color:var(--text-muted);font-family:DM Mono,monospace;font-size:11px;letter-spacing:.08em">
     NO CREATORS MATCH CURRENT FILTERS<br>
     <span style="font-size:10px;margin-top:8px;display:block;opacity:.6">Try increasing your budget, changing the tier mix, or adjusting the genre</span>
   </div>`;
@@ -7396,22 +7395,22 @@ function openProfileOverlay(id) {
 
       <!-- HERO BAND -->
       <div style="background:linear-gradient(135deg,${c.color}22,transparent);padding:32px;position:relative">
-        <button data-oc="closeProfileOverlay()" style="position:absolute;top:16px;right:16px;background:rgba(0,0,0,0.4);border:1px solid var(--border);color:var(--text-dim);border-radius:6px;padding:6px 12px;cursor:pointer;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.06em">✕ CLOSE</button>
+        <button data-oc="closeProfileOverlay()" style="position:absolute;top:16px;right:16px;background:rgba(0,0,0,0.4);border:1px solid var(--border);color:var(--text-dim);border-radius:6px;padding:6px 12px;cursor:pointer;font-family:DM Mono,monospace;font-size:10px;letter-spacing:.06em">✕ CLOSE</button>
         <div style="display:flex;gap:20px;align-items:center">
-          <div id="profile-avatar-${c.id}" style="width:72px;height:72px;border-radius:50%;background:${c.color}33;border:3px solid ${c.color};display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;color:${c.color};flex-shrink:0;font-family:'Space Grotesk',sans-serif;overflow:hidden;flex-shrink:0">${c.name.charAt(0)}</div>
+          <div id="profile-avatar-${c.id}" style="width:72px;height:72px;border-radius:50%;background:${c.color}33;border:3px solid ${c.color};display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;color:${c.color};flex-shrink:0;font-family:Space Grotesk,sans-serif;overflow:hidden;flex-shrink:0">${c.name.charAt(0)}</div>
           <div>
-            <div style="font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:600;letter-spacing:-.02em">${c.name}</div>
+            <div style="font-family:Space Grotesk,sans-serif;font-size:26px;font-weight:600;letter-spacing:-.02em">${c.name}</div>
             <div style="font-size:13px;color:var(--text-dim);margin-top:4px">${c.handle} · ${c.allPlatforms ? c.allPlatforms.join(' · ') : c.platform}</div>
             <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
-              ${c.platform && c.platform.toLowerCase().includes('youtube') ? `<a href="https://youtube.com/${c.handle}" target="_blank" style="font-family:'DM Mono',monospace;font-size:9px;padding:3px 10px;background:rgba(255,0,0,0.12);border:1px solid rgba(255,0,0,0.3);color:#FF4444;border-radius:3px;text-decoration:none;letter-spacing:.04em">▶ YouTube →</a>` : ''}
-              ${c.platform && c.platform.toLowerCase().includes('youtube') ? `<a href="https://youtube.com/${c.handle}" target="_blank" style="font-family:'DM Mono',monospace;font-size:9px;padding:3px 10px;background:rgba(255,0,0,0.12);border:1px solid rgba(255,0,0,0.3);color:#FF0000;border-radius:3px;text-decoration:none;letter-spacing:.04em">▶ YouTube →</a>` : ''}
-              ${c.platform && c.platform.toLowerCase().includes('twitch') ? `<a href="https://twitch.tv/${c.handle.replace('@','')}" target="_blank" style="font-family:'DM Mono',monospace;font-size:9px;padding:3px 10px;background:rgba(145,70,255,0.12);border:1px solid rgba(145,70,255,0.3);color:#9146FF;border-radius:3px;text-decoration:none;letter-spacing:.04em">▶ Twitch →</a>` : ''}
-              ${c.platform && c.platform.toLowerCase().includes('instagram') ? `<a href="https://instagram.com/${c.handle.replace('@','')}" target="_blank" style="font-family:'DM Mono',monospace;font-size:9px;padding:3px 10px;background:rgba(225,48,108,0.12);border:1px solid rgba(225,48,108,0.3);color:#E1306C;border-radius:3px;text-decoration:none;letter-spacing:.04em">▶ Instagram →</a>` : ''}
-              ${c.platform && c.platform.toLowerCase().includes('tiktok') ? `<a href="https://tiktok.com/${c.handle}" target="_blank" style="font-family:'DM Mono',monospace;font-size:9px;padding:3px 10px;background:rgba(0,242,234,0.12);border:1px solid rgba(0,242,234,0.3);color:#00F2EA;border-radius:3px;text-decoration:none;letter-spacing:.04em">▶ TikTok →</a>` : ''}
+              ${c.platform && c.platform.toLowerCase().includes('youtube') ? `<a href="https://youtube.com/${c.handle}" target="_blank" style="font-family:DM Mono,monospace;font-size:9px;padding:3px 10px;background:rgba(255,0,0,0.12);border:1px solid rgba(255,0,0,0.3);color:#FF4444;border-radius:3px;text-decoration:none;letter-spacing:.04em">▶ YouTube →</a>` : ''}
+              ${c.platform && c.platform.toLowerCase().includes('youtube') ? `<a href="https://youtube.com/${c.handle}" target="_blank" style="font-family:DM Mono,monospace;font-size:9px;padding:3px 10px;background:rgba(255,0,0,0.12);border:1px solid rgba(255,0,0,0.3);color:#FF0000;border-radius:3px;text-decoration:none;letter-spacing:.04em">▶ YouTube →</a>` : ''}
+              ${c.platform && c.platform.toLowerCase().includes('twitch') ? `<a href="https://twitch.tv/${c.handle.replace('@','')}" target="_blank" style="font-family:DM Mono,monospace;font-size:9px;padding:3px 10px;background:rgba(145,70,255,0.12);border:1px solid rgba(145,70,255,0.3);color:#9146FF;border-radius:3px;text-decoration:none;letter-spacing:.04em">▶ Twitch →</a>` : ''}
+              ${c.platform && c.platform.toLowerCase().includes('instagram') ? `<a href="https://instagram.com/${c.handle.replace('@','')}" target="_blank" style="font-family:DM Mono,monospace;font-size:9px;padding:3px 10px;background:rgba(225,48,108,0.12);border:1px solid rgba(225,48,108,0.3);color:#E1306C;border-radius:3px;text-decoration:none;letter-spacing:.04em">▶ Instagram →</a>` : ''}
+              ${c.platform && c.platform.toLowerCase().includes('tiktok') ? `<a href="https://tiktok.com/${c.handle}" target="_blank" style="font-family:DM Mono,monospace;font-size:9px;padding:3px 10px;background:rgba(0,242,234,0.12);border:1px solid rgba(0,242,234,0.3);color:#00F2EA;border-radius:3px;text-decoration:none;letter-spacing:.04em">▶ TikTok →</a>` : ''}
             </div>
             <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
               ${tierBadgeHtml(c)}
-              <span style="font-family:'DM Mono',monospace;font-size:9px;padding:3px 8px;border-radius:3px;background:rgba(0,80,255,0.15);border:1px solid rgba(0,80,255,0.3);color:#6B9FFF">${c.genre}</span>
+              <span style="font-family:DM Mono,monospace;font-size:9px;padding:3px 8px;border-radius:3px;background:rgba(0,80,255,0.15);border:1px solid rgba(0,80,255,0.3);color:#6B9FFF">${c.genre}</span>
               ${(function(){
                 var sig = getCrossoverSignal(c, getSelectedGenre());
                 if (!sig) return '';
@@ -7471,23 +7470,23 @@ function openProfileOverlay(id) {
       <!-- STATS ROW -->
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border-top:1px solid var(--border)">
         <div style="background:var(--bg3);padding:20px;text-align:center">
-          <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px">SUBSCRIBERS</div>
-          <div id="profile-subs-${c.id}" style="font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:600;color:var(--text)">${c.subs}</div>
+          <div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px">SUBSCRIBERS</div>
+          <div id="profile-subs-${c.id}" style="font-family:Space Grotesk,sans-serif;font-size:26px;font-weight:600;color:var(--text)">${c.subs}</div>
         </div>
         <div style="background:var(--bg3);padding:20px;text-align:center">
-          <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px">AVG VIEWS</div>
-          <div id="profile-views-${c.id}" style="font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:600;color:var(--text)">${c.avgViews}</div>
+          <div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px">AVG VIEWS</div>
+          <div id="profile-views-${c.id}" style="font-family:Space Grotesk,sans-serif;font-size:26px;font-weight:600;color:var(--text)">${c.avgViews}</div>
         </div>
         <div style="background:var(--bg3);padding:20px;text-align:center">
-          <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px">ENG RATE</div>
-          <div style="font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:600;color:#00C46A">${c.eng}</div>
+          <div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px">ENG RATE</div>
+          <div style="font-family:Space Grotesk,sans-serif;font-size:26px;font-weight:600;color:#00C46A">${c.eng}</div>
         </div>
         <div style="background:var(--bg3);padding:20px;text-align:center;position:relative">
-          <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px">CPI SCORE</div>
-          <div style="font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:600;color:${cpiScoreColor(c.cpi)}">${c.cpi}</div>
-          <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--text-muted);margin-top:4px;cursor:pointer;text-decoration:underline;text-underline-offset:2px" data-oc="toggleCpiBreakdown(${c.id})">why this score?</div>
+          <div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px">CPI SCORE</div>
+          <div style="font-family:Space Grotesk,sans-serif;font-size:26px;font-weight:600;color:${cpiScoreColor(c.cpi)}">${c.cpi}</div>
+          <div style="font-family:DM Mono,monospace;font-size:8px;color:var(--text-muted);margin-top:4px;cursor:pointer;text-decoration:underline;text-underline-offset:2px" data-oc="toggleCpiBreakdown(${c.id})">why this score?</div>
           <div id="cpi-breakdown-${c.id}" style="display:none;position:absolute;left:50%;transform:translateX(-50%);top:100%;z-index:20;width:260px;background:var(--bg);border:1px solid var(--border-bright);border-radius:8px;padding:16px;text-align:left;box-shadow:0 8px 32px rgba(0,0,0,0.4)">
-            <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#0050FF;margin-bottom:10px">CPI BREAKDOWN · ${c.name}</div>
+            <div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#0050FF;margin-bottom:10px">CPI BREAKDOWN · ${c.name}</div>
             ${(function(){
               var eng   = parseFloat(c.eng) || 0;
               var subs  = parseSubs(c.subs);
@@ -7511,7 +7510,7 @@ function openProfileOverlay(id) {
                 return '<div style="margin-bottom:10px">'
                   + '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px">'
                     + '<span style="font-size:10px;color:var(--text-dim)">' + r[0] + '</span>'
-                    + '<span style="font-family:'DM Mono',monospace;font-size:10px;color:' + col + '">' + r[2] + '/' + r[3] + ' pts</span>'
+                    + '<span style="font-family:DM Mono,monospace;font-size:10px;color:' + col + '">' + r[2] + '/' + r[3] + ' pts</span>'
                   + '</div>'
                   + '<div style="height:4px;background:var(--bg3);border-radius:2px;overflow:hidden">'
                     + '<div style="height:100%;width:' + pct + '%;background:' + col + ';border-radius:2px"></div>'
@@ -7530,17 +7529,17 @@ function openProfileOverlay(id) {
 
         <!-- GFI SCORE -->
         <div style="background:var(--bg2);padding:24px">
-          <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#0050FF;margin-bottom:14px">Genre Fit Index · ${genre}</div>
+          <div style="font-family:DM Mono,monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#0050FF;margin-bottom:14px">Genre Fit Index · ${genre}</div>
           <div style="display:flex;align-items:center;gap:16px;margin-bottom:10px">
-            <div style="font-family:'Space Grotesk',sans-serif;font-size:40px;font-weight:600;color:${gfi>=80?'#00C46A':gfi>=60?'#FF7A00':'#E60023'}">${gfi}%</div>
+            <div style="font-family:Space Grotesk,sans-serif;font-size:40px;font-weight:600;color:${gfi>=80?'#00C46A':gfi>=60?'#FF7A00':'#E60023'}">${gfi}%</div>
             <div style="font-size:13px;color:var(--text-dim);line-height:1.5">${gfi>=85?'Excellent fit — near-perfect audience alignment':gfi>=70?'Strong fit — high audience alignment':gfi>=55?'Good fit — solid genre match':gfi>=40?'Moderate fit — some genre crossover':'Weak fit — low genre alignment'}</div>
           </div>
           <div style="background:var(--bg3);border-radius:3px;height:6px">
             <div style="height:100%;border-radius:3px;background:${gfi>=80?'#00C46A':gfi>=60?'#FF7A00':'#E60023'};width:${gfi}%;transition:width .8s ease"></div>
           </div>
-          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);margin-top:8px">CPI ${c.cpi} · P${Math.round(c.cpi/10)*10} performance band</div>
+          <div style="font-family:DM Mono,monospace;font-size:9px;color:var(--text-muted);margin-top:8px">CPI ${c.cpi} · P${Math.round(c.cpi/10)*10} performance band</div>
           <div style="margin-top:12px;padding:10px 12px;background:var(--bg3);border-radius:6px">
-            <div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.08em;color:var(--text-muted);margin-bottom:8px">GFI INPUTS</div>
+            <div style="font-family:DM Mono,monospace;font-size:8px;letter-spacing:.08em;color:var(--text-muted);margin-bottom:8px">GFI INPUTS</div>
             ${(function(){
               var campaignGenre = getSelectedGenre() || 'Gaming & Esports';
               var subMode = activeSubMode || '';
@@ -7555,7 +7554,7 @@ function openProfileOverlay(id) {
                 return '<div style="display:flex;justify-content:space-between;font-size:9px;margin-bottom:4px">'
                   + '<span style="color:var(--text-muted)">' + it[0] + '</span>'
                   + '<span style="color:var(--text-dim)">' + it[1] + '</span>'
-                  + '<span style="color:#FFD400;font-family:'DM Mono',monospace">' + it[2] + '</span>'
+                  + '<span style="color:#FFD400;font-family:DM Mono,monospace">' + it[2] + '</span>'
                 + '</div>';
               }).join('');
             })()}
@@ -7564,23 +7563,23 @@ function openProfileOverlay(id) {
 
         <!-- COST ESTIMATE -->
         <div style="background:var(--bg2);padding:24px">
-          <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#0050FF;margin-bottom:14px">Estimated Budget Range</div>
+          <div style="font-family:DM Mono,monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#0050FF;margin-bottom:14px">Estimated Budget Range</div>
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
             ${[['Dedicated',e.ranges.ded],['Integrated',e.ranges.int],['Mixed',e.ranges.mix]].map(([label,range])=>`
               <div style="background:var(--bg3);border-radius:6px;padding:12px;text-align:center">
-                <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);margin-bottom:6px">${label}</div>
-                <div style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:#FFD400">${e.fmt(range[0])}</div>
-                <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text-dim);font-weight:500">– ${e.fmt(range[1])}</div>
+                <div style="font-family:DM Mono,monospace;font-size:9px;color:var(--text-muted);margin-bottom:6px">${label}</div>
+                <div style="font-family:Space Grotesk,sans-serif;font-size:18px;font-weight:700;color:#FFD400">${e.fmt(range[0])}</div>
+                <div style="font-family:DM Mono,monospace;font-size:11px;color:var(--text-dim);font-weight:500">– ${e.fmt(range[1])}</div>
               </div>`).join('')}
           </div>
-          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);margin-top:10px;line-height:1.5">${e.verifiedNote || '2025 CPM benchmark'}</div>
+          <div style="font-family:DM Mono,monospace;font-size:9px;color:var(--text-muted);margin-top:10px;line-height:1.5">${e.verifiedNote || '2025 CPM benchmark'}</div>
         </div>
 
       </div>
 
       <!-- SPONSORSHIP FREQUENCY -->
       <div style="padding:20px 24px;border-top:1px solid var(--border)">
-        <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#0050FF;margin-bottom:12px">Estimated Sponsorship Frequency</div>
+        <div style="font-family:DM Mono,monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#0050FF;margin-bottom:12px">Estimated Sponsorship Frequency</div>
         <div style="display:flex;gap:12px;align-items:center">
           ${(function() {
             var subs = parseSubs(c.subs);
@@ -7618,7 +7617,7 @@ function openProfileOverlay(id) {
 
       <!-- AUDIENCE INTELLIGENCE -->
       <div style="padding:20px 24px;border-top:1px solid var(--border)">
-        <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#0050FF;margin-bottom:14px">Audience Intelligence</div>
+        <div style="font-family:DM Mono,monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#0050FF;margin-bottom:14px">Audience Intelligence</div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
           ${(function(){
             var yt = YT_ENRICHMENT[c.id];
@@ -7660,13 +7659,13 @@ function openProfileOverlay(id) {
             ];
             return items.map(function(it){
               return '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:12px">'
-                + '<div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px">' + it[0] + '</div>'
+                + '<div style="font-family:DM Mono,monospace;font-size:8px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px">' + it[0] + '</div>'
                 + '<div style="font-size:13px;font-weight:600;color:var(--text)">' + it[1] + '</div>'
               + '</div>';
             }).join('');
           })()}
         </div>
-        <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--text-muted);margin-top:8px;opacity:.6">Geo and demographic estimates derived from channel country, language and genre benchmarks. Verified audience analytics coming in a future release.</div>
+        <div style="font-family:DM Mono,monospace;font-size:8px;color:var(--text-muted);margin-top:8px;opacity:.6">Geo and demographic estimates derived from channel country, language and genre benchmarks. Verified audience analytics coming in a future release.</div>
       </div>
 
       <!-- TWITCH CONTEXT PANEL -->
@@ -7675,10 +7674,10 @@ function openProfileOverlay(id) {
       <!-- LIVE CONTENT ANALYSIS -->
       <div style="padding:20px 24px;border-top:1px solid var(--border)">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-          <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#0050FF">Live Content Analysis</div>
-          <div id="profile-ts-${c.id}" style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted)"></div>
+          <div style="font-family:DM Mono,monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#0050FF">Live Content Analysis</div>
+          <div id="profile-ts-${c.id}" style="font-family:DM Mono,monospace;font-size:9px;color:var(--text-muted)"></div>
         </div>
-        <div id="profile-live-${c.id}" style="font-size:12px;color:var(--text-muted);font-family:'DM Mono',monospace;letter-spacing:.04em">
+        <div id="profile-live-${c.id}" style="font-size:12px;color:var(--text-muted);font-family:DM Mono,monospace;letter-spacing:.04em">
           ${c.platform && c.platform.toLowerCase().includes('youtube') ? 'Fetching live data...' : 'Live data available for YouTube channels only'}
         </div>
       </div>
@@ -7686,7 +7685,7 @@ function openProfileOverlay(id) {
       <!-- ADD TO CAMPAIGN -->
       <div style="padding:20px 24px;border-top:1px solid var(--border);background:var(--bg3);display:flex;align-items:center;justify-content:space-between">
         <div style="font-size:13px;color:var(--text-dim)">Add to your campaign brief and run a simulation.</div>
-        <button data-oc="toggleCreator(${c.id});closeProfileOverlay()" style="padding:10px 20px;background:var(--blue-bright)||'#0050FF';background:#0050FF;color:#fff;border:none;border-radius:6px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.06em;cursor:pointer;text-transform:uppercase">+ Add to Campaign</button>
+        <button data-oc="toggleCreator(${c.id});closeProfileOverlay()" style="padding:10px 20px;background:var(--blue-bright)||'#0050FF';background:#0050FF;color:#fff;border:none;border-radius:6px;font-family:DM Mono,monospace;font-size:10px;letter-spacing:.06em;cursor:pointer;text-transform:uppercase">+ Add to Campaign</button>
       </div>
 
     </div>
@@ -8333,7 +8332,7 @@ function expandBand(band) {
   const d = cfg.data;
 
   content.innerHTML = `
-    <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:${cfg.color};margin-bottom:16px;font-weight:700">${cfg.label} — Full Breakdown</div>
+    <div style="font-family:DM Mono,monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:${cfg.color};margin-bottom:16px;font-weight:700">${cfg.label} — Full Breakdown</div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
       ${[
         ['Impressions', fmtNum(d.impressions), cfg.color],
@@ -8342,11 +8341,11 @@ function expandBand(band) {
         ['Est. Clicks', fmtNum(Math.round(d.impressions * d.ctr / 100)), 'var(--text)'],
       ].map(([l,v,col]) => `
         <div style="background:var(--bg3);border-radius:6px;padding:16px;text-align:center">
-          <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px">${l}</div>
-          <div style="font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:700;color:${col}">${v}</div>
+          <div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px">${l}</div>
+          <div style="font-family:Space Grotesk,sans-serif;font-size:24px;font-weight:700;color:${col}">${v}</div>
         </div>`).join('')}
     </div>
-    <div style="margin-top:12px;font-family:'DM Mono',monospace;font-size:10px;color:var(--text-muted);line-height:1.6">
+    <div style="margin-top:12px;font-family:DM Mono,monospace;font-size:10px;color:var(--text-muted);line-height:1.6">
       ${band === 'worst' ? 'Conservative estimate based on lower engagement and saturation scenarios. Plan contingencies around these numbers.' :
         band === 'base'  ? 'Most probable outcome based on current benchmark data and creator CPI/GFI scores. Use as your primary planning figure.' :
         'Optimistic outcome under ideal conditions — strong audience alignment, high engagement, favourable timing. Treat as upside potential.'}
@@ -10219,6 +10218,37 @@ function openCompareView() {
 </script>
 
 <script>
+// ── SIGNUP MODAL ─────────────────────────────────────────────────────
+function showSignUpModal() {
+  var el = document.getElementById('suModal');
+  if (el) { el.style.display = 'flex'; document.body.style.overflow = 'hidden'; }
+}
+function hideSignUpModal() {
+  var el = document.getElementById('suModal');
+  if (el) { el.style.display = 'none'; document.body.style.overflow = ''; }
+}
+function handleFreeSignUp() {
+  var emailEl = document.getElementById('suEmail');
+  var email = emailEl ? emailEl.value.trim() : '';
+  if (!email || email.indexOf('@') < 0) {
+    if (emailEl) { emailEl.style.border = '1px solid #E60023'; }
+    return;
+  }
+  // Submit to Supabase signups table
+  fetch('https://iysjxslzlbojoivxjrce.supabase.co/rest/v1/signups', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5c2p4c2x6bGJvam9pdnhqcmNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM0MzA2MDIsImV4cCI6MjA1OTAwNjYwMn0.AqbQqRs3AiGYhRGZw1SG2TNqlQQ1rPbICbzNBE3Uvj4',
+      'Prefer': 'return=minimal'
+    },
+    body: JSON.stringify({ email: email, source: 'modal', created_at: new Date().toISOString() })
+  }).catch(function(){});
+  hideSignUpModal();
+  alert('Thanks! We will be in touch.');
+}
+
+
 // ── GLOBAL EVENT DELEGATION (Cloudflare-safe) ────────────────────────
 // Handles all data-oc= attributes (replaces onclick= stripped by Cloudflare)
 document.addEventListener('click', function(e) {
@@ -10264,6 +10294,34 @@ document.addEventListener('DOMContentLoaded', function() {
   wireId('runSimFromPersonasBtn', function() { if(typeof showScreen==='function') showScreen('simulator', document.querySelector('.nav-tab:nth-child(4)')); });
   wireId('simThisCampaignBtn', function() { if(typeof showScreen==='function') showScreen('simulator', document.querySelector('.nav-tab:nth-child(4)')); if(typeof runSimulation==='function') runSimulation(); });
   wireId('GBtn',               function() { if(typeof GC==='function') GC(); });
+  // Search input
+  var searchInput = document.getElementById('creatorSearch');
+  if (searchInput) {
+    searchInput.addEventListener('input', function() {
+      if (typeof runCreatorSearch === 'function') runCreatorSearch(searchInput.value);
+    });
+  }
+  // Budget slider
+  var budgetSlider = document.getElementById('budget');
+  if (budgetSlider) {
+    budgetSlider.addEventListener('input', function() {
+      if (typeof updateTierLabel === 'function') updateTierLabel(budgetSlider.value);
+    });
+  }
+  // Duration slider
+  var durSlider = document.getElementById('campaignDuration');
+  var durLabel  = document.getElementById('durationLabel');
+  if (durSlider && durLabel) {
+    durSlider.addEventListener('input', function() {
+      durLabel.textContent = durSlider.value + (durSlider.value == 1 ? ' week' : ' weeks');
+    });
+    durSlider.addEventListener('change', function() {
+      if (typeof simResults !== 'undefined' && simResults) {
+        simResults = null;
+        if (typeof runSimulation === 'function') runSimulation();
+      }
+    });
+  }
 });
 </script>
 
