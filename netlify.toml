@@ -1,12 +1,9 @@
 [[headers]]
   for = "/*"
   [headers.values]
-    Content-Security-Policy = ""
-    X-Content-Type-Options = "nosniff"
     Cache-Control = "no-transform"
 
 [[headers]]
   for = "/*.html"
   [headers.values]
     Cache-Control = "no-transform, no-cache"
-    X-Cloudflare-Email-Obfuscation = "off"
