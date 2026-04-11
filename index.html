@@ -301,12 +301,13 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
     <div style="margin-bottom:60px;">
       <span class="section-eyebrow">See it in action</span>
       <h2 class="section-h2" style="margin-top:16px;">The platform,<br><em>animated.</em></h2>
-      <p style="font-size:18px;color:var(--muted);font-weight:300;max-width:520px;margin-top:16px;">Click a creator card to open their full profile — CPI breakdown, engagement quality, genre fit and campaign simulation. All before you spend a penny.</p>
+      <p style="font-size:18px;color:var(--muted);font-weight:300;max-width:520px;margin-top:16px;">Watch the platform discover a creator and open their full profile — CPI breakdown, engagement quality, genre fit and campaign simulation.</p>
     </div>
-    <div style="background:#050508;border-radius:16px;padding:24px;font-family:DM Mono,monospace;overflow:hidden;position:relative;min-height:500px;border:1px solid rgba(255,255,255,0.06);">
+    <div style="background:#050508;border-radius:16px;padding:24px;font-family:DM Mono,monospace;border:1px solid rgba(255,255,255,0.06);">
       <div style="font-size:9px;letter-spacing:.1em;color:rgba(255,255,255,0.3);margin-bottom:14px;">CREATOR DISCOVERY · GAMING & ESPORTS · MID-TIER</div>
 
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;" id="sf-demo-grid">
+      <!-- Creator cards grid -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;position:relative;" id="sf-demo-grid">
 
         <div class="sf-demo-card" id="sf-card0" style="background:#0A0A10;border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:16px;cursor:pointer;transition:border-color 0.2s,transform 0.2s;position:relative;">
           <div style="display:inline-block;font-size:8px;letter-spacing:.06em;padding:2px 7px;border-radius:3px;margin-bottom:8px;background:rgba(0,80,255,0.12);color:#6B9FFF;">Mid-tier</div>
@@ -358,42 +359,9 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
 
       </div>
 
-      <!-- Profile overlay -->
-      <div id="sf-overlay" style="position:absolute;top:0;right:-100%;width:52%;height:100%;background:#0D0D16;border-left:1px solid rgba(255,255,255,0.1);border-radius:0 16px 16px 0;padding:20px;transition:right 0.4s cubic-bezier(.23,1,.32,1);overflow:hidden;">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,0.07);">
-          <div style="width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;font-family:sans-serif;background:rgba(255,122,0,0.15);color:#FF7A00;">G</div>
-          <div>
-            <div style="font-family:sans-serif;font-size:17px;font-weight:700;color:#fff;">General Sam</div>
-            <div style="font-size:9px;letter-spacing:.06em;color:rgba(255,255,255,0.35);">@generalsam · YouTube · Gaming & Esports · Survival</div>
-          </div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
-          <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:12px;">
-            <div style="font-family:sans-serif;font-size:28px;font-weight:700;line-height:1;color:#00C46A;" id="sf-cpi-n">0</div>
-            <div style="font-size:8px;letter-spacing:.08em;color:rgba(255,255,255,0.3);margin-top:4px;">CPI SCORE</div>
-          </div>
-          <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:12px;">
-            <div style="font-family:sans-serif;font-size:28px;font-weight:700;line-height:1;color:#00C46A;" id="sf-gfi-n">0%</div>
-            <div style="font-size:8px;letter-spacing:.08em;color:rgba(255,255,255,0.3);margin-top:4px;">GFI SCORE</div>
-          </div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px;">
-          <div style="background:rgba(255,255,255,0.025);border-radius:6px;padding:10px;"><div style="font-size:8px;letter-spacing:.06em;color:rgba(255,255,255,0.3);margin-bottom:4px;">SUBSCRIBERS</div><div style="font-size:13px;font-weight:700;color:#FFD400;">1.5M</div></div>
-          <div style="background:rgba(255,255,255,0.025);border-radius:6px;padding:10px;"><div style="font-size:8px;letter-spacing:.06em;color:rgba(255,255,255,0.3);margin-bottom:4px;">AVG VIEWS</div><div style="font-size:13px;font-weight:700;color:#FFD400;">720K</div></div>
-          <div style="background:rgba(255,255,255,0.025);border-radius:6px;padding:10px;"><div style="font-size:8px;letter-spacing:.06em;color:rgba(255,255,255,0.3);margin-bottom:4px;">ENG RATE</div><div style="font-size:13px;font-weight:700;color:#00C46A;">15.0%</div></div>
-          <div style="background:rgba(255,255,255,0.025);border-radius:6px;padding:10px;"><div style="font-size:8px;letter-spacing:.06em;color:rgba(255,255,255,0.3);margin-bottom:4px;">EST. RATE (INT)</div><div style="font-size:13px;font-weight:700;color:#FFD400;">$18K–$36K</div></div>
-        </div>
-        <div style="margin-bottom:8px;"><div style="font-size:8px;letter-spacing:.06em;color:rgba(255,255,255,0.3);display:flex;justify-content:space-between;margin-bottom:4px;"><span>Engagement quality</span><span>High</span></div><div style="height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;"><div id="sf-bar1" style="height:100%;width:0;border-radius:2px;background:#00C46A;transition:width 0.8s cubic-bezier(.23,1,.32,1);"></div></div></div>
-        <div style="margin-bottom:8px;"><div style="font-size:8px;letter-spacing:.06em;color:rgba(255,255,255,0.3);display:flex;justify-content:space-between;margin-bottom:4px;"><span>Sponsor frequency</span><span>Low — authentic</span></div><div style="height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;"><div id="sf-bar2" style="height:100%;width:0;border-radius:2px;background:#FFD400;transition:width 0.8s cubic-bezier(.23,1,.32,1);"></div></div></div>
-        <div style="margin-bottom:14px;"><div style="font-size:8px;letter-spacing:.06em;color:rgba(255,255,255,0.3);display:flex;justify-content:space-between;margin-bottom:4px;"><span>Genre fit · Gaming / Survival</span><span>83%</span></div><div style="height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;"><div id="sf-bar3" style="height:100%;width:0;border-radius:2px;background:#6B9FFF;transition:width 0.8s cubic-bezier(.23,1,.32,1);"></div></div></div>
-        <div style="background:rgba(0,80,255,0.06);border:1px solid rgba(0,80,255,0.2);border-radius:8px;padding:12px;">
-          <div style="font-size:8px;letter-spacing:.08em;color:#6B9FFF;margin-bottom:8px;">CAMPAIGN SIMULATION · $25K BUDGET</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;text-align:center;">
-            <div><div style="font-family:sans-serif;font-size:14px;font-weight:700;color:#E60023;" id="sf-p10">—</div><div style="font-size:7px;letter-spacing:.06em;color:rgba(255,255,255,0.3);margin-top:2px;">P10</div></div>
-            <div><div style="font-family:sans-serif;font-size:14px;font-weight:700;color:#FFD400;" id="sf-p50">—</div><div style="font-size:7px;letter-spacing:.06em;color:rgba(255,255,255,0.3);margin-top:2px;">P50</div></div>
-            <div><div style="font-family:sans-serif;font-size:14px;font-weight:700;color:#00C46A;" id="sf-p90">—</div><div style="font-size:7px;letter-spacing:.06em;color:rgba(255,255,255,0.3);margin-top:2px;">P90</div></div>
-          </div>
-        </div>
+      <!-- Profile panel — expands BELOW the grid, full width -->
+      <div id="sf-overlay" style="max-height:0;overflow:hidden;opacity:0;transition:max-height 0.5s cubic-bezier(.23,1,.32,1),opacity 0.35s ease,margin-top 0.35s ease;margin-top:0;border-radius:12px;background:#0D0D16;border:1px solid rgba(255,255,255,0.1);">
+        <div id="sf-overlay-inner" style="padding:20px;"><!-- populated by JS --></div>
       </div>
 
       <!-- Animated cursor -->
@@ -404,11 +372,10 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
     </div>
   </div>
 </section>
-
 <style>
 @keyframes sf-ring-pop{0%{opacity:1;transform:scale(1);}100%{opacity:0;transform:scale(2.8);}}
 .sf-ring-anim{animation:sf-ring-pop 0.4s ease forwards;}
-.sf-demo-card.sf-active{border-color:#FFD400 !important;transform:translateY(-3px);}
+.sf-demo-card.sf-active{border-color:#FFD400 !important;transform:translateY(-2px);box-shadow:0 6px 20px rgba(255,212,0,0.12);}
 </style>
 
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
@@ -416,7 +383,7 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
   var ov=document.getElementById('sf-overlay');
   var cur=document.getElementById('sf-cursor');
   var ring=document.getElementById('sf-ring');
-  var wrap=document.querySelector('[id="sf-demo-grid"]').parentElement;
+  var wrap=document.getElementById('sf-demo-grid').parentElement;
 
   var CREATORS=[
     {
@@ -488,37 +455,45 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
   }
 
   function populateOverlay(cr){
-    var ov=document.getElementById('sf-overlay');
-    ov.innerHTML=
+    var inner=document.getElementById('sf-overlay-inner');
+    inner.innerHTML=
       '<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,0.07);">'
       +'<div style="width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;font-family:sans-serif;background:'+cr.avatarBg+';color:'+cr.avatarColor+';">'+cr.avatar+'</div>'
       +'<div><div style="font-family:sans-serif;font-size:17px;font-weight:700;color:#fff;">'+cr.name+'</div>'
       +'<div style="font-size:9px;letter-spacing:.06em;color:rgba(255,255,255,0.35);">'+cr.handle+'</div></div></div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">'
+      +'<div>'
       +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">'
       +'<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:12px;"><div style="font-family:sans-serif;font-size:28px;font-weight:700;line-height:1;color:'+cr.cpiColor+';" id="sf-cpi-n">0</div><div style="font-size:8px;letter-spacing:.08em;color:rgba(255,255,255,0.3);margin-top:4px;">CPI SCORE</div></div>'
       +'<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:12px;"><div style="font-family:sans-serif;font-size:28px;font-weight:700;line-height:1;color:'+cr.gfiColor+';" id="sf-gfi-n">0%</div><div style="font-size:8px;letter-spacing:.08em;color:rgba(255,255,255,0.3);margin-top:4px;">GFI SCORE</div></div>'
       +'</div>'
+      +'<div style="margin-bottom:8px;"><div style="font-size:8px;letter-spacing:.06em;color:rgba(255,255,255,0.3);display:flex;justify-content:space-between;margin-bottom:4px;"><span>'+cr.bar1lbl+'</span><span>'+cr.bar1r+'</span></div><div style="height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;"><div id="sf-bar1" style="height:100%;width:0;border-radius:2px;background:'+cr.bar1c+';transition:width 0.8s cubic-bezier(.23,1,.32,1);"></div></div></div>'
+      +'<div style="margin-bottom:8px;"><div style="font-size:8px;letter-spacing:.06em;color:rgba(255,255,255,0.3);display:flex;justify-content:space-between;margin-bottom:4px;"><span>'+cr.bar2lbl+'</span><span>'+cr.bar2r+'</span></div><div style="height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;"><div id="sf-bar2" style="height:100%;width:0;border-radius:2px;background:'+cr.bar2c+';transition:width 0.8s cubic-bezier(.23,1,.32,1);"></div></div></div>'
+      +'<div style="margin-bottom:0;"><div style="font-size:8px;letter-spacing:.06em;color:rgba(255,255,255,0.3);display:flex;justify-content:space-between;margin-bottom:4px;"><span>'+cr.bar3lbl+'</span><span>'+cr.bar3r+'</span></div><div style="height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;"><div id="sf-bar3" style="height:100%;width:0;border-radius:2px;background:'+cr.bar3c+';transition:width 0.8s cubic-bezier(.23,1,.32,1);"></div></div></div>'
+      +'</div>'
+      +'<div>'
       +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px;">'
       +'<div style="background:rgba(255,255,255,0.025);border-radius:6px;padding:10px;"><div style="font-size:8px;letter-spacing:.06em;color:rgba(255,255,255,0.3);margin-bottom:4px;">SUBSCRIBERS</div><div style="font-size:13px;font-weight:700;color:#FFD400;">'+cr.subs+'</div></div>'
       +'<div style="background:rgba(255,255,255,0.025);border-radius:6px;padding:10px;"><div style="font-size:8px;letter-spacing:.06em;color:rgba(255,255,255,0.3);margin-bottom:4px;">AVG VIEWS</div><div style="font-size:13px;font-weight:700;color:#FFD400;">'+cr.views+'</div></div>'
       +'<div style="background:rgba(255,255,255,0.025);border-radius:6px;padding:10px;"><div style="font-size:8px;letter-spacing:.06em;color:rgba(255,255,255,0.3);margin-bottom:4px;">ENG RATE</div><div style="font-size:13px;font-weight:700;color:#00C46A;">'+cr.eng+'</div></div>'
       +'<div style="background:rgba(255,255,255,0.025);border-radius:6px;padding:10px;"><div style="font-size:8px;letter-spacing:.06em;color:rgba(255,255,255,0.3);margin-bottom:4px;">EST. RATE (INT)</div><div style="font-size:13px;font-weight:700;color:#FFD400;">'+cr.rate+'</div></div>'
       +'</div>'
-      +'<div style="margin-bottom:8px;"><div style="font-size:8px;letter-spacing:.06em;color:rgba(255,255,255,0.3);display:flex;justify-content:space-between;margin-bottom:4px;"><span>'+cr.bar1lbl+'</span><span>'+cr.bar1r+'</span></div><div style="height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;"><div id="sf-bar1" style="height:100%;width:0;border-radius:2px;background:'+cr.bar1c+';transition:width 0.8s cubic-bezier(.23,1,.32,1);"></div></div></div>'
-      +'<div style="margin-bottom:8px;"><div style="font-size:8px;letter-spacing:.06em;color:rgba(255,255,255,0.3);display:flex;justify-content:space-between;margin-bottom:4px;"><span>'+cr.bar2lbl+'</span><span>'+cr.bar2r+'</span></div><div style="height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;"><div id="sf-bar2" style="height:100%;width:0;border-radius:2px;background:'+cr.bar2c+';transition:width 0.8s cubic-bezier(.23,1,.32,1);"></div></div></div>'
-      +'<div style="margin-bottom:14px;"><div style="font-size:8px;letter-spacing:.06em;color:rgba(255,255,255,0.3);display:flex;justify-content:space-between;margin-bottom:4px;"><span>'+cr.bar3lbl+'</span><span>'+cr.bar3r+'</span></div><div style="height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;"><div id="sf-bar3" style="height:100%;width:0;border-radius:2px;background:'+cr.bar3c+';transition:width 0.8s cubic-bezier(.23,1,.32,1);"></div></div></div>'
-      +'<div style="background:rgba(0,80,255,0.06);border:1px solid rgba(0,80,255,0.2);border-radius:8px;padding:12px;">'
-      +'<div style="font-size:8px;letter-spacing:.08em;color:#6B9FFF;margin-bottom:8px;">CAMPAIGN SIMULATION · '+cr.budget+'</div>'
+      +'<div style="background:rgba(0,80,255,0.06);border:1px solid rgba(0,80,255,0.2);border-radius:8px;padding:16px;">'
+      +'<div style="font-size:8px;letter-spacing:.08em;color:#6B9FFF;margin-bottom:12px;">CAMPAIGN SIMULATION · '+cr.budget+'</div>'
       +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;text-align:center;">'
-      +'<div><div style="font-family:sans-serif;font-size:14px;font-weight:700;color:#E60023;" id="sf-p10">—</div><div style="font-size:7px;letter-spacing:.06em;color:rgba(255,255,255,0.3);margin-top:2px;">P10</div></div>'
-      +'<div><div style="font-family:sans-serif;font-size:14px;font-weight:700;color:#FFD400;" id="sf-p50">—</div><div style="font-size:7px;letter-spacing:.06em;color:rgba(255,255,255,0.3);margin-top:2px;">P50</div></div>'
-      +'<div><div style="font-family:sans-serif;font-size:14px;font-weight:700;color:#00C46A;" id="sf-p90">—</div><div style="font-size:7px;letter-spacing:.06em;color:rgba(255,255,255,0.3);margin-top:2px;">P90</div></div>'
-      +'</div></div>';
+      +'<div><div style="font-family:sans-serif;font-size:22px;font-weight:700;color:#E60023;" id="sf-p10">—</div><div style="font-size:7px;letter-spacing:.06em;color:rgba(255,255,255,0.3);margin-top:4px;">P10</div></div>'
+      +'<div><div style="font-family:sans-serif;font-size:22px;font-weight:700;color:#FFD400;" id="sf-p50">—</div><div style="font-size:7px;letter-spacing:.06em;color:rgba(255,255,255,0.3);margin-top:4px;">P50</div></div>'
+      +'<div><div style="font-family:sans-serif;font-size:22px;font-weight:700;color:#00C46A;" id="sf-p90">—</div><div style="font-size:7px;letter-spacing:.06em;color:rgba(255,255,255,0.3);margin-top:4px;">P90</div></div>'
+      +'</div></div>'
+      +'</div>'
+      +'</div>';
   }
 
   function openProfile(cr, cardEl){
     populateOverlay(cr);
-    ov.style.right='0';
+    ov.style.maxHeight='500px';
+    ov.style.marginTop='16px';
+    ov.style.opacity='1';
     cardEl.classList.add('sf-active');
     setTimeout(function(){
       countUp(document.getElementById('sf-cpi-n'),cr.cpi,'',600);
@@ -535,7 +510,9 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
   }
 
   function closeProfile(cardEl){
-    ov.style.right='-100%';
+    ov.style.maxHeight='0';
+    ov.style.marginTop='0';
+    ov.style.opacity='0';
     if(cardEl) cardEl.classList.remove('sf-active');
   }
 
