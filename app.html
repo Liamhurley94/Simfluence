@@ -2668,27 +2668,132 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 
     <!-- OUTREACH ADD MODAL -->
-    <div id="outreach-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:600;align-items:center;justify-content:center;padding:24px">
-      <div style="background:var(--bg2);border:1px solid var(--border-bright);border-radius:14px;padding:32px;max-width:480px;width:100%">
-        <div style="font-family:DM Mono,monospace;font-size:10px;letter-spacing:.1em;color:var(--text-muted);margin-bottom:16px">ADD CREATOR TO OUTREACH</div>
-        <div style="display:flex;flex-direction:column;gap:10px">
-          <div><label style="font-family:DM Mono,monospace;font-size:9px;color:var(--text-muted);display:block;margin-bottom:4px">CREATOR NAME / HANDLE</label>
-            <input id="or-name" type="text" placeholder="e.g. @GhazzyTV" style="width:100%;font-family:DM Mono,monospace;font-size:12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text);outline:none"></div>
-          <div><label style="font-family:DM Mono,monospace;font-size:9px;color:var(--text-muted);display:block;margin-bottom:4px">ASSIGN TO CAMPAIGN</label>
-            <select id="or-campaign" style="width:100%;font-family:DM Mono,monospace;font-size:12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text)"></select></div>
-          <div><label style="font-family:DM Mono,monospace;font-size:9px;color:var(--text-muted);display:block;margin-bottom:4px">CONTACT EMAIL</label>
-            <input id="or-email" type="email" placeholder="business@creator.com (if known)" style="width:100%;font-family:DM Mono,monospace;font-size:12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text);outline:none"></div>
-          <div><label style="font-family:DM Mono,monospace;font-size:9px;color:var(--text-muted);display:block;margin-bottom:4px">STATUS</label>
-            <select id="or-status" style="width:100%;font-family:DM Mono,monospace;font-size:12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text)">
-              <option value="shortlisted">Shortlisted</option>
-              <option value="contacted">Contacted</option>
-              <option value="negotiating">Negotiating</option>
-              <option value="confirmed">Confirmed</option>
-              <option value="declined">Declined</option>
-            </select></div>
-          <div><label style="font-family:DM Mono,monospace;font-size:9px;color:var(--text-muted);display:block;margin-bottom:4px">NOTES</label>
-            <input id="or-notes" type="text" placeholder="Rate quoted, response time, agent..." style="width:100%;font-family:DM Mono,monospace;font-size:12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text);outline:none"></div>
+    <div id="outreach-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:600;align-items:flex-start;justify-content:center;padding:32px 16px;overflow-y:auto">
+      <div style="background:var(--bg2);border:1px solid var(--border-bright);border-radius:14px;padding:28px;max-width:560px;width:100%;margin:0 auto">
+
+        <div style="font-family:DM Mono,monospace;font-size:10px;letter-spacing:.1em;color:var(--text-muted);margin-bottom:20px">ADD CREATOR TO OUTREACH</div>
+
+        <div style="display:flex;flex-direction:column;gap:14px">
+
+          <!-- STEP 1: Campaign -->
+          <div>
+            <label style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.06em;color:var(--text-muted);display:block;margin-bottom:5px">STEP 1 · SELECT CAMPAIGN</label>
+            <select id="or-campaign" style="width:100%;font-family:DM Mono,monospace;font-size:12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:9px 12px;color:var(--text)"></select>
+          </div>
+
+          <!-- STEP 2: Genre targets -->
+          <div>
+            <label style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.06em;color:var(--text-muted);display:block;margin-bottom:5px">STEP 2 · BRAND CATEGORY <span style="color:var(--text-dim);font-size:8px">· auto-filled from campaign · add more to cross-target</span></label>
+            <div style="display:flex;gap:8px;align-items:center">
+              <select id="or-genre-primary" style="flex:1;font-family:DM Mono,monospace;font-size:12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:9px 12px;color:var(--text)">
+                <option value="">— Select primary genre —</option>
+              <option value="ASMR & Relaxation">ASMR & Relaxation</option>
+              <option value="Animals & Pets">Animals & Pets</option>
+              <option value="Art & Creative">Art & Creative</option>
+              <option value="Beauty & Skincare">Beauty & Skincare</option>
+              <option value="Education & Self-Development">Education & Self-Development</option>
+              <option value="Entertainment & Comedy">Entertainment & Comedy</option>
+              <option value="Finance & Investing">Finance & Investing</option>
+              <option value="Food & Cooking">Food & Cooking</option>
+              <option value="Gaming & Esports">Gaming & Esports</option>
+              <option value="Health & Fitness">Health & Fitness</option>
+              <option value="Kids & Family / Toys">Kids & Family / Toys</option>
+              <option value="Lifestyle & Vlogs">Lifestyle & Vlogs</option>
+              <option value="Music">Music</option>
+              <option value="News & Commentary">News & Commentary</option>
+              <option value="Sports & Athletics">Sports & Athletics</option>
+              <option value="Talk & Entertainment">Talk & Entertainment</option>
+              <option value="Tech & Gadgets">Tech & Gadgets</option>
+              <option value="Travel & Adventure">Travel & Adventure</option>
+              <option value="Unboxing">Unboxing</option>
+              </select>
+              <button id="or-genre-add-btn" style="padding:8px 12px;background:rgba(0,80,255,0.1);border:1px solid rgba(0,80,255,0.3);color:#6B9FFF;border-radius:6px;font-family:DM Mono,monospace;font-size:9px;cursor:pointer;white-space:nowrap;letter-spacing:.04em">+ ADD TARGET</button>
+            </div>
+            <!-- Additional genre targets -->
+            <div id="or-genre-extras" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px"></div>
+            <!-- Genre add row (hidden until + ADD TARGET clicked) -->
+            <div id="or-genre-extra-row" style="display:none;margin-top:8px">
+              <select id="or-genre-secondary" style="width:100%;font-family:DM Mono,monospace;font-size:12px;background:var(--bg3);border:1px solid rgba(0,80,255,0.3);border-radius:6px;padding:9px 12px;color:var(--text)">
+                <option value="">— Select additional genre —</option>
+              <option value="ASMR & Relaxation">ASMR & Relaxation</option>
+              <option value="Animals & Pets">Animals & Pets</option>
+              <option value="Art & Creative">Art & Creative</option>
+              <option value="Beauty & Skincare">Beauty & Skincare</option>
+              <option value="Education & Self-Development">Education & Self-Development</option>
+              <option value="Entertainment & Comedy">Entertainment & Comedy</option>
+              <option value="Finance & Investing">Finance & Investing</option>
+              <option value="Food & Cooking">Food & Cooking</option>
+              <option value="Gaming & Esports">Gaming & Esports</option>
+              <option value="Health & Fitness">Health & Fitness</option>
+              <option value="Kids & Family / Toys">Kids & Family / Toys</option>
+              <option value="Lifestyle & Vlogs">Lifestyle & Vlogs</option>
+              <option value="Music">Music</option>
+              <option value="News & Commentary">News & Commentary</option>
+              <option value="Sports & Athletics">Sports & Athletics</option>
+              <option value="Talk & Entertainment">Talk & Entertainment</option>
+              <option value="Tech & Gadgets">Tech & Gadgets</option>
+              <option value="Travel & Adventure">Travel & Adventure</option>
+              <option value="Unboxing">Unboxing</option>
+              </select>
+            </div>
+            <div id="or-genre-hint" style="font-family:DM Mono,monospace;font-size:9px;color:var(--text-muted);margin-top:6px"></div>
+          </div>
+
+          <!-- STEP 3: Creator dropdown (filtered) -->
+          <div>
+            <label style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.06em;color:var(--text-muted);display:block;margin-bottom:5px">STEP 3 · SELECT CREATOR <span id="or-creator-count" style="color:var(--text-dim);font-size:8px"></span></label>
+            <div style="position:relative">
+              <input id="or-creator-search" type="text" placeholder="Type name or @handle to filter..." autocomplete="off"
+                style="width:100%;font-family:DM Mono,monospace;font-size:12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:9px 12px;color:var(--text);outline:none">
+              <div id="or-creator-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg3);border:1px solid rgba(0,80,255,0.3);border-radius:6px;max-height:220px;overflow-y:auto;z-index:50;margin-top:2px"></div>
+            </div>
+            <!-- Selected creator preview -->
+            <div id="or-creator-preview" style="display:none;margin-top:8px;padding:10px 12px;background:rgba(0,196,106,0.06);border:1px solid rgba(0,196,106,0.25);border-radius:6px">
+              <div style="display:flex;align-items:center;gap:10px">
+                <div id="or-preview-avatar" style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;font-family:sans-serif;flex-shrink:0"></div>
+                <div style="flex:1">
+                  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                    <span id="or-preview-name" style="font-size:13px;font-weight:700;color:var(--text)"></span>
+                    <span id="or-preview-handle" style="font-family:DM Mono,monospace;font-size:10px;color:var(--text-muted)"></span>
+                    <span id="or-preview-platform" style="font-family:DM Mono,monospace;font-size:9px;padding:2px 6px;border-radius:3px;background:rgba(0,80,255,0.1);color:#6B9FFF"></span>
+                  </div>
+                  <div style="display:flex;gap:16px;margin-top:4px;font-family:DM Mono,monospace;font-size:10px">
+                    <span style="color:var(--text-muted)">SUBS <span id="or-preview-subs" style="color:var(--text)"></span></span>
+                    <span style="color:var(--text-muted)">CPI <span id="or-preview-cpi" style="color:#00C46A;font-weight:700"></span></span>
+                    <span style="color:var(--text-muted)">RATE <span id="or-preview-rate" style="color:#FFD400"></span></span>
+                  </div>
+                </div>
+                <button id="or-clear-creator" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;padding:0;line-height:1" title="Clear">×</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Contact email (auto-filled if known) -->
+          <div>
+            <label style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.06em;color:var(--text-muted);display:block;margin-bottom:5px">CONTACT EMAIL <span style="color:var(--text-dim);font-size:8px">· auto-filled if found in bio</span></label>
+            <input id="or-email" type="email" placeholder="business@creator.com" style="width:100%;font-family:DM Mono,monospace;font-size:12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:9px 12px;color:var(--text);outline:none">
+          </div>
+
+          <!-- Status + Notes side by side -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div>
+              <label style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.06em;color:var(--text-muted);display:block;margin-bottom:5px">STATUS</label>
+              <select id="or-status" style="width:100%;font-family:DM Mono,monospace;font-size:12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:9px 12px;color:var(--text)">
+                <option value="shortlisted">Shortlisted</option>
+                <option value="contacted">Contacted</option>
+                <option value="negotiating">Negotiating</option>
+                <option value="confirmed">Confirmed</option>
+                <option value="declined">Declined</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.06em;color:var(--text-muted);display:block;margin-bottom:5px">NOTES</label>
+              <input id="or-notes" type="text" placeholder="Rate, agent, response..." style="width:100%;font-family:DM Mono,monospace;font-size:12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:9px 12px;color:var(--text);outline:none">
+            </div>
+          </div>
+
         </div>
+
         <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">
           <button data-oc="closeOutreachModal()" style="padding:8px 18px;background:transparent;border:1px solid var(--border);color:var(--text-dim);border-radius:6px;font-family:DM Mono,monospace;font-size:10px;cursor:pointer">CANCEL</button>
           <button data-oc="saveOutreachEntry()" style="padding:8px 18px;background:#00C46A;color:#000;border:none;border-radius:6px;font-family:DM Mono,monospace;font-size:10px;cursor:pointer;font-weight:700">ADD TO TRACKER</button>
@@ -10583,41 +10688,200 @@ function renderCampaignsScreen() {
 }
 
 // ── OUTREACH CRM ──────────────────────────────────────────────────────
-function openOutreachModal() {
+// Tracks the currently selected creator object in outreach modal
+var _orSelectedCreator = null;
+var _orExtraGenres = [];
+
+function openOutreachModal(campaignId) {
   if (typeof getTierLevel === 'function' && getTierLevel() < 3) {
     showUpgradePrompt('personas_all','Platinum'); return;
   }
   _editingOutreachId = null;
-  document.getElementById('or-name').value   = '';
-  document.getElementById('or-email').value  = '';
-  document.getElementById('or-notes').value  = '';
+  _orSelectedCreator = null;
+  _orExtraGenres = [];
+  // Reset all fields
+  var ids = ['or-email','or-notes'];
+  ids.forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
   document.getElementById('or-status').value = 'shortlisted';
+  document.getElementById('or-creator-search').value = '';
+  document.getElementById('or-creator-dropdown').style.display = 'none';
+  document.getElementById('or-creator-preview').style.display = 'none';
+  document.getElementById('or-genre-extra-row').style.display = 'none';
+  document.getElementById('or-genre-extras').innerHTML = '';
+  document.getElementById('or-genre-hint').textContent = '';
   syncOutreachCampaignSelect();
+  // Pre-select campaign if provided
+  if (campaignId) {
+    setTimeout(function(){
+      var sel = document.getElementById('or-campaign');
+      if (sel) { sel.value = campaignId; orOnCampaignChange(); }
+    }, 20);
+  } else {
+    document.getElementById('or-genre-primary').value = '';
+    orRefreshCreatorCount();
+  }
   document.getElementById('outreach-modal').style.display = 'flex';
 }
 
 function addOutreachToCampaign(campaignId) {
-  openOutreachModal();
-  setTimeout(function() {
-    var sel = document.getElementById('or-campaign');
-    if (sel) sel.value = campaignId;
-  }, 50);
+  openOutreachModal(campaignId);
 }
 
 function addOutreachFromCreator(creatorId) {
   if (typeof getTierLevel === 'function' && getTierLevel() < 3) {
     showUpgradePrompt('personas_all','Platinum'); return;
   }
-  var cr = (typeof CREATORS !== 'undefined') ? CREATORS.find(function(c){ return c.id===creatorId; }) : null;
   openOutreachModal();
-  if (cr) {
-    setTimeout(function() {
-      document.getElementById('or-name').value = cr.name + ' (' + cr.handle + ')';
-      // Pre-fill email if known from bio
-      var emailMatch = (cr.bio||'').match(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/);
-      if (emailMatch) document.getElementById('or-email').value = emailMatch[0];
-    }, 50);
+  if (typeof CREATORS !== 'undefined') {
+    var cr = CREATORS.find(function(c){ return c.id===creatorId; });
+    if (cr) setTimeout(function(){ orSelectCreator(cr); }, 60);
   }
+}
+
+// Called when campaign changes — auto-fill genre from campaign data
+function orOnCampaignChange() {
+  var campId = document.getElementById('or-campaign').value;
+  var cmp = (typeof _campaigns!=='undefined') ? _campaigns.find(function(c){ return c.id===campId; }) : null;
+  var genreSel = document.getElementById('or-genre-primary');
+  if (cmp && cmp.genre) {
+    // Match campaign genre string to a known genre option
+    var opts = Array.from(genreSel.options).map(function(o){ return o.value; });
+    var match = opts.find(function(o){ return o && cmp.genre.toLowerCase().includes(o.toLowerCase().split(' ')[0]); });
+    genreSel.value = match || '';
+  }
+  orRefreshCreatorCount();
+}
+
+// Collect all selected genres (primary + extras)
+function orGetActiveGenres() {
+  var primary = document.getElementById('or-genre-primary').value;
+  var genres = [];
+  if (primary) genres.push(primary);
+  _orExtraGenres.forEach(function(g){ if(g && genres.indexOf(g)===-1) genres.push(g); });
+  return genres;
+}
+
+// Refresh the count hint and reset creator selection when genre changes
+function orRefreshCreatorCount() {
+  var genres = orGetActiveGenres();
+  var hint   = document.getElementById('or-genre-hint');
+  var countEl= document.getElementById('or-creator-count');
+  if (!genres.length) {
+    if(hint) hint.textContent = '';
+    if(countEl) countEl.textContent = '';
+    return;
+  }
+  var pool = (typeof CREATORS!=='undefined') ? CREATORS.filter(function(cr){
+    return genres.indexOf(cr.genre) !== -1;
+  }) : [];
+  var label = genres.length === 1 ? genres[0] : genres.join(' + ');
+  if(hint) hint.textContent = pool.length + ' creators available in ' + label;
+  if(countEl) countEl.textContent = '· ' + pool.length + ' in selected genre' + (genres.length>1?'s':'');
+}
+
+// Add an extra genre target
+function orAddExtraGenre() {
+  var sel = document.getElementById('or-genre-secondary');
+  var val = sel ? sel.value : '';
+  if (!val) return;
+  if (_orExtraGenres.indexOf(val) === -1) _orExtraGenres.push(val);
+  sel.value = '';
+  document.getElementById('or-genre-extra-row').style.display = 'none';
+  orRenderExtraGenreChips();
+  orRefreshCreatorCount();
+}
+
+function orRemoveExtraGenre(g) {
+  _orExtraGenres = _orExtraGenres.filter(function(x){ return x!==g; });
+  orRenderExtraGenreChips();
+  orRefreshCreatorCount();
+}
+
+function orRenderExtraGenreChips() {
+  var el = document.getElementById('or-genre-extras');
+  if (!el) return;
+  el.innerHTML = _orExtraGenres.map(function(g){
+    return '<div style="display:inline-flex;align-items:center;gap:5px;background:rgba(0,80,255,0.1);border:1px solid rgba(0,80,255,0.3);border-radius:12px;padding:3px 10px;font-family:DM Mono,monospace;font-size:9px;color:#6B9FFF">'
+      + g
+      + '<span style="cursor:pointer;color:rgba(107,159,255,0.6);margin-left:2px" data-genre="'+g+'" data-action="remove-extra-genre">×</span>'
+    + '</div>';
+  }).join('');
+}
+
+// Filter + show creator dropdown based on search input
+function orFilterCreators(q) {
+  var genres  = orGetActiveGenres();
+  var pool    = (typeof CREATORS!=='undefined') ? CREATORS : [];
+  // Filter by genre if any selected
+  if (genres.length) pool = pool.filter(function(cr){ return genres.indexOf(cr.genre)!==-1; });
+  // Filter by search query
+  q = (q||'').toLowerCase().trim();
+  if (q) pool = pool.filter(function(cr){
+    return cr.name.toLowerCase().includes(q) || cr.handle.toLowerCase().replace('@','').includes(q);
+  });
+  // Sort by CPI desc, cap at 80 results
+  pool = pool.slice().sort(function(a,b){ return (b.cpi||0)-(a.cpi||0); }).slice(0,80);
+  return pool;
+}
+
+function orShowDropdown(q) {
+  var dd = document.getElementById('or-creator-dropdown');
+  if (!dd) return;
+  var results = orFilterCreators(q);
+  if (!results.length) {
+    dd.innerHTML = '<div style="padding:12px 14px;font-family:DM Mono,monospace;font-size:10px;color:var(--text-muted)">No creators found — try a different search or genre</div>';
+    dd.style.display = 'block';
+    return;
+  }
+  dd.innerHTML = results.map(function(cr){
+    var cpiColor = cr.cpi>=85 ? '#00C46A' : cr.cpi>=70 ? '#FFD400' : '#FF7A00';
+    return '<div data-crid="'+cr.id+'" data-action="or-pick-creator" style="display:flex;align-items:center;gap:10px;padding:9px 12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);transition:background .1s"'
+      + ' class="or-dd-row">'
+      + '<div style="width:28px;height:28px;border-radius:50%;background:'+cr.color+'22;color:'+cr.color+';font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;font-family:sans-serif;flex-shrink:0">'+cr.name.charAt(0)+'</div>'
+      + '<div style="flex:1;min-width:0">'
+        + '<div style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+cr.name+'</div>'
+        + '<div style="font-family:DM Mono,monospace;font-size:9px;color:var(--text-muted)">'+cr.handle+' &nbsp;·&nbsp; '+cr.platform+'</div>'
+      + '</div>'
+      + '<div style="text-align:right;flex-shrink:0">'
+        + '<div style="font-family:DM Mono,monospace;font-size:10px;color:var(--text-dim)">'+cr.subs+'</div>'
+        + '<div style="font-family:DM Mono,monospace;font-size:10px;color:'+cpiColor+';font-weight:700">CPI '+cr.cpi+'</div>'
+      + '</div>'
+    + '</div>';
+  }).join('');
+  dd.style.display = 'block';
+}
+
+function orHideDropdown() {
+  setTimeout(function(){
+    var dd = document.getElementById('or-creator-dropdown');
+    if(dd) dd.style.display = 'none';
+  }, 180);
+}
+
+// Called when a creator row is clicked in the dropdown
+function orSelectCreator(cr) {
+  _orSelectedCreator = cr;
+  document.getElementById('or-creator-search').value = cr.name + ' ' + cr.handle;
+  document.getElementById('or-creator-dropdown').style.display = 'none';
+  // Populate preview card
+  var prev = document.getElementById('or-creator-preview');
+  document.getElementById('or-preview-avatar').style.background = cr.color+'22';
+  document.getElementById('or-preview-avatar').style.color = cr.color;
+  document.getElementById('or-preview-avatar').textContent = cr.name.charAt(0);
+  document.getElementById('or-preview-name').textContent = cr.name;
+  document.getElementById('or-preview-handle').textContent = cr.handle;
+  document.getElementById('or-preview-platform').textContent = cr.platform;
+  document.getElementById('or-preview-subs').textContent = cr.subs;
+  document.getElementById('or-preview-cpi').textContent = cr.cpi;
+  // Rate estimate
+  try {
+    var e = computeCostEstimate(cr);
+    document.getElementById('or-preview-rate').textContent = e.fmt(e.ranges.int[0])+'–'+e.fmt(e.ranges.int[1]);
+  } catch(err) { document.getElementById('or-preview-rate').textContent = '—'; }
+  prev.style.display = 'block';
+  // Auto-fill email from bio
+  var emailMatch = (cr.bio||'').match(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/);
+  if (emailMatch) document.getElementById('or-email').value = emailMatch[0];
 }
 
 function closeOutreachModal() {
@@ -10625,32 +10889,44 @@ function closeOutreachModal() {
 }
 
 function saveOutreachEntry() {
-  var name = document.getElementById('or-name').value.trim();
-  if (!name) { document.getElementById('or-name').style.border='1px solid #E60023'; return; }
+  var cr = _orSelectedCreator;
+  var searchVal = (document.getElementById('or-creator-search').value || '').trim();
+  // Require a creator to be selected from the dropdown
+  if (!cr && !searchVal) {
+    var srch = document.getElementById('or-creator-search');
+    if(srch) srch.style.border='1px solid #E60023';
+    return;
+  }
+  // If no creator picked but text entered, try fuzzy match
+  if (!cr && searchVal && typeof CREATORS!=='undefined') {
+    var q = searchVal.toLowerCase().replace('@','');
+    cr = CREATORS.find(function(c){
+      return c.name.toLowerCase().includes(q) || c.handle.toLowerCase().replace('@','').includes(q);
+    });
+  }
+  var name = cr ? cr.name : searchVal;
   var entry = {
     id:       _editingOutreachId || ('or_'+Date.now()),
     name:     name,
+    handle:   cr ? cr.handle : null,
     campaign: document.getElementById('or-campaign').value,
+    genres:   orGetActiveGenres(),
     email:    document.getElementById('or-email').value.trim(),
     status:   document.getElementById('or-status').value,
     notes:    document.getElementById('or-notes').value.trim(),
     added:    _editingOutreachId ? null : new Date().toISOString(),
     updated:  new Date().toISOString(),
-    cpi:      null, subs:null, rate:null,
+    cpi:      cr ? cr.cpi  : null,
+    subs:     cr ? cr.subs : null,
+    rate:     null,
+    crId:     cr ? cr.id   : null,
   };
-  // Try to match to a creator for CPI/subs
-  if (typeof CREATORS !== 'undefined') {
-    var nameSearch = name.toLowerCase().replace('@','');
-    var cr = CREATORS.find(function(c){
-      return c.name.toLowerCase().includes(nameSearch) || c.handle.toLowerCase().replace('@','').includes(nameSearch);
-    });
-    if (cr) { entry.cpi = cr.cpi; entry.subs = cr.subs; entry.handle = cr.handle;
-      if (!entry.email && cr.bio) {
-        var em = cr.bio.match(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/);
-        if (em) entry.email = em[0];
-      }
-      try { var e = computeCostEstimate(cr); entry.rate = e.fmt(e.ranges.int[0])+'–'+e.fmt(e.ranges.int[1]); } catch(err){}
+  if (cr) {
+    if (!entry.email && cr.bio) {
+      var em = cr.bio.match(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/);
+      if (em) entry.email = em[0];
     }
+    try { var e = computeCostEstimate(cr); entry.rate = e.fmt(e.ranges.int[0])+'–'+e.fmt(e.ranges.int[1]); } catch(err){}
   }
   if (_editingOutreachId) {
     var idx = _outreach.findIndex(function(o){ return o.id===_editingOutreachId; });
@@ -10778,6 +11054,50 @@ document.addEventListener('DOMContentLoaded', function() {
   // Overlap search enter key
   var osearch = document.getElementById('overlap-search');
   if (osearch) osearch.addEventListener('keydown', function(e){ if(e.key==='Enter') overlapAddFromSearch(); });
+
+  // Outreach modal — campaign change auto-fills genre
+  var orCamp = document.getElementById('or-campaign');
+  if (orCamp) orCamp.addEventListener('change', orOnCampaignChange);
+
+  // Genre primary change refreshes creator count
+  var orGenP = document.getElementById('or-genre-primary');
+  if (orGenP) orGenP.addEventListener('change', orRefreshCreatorCount);
+
+  // Genre secondary confirm on change
+  var orGenS = document.getElementById('or-genre-secondary');
+  if (orGenS) orGenS.addEventListener('change', function(){ if(this.value) orAddExtraGenre(); });
+
+  // + ADD TARGET button toggles secondary genre row
+  var orGenBtn = document.getElementById('or-genre-add-btn');
+  if (orGenBtn) orGenBtn.addEventListener('click', function(){
+    var row = document.getElementById('or-genre-extra-row');
+    row.style.display = row.style.display==='none' ? 'block' : 'none';
+  });
+
+  // Creator search input — filter on type, show dropdown
+  var orSrch = document.getElementById('or-creator-search');
+  if (orSrch) {
+    orSrch.addEventListener('input', function(){ orShowDropdown(this.value); });
+    orSrch.addEventListener('focus', function(){ if(this.value||orGetActiveGenres().length) orShowDropdown(this.value); });
+    orSrch.addEventListener('blur',  function(){ orHideDropdown(); });
+    orSrch.addEventListener('keydown', function(e){
+      if(e.key==='Enter'){
+        var first=document.querySelector('#or-creator-dropdown [data-action="or-pick-creator"]');
+        if(first){ var crid=parseInt(first.getAttribute('data-crid'));
+          var found=(typeof CREATORS!=='undefined')?CREATORS.find(function(c){return c.id===crid;}):null;
+          if(found) orSelectCreator(found); }
+      }
+    });
+  }
+
+  // Clear creator button
+  var orClr = document.getElementById('or-clear-creator');
+  if (orClr) orClr.addEventListener('click', function(){
+    _orSelectedCreator=null;
+    document.getElementById('or-creator-search').value='';
+    document.getElementById('or-creator-preview').style.display='none';
+    document.getElementById('or-email').value='';
+  });
   syncOutreachCampaignFilter();
 });
 
@@ -11202,6 +11522,12 @@ document.addEventListener('click', function(e) {
       else if (action==='close-overlap') closeOverlapModal();
       else if (action==='overlap-toggle-creator') { var ooid=el.getAttribute('data-oid'); if(ooid) overlapRemoveCreator(parseInt(ooid)); }
       else if (action==='overlap-add-search') overlapAddFromSearch();
+      else if (action==='or-pick-creator') {
+        var crid=parseInt(el.getAttribute('data-crid'));
+        var found=(typeof CREATORS!=='undefined')?CREATORS.find(function(c){return c.id===crid;}):null;
+        if(found) orSelectCreator(found);
+      }
+      else if (action==='remove-extra-genre') { var rg=el.getAttribute('data-genre'); if(rg) orRemoveExtraGenre(rg); }
       else if (action==='prompt-email' && oid) promptEmail(oid);
       return;
     }
