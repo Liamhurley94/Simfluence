@@ -8253,42 +8253,78 @@ function sfExpandLive() {
 var __twitchPollOffset = 0;
 
 function getTwitchHandles() {
-  // Sort by CPI desc so we check highest quality creators across rotations
-  var allTwitch = CREATORS
-    .filter(function(cr) { return cr.platform === 'Twitch' || (cr.allPlatforms && cr.allPlatforms.includes('Twitch')); })
-    .sort(function(a, b) { return b.cpi - a.cpi; })
-    .map(function(cr) { return cr.handle.replace('@','').toLowerCase(); });
+  // Return handles for batch fetching — called per-chunk
+  // We now fetch 250 by making multiple API calls in fetchLiveStatus
+  var allTwitch = CREATORS.filter(function(cr) {
+    return cr.platform === 'Twitch' || (cr.allPlatforms && cr.allPlatforms.includes('Twitch'));
+  });
 
-  // Rotate through all creators — each poll checks next 100
-  var batch = allTwitch.slice(__twitchPollOffset, __twitchPollOffset + 100);
-  __twitchPollOffset = (__twitchPollOffset + 100) % allTwitch.length;
+  // Guarantee top 3 from every genre are always checked
+  var byGenre = {};
+  allTwitch.forEach(function(cr) {
+    var g = cr.genre || 'Other';
+    if (!byGenre[g]) byGenre[g] = [];
+    byGenre[g].push(cr);
+  });
 
-  // Always include top 50 by CPI in every batch for reliability
-  var top50 = allTwitch.slice(0, 50);
-  var combined = top50.concat(batch.filter(function(h) { return top50.indexOf(h) === -1; }));
-  return combined.slice(0, 100);
+  var guaranteed = [];
+  Object.keys(byGenre).forEach(function(g) {
+    byGenre[g].sort(function(a,b){ return b.cpi - a.cpi; });
+    guaranteed = guaranteed.concat(byGenre[g].slice(0, 5));
+  });
+
+  var guarHandles = guaranteed.map(function(cr){ return cr.handle.replace('@','').toLowerCase(); });
+
+  // Fill the rest from rotating high-CPI pool
+  var allSorted = allTwitch.slice().sort(function(a,b){ return b.cpi - a.cpi; });
+  var remaining = allSorted.filter(function(cr){
+    return guarHandles.indexOf(cr.handle.replace('@','').toLowerCase()) === -1;
+  }).map(function(cr){ return cr.handle.replace('@','').toLowerCase(); });
+
+  var need = 250 - guarHandles.length;
+  var batchStart = __twitchPollOffset % Math.max(1, remaining.length);
+  var batch = remaining.slice(batchStart, batchStart + need);
+  if (batch.length < need) batch = batch.concat(remaining.slice(0, need - batch.length));
+  __twitchPollOffset = (batchStart + Math.min(need, remaining.length)) % Math.max(1, remaining.length);
+
+  return guarHandles.concat(batch).slice(0, 250);
 }
+
+
 
 // Fetch live status for all Twitch creators
 async function fetchLiveStatus() {
   var handles = getTwitchHandles();
   if (!handles.length) return;
 
+  // Send in chunks of 100 (Twitch API limit), merge all results
+  var merged = {};
+  var chunks = [];
+  for (var i = 0; i < handles.length; i += 100) {
+    chunks.push(handles.slice(i, i + 100));
+  }
+
   try {
-    var res = await fetch(
-      'https://iysjxslzlbojoivxjrce.supabase.co/functions/v1/twitch-live-status',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type':  'application/json',
-          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5c2p4c2x6bGJvam9pdnhqcmNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0OTkyNjksImV4cCI6MjA5MTA3NTI2OX0.gGW_qclPJZT4x3eevXg6PFllq5CQWVifJUEaI3rqKnw',
-        },
-        body: JSON.stringify({ logins: handles }),
-      }
-    );
-    if (!res.ok) return;
-    var data = await res.json();
-    window.__twitchLive = data.streams || {};
+    var results = await Promise.all(chunks.map(function(chunk) {
+      return fetch(
+        'https://iysjxslzlbojoivxjrce.supabase.co/functions/v1/twitch-live-status',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type':  'application/json',
+            'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5c2p4c2x6bGJvam9pdnhqcmNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0OTkyNjksImV4cCI6MjA5MTA3NTI2OX0.gGW_qclPJZT4x3eevXg6PFllq5CQWVifJUEaI3rqKnw',
+          },
+          body: JSON.stringify({ logins: chunk }),
+        }
+      ).then(function(res) { return res.ok ? res.json() : { streams: {} }; })
+       .catch(function() { return { streams: {} }; });
+    }));
+
+    results.forEach(function(data) {
+      Object.assign(merged, data.streams || {});
+    });
+
+    window.__twitchLive = merged;
     updateLiveUI();
   } catch(e) {
     console.log('Live status fetch failed:', e);
