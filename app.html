@@ -2677,8 +2677,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
           <!-- STEP 1: Campaign -->
           <div>
-            <label style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.06em;color:var(--text-muted);display:block;margin-bottom:5px">STEP 1 · SELECT CAMPAIGN</label>
+            <label style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.06em;color:var(--text-muted);display:block;margin-bottom:5px">STEP 1 · CAMPAIGN NAME</label>
             <select id="or-campaign" style="width:100%;font-family:DM Mono,monospace;font-size:12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:9px 12px;color:var(--text)"></select>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
+              <span style="font-family:DM Mono,monospace;font-size:9px;color:var(--text-muted);white-space:nowrap">or create new</span>
+              <input id="or-new-campaign" type="text" placeholder="Type a new campaign name..." style="flex:1;font-family:DM Mono,monospace;font-size:11px;background:var(--bg3);border:1px solid rgba(0,80,255,0.25);border-radius:6px;padding:7px 10px;color:var(--text);outline:none" autocomplete="off">
+            </div>
+            <div id="or-campaign-hint" style="font-family:DM Mono,monospace;font-size:9px;color:var(--text-muted);margin-top:4px;display:none"></div>
           </div>
 
           <!-- STEP 2: Genre targets -->
@@ -10700,8 +10705,10 @@ function openOutreachModal(campaignId) {
   _orSelectedCreator = null;
   _orExtraGenres = [];
   // Reset all fields
-  var ids = ['or-email','or-notes'];
+  var ids = ['or-email','or-notes','or-new-campaign'];
   ids.forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+  var orHint = document.getElementById('or-campaign-hint');
+  if (orHint) orHint.style.display = 'none';
   document.getElementById('or-status').value = 'shortlisted';
   document.getElementById('or-creator-search').value = '';
   document.getElementById('or-creator-dropdown').style.display = 'none';
@@ -10741,15 +10748,39 @@ function addOutreachFromCreator(creatorId) {
 // Called when campaign changes — auto-fill genre from campaign data
 function orOnCampaignChange() {
   var campId = document.getElementById('or-campaign').value;
+  var newNameEl = document.getElementById('or-new-campaign');
+  var hintEl = document.getElementById('or-campaign-hint');
+  // If they picked an existing campaign, clear the new-name field
+  if (campId && newNameEl) {
+    newNameEl.value = '';
+    newNameEl.style.border = '1px solid rgba(0,80,255,0.25)';
+    if (hintEl) hintEl.style.display = 'none';
+  }
   var cmp = (typeof _campaigns!=='undefined') ? _campaigns.find(function(c){ return c.id===campId; }) : null;
   var genreSel = document.getElementById('or-genre-primary');
   if (cmp && cmp.genre) {
-    // Match campaign genre string to a known genre option
     var opts = Array.from(genreSel.options).map(function(o){ return o.value; });
     var match = opts.find(function(o){ return o && cmp.genre.toLowerCase().includes(o.toLowerCase().split(' ')[0]); });
     genreSel.value = match || '';
   }
   orRefreshCreatorCount();
+}
+
+// Called when new-campaign name is typed — deselect dropdown
+function orOnNewCampaignType() {
+  var val = (document.getElementById('or-new-campaign').value || '').trim();
+  var hintEl = document.getElementById('or-campaign-hint');
+  if (val) {
+    // Deselect existing campaign dropdown
+    document.getElementById('or-campaign').value = '';
+    if (hintEl) {
+      hintEl.textContent = 'New campaign "' + val + '" will be created on save';
+      hintEl.style.color = '#6B9FFF';
+      hintEl.style.display = 'block';
+    }
+  } else {
+    if (hintEl) hintEl.style.display = 'none';
+  }
 }
 
 // Collect all selected genres (primary + extras)
@@ -10909,7 +10940,29 @@ function saveOutreachEntry() {
     id:       _editingOutreachId || ('or_'+Date.now()),
     name:     name,
     handle:   cr ? cr.handle : null,
-    campaign: document.getElementById('or-campaign').value,
+    campaign: (function(){
+      var existingId = document.getElementById('or-campaign').value;
+      if (existingId) return existingId;
+      // Create new campaign inline from the text field
+      var newName = (document.getElementById('or-new-campaign').value || '').trim();
+      if (!newName) return '';
+      var genres = orGetActiveGenres();
+      var newCmp = {
+        id:      'cws_' + Date.now(),
+        name:    newName,
+        client:  '',
+        genre:   genres[0] || '',
+        budget:  '',
+        date:    '',
+        notes:   '',
+        created: new Date().toISOString(),
+        status:  'active',
+      };
+      _campaigns.unshift(newCmp);
+      localStorage.setItem('sf_campaigns_ws', JSON.stringify(_campaigns));
+      syncOutreachCampaignFilter();
+      return newCmp.id;
+    })(),
     genres:   orGetActiveGenres(),
     email:    document.getElementById('or-email').value.trim(),
     status:   document.getElementById('or-status').value,
@@ -10956,8 +11009,14 @@ function deleteOutreachEntry(id) {
 function syncOutreachCampaignSelect() {
   var sel = document.getElementById('or-campaign');
   if (!sel) return;
-  sel.innerHTML = '<option value="">— No campaign —</option>'
-    + _campaigns.map(function(c){ return '<option value="'+c.id+'">'+c.name+'</option>'; }).join('');
+  if (_campaigns.length === 0) {
+    sel.innerHTML = '<option value="">— No existing campaigns —</option>';
+    sel.style.opacity = '0.5';
+  } else {
+    sel.style.opacity = '';
+    sel.innerHTML = '<option value="">— Select existing campaign —</option>'
+      + _campaigns.map(function(c){ return '<option value="'+c.id+'">'+c.name+'</option>'; }).join('');
+  }
 }
 
 function syncOutreachCampaignFilter() {
@@ -11058,6 +11117,8 @@ document.addEventListener('DOMContentLoaded', function() {
   // Outreach modal — campaign change auto-fills genre
   var orCamp = document.getElementById('or-campaign');
   if (orCamp) orCamp.addEventListener('change', orOnCampaignChange);
+  var orNewCamp = document.getElementById('or-new-campaign');
+  if (orNewCamp) orNewCamp.addEventListener('input', orOnNewCampaignType);
 
   // Genre primary change refreshes creator count
   var orGenP = document.getElementById('or-genre-primary');
