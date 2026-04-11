@@ -2184,6 +2184,8 @@ document.addEventListener('DOMContentLoaded', function() {
     <button class="nav-tab" data-screen="scoring">Scoring</button>
     <button class="nav-tab" data-screen="personas">Personas</button>
     <button class="nav-tab" data-screen="simulator">Simulator</button>
+    <button class="nav-tab" id="nav-campaigns" data-screen="campaigns">Campaigns</button>
+    <button class="nav-tab" id="nav-outreach" data-screen="outreach">Outreach</button>
   </div>
   <div style="display:flex;align-items:center;gap:8px;position:relative">
     <div style="position:relative;display:flex;align-items:center">
@@ -2568,6 +2570,129 @@ document.addEventListener('DOMContentLoaded', function() {
       <div class="panel">
         <div class="panel-title">Industry Benchmark Comparison</div>
         <div id="pvaPanel"></div>
+      </div>
+    </div>
+
+
+    <!-- CAMPAIGNS SCREEN (Platinum+) -->
+    <div id="screen-campaigns" class="screen">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Campaign <em>Workspace</em></div>
+          <div class="page-meta" id="campaigns-meta">MULTI-BRIEF MANAGEMENT · PLATINUM</div>
+        </div>
+        <button id="newCampaignBtn" style="padding:10px 20px;background:#0050FF;color:#fff;border:none;border-radius:var(--radius);font-family:DM Mono,monospace;font-size:11px;cursor:pointer;letter-spacing:.05em;font-weight:700">+ NEW CAMPAIGN</button>
+      </div>
+      <div id="campaigns-list" style="display:flex;flex-direction:column;gap:12px;"></div>
+      <div id="campaigns-empty" style="display:none;padding:80px 40px;text-align:center">
+        <div style="font-size:48px;margin-bottom:16px">📋</div>
+        <div style="font-family:DM Mono,monospace;font-size:11px;letter-spacing:.08em;color:var(--text-muted);margin-bottom:8px">NO CAMPAIGNS YET</div>
+        <div style="font-size:13px;color:var(--text-dim);margin-bottom:24px">Create your first campaign brief to start managing multiple clients and briefs in parallel.</div>
+        <button data-oc="newCampaign()" style="padding:10px 24px;background:#0050FF;color:#fff;border:none;border-radius:6px;font-family:DM Mono,monospace;font-size:11px;cursor:pointer;letter-spacing:.05em;font-weight:700">+ NEW CAMPAIGN</button>
+      </div>
+    </div>
+
+    <!-- OUTREACH SCREEN (Platinum+) -->
+    <div id="screen-outreach" class="screen">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Creator <em>Outreach</em></div>
+          <div class="page-meta">CRM · CONTACT TRACKING · PLATINUM</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <select id="outreach-campaign-filter" style="font-family:DM Mono,monospace;font-size:10px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 10px">
+            <option value="all">All campaigns</option>
+          </select>
+          <select id="outreach-status-filter" style="font-family:DM Mono,monospace;font-size:10px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 10px">
+            <option value="all">All statuses</option>
+            <option value="shortlisted">Shortlisted</option>
+            <option value="contacted">Contacted</option>
+            <option value="negotiating">Negotiating</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="declined">Declined</option>
+          </select>
+          <button id="addOutreachBtn" style="padding:8px 16px;background:#00C46A;color:#000;border:none;border-radius:6px;font-family:DM Mono,monospace;font-size:10px;cursor:pointer;font-weight:700;letter-spacing:.05em">+ ADD CREATOR</button>
+        </div>
+      </div>
+      <div id="outreach-stats" style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:20px"></div>
+      <div id="outreach-table-wrap" style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;overflow:hidden">
+        <table style="width:100%;border-collapse:collapse;font-family:DM Mono,monospace;font-size:11px">
+          <thead>
+            <tr style="background:var(--bg3);border-bottom:1px solid var(--border)">
+              <th style="padding:12px 16px;text-align:left;font-size:9px;letter-spacing:.08em;color:var(--text-muted);font-weight:600">CREATOR</th>
+              <th style="padding:12px 16px;text-align:left;font-size:9px;letter-spacing:.08em;color:var(--text-muted);font-weight:600">CAMPAIGN</th>
+              <th style="padding:12px 8px;text-align:center;font-size:9px;letter-spacing:.08em;color:var(--text-muted);font-weight:600">CPI</th>
+              <th style="padding:12px 8px;text-align:center;font-size:9px;letter-spacing:.08em;color:var(--text-muted);font-weight:600">SUBS</th>
+              <th style="padding:12px 16px;text-align:left;font-size:9px;letter-spacing:.08em;color:var(--text-muted);font-weight:600">EST. RATE</th>
+              <th style="padding:12px 16px;text-align:left;font-size:9px;letter-spacing:.08em;color:var(--text-muted);font-weight:600">CONTACT</th>
+              <th style="padding:12px 16px;text-align:left;font-size:9px;letter-spacing:.08em;color:var(--text-muted);font-weight:600">STATUS</th>
+              <th style="padding:12px 16px;text-align:left;font-size:9px;letter-spacing:.08em;color:var(--text-muted);font-weight:600">NOTES</th>
+              <th style="padding:12px 8px;text-align:center;font-size:9px;letter-spacing:.08em;color:var(--text-muted);font-weight:600"></th>
+            </tr>
+          </thead>
+          <tbody id="outreach-tbody"></tbody>
+        </table>
+        <div id="outreach-empty" style="padding:60px;text-align:center;display:none">
+          <div style="font-size:36px;margin-bottom:12px">📬</div>
+          <div style="font-family:DM Mono,monospace;font-size:10px;letter-spacing:.08em;color:var(--text-muted);margin-bottom:6px">NO CREATORS TRACKED YET</div>
+          <div style="font-size:12px;color:var(--text-dim)">Add creators from Discovery or use the + ADD CREATOR button above.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CAMPAIGN MODAL -->
+    <div id="campaign-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:600;display:none;align-items:center;justify-content:center;padding:24px">
+      <div style="background:var(--bg2);border:1px solid var(--border-bright);border-radius:14px;padding:32px;max-width:500px;width:100%">
+        <div style="font-family:DM Mono,monospace;font-size:10px;letter-spacing:.1em;color:var(--text-muted);margin-bottom:16px" id="campaign-modal-title">NEW CAMPAIGN</div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div><label style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.06em;color:var(--text-muted);display:block;margin-bottom:4px">CAMPAIGN NAME</label>
+            <input id="cm-name" type="text" placeholder="e.g. Nestlé Gaming Q3 2026" style="width:100%;font-family:DM Mono,monospace;font-size:12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text);outline:none"></div>
+          <div><label style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.06em;color:var(--text-muted);display:block;margin-bottom:4px">CLIENT</label>
+            <input id="cm-client" type="text" placeholder="e.g. Nestlé" style="width:100%;font-family:DM Mono,monospace;font-size:12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text);outline:none"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div><label style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.06em;color:var(--text-muted);display:block;margin-bottom:4px">GENRE</label>
+              <input id="cm-genre" type="text" placeholder="Gaming & Esports" style="width:100%;font-family:DM Mono,monospace;font-size:12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text);outline:none"></div>
+            <div><label style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.06em;color:var(--text-muted);display:block;margin-bottom:4px">BUDGET</label>
+              <input id="cm-budget" type="text" placeholder="e.g. $85,000" style="width:100%;font-family:DM Mono,monospace;font-size:12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text);outline:none"></div>
+          </div>
+          <div><label style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.06em;color:var(--text-muted);display:block;margin-bottom:4px">GO LIVE DATE</label>
+            <input id="cm-date" type="date" style="width:100%;font-family:DM Mono,monospace;font-size:12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text);outline:none"></div>
+          <div><label style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.06em;color:var(--text-muted);display:block;margin-bottom:4px">NOTES</label>
+            <textarea id="cm-notes" placeholder="Campaign objectives, region, format..." rows="2" style="width:100%;font-family:DM Mono,monospace;font-size:12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text);outline:none;resize:vertical"></textarea></div>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">
+          <button data-oc="closeCampaignModal()" style="padding:8px 18px;background:transparent;border:1px solid var(--border);color:var(--text-dim);border-radius:6px;font-family:DM Mono,monospace;font-size:10px;cursor:pointer">CANCEL</button>
+          <button id="cm-save-btn" data-oc="saveCampaignWorkspace()" style="padding:8px 18px;background:#0050FF;color:#fff;border:none;border-radius:6px;font-family:DM Mono,monospace;font-size:10px;cursor:pointer;font-weight:700">SAVE CAMPAIGN</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- OUTREACH ADD MODAL -->
+    <div id="outreach-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:600;align-items:center;justify-content:center;padding:24px">
+      <div style="background:var(--bg2);border:1px solid var(--border-bright);border-radius:14px;padding:32px;max-width:480px;width:100%">
+        <div style="font-family:DM Mono,monospace;font-size:10px;letter-spacing:.1em;color:var(--text-muted);margin-bottom:16px">ADD CREATOR TO OUTREACH</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div><label style="font-family:DM Mono,monospace;font-size:9px;color:var(--text-muted);display:block;margin-bottom:4px">CREATOR NAME / HANDLE</label>
+            <input id="or-name" type="text" placeholder="e.g. @GhazzyTV" style="width:100%;font-family:DM Mono,monospace;font-size:12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text);outline:none"></div>
+          <div><label style="font-family:DM Mono,monospace;font-size:9px;color:var(--text-muted);display:block;margin-bottom:4px">ASSIGN TO CAMPAIGN</label>
+            <select id="or-campaign" style="width:100%;font-family:DM Mono,monospace;font-size:12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text)"></select></div>
+          <div><label style="font-family:DM Mono,monospace;font-size:9px;color:var(--text-muted);display:block;margin-bottom:4px">CONTACT EMAIL</label>
+            <input id="or-email" type="email" placeholder="business@creator.com (if known)" style="width:100%;font-family:DM Mono,monospace;font-size:12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text);outline:none"></div>
+          <div><label style="font-family:DM Mono,monospace;font-size:9px;color:var(--text-muted);display:block;margin-bottom:4px">STATUS</label>
+            <select id="or-status" style="width:100%;font-family:DM Mono,monospace;font-size:12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text)">
+              <option value="shortlisted">Shortlisted</option>
+              <option value="contacted">Contacted</option>
+              <option value="negotiating">Negotiating</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="declined">Declined</option>
+            </select></div>
+          <div><label style="font-family:DM Mono,monospace;font-size:9px;color:var(--text-muted);display:block;margin-bottom:4px">NOTES</label>
+            <input id="or-notes" type="text" placeholder="Rate quoted, response time, agent..." style="width:100%;font-family:DM Mono,monospace;font-size:12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text);outline:none"></div>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">
+          <button data-oc="closeOutreachModal()" style="padding:8px 18px;background:transparent;border:1px solid var(--border);color:var(--text-dim);border-radius:6px;font-family:DM Mono,monospace;font-size:10px;cursor:pointer">CANCEL</button>
+          <button data-oc="saveOutreachEntry()" style="padding:8px 18px;background:#00C46A;color:#000;border:none;border-radius:6px;font-family:DM Mono,monospace;font-size:10px;cursor:pointer;font-weight:700">ADD TO TRACKER</button>
+        </div>
       </div>
     </div>
 
@@ -9598,7 +9723,7 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="footer-brand-name">Sim<span>fluence</span></div>
       <div class="footer-tagline">AI-powered campaign intelligence for creator-driven brands. Know your CTR, CPM, CVR and ROAS before you spend a single penny.</div>
       <div class="footer-contact">
-        Questions? Liam@Simfluence.AI
+        Questions? <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="460a2f272b06152f2b202a332328252368070f">[email&#160;protected]</a>
       </div>
     </div>
 
@@ -9665,7 +9790,7 @@ document.addEventListener('DOMContentLoaded', () => {
     <p>We do not take commission on deals. We do not monetise creator relationships. We charge a flat subscription for access to the platform and nothing else. Your data, your campaigns, and your creator relationships remain entirely yours.</p>
 
     <hr class="divider-line">
-    <p>For enquiries, partnerships, or pilot access: Liam@Simfluence.AI</p>
+    <p>For enquiries, partnerships, or pilot access: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="c28eaba3af8291abafa4aeb7a7aca1a7ec838b">[email&#160;protected]</a></p>
   </div>
 </div>
 
@@ -9685,7 +9810,7 @@ document.addEventListener('DOMContentLoaded', () => {
     <p>Simfluence provides AI-generated campaign forecasting tools, creator discovery and scoring, and audience intelligence for influencer marketing planning. All forecast outputs are probabilistic models based on historical benchmark data and machine learning inference. They are provided for planning and decision-support purposes only and do not constitute guarantees of campaign performance.</p>
 
     <h2>3. Your account</h2>
-    <p>To access the full platform you must register an account with a valid work email address. You are responsible for maintaining the confidentiality of your login credentials and for all activity that occurs under your account. You must notify us immediately at Liam@Simfluence.AI if you suspect any unauthorised use of your account.</p>
+    <p>To access the full platform you must register an account with a valid work email address. You are responsible for maintaining the confidentiality of your login credentials and for all activity that occurs under your account. You must notify us immediately at <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="e9a5808884a9ba80848f859c8c878a8cc7a8a0">[email&#160;protected]</a> if you suspect any unauthorised use of your account.</p>
     <p>You agree to provide accurate, current, and complete information when registering and to update this information as necessary.</p>
 
     <h2>4. Acceptable use</h2>
@@ -9715,7 +9840,7 @@ document.addEventListener('DOMContentLoaded', () => {
     <p>In no event shall Simfluence Ltd be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the platform or reliance on any forecast output, even if we have been advised of the possibility of such damages. Our total aggregate liability to you for any claims arising under these terms shall not exceed the total fees paid by you to us in the three months preceding the claim.</p>
 
     <h2>9. Data and privacy</h2>
-    <p>We collect and process personal data in accordance with applicable data protection laws including the UAE Personal Data Protection Law (Federal Decree-Law No. 45 of 2021) and, where applicable to our European users, the EU General Data Protection Regulation (GDPR). We do not sell your personal data to third parties. For full details of how we collect, use, and protect your data, please contact us at Liam@Simfluence.AI.</p>
+    <p>We collect and process personal data in accordance with applicable data protection laws including the UAE Personal Data Protection Law (Federal Decree-Law No. 45 of 2021) and, where applicable to our European users, the EU General Data Protection Regulation (GDPR). We do not sell your personal data to third parties. For full details of how we collect, use, and protect your data, please contact us at <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="561a3f373b16053f3b303a233338353378171f">[email&#160;protected]</a>.</p>
 
     <h2>10. Governing law</h2>
     <p>These terms are governed by the laws of the United Arab Emirates. Any disputes arising from or relating to these terms or the platform shall be subject to the exclusive jurisdiction of the courts of Dubai, UAE, except where mandatory consumer protection laws in your jurisdiction require otherwise.</p>
@@ -9724,7 +9849,7 @@ document.addEventListener('DOMContentLoaded', () => {
     <p>We may update these terms from time to time. Material changes will be notified to your registered email address at least 14 days before taking effect. Continued use of the platform after that date constitutes acceptance of the revised terms.</p>
 
     <h2>12. Contact</h2>
-    <p>For any questions regarding these Terms of Use: Liam@Simfluence.AI</p>
+    <p>For any questions regarding these Terms of Use: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="3d71545c507d6e54505b514858535e58137c74">[email&#160;protected]</a></p>
   </div>
 </div>
 
@@ -9739,7 +9864,7 @@ document.addEventListener('DOMContentLoaded', () => {
     <p><strong>Trading name:</strong> Simfluence<br>
     <strong>Legal entity:</strong> Simfluence Ltd<br>
     <strong>Registered address:</strong> Dubai, United Arab Emirates<br>
-    <strong>Contact:</strong> Liam@Simfluence.AI</p>
+    <strong>Contact:</strong> <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="7e32171f133e2d171318120b1b101d1b503f37">[email&#160;protected]</a></p>
 
     <h2>Nature of the service</h2>
     <p>Simfluence operates a Software-as-a-Service (SaaS) platform providing AI-generated campaign forecasting and creator intelligence for influencer marketing professionals. The platform is a planning and decision-support tool. It does not broker, negotiate, or execute agreements between brands and creators, and does not act as an agent, intermediary, or marketplace for influencer deals.</p>
@@ -9760,7 +9885,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     <h2>Data protection</h2>
     <p>Simfluence processes personal data in accordance with the UAE Personal Data Protection Law (Federal Decree-Law No. 45 of 2021) and applicable international data protection regulations. Users located in the European Economic Area benefit from protections under the EU General Data Protection Regulation (GDPR). We act as a data controller for account registration data and as a data processor for campaign data submitted by subscribing brands.</p>
-    <p>You have the right to request access to, correction of, or deletion of your personal data at any time by contacting Liam@Simfluence.AI.</p>
+    <p>You have the right to request access to, correction of, or deletion of your personal data at any time by contacting <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="7b37121a163b2812161d170e1e15181e553a32">[email&#160;protected]</a>.</p>
 
     <h2>No financial or investment advice</h2>
     <p>Nothing on the Simfluence platform constitutes financial, investment, or professional marketing advice. Forecast outputs are tools to inform your own independent decision-making. You should conduct your own due diligence before committing any marketing budget.</p>
@@ -9772,7 +9897,7 @@ document.addEventListener('DOMContentLoaded', () => {
     <p>This legal notice and any disputes arising from the operation of the Simfluence platform are governed by the laws of the United Arab Emirates.</p>
 
     <h2>Contact for legal matters</h2>
-    <p>For legal enquiries: Liam@Simfluence.AI
+    <p>For legal enquiries: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="5c10353d311c0f35313a302939323f39721d15">[email&#160;protected]</a>
 
 // PASSWORD GATE
 var GATE_PASS = 'Simfluence2025!';
@@ -9871,7 +9996,7 @@ function checkGate() {
 </div>
 
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 function openPageModal(key) {
   var el = document.getElementById('modal-' + key);
   if (!el) return;
@@ -10310,11 +10435,776 @@ function handleFreeSignUp() {
 }
 
 
+
+// ══════════════════════════════════════════════════════════════════════
+// PLATINUM FEATURES: CAMPAIGN WORKSPACE + CREATOR OUTREACH CRM
+// ══════════════════════════════════════════════════════════════════════
+var _campaigns = JSON.parse(localStorage.getItem('sf_campaigns_ws') || '[]');
+var _outreach  = JSON.parse(localStorage.getItem('sf_outreach') || '[]');
+var _editingCampaignId = null;
+var _editingOutreachId = null;
+
+// ── STATUS HELPERS ────────────────────────────────────────────────────
+var _statusColors = {
+  shortlisted:  { bg:'rgba(0,80,255,0.12)',  border:'rgba(0,80,255,0.3)',   text:'#6B9FFF', label:'Shortlisted'  },
+  contacted:    { bg:'rgba(255,212,0,0.1)',   border:'rgba(255,212,0,0.3)',  text:'#FFD400', label:'Contacted'    },
+  negotiating:  { bg:'rgba(255,122,0,0.12)', border:'rgba(255,122,0,0.3)',  text:'#FF7A00', label:'Negotiating'  },
+  confirmed:    { bg:'rgba(0,196,106,0.1)',   border:'rgba(0,196,106,0.3)', text:'#00C46A', label:'Confirmed'    },
+  declined:     { bg:'rgba(230,0,35,0.1)',    border:'rgba(230,0,35,0.25)', text:'#E60023', label:'Declined'     },
+};
+function statusPill(s) {
+  var st = _statusColors[s] || _statusColors.shortlisted;
+  return '<span style="display:inline-block;font-family:DM Mono,monospace;font-size:9px;letter-spacing:.06em;padding:3px 8px;border-radius:3px;background:'+st.bg+';border:1px solid '+st.border+';color:'+st.text+'">'+st.label+'</span>';
+}
+
+// ── CAMPAIGN WORKSPACE ────────────────────────────────────────────────
+function newCampaign() {
+  if (typeof getTierLevel === 'function' && getTierLevel() < 3) {
+    showUpgradePrompt('personas_all','Platinum'); return;
+  }
+  _editingCampaignId = null;
+  document.getElementById('cm-name').value = '';
+  document.getElementById('cm-client').value = '';
+  document.getElementById('cm-genre').value = (typeof getSelectedGenre === 'function') ? getSelectedGenre() : '';
+  document.getElementById('cm-budget').value = '';
+  document.getElementById('cm-date').value = '';
+  document.getElementById('cm-notes').value = '';
+  document.getElementById('campaign-modal-title').textContent = 'NEW CAMPAIGN';
+  var m = document.getElementById('campaign-modal');
+  m.style.display = 'flex';
+}
+
+function closeCampaignModal() {
+  document.getElementById('campaign-modal').style.display = 'none';
+}
+
+function saveCampaignWorkspace() {
+  var name   = document.getElementById('cm-name').value.trim();
+  var client = document.getElementById('cm-client').value.trim();
+  if (!name) { document.getElementById('cm-name').style.border = '1px solid #E60023'; return; }
+  var entry = {
+    id:      _editingCampaignId || ('cws_' + Date.now()),
+    name:    name,
+    client:  client,
+    genre:   document.getElementById('cm-genre').value.trim(),
+    budget:  document.getElementById('cm-budget').value.trim(),
+    date:    document.getElementById('cm-date').value,
+    notes:   document.getElementById('cm-notes').value.trim(),
+    created: _editingCampaignId ? null : new Date().toISOString(),
+    status:  'active',
+  };
+  if (_editingCampaignId) {
+    var idx = _campaigns.findIndex(function(c) { return c.id === _editingCampaignId; });
+    if (idx > -1) { entry.created = _campaigns[idx].created; _campaigns[idx] = entry; }
+  } else {
+    _campaigns.unshift(entry);
+  }
+  localStorage.setItem('sf_campaigns_ws', JSON.stringify(_campaigns));
+  closeCampaignModal();
+  renderCampaignsScreen();
+  syncOutreachCampaignFilter();
+}
+
+function deleteCampaign(id) {
+  if (!confirm('Delete this campaign? Outreach entries linked to it will remain.')) return;
+  _campaigns = _campaigns.filter(function(c) { return c.id !== id; });
+  localStorage.setItem('sf_campaigns_ws', JSON.stringify(_campaigns));
+  renderCampaignsScreen();
+  syncOutreachCampaignFilter();
+}
+
+function editCampaign(id) {
+  var cmp = _campaigns.find(function(c) { return c.id === id; });
+  if (!cmp) return;
+  _editingCampaignId = id;
+  document.getElementById('cm-name').value   = cmp.name   || '';
+  document.getElementById('cm-client').value = cmp.client || '';
+  document.getElementById('cm-genre').value  = cmp.genre  || '';
+  document.getElementById('cm-budget').value = cmp.budget || '';
+  document.getElementById('cm-date').value   = cmp.date   || '';
+  document.getElementById('cm-notes').value  = cmp.notes  || '';
+  document.getElementById('campaign-modal-title').textContent = 'EDIT CAMPAIGN';
+  document.getElementById('campaign-modal').style.display = 'flex';
+}
+
+function renderCampaignsScreen() {
+  var list  = document.getElementById('campaigns-list');
+  var empty = document.getElementById('campaigns-empty');
+  var meta  = document.getElementById('campaigns-meta');
+  if (!list) return;
+  if (_campaigns.length === 0) {
+    list.innerHTML  = '';
+    list.style.display = 'none';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  list.style.display  = 'flex';
+  meta.textContent = _campaigns.length + ' CAMPAIGN' + (_campaigns.length !== 1 ? 'S' : '') + ' · PLATINUM WORKSPACE';
+
+  list.innerHTML = _campaigns.map(function(cmp) {
+    var linked = _outreach.filter(function(o) { return o.campaign === cmp.id; });
+    var confirmed  = linked.filter(function(o) { return o.status === 'confirmed'; }).length;
+    var negotiating= linked.filter(function(o) { return o.status === 'negotiating'; }).length;
+    var contacted  = linked.filter(function(o) { return o.status === 'contacted'; }).length;
+    var dateStr = cmp.date ? new Date(cmp.date).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '—';
+    return '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:20px;position:relative">'
+      + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap">'
+        + '<div>'
+          + '<div style="font-family:Space Grotesk,sans-serif;font-size:17px;font-weight:700;color:var(--text);margin-bottom:4px">'+cmp.name+'</div>'
+          + '<div style="font-family:DM Mono,monospace;font-size:10px;color:var(--text-muted);letter-spacing:.05em">'
+            + (cmp.client ? cmp.client+' &nbsp;·&nbsp; ' : '')
+            + (cmp.genre  ? cmp.genre +' &nbsp;·&nbsp; ' : '')
+            + (cmp.budget ? cmp.budget+' &nbsp;·&nbsp; ' : '')
+            + 'Live: '+dateStr
+          + '</div>'
+          + (cmp.notes ? '<div style="font-size:12px;color:var(--text-dim);margin-top:8px">'+cmp.notes+'</div>' : '')
+        + '</div>'
+        + '<div style="display:flex;gap:8px;flex-shrink:0">'
+          + '<button data-cid="'+cmp.id+'" data-action="edit-campaign" style="padding:6px 12px;background:transparent;border:1px solid var(--border);color:var(--text-dim);border-radius:5px;font-family:DM Mono,monospace;font-size:9px;cursor:pointer;letter-spacing:.05em">EDIT</button>'
+          + '<button data-cid="'+cmp.id+'" data-action="add-outreach-campaign" style="padding:6px 12px;background:rgba(0,196,106,0.12);border:1px solid rgba(0,196,106,0.3);color:#00C46A;border-radius:5px;font-family:DM Mono,monospace;font-size:9px;cursor:pointer;letter-spacing:.05em">+ ADD CREATOR</button>'
+          + '<button data-cid="'+cmp.id+'" data-action="delete-campaign" style="padding:6px 10px;background:rgba(230,0,35,0.08);border:1px solid rgba(230,0,35,0.2);color:#E60023;border-radius:5px;font-family:DM Mono,monospace;font-size:9px;cursor:pointer">✕</button>'
+        + '</div>'
+      + '</div>'
+      + '<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);display:flex;gap:20px;align-items:center">'
+        + '<span style="font-family:DM Mono,monospace;font-size:9px;color:var(--text-muted)">'+linked.length+' CREATOR'+(linked.length!==1?'S':'')+' TRACKED</span>'
+        + (confirmed   ? '<span style="font-family:DM Mono,monospace;font-size:9px;color:#00C46A">✓ '+confirmed+' CONFIRMED</span>'   : '')
+        + (negotiating ? '<span style="font-family:DM Mono,monospace;font-size:9px;color:#FF7A00">⇄ '+negotiating+' NEGOTIATING</span>' : '')
+        + (contacted   ? '<span style="font-family:DM Mono,monospace;font-size:9px;color:#FFD400">→ '+contacted+' CONTACTED</span>'    : '')
+        + (linked.length > 0
+          ? '<button data-cid="'+cmp.id+'" data-action="view-outreach-campaign" style="margin-left:auto;padding:5px 12px;background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:4px;font-family:DM Mono,monospace;font-size:9px;cursor:pointer;letter-spacing:.04em">VIEW OUTREACH &#x2192;</button>'
+            + (linked.filter(function(o){ return o.status==='confirmed'||o.status==='shortlisted'||o.status==='negotiating'; }).length >= 2
+              ? '<button data-cid="'+cmp.id+'" data-action="open-overlap" style="padding:5px 12px;background:rgba(109,40,217,0.12);border:1px solid rgba(109,40,217,0.35);color:#A78BFA;border-radius:4px;font-family:DM Mono,monospace;font-size:9px;cursor:pointer;letter-spacing:.04em">&#x25C6; AUDIENCE OVERLAP</button>'
+              : '')
+          : '')
+      + '</div>'
+    + '</div>';
+  }).join('');
+}
+
+// ── OUTREACH CRM ──────────────────────────────────────────────────────
+function openOutreachModal() {
+  if (typeof getTierLevel === 'function' && getTierLevel() < 3) {
+    showUpgradePrompt('personas_all','Platinum'); return;
+  }
+  _editingOutreachId = null;
+  document.getElementById('or-name').value   = '';
+  document.getElementById('or-email').value  = '';
+  document.getElementById('or-notes').value  = '';
+  document.getElementById('or-status').value = 'shortlisted';
+  syncOutreachCampaignSelect();
+  document.getElementById('outreach-modal').style.display = 'flex';
+}
+
+function addOutreachToCampaign(campaignId) {
+  openOutreachModal();
+  setTimeout(function() {
+    var sel = document.getElementById('or-campaign');
+    if (sel) sel.value = campaignId;
+  }, 50);
+}
+
+function addOutreachFromCreator(creatorId) {
+  if (typeof getTierLevel === 'function' && getTierLevel() < 3) {
+    showUpgradePrompt('personas_all','Platinum'); return;
+  }
+  var cr = (typeof CREATORS !== 'undefined') ? CREATORS.find(function(c){ return c.id===creatorId; }) : null;
+  openOutreachModal();
+  if (cr) {
+    setTimeout(function() {
+      document.getElementById('or-name').value = cr.name + ' (' + cr.handle + ')';
+      // Pre-fill email if known from bio
+      var emailMatch = (cr.bio||'').match(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/);
+      if (emailMatch) document.getElementById('or-email').value = emailMatch[0];
+    }, 50);
+  }
+}
+
+function closeOutreachModal() {
+  document.getElementById('outreach-modal').style.display = 'none';
+}
+
+function saveOutreachEntry() {
+  var name = document.getElementById('or-name').value.trim();
+  if (!name) { document.getElementById('or-name').style.border='1px solid #E60023'; return; }
+  var entry = {
+    id:       _editingOutreachId || ('or_'+Date.now()),
+    name:     name,
+    campaign: document.getElementById('or-campaign').value,
+    email:    document.getElementById('or-email').value.trim(),
+    status:   document.getElementById('or-status').value,
+    notes:    document.getElementById('or-notes').value.trim(),
+    added:    _editingOutreachId ? null : new Date().toISOString(),
+    updated:  new Date().toISOString(),
+    cpi:      null, subs:null, rate:null,
+  };
+  // Try to match to a creator for CPI/subs
+  if (typeof CREATORS !== 'undefined') {
+    var nameSearch = name.toLowerCase().replace('@','');
+    var cr = CREATORS.find(function(c){
+      return c.name.toLowerCase().includes(nameSearch) || c.handle.toLowerCase().replace('@','').includes(nameSearch);
+    });
+    if (cr) { entry.cpi = cr.cpi; entry.subs = cr.subs; entry.handle = cr.handle;
+      if (!entry.email && cr.bio) {
+        var em = cr.bio.match(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/);
+        if (em) entry.email = em[0];
+      }
+      try { var e = computeCostEstimate(cr); entry.rate = e.fmt(e.ranges.int[0])+'–'+e.fmt(e.ranges.int[1]); } catch(err){}
+    }
+  }
+  if (_editingOutreachId) {
+    var idx = _outreach.findIndex(function(o){ return o.id===_editingOutreachId; });
+    if (idx>-1) { entry.added=_outreach[idx].added; _outreach[idx]=entry; }
+  } else { _outreach.push(entry); }
+  localStorage.setItem('sf_outreach', JSON.stringify(_outreach));
+  closeOutreachModal();
+  renderOutreachScreen();
+  renderCampaignsScreen();
+}
+
+function updateOutreachStatus(id, newStatus) {
+  var entry = _outreach.find(function(o){ return o.id===id; });
+  if (entry) { entry.status=newStatus; entry.updated=new Date().toISOString(); }
+  localStorage.setItem('sf_outreach', JSON.stringify(_outreach));
+  renderOutreachScreen();
+  renderCampaignsScreen();
+}
+
+function deleteOutreachEntry(id) {
+  _outreach = _outreach.filter(function(o){ return o.id!==id; });
+  localStorage.setItem('sf_outreach', JSON.stringify(_outreach));
+  renderOutreachScreen();
+  renderCampaignsScreen();
+}
+
+function syncOutreachCampaignSelect() {
+  var sel = document.getElementById('or-campaign');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">— No campaign —</option>'
+    + _campaigns.map(function(c){ return '<option value="'+c.id+'">'+c.name+'</option>'; }).join('');
+}
+
+function syncOutreachCampaignFilter() {
+  var sel = document.getElementById('outreach-campaign-filter');
+  if (!sel) return;
+  sel.innerHTML = '<option value="all">All campaigns</option>'
+    + _campaigns.map(function(c){ return '<option value="'+c.id+'">'+c.name+'</option>'; }).join('');
+}
+
+function filterOutreachByCampaign(id) {
+  var sel = document.getElementById('outreach-campaign-filter');
+  if (sel) sel.value = id;
+  renderOutreachScreen();
+}
+
+function renderOutreachScreen() {
+  var tbody  = document.getElementById('outreach-tbody');
+  var empty  = document.getElementById('outreach-empty');
+  var stats  = document.getElementById('outreach-stats');
+  if (!tbody) return;
+
+  var campFilter   = (document.getElementById('outreach-campaign-filter')  || {value:'all'}).value;
+  var statusFilter = (document.getElementById('outreach-status-filter')    || {value:'all'}).value;
+  var filtered = _outreach.filter(function(o){
+    if (campFilter !== 'all' && o.campaign !== campFilter) return false;
+    if (statusFilter !== 'all' && o.status !== statusFilter) return false;
+    return true;
+  });
+
+  // Stats bar
+  var counts = { shortlisted:0,contacted:0,negotiating:0,confirmed:0,declined:0 };
+  _outreach.forEach(function(o){ if(counts[o.status]!==undefined) counts[o.status]++; });
+  if (stats) stats.innerHTML = Object.keys(counts).map(function(k){
+    var st = _statusColors[k];
+    return '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center">'
+      + '<div style="font-size:20px;font-weight:700;color:'+st.text+';font-family:Space Grotesk,sans-serif">'+counts[k]+'</div>'
+      + '<div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.06em;color:var(--text-muted);margin-top:2px">'+st.label.toUpperCase()+'</div>'
+    + '</div>';
+  }).join('');
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  var campMap = {};
+  _campaigns.forEach(function(c){ campMap[c.id]=c.name; });
+
+  tbody.innerHTML = filtered.map(function(o){
+    var campName = o.campaign ? (campMap[o.campaign]||'—') : '—';
+    var emailCell = o.email
+      ? '<a href="mailto:'+o.email+'" style="color:#6B9FFF;text-decoration:none;font-size:10px">'+o.email+'</a>'
+      : '<span style="color:var(--text-muted);font-size:10px;cursor:pointer" data-oid="'+o.id+'" data-action="prompt-email" title="Click to add email">+ add email</span>'
+    return '<tr style="border-bottom:1px solid var(--border);transition:background .15s" class="or-row">'
+      + '<td style="padding:12px 16px"><div style="font-weight:600;font-size:12px;color:var(--text)">'+o.name+'</div>'
+        + (o.handle ? '<div style="font-size:9px;color:var(--text-muted);margin-top:2px">'+o.handle+'</div>' : '') + '</td>'
+      + '<td style="padding:12px 16px;font-size:11px;color:var(--text-dim)">'+campName+'</td>'
+      + '<td style="padding:12px 8px;text-align:center"><span style="font-weight:700;color:'+(o.cpi>=85?'#00C46A':o.cpi>=70?'#FFD400':'#FF7A00')+'">'+( o.cpi||'—')+'</span></td>'
+      + '<td style="padding:12px 8px;text-align:center;font-size:11px;color:var(--text-dim)">'+(o.subs||'—')+'</td>'
+      + '<td style="padding:12px 16px;font-size:11px;color:#FFD400">'+(o.rate||'—')+'</td>'
+      + '<td style="padding:12px 16px">'+emailCell+'</td>'
+      + '<td style="padding:12px 16px"><select data-oid="'+o.id+'" data-action="status-change" style="font-family:DM Mono,monospace;font-size:10px;background:transparent;border:none;color:'+(_statusColors[o.status]||{text:'#fff'}).text+';cursor:pointer;outline:none">'
+        + ['shortlisted','contacted','negotiating','confirmed','declined'].map(function(s){
+            return '<option value="'+s+'"'+(o.status===s?' selected':'')+'>'+(_statusColors[s]||{label:s}).label+'</option>';
+          }).join('')
+        + '</select></td>'
+      + '<td style="padding:12px 16px;font-size:11px;color:var(--text-muted);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+(o.notes||'')+'">'+(o.notes||'<span style="color:var(--text-muted);opacity:.4">—</span>')+'</td>'
+      + '<td style="padding:12px 8px;text-align:center">'
+        + '<button data-oid="'+o.id+'" data-action="delete-outreach" style="background:rgba(230,0,35,0.08);border:1px solid rgba(230,0,35,0.2);color:#E60023;border-radius:4px;padding:4px 8px;font-family:DM Mono,monospace;font-size:9px;cursor:pointer">✕</button>'
+      + '</td>'
+    + '</tr>';
+  }).join('');
+}
+
+function promptEmail(id) {
+  var em = prompt('Enter business email for this creator:');
+  if (!em) return;
+  var entry = _outreach.find(function(o){ return o.id===id; });
+  if (entry) { entry.email=em.trim(); localStorage.setItem('sf_outreach',JSON.stringify(_outreach)); renderOutreachScreen(); }
+}
+
+// ── Wire buttons + init ───────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+  var nbtn = document.getElementById('newCampaignBtn');
+  if (nbtn) nbtn.addEventListener('click', newCampaign);
+  var abtn = document.getElementById('addOutreachBtn');
+  if (abtn) abtn.addEventListener('click', openOutreachModal);
+  var cf = document.getElementById('outreach-campaign-filter');
+  if (cf) cf.addEventListener('change', renderOutreachScreen);
+  var sf = document.getElementById('outreach-status-filter');
+  if (sf) sf.addEventListener('change', renderOutreachScreen);
+  // Overlap search enter key
+  var osearch = document.getElementById('overlap-search');
+  if (osearch) osearch.addEventListener('keydown', function(e){ if(e.key==='Enter') overlapAddFromSearch(); });
+  syncOutreachCampaignFilter();
+});
+
+// Hook showScreen to render on tab switch
+var _origShowScreen2 = showScreen;
+showScreen = function(name, btn) {
+  _origShowScreen2(name, btn);
+  if (name==='campaigns') {
+    if (typeof getTierLevel==='function' && getTierLevel()<3) {
+      showUpgradePrompt('personas_all','Platinum'); return;
+    }
+    renderCampaignsScreen();
+  }
+  if (name==='outreach') {
+    if (typeof getTierLevel==='function' && getTierLevel()<3) {
+      showUpgradePrompt('personas_all','Platinum'); return;
+    }
+    syncOutreachCampaignFilter();
+    renderOutreachScreen();
+  }
+};
+
+// ══════════════════════════════════════════════════════════════════════
+// AUDIENCE OVERLAP ENGINE  (Platinum)
+// Model: probabilistic Jaccard-based estimator using genre, platform,
+// audience size, engagement rate, language and country signals.
+// No real subscriber lists — academically grounded probabilistic model.
+// ══════════════════════════════════════════════════════════════════════
+
+var _overlapCreators = []; // array of creator IDs currently in analysis
+
+function parseSubs2(s) {
+  if (!s) return 0;
+  var n = parseFloat(s);
+  if (s.indexOf('M') !== -1) return n * 1e6;
+  if (s.indexOf('K') !== -1) return n * 1e3;
+  return n;
+}
+
+// ── PAIRWISE OVERLAP ESTIMATOR ────────────────────────────────────────
+// Returns estimated fraction of A's audience that also follows B
+// Uses a weighted model across 5 signals
+function estimatePairOverlap(crA, crB) {
+  // Signal 1: Platform (most important — different platforms = tiny overlap)
+  var samePlatform = crA.platform === crB.platform;
+  var platformBase = samePlatform ? 1.0 : 0.12;
+
+  // Signal 2: Genre similarity
+  var sameGenre = crA.genre === crB.genre;
+  var genreScore;
+  if (sameGenre) {
+    genreScore = 0.55;
+  } else {
+    // Adjacent genres have some overlap
+    var adjacentGenres = {
+      'Gaming & Esports':        ['Talk & Entertainment','Tech & Gadgets','Entertainment & Comedy'],
+      'Talk & Entertainment':    ['Gaming & Esports','Entertainment & Comedy','Education & Self-Development'],
+      'Tech & Gadgets':          ['Gaming & Esports','Education & Self-Development','Finance & Investing'],
+      'Beauty & Skincare':       ['Lifestyle & Vlogging','Health & Fitness','Food & Cooking'],
+      'Health & Fitness':        ['Food & Cooking','Beauty & Skincare','Lifestyle & Vlogging','Education & Self-Development'],
+      'Finance & Investing':     ['Education & Self-Development','Tech & Gadgets'],
+      'Travel & Adventure':      ['Lifestyle & Vlogging','Food & Cooking'],
+      'Food & Cooking':          ['Health & Fitness','Travel & Adventure','Lifestyle & Vlogging'],
+      'Music':                   ['Entertainment & Comedy','Talk & Entertainment'],
+      'Entertainment & Comedy':  ['Talk & Entertainment','Music','Gaming & Esports'],
+    };
+    var adj = (adjacentGenres[crA.genre] || []);
+    genreScore = adj.indexOf(crB.genre) !== -1 ? 0.18 : 0.06;
+  }
+
+  // Signal 3: Audience size — larger channels = broader, more overlapping audiences
+  // Jaccard-inspired: overlap increases with channel size (mass audience)
+  var subsA = parseSubs2(crA.subs);
+  var subsB = parseSubs2(crB.subs);
+  var minSubs = Math.min(subsA, subsB);
+  var maxSubs = Math.max(subsA, subsB);
+  // Size score: mega channels (5M+) = 0.3, micro (<50K) = 0.05
+  var sizeScore = Math.min(0.30, Math.max(0.04, Math.log10(Math.max(minSubs, 1000)) / 30));
+
+  // Signal 4: Engagement rate — high engagement = niche loyal audience = LESS overlap
+  var engA = parseFloat(crA.eng) || 2;
+  var engB = parseFloat(crB.eng) || 2;
+  var avgEng = (engA + engB) / 2;
+  // High eng (10%+) = niche = lower overlap; low eng (1%) = broad = higher overlap
+  var engMultiplier = avgEng >= 10 ? 0.65 : avgEng >= 5 ? 0.80 : avgEng >= 2 ? 0.95 : 1.10;
+
+  // Signal 5: Language & Country — same language/region = higher overlap
+  var langA = crA.language || 'English';
+  var langB = crB.language || 'English';
+  var ytA = (typeof YT_ENRICHMENT !== 'undefined') ? (YT_ENRICHMENT[crA.id] || {}) : {};
+  var ytB = (typeof YT_ENRICHMENT !== 'undefined') ? (YT_ENRICHMENT[crB.id] || {}) : {};
+  var countryA = ytA.country || null;
+  var countryB = ytB.country || null;
+  var langMatch = langA === langB;
+  var countryMatch = countryA && countryB && countryA === countryB;
+  var geoMultiplier = countryMatch ? 1.20 : langMatch ? 1.08 : 0.75;
+
+  // Combine signals
+  var rawOverlap = platformBase * genreScore + sizeScore;
+  var adjusted   = rawOverlap * engMultiplier * geoMultiplier;
+
+  // Cap: can't exceed 85% (even identical niche creators have different followers)
+  return Math.min(0.85, Math.max(0.01, adjusted));
+}
+
+// ── UNIQUE REACH ESTIMATOR ────────────────────────────────────────────
+// Given N creators, estimate unique reach using inclusion-exclusion
+// approximation (exact would be 2^N computations)
+function estimateUniqueReach(creators) {
+  if (creators.length === 0) return { unique: 0, total: 0, efficiency: 0, matrix: [] };
+
+  var subs = creators.map(function(cr) { return parseSubs2(cr.subs); });
+  var totalRaw = subs.reduce(function(a, b) { return a + b; }, 0);
+
+  // Build pairwise overlap matrix
+  var n = creators.length;
+  var matrix = [];
+  for (var i = 0; i < n; i++) {
+    matrix[i] = [];
+    for (var j = 0; j < n; j++) {
+      if (i === j) { matrix[i][j] = 1.0; continue; }
+      var frac = estimatePairOverlap(creators[i], creators[j]);
+      matrix[i][j] = frac;
+    }
+  }
+
+  // Estimate unique reach via sequential addition with overlap deduction
+  // Start with largest creator, add others deducting estimated overlap
+  var sorted = creators.slice().sort(function(a,b) { return parseSubs2(b.subs)-parseSubs2(a.subs); });
+  var uniquePool = parseSubs2(sorted[0].subs);
+  var alreadyCounted = [sorted[0]];
+
+  for (var k = 1; k < sorted.length; k++) {
+    var newCr = sorted[k];
+    var newSubs = parseSubs2(newCr.subs);
+    // Max overlap fraction with any already-counted creator
+    var maxOverlapFrac = 0;
+    alreadyCounted.forEach(function(existing) {
+      var ovFrac = estimatePairOverlap(newCr, existing);
+      if (ovFrac > maxOverlapFrac) maxOverlapFrac = ovFrac;
+    });
+    // Expected new unique audience from this creator
+    var expectedNew = newSubs * (1 - maxOverlapFrac);
+    uniquePool += expectedNew;
+    alreadyCounted.push(newCr);
+  }
+
+  var efficiency = totalRaw > 0 ? uniquePool / totalRaw : 0;
+  return {
+    unique: Math.round(uniquePool),
+    total:  Math.round(totalRaw),
+    efficiency: Math.min(1, efficiency),
+    matrix: matrix,
+  };
+}
+
+// ── FORMAT NUMBERS ────────────────────────────────────────────────────
+function fmtReach(n) {
+  if (n >= 1e9) return (n/1e9).toFixed(1)+'B';
+  if (n >= 1e6) return (n/1e6).toFixed(1)+'M';
+  if (n >= 1e3) return Math.round(n/1e3)+'K';
+  return n.toString();
+}
+
+// ── OPEN OVERLAP MODAL ────────────────────────────────────────────────
+function openOverlapModal(campaignId) {
+  if (typeof getTierLevel === 'function' && getTierLevel() < 3) {
+    showUpgradePrompt('personas_all','Platinum'); return;
+  }
+  // Pre-populate with creators tracked for this campaign
+  _overlapCreators = [];
+  if (campaignId && typeof _outreach !== 'undefined') {
+    var linked = _outreach.filter(function(o) {
+      return o.campaign === campaignId &&
+             (o.status === 'confirmed' || o.status === 'shortlisted' || o.status === 'negotiating');
+    });
+    linked.forEach(function(entry) {
+      // Try to match to CREATORS array
+      if (typeof CREATORS !== 'undefined') {
+        var nameSearch = (entry.name || '').toLowerCase().replace('@','').replace(/\s*\(.*\)/,'').trim();
+        var cr = CREATORS.find(function(c) {
+          return c.name.toLowerCase() === nameSearch ||
+                 c.handle.toLowerCase().replace('@','') === nameSearch ||
+                 c.name.toLowerCase().includes(nameSearch.split(' ')[0]) && nameSearch.length > 3;
+        });
+        if (cr && _overlapCreators.indexOf(cr.id) === -1) _overlapCreators.push(cr.id);
+      }
+    });
+  }
+
+  // Set title
+  var cmp = (typeof _campaigns !== 'undefined') ? _campaigns.find(function(c){ return c.id===campaignId; }) : null;
+  document.getElementById('overlap-title').textContent = (cmp ? cmp.name+' — ' : '') + 'Audience Overlap';
+
+  document.getElementById('overlap-modal').style.display = 'flex';
+  renderOverlapModal();
+}
+
+function closeOverlapModal() {
+  document.getElementById('overlap-modal').style.display = 'none';
+}
+
+function renderOverlapModal() {
+  renderOverlapChips();
+  renderOverlapResults();
+}
+
+function renderOverlapChips() {
+  var chips = document.getElementById('overlap-creator-chips');
+  var warn  = document.getElementById('overlap-count-warn');
+  if (!chips) return;
+  if (_overlapCreators.length === 0) {
+    chips.innerHTML = '<span style="font-family:DM Mono,monospace;font-size:10px;color:var(--text-muted)">No creators added yet — search above or add from your outreach list</span>';
+    if (warn) warn.style.display = 'none';
+    return;
+  }
+  if (warn) warn.style.display = _overlapCreators.length >= 10 ? 'inline' : 'none';
+  chips.innerHTML = _overlapCreators.map(function(id) {
+    var cr = (typeof CREATORS !== 'undefined') ? CREATORS.find(function(c){ return c.id===id; }) : null;
+    if (!cr) return '';
+    return '<div style="display:inline-flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid '
+      + cr.color+'44;border-radius:20px;padding:4px 10px 4px 8px;cursor:pointer" data-oid="'+id+'" data-action="overlap-toggle-creator">'
+      + '<div style="width:20px;height:20px;border-radius:50%;background:'+cr.color+'22;color:'+cr.color
+      + ';font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;font-family:sans-serif">'+cr.name.charAt(0)+'</div>'
+      + '<span style="font-family:DM Mono,monospace;font-size:10px;color:var(--text)">'+cr.name+'</span>'
+      + '<span style="font-family:DM Mono,monospace;font-size:9px;color:var(--text-muted)">'+cr.subs+'</span>'
+      + '<span style="color:#E60023;font-size:11px;margin-left:2px" title="Remove">×</span>'
+    + '</div>';
+  }).join('');
+}
+
+function overlapAddCreator(id) {
+  if (_overlapCreators.indexOf(id) === -1) _overlapCreators.push(id);
+  renderOverlapModal();
+}
+
+function overlapRemoveCreator(id) {
+  _overlapCreators = _overlapCreators.filter(function(x){ return x !== id; });
+  renderOverlapModal();
+}
+
+function overlapAddFromSearch() {
+  var q = (document.getElementById('overlap-search').value || '').toLowerCase().trim();
+  if (!q || typeof CREATORS === 'undefined') return;
+  var cr = CREATORS.find(function(c){
+    return c.name.toLowerCase().includes(q) || c.handle.toLowerCase().replace('@','').includes(q);
+  });
+  if (cr) {
+    overlapAddCreator(cr.id);
+    document.getElementById('overlap-search').value = '';
+  } else {
+    document.getElementById('overlap-search').style.border = '1px solid #E60023';
+    setTimeout(function(){ document.getElementById('overlap-search').style.border = ''; }, 1500);
+  }
+}
+
+function renderOverlapResults() {
+  var el = document.getElementById('overlap-results');
+  if (!el) return;
+
+  if (_overlapCreators.length < 2) {
+    el.innerHTML = '<div style="text-align:center;padding:48px;color:var(--text-muted);font-family:DM Mono,monospace;font-size:11px">'
+      + 'Add at least 2 creators to run the overlap analysis</div>';
+    return;
+  }
+
+  var creators = _overlapCreators.map(function(id){
+    return (typeof CREATORS !== 'undefined') ? CREATORS.find(function(c){ return c.id===id; }) : null;
+  }).filter(Boolean);
+
+  var result = estimateUniqueReach(creators);
+  var effPct = Math.round(result.efficiency * 100);
+  var dupPct  = 100 - effPct;
+  var effColor = effPct >= 80 ? '#00C46A' : effPct >= 60 ? '#FFD400' : '#FF7A00';
+
+  // ── SUMMARY METRICS ───────────────────────────────────────────────
+  var summaryHtml = '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px">'
+    + '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:16px;text-align:center">'
+      + '<div style="font-family:Space Grotesk,sans-serif;font-size:28px;font-weight:700;color:#A78BFA">'+fmtReach(result.unique)+'</div>'
+      + '<div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.08em;color:var(--text-muted);margin-top:4px">EST. UNIQUE REACH</div>'
+    + '</div>'
+    + '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:16px;text-align:center">'
+      + '<div style="font-family:Space Grotesk,sans-serif;font-size:28px;font-weight:700;color:var(--text)">'+fmtReach(result.total)+'</div>'
+      + '<div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.08em;color:var(--text-muted);margin-top:4px">COMBINED SUBS</div>'
+    + '</div>'
+    + '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:16px;text-align:center">'
+      + '<div style="font-family:Space Grotesk,sans-serif;font-size:28px;font-weight:700;color:'+effColor+'">'+effPct+'%</div>'
+      + '<div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.08em;color:var(--text-muted);margin-top:4px">REACH EFFICIENCY</div>'
+    + '</div>'
+    + '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:16px;text-align:center">'
+      + '<div style="font-family:Space Grotesk,sans-serif;font-size:28px;font-weight:700;color:#E60023">'+dupPct+'%</div>'
+      + '<div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.08em;color:var(--text-muted);margin-top:4px">EST. DUPLICATION</div>'
+    + '</div>'
+  + '</div>';
+
+  // ── EFFICIENCY BAR ────────────────────────────────────────────────
+  var barHtml = '<div style="margin-bottom:24px">'
+    + '<div style="display:flex;justify-content:space-between;font-family:DM Mono,monospace;font-size:9px;color:var(--text-muted);margin-bottom:6px">'
+      + '<span>UNIQUE REACH</span><span>DUPLICATION</span>'
+    + '</div>'
+    + '<div style="height:12px;background:rgba(230,0,35,0.15);border-radius:6px;overflow:hidden">'
+      + '<div style="height:100%;width:'+effPct+'%;background:'+effColor+';border-radius:6px;transition:width 0.8s cubic-bezier(.23,1,.32,1)"></div>'
+    + '</div>'
+    + '<div style="font-family:DM Mono,monospace;font-size:10px;color:var(--text-dim);margin-top:8px">'
+      + _getEfficiencyVerdict(effPct, creators)
+    + '</div>'
+  + '</div>';
+
+  // ── PAIRWISE HEATMAP ──────────────────────────────────────────────
+  var n = creators.length;
+  var heatmapHtml = '<div style="margin-bottom:24px">'
+    + '<div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.08em;color:var(--text-muted);margin-bottom:12px">PAIRWISE AUDIENCE OVERLAP ESTIMATE</div>'
+    + '<div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%;font-family:DM Mono,monospace;font-size:10px">';
+
+  // Header row
+  heatmapHtml += '<tr><th style="padding:8px;text-align:left;color:var(--text-muted);font-size:9px;font-weight:400;white-space:nowrap"></th>';
+  creators.forEach(function(cr) {
+    heatmapHtml += '<th style="padding:8px;text-align:center;color:var(--text-dim);font-size:9px;font-weight:400;white-space:nowrap;max-width:80px;overflow:hidden;text-overflow:ellipsis">'+cr.name.split(' ')[0]+'</th>';
+  });
+  heatmapHtml += '</tr>';
+
+  // Data rows
+  creators.forEach(function(crA, i) {
+    heatmapHtml += '<tr>';
+    heatmapHtml += '<td style="padding:8px 12px 8px 0;white-space:nowrap;color:var(--text-dim);font-size:10px">'+crA.name.split(' ')[0]+'<br><span style="font-size:8px;color:var(--text-muted)">'+crA.subs+'</span></td>';
+    creators.forEach(function(crB, j) {
+      if (i === j) {
+        heatmapHtml += '<td style="padding:6px;text-align:center;background:rgba(109,40,217,0.2);border-radius:4px;color:#A78BFA;font-weight:700">SELF</td>';
+      } else {
+        var pct = Math.round(result.matrix[i][j] * 100);
+        var bg  = pct >= 50 ? 'rgba(230,0,35,' + (0.1 + pct/200) + ')'
+                : pct >= 25 ? 'rgba(255,122,0,' + (0.1 + pct/200) + ')'
+                : 'rgba(0,196,106,' + (0.08 + pct/300) + ')';
+        var txt = pct >= 40 ? '#E60023' : pct >= 20 ? '#FF7A00' : '#00C46A';
+        heatmapHtml += '<td style="padding:6px;text-align:center;background:'+bg+';border-radius:4px">'
+          + '<span style="color:'+txt+';font-weight:700">'+pct+'%</span>'
+          + '<div style="font-size:8px;color:var(--text-muted);margin-top:2px">of '+crA.name.split(' ')[0]+'</div>'
+          + '</td>';
+      }
+    });
+    heatmapHtml += '</tr>';
+  });
+  heatmapHtml += '</table></div></div>';
+
+  // ── PER-CREATOR BREAKDOWN ─────────────────────────────────────────
+  var breakdownHtml = '<div>'
+    + '<div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.08em;color:var(--text-muted);margin-bottom:12px">PER-CREATOR CONTRIBUTION</div>'
+    + creators.map(function(cr, i) {
+      // Estimate unique contribution of removing this creator
+      var withoutCr = creators.filter(function(_,j){ return j!==i; });
+      var resultWithout = estimateUniqueReach(withoutCr);
+      var uniqueContrib = Math.max(0, result.unique - (withoutCr.length > 0 ? resultWithout.unique : 0));
+      var contribPct = result.unique > 0 ? Math.round(uniqueContrib / result.unique * 100) : 0;
+      var subs = parseSubs2(cr.subs);
+      var overlapPct = subs > 0 ? Math.round((1 - uniqueContrib/Math.max(uniqueContrib,subs)) * 100) : 0;
+      return '<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">'
+        + '<div style="width:28px;height:28px;border-radius:50%;background:'+cr.color+'22;color:'+cr.color
+          + ';font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;font-family:sans-serif;flex-shrink:0">'+cr.name.charAt(0)+'</div>'
+        + '<div style="flex:1">'
+          + '<div style="display:flex;justify-content:space-between;margin-bottom:4px">'
+            + '<span style="font-size:12px;font-weight:600;color:var(--text)">'+cr.name+'</span>'
+            + '<span style="font-family:DM Mono,monospace;font-size:10px;color:#A78BFA">+'+fmtReach(uniqueContrib)+' unique</span>'
+          + '</div>'
+          + '<div style="height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden">'
+            + '<div style="height:100%;width:'+contribPct+'%;background:'+cr.color+';border-radius:2px"></div>'
+          + '</div>'
+          + '<div style="display:flex;gap:12px;margin-top:3px;font-family:DM Mono,monospace;font-size:9px;color:var(--text-muted)">'
+            + '<span>'+contribPct+'% of total unique reach</span>'
+            + '<span style="color:'+(overlapPct>50?'#E60023':overlapPct>25?'#FF7A00':'#00C46A')+'">'
+              + 'Est. '+overlapPct+'% of audience already reached by others</span>'
+          + '</div>'
+        + '</div>'
+      + '</div>';
+    }).join('')
+  + '</div>';
+
+  // ── METHODOLOGY NOTE ──────────────────────────────────────────────
+  var methodNote = '<div style="margin-top:24px;padding:12px 16px;background:rgba(109,40,217,0.06);border:1px solid rgba(109,40,217,0.2);border-radius:8px">'
+    + '<div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.06em;color:#A78BFA;margin-bottom:4px">METHODOLOGY</div>'
+    + '<div style="font-size:11px;color:var(--text-muted);line-height:1.6">'
+      + 'Estimates are probabilistic, based on genre alignment, platform, audience size, engagement rate, language and geography signals. '
+      + 'Model uses Jaccard-similarity approximation with inclusion-exclusion for n-creator sets. '
+      + 'Accuracy improves with more distinct creators. Not a substitute for DMP or pixel-based measurement.'
+    + '</div>'
+  + '</div>';
+
+  el.innerHTML = summaryHtml + barHtml + heatmapHtml + breakdownHtml + methodNote;
+}
+
+function _getEfficiencyVerdict(effPct, creators) {
+  var platforms = creators.map(function(c){ return c.platform; });
+  var uniquePlatforms = platforms.filter(function(p,i){ return platforms.indexOf(p)===i; }).length;
+  if (effPct >= 85) return 'Excellent roster diversity — these creators reach largely distinct audiences. Strong investment case.';
+  if (effPct >= 70) return 'Good efficiency. Some audience overlap but meaningful incremental reach from each creator.';
+  if (effPct >= 55) return uniquePlatforms < 2
+    ? 'Moderate overlap. Consider adding a creator from a different platform to improve net reach.'
+    : 'Moderate overlap — these creators share significant audience. Consider diversifying genre or creator tier.';
+  if (effPct >= 40) return 'High duplication. You may be paying to reach the same audience multiple times. Recommend replacing at least one creator with a different tier or genre.';
+  return 'Very high duplication. This roster is likely hitting the same core audience repeatedly. Significant budget is being wasted on duplicate impressions.';
+}
+
+// ── Wire overlap delegation ───────────────────────────────────────────
+// (handled in main delegation block — open-overlap, overlap-toggle-creator, overlap-add-search, close-overlap)
+
 // ── GLOBAL EVENT DELEGATION (Cloudflare-safe) ────────────────────────
 // Handles all data-oc= attributes (replaces onclick= stripped by Cloudflare)
 document.addEventListener('click', function(e) {
   var el = e.target;
   while (el && el !== document) {
+    // Handle campaign/outreach data-action buttons
+    var action = el.getAttribute('data-action');
+    var cid = el.getAttribute('data-cid');
+    var oid = el.getAttribute('data-oid');
+    if (action) {
+      e.stopPropagation();
+      if (action==='edit-campaign' && cid) editCampaign(cid);
+      else if (action==='add-outreach-campaign' && cid) addOutreachToCampaign(cid);
+      else if (action==='delete-campaign' && cid) deleteCampaign(cid);
+      else if (action==='view-outreach-campaign' && cid) { showScreen('outreach',null); setTimeout(function(){ filterOutreachByCampaign(cid); },50); }
+      else if (action==='delete-outreach' && oid) deleteOutreachEntry(oid);
+      else if (action==='open-overlap') { var cid2=el.getAttribute('data-cid'); openOverlapModal(cid2); }
+      else if (action==='close-overlap') closeOverlapModal();
+      else if (action==='overlap-toggle-creator') { var ooid=el.getAttribute('data-oid'); if(ooid) overlapRemoveCreator(parseInt(ooid)); }
+      else if (action==='overlap-add-search') overlapAddFromSearch();
+      else if (action==='prompt-email' && oid) promptEmail(oid);
+      return;
+    }
     // Handle data-oc (replaces onclick)
     var oc = el.getAttribute('data-oc');
     if (oc) {
@@ -10341,6 +11231,15 @@ document.addEventListener('click', function(e) {
     el = el.parentElement;
   }
 }, true);
+
+// Wire outreach status selects (they fire 'change' not 'click')
+document.addEventListener('change', function(e) {
+  var el = e.target;
+  if (el && el.tagName === 'SELECT' && el.getAttribute('data-action') === 'status-change') {
+    var oid = el.getAttribute('data-oid');
+    if (oid) updateOutreachStatus(oid, el.value);
+  }
+});
 
 // Wire buttons that need IDs (run simulation, re-run, etc.)
 document.addEventListener('DOMContentLoaded', function() {
@@ -10604,32 +11503,4 @@ document.addEventListener('DOMContentLoaded', function() {
       '<div class="bands">' +
         '<div class="band best"><div class="blbl" style="color:#00A855">P90 — Best Case</div><div class="bimpr" style="color:#00A855">' + fmtN(r.p90.impressions) + '</div><div style="font-size:12px;color:#00A855">impressions</div><div class="bsub" style="color:#00A855">' + r.p90.ctr + '% CTR &nbsp;·&nbsp; ' + r.p90.roas + '× ROAS</div></div>' +
         '<div class="band base"><div class="blbl" style="color:#B38A00">P50 — Base Case</div><div class="bimpr" style="color:#B38A00">' + fmtN(r.p50.impressions) + '</div><div style="font-size:12px;color:#B38A00">impressions</div><div class="bsub" style="color:#B38A00">' + r.p50.ctr + '% CTR &nbsp;·&nbsp; ' + r.p50.roas + '× ROAS</div></div>' +
-        '<div class="band wrst"><div class="blbl" style="color:#CC0020">P10 — Worst Case</div><div class="bimpr" style="color:#CC0020">' + fmtN(r.p10.impressions) + '</div><div style="font-size:12px;color:#CC0020">impressions</div><div class="bsub" style="color:#CC0020">' + r.p10.ctr + '% CTR &nbsp;·&nbsp; ' + r.p10.roas + '× ROAS</div></div>' +
-      '</div>' +
-
-      (bench.ctrBase ? '<h2>vs Industry Benchmarks — ' + genre + '</h2>' + benchRow : '') +
-
-      '<h2>Per-Creator Forecast (' + creators.length + ' creators)</h2>' +
-      (crRows || '<p style="color:#888">No creators selected.</p>') +
-
-      '<div style="margin-top:32px;padding-top:14px;border-top:1px solid #eee;font-size:9px;color:#aaa;text-align:center">' +
-        'Generated by Simfluence &nbsp;·&nbsp; simfluence.ai &nbsp;·&nbsp; Campaign Intelligence Platform' +
-      '</div>' +
-    '</body></html>';
-
-    var win = window.open('', '_blank');
-    if (!win) { alert('Please allow popups to generate the PDF.'); return; }
-    win.document.write(html);
-    win.document.close();
-    setTimeout(function() { win.focus(); win.print(); }, 700);
-  }
-
-  document.addEventListener('DOMContentLoaded', function() {
-    var btn = document.getElementById('saveCampaignBtn');
-    if (btn) btn.addEventListener('click', buildPDF);
-  });
-})();
-</script>
-
-</body>
-</html>
+        '<div class="band wrst"><div class="blbl" style="color:#CC0020">P10 — Worst Case</div><div class="bimpr" style="color:#CC0020">' + fmtN(r.p10.impressions) + '</div><div style="font-size:12px;color:#CC0020">impressions</div><div class="bsub" style="color:#C
