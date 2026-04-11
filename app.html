@@ -8179,8 +8179,9 @@ window.__livePanelOpen  = false;
 // Get all Twitch creator handles from the database
 function getTwitchHandles() {
   return CREATORS
-    .filter(function(cr) { return cr.platform === 'Twitch'; })
-    .map(function(cr) { return cr.handle; });
+    .filter(function(cr) { return cr.platform === 'Twitch' || (cr.allPlatforms && cr.allPlatforms.includes('Twitch')); })
+    .map(function(cr) { return cr.handle.replace('@','').toLowerCase(); })
+    .slice(0, 100);
 }
 
 // Fetch live status for all Twitch creators
