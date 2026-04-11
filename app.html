@@ -6937,13 +6937,22 @@ function renderCreatorGrid(keepPage) {
         <div class="stat"><div class="stat-label">SUBS</div><div class="stat-val">${cr.subs}</div></div>
         <div class="stat"><div class="stat-label">AVG VIEWS</div><div class="stat-val">${cr.avgViews}</div></div>
         <div class="stat"><div class="stat-label">ENG RATE</div><div class="stat-val">${cr.eng}</div></div>
-        <div class="stat"><div class="stat-label">CPI SCORE</div><div class="stat-val" style="color:${cpiScoreColor(cr.cpi)};font-size:22px;font-weight:700">${cr.cpi}</div></div>
       </div>
       ${multiPlatformCpiHtml(cr)}
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;gap:6px;flex-wrap:wrap">
-        <div style="font-size:11px;color:var(--text-muted)">GFI: <span style="color:#fff;background:${gfi>=80?'#00D47A':gfi>=60?'#FF9500':'#FF3355'};padding:1px 6px;border-radius:3px;font-weight:700">${gfi}%</span>
-          ${mismatch?`<span style="color:#FF7A00;font-size:10px"> ⚠ ${mismatch}</span>`:''}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+        <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:10px 12px;">
+          <div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.08em;color:rgba(255,255,255,0.35);margin-bottom:4px;">CREATOR SCORE</div>
+          <div style="font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:700;line-height:1;color:${cpiScoreColor(cr.cpi)}">${cr.cpi}</div>
+          <div style="font-family:'DM Mono',monospace;font-size:8px;color:rgba(255,255,255,0.3);margin-top:3px">${cr.cpi>=80?'Strong commercial performer':cr.cpi>=60?'Moderate performer':'Developing creator'}</div>
         </div>
+        <div style="background:rgba(255,255,255,0.03);border:1px solid ${gfi>=80?'rgba(0,212,122,0.25)':gfi>=60?'rgba(255,149,0,0.25)':'rgba(255,51,85,0.25)'};border-radius:8px;padding:10px 12px;">
+          <div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.08em;color:rgba(255,255,255,0.35);margin-bottom:4px;">GENRE FIT</div>
+          <div style="font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:700;line-height:1;color:${gfi>=80?'#00D47A':gfi>=60?'#FF9500':'#FF3355'}">${gfi}%</div>
+          <div style="font-family:'DM Mono',monospace;font-size:8px;color:rgba(255,255,255,0.3);margin-top:3px">${gfi>=80?'Strong fit for this campaign':gfi>=60?'Moderate fit — usable':mismatch?'Low fit · '+mismatch:'Low genre alignment'}</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;gap:6px;flex-wrap:wrap">
+        <div></div>
         ${highlight}
       </div>
       ${renderCrossoverBadge(cr, genre)}
