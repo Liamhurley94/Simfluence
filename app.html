@@ -6865,7 +6865,7 @@ function renderCreatorGrid(keepPage) {
       const selected  = selectedCreators.has(cr.id);
       const gfi       = computeGFI(cr);
       const e         = computeCostEstimate(cr);
-      return `<div class="creator-card ${selected?'selected':''}" onclick="openProfileOverlay(${cr.id})" style="cursor:pointer;position:relative">
+      return `<div class="creator-card ${selected?'selected':''}" data-oc="openProfileOverlay(${cr.id})" style="cursor:pointer;position:relative">
         <div class="creator-card-header">
           <div id="card-avatar-${cr.id}" class="creator-avatar" style="background:${cr.color}22;color:${cr.color};${selected?'border:2px solid '+cr.color:''};cursor:zoom-in;overflow:hidden">${cr.name.charAt(0)}</div>
           <div style="flex:1;min-width:0">
@@ -6877,7 +6877,7 @@ function renderCreatorGrid(keepPage) {
           <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
             ${tierBadgeHtml(cr)}
             ${getLiveBadge(cr)}
-            <button onclick="event.stopPropagation();toggleCreator(${cr.id})" style="font-family:'DM Mono',monospace;font-size:9px;padding:3px 8px;background:${selected?'rgba(0,196,106,0.15)'  :'rgba(0,80,255,0.15)'};border:1px solid ${selected?'rgba(0,196,106,0.3)'  :'rgba(0,80,255,0.3)'};color:${selected?'#00C46A':'#6B9FFF'};border-radius:3px;cursor:pointer;white-space:nowrap">${selected?'✓ SELECTED':'+ SELECT'}</button>
+            <button data-oc="event.stopPropagation();toggleCreator(${cr.id})" style="font-family:'DM Mono',monospace;font-size:9px;padding:3px 8px;background:${selected?'rgba(0,196,106,0.15)'  :'rgba(0,80,255,0.15)'};border:1px solid ${selected?'rgba(0,196,106,0.3)'  :'rgba(0,80,255,0.3)'};color:${selected?'#00C46A':'#6B9FFF'};border-radius:3px;cursor:pointer;white-space:nowrap">${selected?'✓ SELECTED':'+ SELECT'}</button>
           </div>
         </div>
         <div class="creator-stats">
@@ -6970,7 +6970,7 @@ function renderCreatorGrid(keepPage) {
       ? `<div style="position:absolute;top:8px;left:8px;font-family:'DM Mono',monospace;font-size:8px;padding:2px 7px;background:rgba(255,122,0,0.12);border:1px solid rgba(255,122,0,0.3);color:#FF7A00;border-radius:2px;z-index:1">WOULD OVERSPEND</div>`
       : '';
 
-    return `<div class="creator-card ${selected?'selected':''}" onclick="openProfileOverlay(${cr.id})" style="cursor:pointer;position:relative">
+    return `<div class="creator-card ${selected?'selected':''}" data-oc="openProfileOverlay(${cr.id})" style="cursor:pointer;position:relative">
       ${budgetBadge}
       <div class="creator-card-header">
         <div id="card-avatar-${cr.id}" class="creator-avatar" style="background:${cr.color}22;color:${cr.color};${selected?'border:2px solid '+cr.color:''};overflow:hidden">${cr.name.charAt(0)}</div>
@@ -6981,7 +6981,7 @@ function renderCreatorGrid(keepPage) {
         </div>
         <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
           ${tierBadgeHtml(cr)}
-          <button onclick="event.stopPropagation();toggleCreator(${cr.id})" style="font-family:'DM Mono',monospace;font-size:9px;padding:3px 8px;background:${selected?'rgba(0,196,106,0.15)'  :'rgba(0,80,255,0.15)'};border:1px solid ${selected?'rgba(0,196,106,0.3)'  :'rgba(0,80,255,0.3)'};color:${selected?'#00C46A':'#6B9FFF'};border-radius:3px;cursor:pointer;white-space:nowrap">${selected?'✓ SELECTED':'+ SELECT'}</button>
+          <button data-oc="event.stopPropagation();toggleCreator(${cr.id})" style="font-family:'DM Mono',monospace;font-size:9px;padding:3px 8px;background:${selected?'rgba(0,196,106,0.15)'  :'rgba(0,80,255,0.15)'};border:1px solid ${selected?'rgba(0,196,106,0.3)'  :'rgba(0,80,255,0.3)'};color:${selected?'#00C46A':'#6B9FFF'};border-radius:3px;cursor:pointer;white-space:nowrap">${selected?'✓ SELECTED':'+ SELECT'}</button>
         </div>
       </div>
       <div class="creator-stats">
@@ -7061,7 +7061,7 @@ function openProfileOverlay(id) {
 
       <!-- HERO BAND -->
       <div style="background:linear-gradient(135deg,${c.color}22,transparent);padding:32px;position:relative">
-        <button onclick="closeProfileOverlay()" style="position:absolute;top:16px;right:16px;background:rgba(0,0,0,0.4);border:1px solid var(--border);color:var(--text-dim);border-radius:6px;padding:6px 12px;cursor:pointer;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.06em">✕ CLOSE</button>
+        <button data-oc="closeProfileOverlay()" style="position:absolute;top:16px;right:16px;background:rgba(0,0,0,0.4);border:1px solid var(--border);color:var(--text-dim);border-radius:6px;padding:6px 12px;cursor:pointer;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.06em">✕ CLOSE</button>
         <div style="display:flex;gap:20px;align-items:center">
           <div id="profile-avatar-${c.id}" style="width:72px;height:72px;border-radius:50%;background:${c.color}33;border:3px solid ${c.color};display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;color:${c.color};flex-shrink:0;font-family:'Space Grotesk',sans-serif;overflow:hidden;flex-shrink:0">${c.name.charAt(0)}</div>
           <div>
@@ -7240,7 +7240,7 @@ function openProfileOverlay(id) {
       <!-- ADD TO CAMPAIGN -->
       <div style="padding:20px 24px;border-top:1px solid var(--border);background:var(--bg3);display:flex;align-items:center;justify-content:space-between">
         <div style="font-size:13px;color:var(--text-dim)">Add to your campaign brief and run a simulation.</div>
-        <button onclick="toggleCreator(${c.id});closeProfileOverlay()" style="padding:10px 20px;background:var(--blue-bright)||'#0050FF';background:#0050FF;color:#fff;border:none;border-radius:6px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.06em;cursor:pointer;text-transform:uppercase">+ Add to Campaign</button>
+        <button data-oc="toggleCreator(${c.id});closeProfileOverlay()" style="padding:10px 20px;background:var(--blue-bright)||'#0050FF';background:#0050FF;color:#fff;border:none;border-radius:6px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.06em;cursor:pointer;text-transform:uppercase">+ Add to Campaign</button>
       </div>
 
     </div>
@@ -7598,7 +7598,7 @@ function updateSimDisplay() {
       return '<div style="border-bottom:1px solid var(--border);padding:20px">'
 
         // Clickable creator header
-        + '<div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;cursor:pointer" onclick="openProfileOverlay(' + cr.id + ')" title="Click to view full profile">'
+        + '<div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;cursor:pointer" data-oc="openProfileOverlay(' + cr.id + ')" title="Click to view full profile">'
           + '<div style="width:44px;height:44px;border-radius:50%;background:' + cr.color + '22;color:' + cr.color + ';display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;flex-shrink:0;border:2px solid ' + cr.color + '">' + cr.name.charAt(0) + '</div>'
           + '<div style="flex:1;min-width:0">'
             + '<div style="font-size:16px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + cr.name + ' <span style="font-size:11px;color:var(--text-muted);font-weight:400">↗ view profile</span></div>'
@@ -7702,7 +7702,7 @@ function onGenreChange() {
   if (field) field.style.display = modes.length ? 'block' : 'none';
   activeSubMode = modes[0] || '';
   container.innerHTML = modes.map((m,i) =>
-    `<button class="chip ${i===0?'active':''}" onclick="setSubMode('${m.replace(/'/g,"\'")}',this)">${m}</button>`
+    `<button class="chip ${i===0?'active':''}" data-oc="setSubMode('${m.replace(/'/g,"\'")}',this)">${m}</button>`
   ).join('');
   renderCreatorGrid();
   updateBriefPanel();
@@ -7793,7 +7793,7 @@ function renderScoringScreen() {
     const subAlignCol = subAlign >= 60 ? '#00C46A' : subAlign >= 35 ? '#FF7A00' : '#E60023';
     const subAlignLabel = subAlign >= 60 ? '✓ Strong fit' : subAlign >= 35 ? '~ Partial fit' : '✗ Weak fit';
 
-    return '<div style="display:grid;grid-template-columns:2fr 80px 80px 1fr 140px;gap:0;padding:14px 20px;border-bottom:1px solid var(--border);align-items:center;cursor:pointer" onclick="openProfileOverlay(' + cr.id + ')">'  
+    return '<div style="display:grid;grid-template-columns:2fr 80px 80px 1fr 140px;gap:0;padding:14px 20px;border-bottom:1px solid var(--border);align-items:center;cursor:pointer" data-oc="openProfileOverlay(' + cr.id + ')">'  
 
       // Creator info
       + '<div style="display:flex;align-items:center;gap:12px">'
@@ -8032,7 +8032,7 @@ function updateBriefPanel() {
   // ── Creator chips ─────────────────────────────────────────────────
   const chipsEl = document.getElementById('briefCreatorChips');
   if (chipsEl) chipsEl.innerHTML = selected.map(cr => `
-    <div class="brief-creator-chip" onclick="toggleCreator(${cr.id})" title="Click to remove">
+    <div class="brief-creator-chip" data-oc="toggleCreator(${cr.id})" title="Click to remove">
       <div style="width:20px;height:20px;border-radius:50%;background:${cr.color}33;color:${cr.color};
         display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700">${cr.name.charAt(0)}</div>
       <span>${cr.name}</span>
@@ -8514,7 +8514,7 @@ function renderLivePanel() {
     var gfiCol      = liveGFI >= 80 ? '#00C46A' : liveGFI >= 60 ? '#FFD400' : '#E60023';
     var twitchLogin = cr.handle.replace('@','').toLowerCase();
 
-    return '<div style="display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:5px;cursor:pointer;margin-bottom:3px;border:1px solid var(--border);background:var(--bg2)" onclick="openProfileOverlay(' + cr.id + ')">'
+    return '<div style="display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:5px;cursor:pointer;margin-bottom:3px;border:1px solid var(--border);background:var(--bg2)" data-oc="openProfileOverlay(' + cr.id + ')">'
       + '<div style="width:7px;height:7px;border-radius:50%;background:#E60023;flex-shrink:0;animation:livePulse 1.4s infinite"></div>'
       + '<div style="flex:1;min-width:0">'
         + '<div style="font-size:11px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + cr.name + '</div>'
@@ -8535,7 +8535,7 @@ function renderLivePanel() {
             + '<div style="font-size:7px;color:var(--text-muted);letter-spacing:.03em">LIVE CPI</div>'
           + '</div>'
       )
-      + '<a href="https://twitch.tv/' + twitchLogin + '" target="_blank" onclick="event.stopPropagation()" style="padding:4px 7px;background:#9146FF;border-radius:3px;font-size:9px;font-weight:700;color:#fff;text-decoration:none;flex-shrink:0">&#9654;</a>'
+      + '<a href="https://twitch.tv/' + twitchLogin + '" target="_blank" data-oc="event.stopPropagation()" style="padding:4px 7px;background:#9146FF;border-radius:3px;font-size:9px;font-weight:700;color:#fff;text-decoration:none;flex-shrink:0">&#9654;</a>'
     + '</div>';
   }
 
