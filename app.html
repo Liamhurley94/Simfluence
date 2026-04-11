@@ -1769,10 +1769,14 @@
 // ── CLIENT ACCESS PASSWORDS ─────────────────────────────────────────
 // Add new clients here: 'Password': { client: 'Name', tier: 'bronze' }
 var CLIENTS = {
-  'Simfluence2025!': { client: 'Simfluence',  tier: 'admin'   },
-  'Cleopatra1!':     { client: 'Internal',     tier: 'admin'   },
-  'Nestle2026!':     { client: 'Nestle',        tier: 'bronze'  },
-  'eFootball2026!':  { client: 'eFootball',     tier: 'bronze'  },
+  'Simfluence2025!': { client: 'Simfluence', tier: 'admin'    },
+  'Cleopatra1!':     { client: 'Internal',    tier: 'admin'    },
+  'Nestle2026!':     { client: 'Nestle',      tier: 'bronze'   },
+  'eFootball2026!':  { client: 'eFootball',   tier: 'bronze'   },
+  'Silver2026!':     { client: 'Demo',        tier: 'silver'   },
+  'Gold2026!':       { client: 'Demo',        tier: 'gold'     },
+  'Platinum2026!':   { client: 'Demo',        tier: 'platinum' },
+  'Diamond2026!':    { client: 'Demo',        tier: 'diamond'  },
 };
 
 document.getElementById('GP').addEventListener('keydown',function(e){if(e.key==='Enter')GC();});
@@ -1787,12 +1791,305 @@ function GC(){
       sessionStorage.setItem('sf_tier', match.tier);
     } catch(e){}
   } else {
+
+
     document.getElementById('GE').style.display='block';
     document.getElementById('GP').value='';
     document.getElementById('GP').focus();
     setTimeout(function(){document.getElementById('GE').style.display='none';},2500);
   }
 }
+
+// ══════════════════════════════════════════════════════════════════════
+// TIER ENGINE
+// ══════════════════════════════════════════════════════════════════════
+var TIER_LEVELS = { bronze:0, silver:1, gold:2, platinum:3, diamond:4, admin:5 };
+
+function getTierLevel() {
+  try { return TIER_LEVELS[sessionStorage.getItem('sf_tier')] || 0; } catch(e) { return 0; }
+}
+function getTierName() {
+  try { return sessionStorage.getItem('sf_tier') || 'bronze'; } catch(e) { return 'bronze'; }
+}
+
+function tierCan(feature) {
+  var t = getTierLevel();
+  var rules = {
+    'discovery_unlimited': t>=2, 'discovery_100': t>=1,
+    'profile_full': t>=2, 'profile_basic': t>=1,
+    'cpi_breakdown': t>=2, 'audience_intelligence': t>=2, 'audience_blur': t>=1,
+    'export_unlimited': t>=3, 'export_10': t>=2,
+    'cpi_gfi_visible': t>=1, 'gfi_methodology': t>=2,
+    'compare_4': t>=3, 'compare_2': t>=2,
+    'personas_all': t>=3, 'personas_3': t>=2, 'personas_1': t>=1,
+    'persona_creators_3': t>=3, 'persona_creators_1': t>=2,
+    'sim_unlimited': t>=2, 'sim_10': t>=1,
+    'duration_slider': t>=2,
+    'budget_allocation_edit': t>=3, 'budget_allocation_view': t>=2,
+    'bands_all': t>=2, 'band_p50_only': t>=1,
+    'pdf_full': t>=3, 'pdf_summary': t>=2,
+    'saved_unlimited': t>=3, 'saved_10': t>=2, 'saved_3': t>=1,
+    'live_full': t>=2, 'live_genre': t>=1,
+    'admin': t>=5,
+  };
+  return rules[feature] || false;
+}
+
+function showUpgradePrompt(feature, targetTier) {
+  targetTier = targetTier || 'Gold';
+  var msgs = {
+    'cpi_breakdown':          'See exactly why each creator scored what they did.',
+    'audience_intelligence':  'Unlock geography, demographic and behavioural data for every creator audience.',
+    'export_10':              'Export your creator shortlist as a CSV to share with clients.',
+    'export_unlimited':       'Export unlimited creators with full rate data.',
+    'gfi_methodology':        'See the full GFI input breakdown — genre affinity, sub-mode alignment and content match.',
+    'compare_2':              'Run side-by-side creator comparisons to make faster shortlist decisions.',
+    'compare_4':              'Compare up to 4 creators simultaneously.',
+    'personas_all':           'Unlock all matched audience personas for your campaign genre and objectives.',
+    'personas_1':             'Unlock AI Persona Matching — available from Silver tier.',
+    'personas_3':             'See the top 3 matched audience personas for your campaign.',
+    'duration_slider':        'Model campaigns across 1-12 week windows for realistic reach forecasts.',
+    'budget_allocation_edit': 'Drag to adjust each creator budget share and see the impact in real time.',
+    'budget_allocation_view': 'See exactly how your budget is split across selected creators.',
+    'bands_all':              'Unlock all three confidence bands — P10, P50 and P90 — for full risk modelling.',
+    'pdf_summary':            'Export a campaign summary PDF to share with stakeholders.',
+    'pdf_full':               'Export the full simulator report including per-creator P10/P50/P90 breakdown.',
+    'saved_3':                'Save up to 3 recent campaigns for quick reference.',
+    'saved_10':               'Save up to 10 campaigns and recall them instantly.',
+    'sim_unlimited':          'Remove the monthly simulation limit and run unlimited campaigns.',
+    'discovery_unlimited':    'Access all 3,600+ creators in the full database.',
+    'live_full':              'See live Twitch data — who is streaming now and at what viewer count.',
+  };
+  var msg = msgs[feature] || 'This feature requires a higher tier.';
+
+  var existing = document.getElementById('sf-upgrade-overlay');
+  if (existing) existing.remove();
+
+  var overlay = document.createElement('div');
+  overlay.id = 'sf-upgrade-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9999;display:flex;align-items:center;justify-content:center;padding:24px';
+
+  var box = document.createElement('div');
+  box.style.cssText = 'background:#0D0D18;border:1px solid rgba(255,212,0,0.3);border-radius:14px;padding:36px;max-width:440px;width:100%;text-align:center';
+
+  var icon = document.createElement('div');
+  icon.style.cssText = 'font-size:28px;margin-bottom:16px';
+  icon.textContent = '\uD83D\uDD12';
+
+  var eyebrow = document.createElement('div');
+  eyebrow.style.cssText = 'font-family:DM Mono,monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#FFD400;margin-bottom:10px';
+  eyebrow.textContent = targetTier.toUpperCase() + ' FEATURE';
+
+  var title = document.createElement('div');
+  title.style.cssText = 'font-size:20px;font-weight:700;color:#fff;margin-bottom:12px';
+  title.textContent = 'Upgrade to ' + targetTier;
+
+  var desc = document.createElement('div');
+  desc.style.cssText = 'font-size:13px;color:rgba(255,255,255,0.5);line-height:1.7;margin-bottom:24px';
+  desc.textContent = msg;
+
+  var btnRow = document.createElement('div');
+  btnRow.style.cssText = 'display:flex;gap:10px;justify-content:center';
+
+  var dismissBtn = document.createElement('button');
+  dismissBtn.style.cssText = 'padding:10px 20px;background:transparent;border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.5);border-radius:6px;font-family:DM Mono,monospace;font-size:10px;cursor:pointer;letter-spacing:.05em';
+  dismissBtn.textContent = 'DISMISS';
+  dismissBtn.onclick = function() { overlay.remove(); };
+
+  var upgradeBtn = document.createElement('button');
+  upgradeBtn.style.cssText = 'padding:10px 24px;background:#FFD400;color:#000;border:none;border-radius:6px;font-family:DM Mono,monospace;font-size:10px;cursor:pointer;font-weight:700;letter-spacing:.05em';
+  upgradeBtn.textContent = 'UPGRADE \u2192';
+  upgradeBtn.onclick = function() { overlay.remove(); window.location.href = 'mailto:Liam@Simfluence.AI?subject=Upgrade%20to%20' + targetTier; };
+
+  btnRow.appendChild(dismissBtn);
+  btnRow.appendChild(upgradeBtn);
+  box.appendChild(icon);
+  box.appendChild(eyebrow);
+  box.appendChild(title);
+  box.appendChild(desc);
+  box.appendChild(btnRow);
+  overlay.appendChild(box);
+  overlay.addEventListener('click', function(ev) { if (ev.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+}
+
+function applyTierBlur(elementId, upgradeFeature, targetTier) {
+  var el = document.getElementById(elementId);
+  if (!el || el.querySelector('.tier-blur-overlay')) return;
+  el.style.position = 'relative';
+  el.style.userSelect = 'none';
+
+  var overlay = document.createElement('div');
+  overlay.className = 'tier-blur-overlay';
+  overlay.style.cssText = 'position:absolute;inset:0;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);background:rgba(10,10,20,0.45);z-index:10;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:inherit;pointer-events:all';
+
+  var pill = document.createElement('div');
+  pill.style.cssText = 'font-family:DM Mono,monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,0.7);background:rgba(0,0,0,0.65);padding:6px 14px;border-radius:4px;border:1px solid rgba(255,255,255,0.15)';
+  pill.textContent = '\uD83D\uDD12 ' + (targetTier || 'UPGRADE').toUpperCase();
+
+  overlay.appendChild(pill);
+  if (upgradeFeature) {
+    overlay.addEventListener('click', function() { showUpgradePrompt(upgradeFeature, targetTier); });
+  }
+  el.appendChild(overlay);
+}
+
+function getDiscoveryCap() {
+  var t = getTierLevel();
+  if (t >= 2) return Infinity;
+  if (t >= 1) return 100;
+  return 25;
+}
+
+function applyTierBadge(tn) {
+  if (document.getElementById('sf-tier-badge')) return;
+  var nav = document.querySelector('.nav-tabs');
+  if (!nav) return;
+  var colors = { bronze:'#CD7F32', silver:'#A8A9AD', gold:'#FFD400', platinum:'#00BFFF', diamond:'#B39DDB', admin:'#00C46A' };
+  var col = colors[tn] || '#FFD400';
+  var badge = document.createElement('div');
+  badge.id = 'sf-tier-badge';
+  badge.style.cssText = 'font-family:DM Mono,monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:3px 10px;border-radius:3px;border:1px solid ' + col + '44;color:' + col + ';background:' + col + '11;margin-left:12px;align-self:center;flex-shrink:0;cursor:default';
+  badge.textContent = tn.toUpperCase();
+  nav.appendChild(badge);
+}
+
+function applyAllTierGates() {
+  var t = getTierLevel();
+  var tn = getTierName();
+
+  // Tier badge
+  applyTierBadge(tn);
+
+  // Personas nav tab — locked for bronze
+  var personaTab = document.querySelector('.nav-tab[data-screen="personas"]');
+  if (personaTab) {
+    if (t < 1) {
+      personaTab.style.opacity = '0.4';
+      personaTab.style.cursor = 'not-allowed';
+      personaTab.setAttribute('data-oc', 'showUpgradePrompt("personas_1","Silver")');
+    }
+  }
+
+  // Duration slider — gold+
+  var durSlider = document.getElementById('campaignDuration');
+  if (durSlider && !tierCan('duration_slider')) {
+    durSlider.disabled = true;
+    durSlider.style.opacity = '0.3';
+    durSlider.style.cursor = 'not-allowed';
+    var durLabel = document.getElementById('durationLabel');
+    if (durLabel) { durLabel.textContent = '4 weeks (Gold+)'; durLabel.style.color = 'var(--text-muted)'; }
+    durSlider.addEventListener('click', function(){ showUpgradePrompt('duration_slider','Gold'); });
+  }
+
+  // P10/P90 confidence bands
+  if (!tierCan('bands_all')) {
+    if (t < 1) {
+      // Bronze: blur all three
+      ['bandWorst','bandBase','bandBest'].forEach(function(id){ applyTierBlur(id,'bands_all','Silver'); });
+    } else {
+      // Silver: blur P10 and P90 only
+      ['bandWorst','bandBest'].forEach(function(id){ applyTierBlur(id,'bands_all','Gold'); });
+    }
+  }
+
+  // Budget allocation
+  var budgetPanel = document.getElementById('budgetAllocationPanel');
+  if (budgetPanel) {
+    if (!tierCan('budget_allocation_view')) {
+      budgetPanel.style.display = 'none';
+    } else if (!tierCan('budget_allocation_edit')) {
+      var sliders = budgetPanel.querySelectorAll('input[type="range"]');
+      sliders.forEach(function(s){
+        s.disabled = true;
+        s.style.opacity = '0.35';
+        s.style.cursor = 'not-allowed';
+        s.title = 'Editable on Platinum+';
+        s.addEventListener('click', function(){ showUpgradePrompt('budget_allocation_edit','Platinum'); });
+      });
+      var budgetNote = document.createElement('div');
+      budgetNote.style.cssText = 'font-family:DM Mono,monospace;font-size:9px;color:var(--text-muted);margin-top:12px;padding:8px 12px;background:rgba(255,212,0,0.06);border-radius:5px;border:1px solid rgba(255,212,0,0.2);cursor:pointer';
+      budgetNote.textContent = 'Gold tier: view-only. Upgrade to Platinum to adjust the budget split.';
+      budgetNote.addEventListener('click', function(){ showUpgradePrompt('budget_allocation_edit','Platinum'); });
+      var bac = document.getElementById('budgetAllocationContent');
+      if (bac) bac.appendChild(budgetNote);
+    }
+  }
+
+  // PDF export — gold+
+  var pdfBtn = document.getElementById('saveCampaignBtn');
+  if (pdfBtn && !tierCan('pdf_summary')) {
+    pdfBtn.style.opacity = '0.4';
+    pdfBtn.style.cursor = 'not-allowed';
+    pdfBtn.title = 'PDF export: Gold+ feature';
+    pdfBtn.onclick = function(e){ e.stopImmediatePropagation(); showUpgradePrompt('pdf_summary','Gold'); return false; };
+  }
+
+  // Saved campaigns — silver+
+  if (!tierCan('saved_3')) {
+    var sp = document.getElementById('savedCampaignsPanel');
+    if (sp) sp.style.display = 'none';
+  }
+
+  // Export shortlist — gold+
+  var expBtn = document.getElementById('exportShortlistBtn');
+  if (expBtn && !tierCan('export_10')) {
+    expBtn.style.opacity = '0.4';
+    expBtn.style.cursor = 'not-allowed';
+    expBtn.title = 'CSV export: Gold+ feature';
+    expBtn.onclick = function(e){ e.stopImmediatePropagation(); showUpgradePrompt('export_10','Gold'); return false; };
+  }
+
+  // Compare buttons — gold+
+  if (!tierCan('compare_2')) {
+    document.querySelectorAll('[data-oc^="toggleCompare"]').forEach(function(btn){
+      btn.style.opacity = '0.4';
+      btn.setAttribute('data-oc', 'showUpgradePrompt("compare_2","Gold")');
+    });
+  }
+
+  // Re-run sim button — show counter for bronze/silver
+  if (!tierCan('sim_unlimited')) {
+    var limit = getTierLevel() >= 1 ? 10 : 3;
+    var key = 'sf_sim_runs_' + new Date().toISOString().slice(0,7);
+    try {
+      var runs = parseInt(sessionStorage.getItem(key) || '0');
+      var rrb = document.getElementById('reRunSimBtn');
+      if (rrb) rrb.title = runs + '/' + limit + ' simulations used this month';
+    } catch(e) {}
+  }
+}
+
+// Patch runSimulation with monthly counter
+function patchSimRunCounter() {
+  if (typeof runSimulation !== 'function' || runSimulation._tierPatched) return;
+  var _orig = runSimulation;
+  runSimulation = function() {
+    var t = getTierLevel();
+    if (t >= 2) { _orig(); return; }
+    var limit = t >= 1 ? 10 : 3;
+    var key = 'sf_sim_runs_' + new Date().toISOString().slice(0,7);
+    try {
+      var runs = parseInt(sessionStorage.getItem(key) || '0');
+      if (runs >= limit) {
+        showUpgradePrompt('sim_unlimited', t >= 1 ? 'Gold' : 'Silver');
+        return;
+      }
+      sessionStorage.setItem(key, runs + 1);
+      applyAllTierGates();
+    } catch(e) {}
+    _orig();
+  };
+  runSimulation._tierPatched = true;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  setTimeout(function() {
+    patchSimRunCounter();
+    applyAllTierGates();
+  }, 400);
+});
+
 document.getElementById('GP').focus();
 document.getElementById('GBtn').addEventListener('click', GC);
 
@@ -2093,7 +2390,8 @@ document.addEventListener('DOMContentLoaded', function() {
             <option value="gfi">Sort: GFI Score</option>
             <option value="subs">Sort: Subscribers</option>
           </select>
-          <button id="scoreSelectedBtn" style="padding:8px 16px;background:#0050FF;color:#fff;border:none;border-radius:var(--radius);font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;letter-spacing:0.05em">SCORE SELECTED →</button>
+          <button id="exportShortlistBtn" style="padding:8px 14px;background:rgba(255,212,0,0.1);border:1px solid rgba(255,212,0,0.3);color:#FFD400;border-radius:var(--radius);font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;letter-spacing:.05em">⬇ EXPORT LIST</button>
+  <button id="scoreSelectedBtn" style="padding:8px 16px;background:#0050FF;color:#fff;border:none;border-radius:var(--radius);font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;letter-spacing:0.05em">SCORE SELECTED →</button>
         </div>
       </div>
       <div id="selectedBar" class="selected-bar" style="display:none">
@@ -2106,6 +2404,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     <!-- SCORING SCREEN -->
     <div id="screen-scoring" class="screen">
+      <!-- COMPARE BAR -->
+      <div id="compareBar" style="display:none;background:var(--bg2);border:1px solid rgba(0,80,255,0.3);border-radius:8px;padding:10px 16px;margin-bottom:16px;align-items:center;gap:12px;flex-wrap:wrap"></div>
       <div class="page-header">
         <div>
           <div class="page-title">CPI &amp; GFI <em>Scoring</em></div>
@@ -2196,9 +2496,17 @@ document.addEventListener('DOMContentLoaded', function() {
           <div class="page-title">Campaign <em>Simulator</em></div>
           <div class="page-meta">PROBABILISTIC OUTCOME FORECAST</div>
         </div>
+        <div style="display:flex;align-items:center;gap:16px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 16px">
+          <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted)">DURATION</div>
+          <input type="range" id="campaignDuration" min="1" max="12" value="4" step="1" style="width:100px;accent-color:#0050FF;cursor:pointer" oninput="document.getElementById('durationLabel').textContent=this.value+(this.value==1?' week':' weeks')">
+          <span id="durationLabel" style="font-family:'DM Mono',monospace;font-size:11px;font-weight:700;color:#FFD400;min-width:56px">4 weeks</span>
+        </div>
         <button id="reRunSimBtn" style="padding:10px 20px;background:#FF7A00;color:#fff;border:none;border-radius:var(--radius);font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;letter-spacing:.05em;font-weight:700">▶ RE-RUN</button>
         <button id="saveCampaignBtn" style="padding:10px 20px;background:#0050FF;color:#fff;border:none;border-radius:var(--radius);font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;letter-spacing:.05em;font-weight:700">⬇ SAVE AS PDF</button>
       </div>
+
+      <!-- SAVED CAMPAIGNS -->
+      <div id="savedCampaignsPanel" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px 20px;margin-bottom:16px"></div>
 
       <!-- P10 / P50 / P90 — BOLD, VISIBLE, CLICKABLE -->
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">
@@ -2232,6 +2540,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
       <!-- CORE METRICS -->
       <div id="simResults" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px"></div>
+
+      <!-- BUDGET ALLOCATION -->
+      <div class="panel" style="margin-bottom:20px;padding:0;overflow:hidden" id="budgetAllocationPanel">
+        <div style="background:var(--bg3);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;justify-content:space-between">
+          <div class="panel-title" style="margin:0">Budget Allocation</div>
+          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);letter-spacing:.06em">DRAG TO ADJUST SPLIT</div>
+        </div>
+        <div id="budgetAllocationContent" style="padding:20px"></div>
+      </div>
 
       <!-- CREATOR INDIVIDUAL SCORES -->
       <div class="panel" style="margin-bottom:20px;padding:0;overflow:hidden">
@@ -6943,11 +7260,15 @@ function renderCreatorGrid(keepPage) {
     return '';
   }
 
-  // ── Render with pagination ───────────────────────────────────────
-  var _totalPages = Math.ceil(display.length / pageSize);
+  // ── Tier cap ─────────────────────────────────────────────────────
+  var _tierCap = typeof getDiscoveryCap === 'function' ? getDiscoveryCap() : Infinity;
+  var _display = _tierCap === Infinity ? display : display.slice(0, _tierCap);
+
+  // ── Render with pagination ────────────────────────────────────────
+  var _totalPages = Math.ceil(_display.length / pageSize);
   if (currentPage > _totalPages) currentPage = 1;
   var _pageStart = (currentPage - 1) * pageSize;
-  var _pageItems = display.slice(_pageStart, _pageStart + pageSize);
+  var _pageItems = _display.slice(_pageStart, _pageStart + pageSize);
 
   document.getElementById('creatorGrid').innerHTML = _pageItems.map(({cr}) => {
     const selected   = selectedCreators.has(cr.id);
@@ -7042,8 +7363,21 @@ function renderCreatorGrid(keepPage) {
   const tierLabel  = tierLabels[tierMix] || 'All Tiers';
   const objLabel   = activeObjs.length > 0 ? ' · ' + activeObjs.slice(0,2).join(' + ') : '';
   var langLabel = selectedLang && selectedLang !== 'all' ? ' · ' + selectedLang.toUpperCase() : '';
+  // Tier cap banner
+  var _capBanner = document.getElementById('tier-cap-banner');
+  if (_capBanner) _capBanner.remove();
+  if (typeof _tierCap !== 'undefined' && display.length > _tierCap) {
+    var _upTgt = _tierCap <= 25 ? 'Silver' : 'Gold';
+    var _nb = document.createElement('div');
+    _nb.id = 'tier-cap-banner';
+    _nb.style.cssText = 'margin:16px 0;padding:14px 20px;background:rgba(255,212,0,0.06);border:1px solid rgba(255,212,0,0.25);border-radius:8px;display:flex;align-items:center;justify-content:space-between';
+    _nb.innerHTML = '<span style="font-family:\'DM Mono\',monospace;font-size:10px;color:rgba(255,212,0,0.8)">Showing ' + _tierCap + ' of ' + display.length + ' creators  ·  Upgrade for full access</span>'
+      + '<button onclick="showUpgradePrompt(\'discovery_unlimited\',\'' + _upTgt + '\')" style="font-family:\'DM Mono\',monospace;font-size:9px;padding:5px 14px;background:#FFD400;color:#000;border:none;border-radius:4px;cursor:pointer;font-weight:700">UPGRADE</button>';
+    var _cg = document.getElementById('creatorGrid');
+    if (_cg && _cg.parentElement) _cg.parentElement.insertBefore(_nb, _cg.nextSibling);
+  }
   document.getElementById('discoveryMeta').textContent =
-    display.length + ' CREATORS · ' + genre.toUpperCase() + ' · ' + tierLabel.toUpperCase() +
+    _display.length + ' CREATORS · ' + genre.toUpperCase() + ' · ' + tierLabel.toUpperCase() +
     langLabel + (totalHidden > 0 ? ' · ' + totalHidden + ' FILTERED OUT' : '') + objLabel.toUpperCase();
 }
 
@@ -7148,9 +7482,46 @@ function openProfileOverlay(id) {
           <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px">ENG RATE</div>
           <div style="font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:600;color:#00C46A">${c.eng}</div>
         </div>
-        <div style="background:var(--bg3);padding:20px;text-align:center">
+        <div style="background:var(--bg3);padding:20px;text-align:center;position:relative">
           <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px">CPI SCORE</div>
           <div style="font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:600;color:${cpiScoreColor(c.cpi)}">${c.cpi}</div>
+          <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--text-muted);margin-top:4px;cursor:pointer;text-decoration:underline;text-underline-offset:2px" data-oc="toggleCpiBreakdown(${c.id})">why this score?</div>
+          <div id="cpi-breakdown-${c.id}" style="display:none;position:absolute;left:50%;transform:translateX(-50%);top:100%;z-index:20;width:260px;background:var(--bg);border:1px solid var(--border-bright);border-radius:8px;padding:16px;text-align:left;box-shadow:0 8px 32px rgba(0,0,0,0.4)">
+            <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#0050FF;margin-bottom:10px">CPI BREAKDOWN · ${c.name}</div>
+            ${(function(){
+              var eng   = parseFloat(c.eng) || 0;
+              var subs  = parseSubs(c.subs);
+              var views = parseViews(c.avgViews);
+              var vsr   = subs > 0 ? Math.round((views / subs) * 100) : 0;
+              var sf    = (YT_ENRICHMENT[c.id] && YT_ENRICHMENT[c.id].sponsorFreq) || 0;
+              // Score components (must sum to 100)
+              var engScore  = Math.round(Math.min(eng / 0.20 * 35, 35));
+              var vsrScore  = Math.round(Math.min(vsr / 25 * 30, 30));
+              var sfScore   = Math.round(Math.max(0, (1 - sf/100) * 15));
+              var sizeScore = Math.round(Math.min(parseSubs(c.subs) / 2e6 * 20, 20));
+              var rows = [
+                ['Engagement rate', c.eng, engScore, 35, 'vs 0.2% baseline'],
+                ['View-to-sub ratio', vsr+'%', vsrScore, 30, 'avg views ÷ subscribers'],
+                ['Sponsor frequency', sf > 0 ? '~'+sf+'%' : 'Low', sfScore, 15, 'lower = more authentic'],
+                ['Channel authority', c.subs, sizeScore, 20, 'reach & longevity signal'],
+              ];
+              return rows.map(function(r){
+                var pct = r[3] > 0 ? Math.round(r[2]/r[3]*100) : 0;
+                var col = pct >= 70 ? '#00C46A' : pct >= 40 ? '#FF7A00' : '#FF3355';
+                return '<div style="margin-bottom:10px">'
+                  + '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px">'
+                    + '<span style="font-size:10px;color:var(--text-dim)">' + r[0] + '</span>'
+                    + '<span style="font-family:'DM Mono',monospace;font-size:10px;color:' + col + '">' + r[2] + '/' + r[3] + ' pts</span>'
+                  + '</div>'
+                  + '<div style="height:4px;background:var(--bg3);border-radius:2px;overflow:hidden">'
+                    + '<div style="height:100%;width:' + pct + '%;background:' + col + ';border-radius:2px"></div>'
+                  + '</div>'
+                  + '<div style="font-size:9px;color:var(--text-muted);margin-top:2px">' + r[1] + ' &nbsp;·&nbsp; ' + r[4] + '</div>'
+                + '</div>';
+              }).join('');
+            })()}
+            <div style="border-top:1px solid var(--border);margin-top:8px;padding-top:8px;font-size:9px;color:var(--text-muted)">CPI combines engagement quality, content consistency, audience authenticity and commercial track record.</div>
+          </div>
         </div>
       </div>
 
@@ -7168,6 +7539,27 @@ function openProfileOverlay(id) {
             <div style="height:100%;border-radius:3px;background:${gfi>=80?'#00C46A':gfi>=60?'#FF7A00':'#E60023'};width:${gfi}%;transition:width .8s ease"></div>
           </div>
           <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);margin-top:8px">CPI ${c.cpi} · P${Math.round(c.cpi/10)*10} performance band</div>
+          <div style="margin-top:12px;padding:10px 12px;background:var(--bg3);border-radius:6px">
+            <div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.08em;color:var(--text-muted);margin-bottom:8px">GFI INPUTS</div>
+            ${(function(){
+              var campaignGenre = getSelectedGenre() || 'Gaming & Esports';
+              var subMode = activeSubMode || '';
+              var ga = c.genre === campaignGenre ? 1.0 : ((GENRE_AFFINITY[c.genre]||{})[campaignGenre] || 0.05);
+              var sma = typeof computeSubModeAlignment === 'function' ? computeSubModeAlignment(c, subMode) : 70;
+              var items = [
+                ['Genre affinity', c.genre + ' → ' + campaignGenre, Math.round(ga*100)+'%'],
+                ['Sub-mode signal', subMode || 'none set', Math.round(sma)+'%'],
+                ['Content match', c.genre === campaignGenre ? 'Native genre' : 'Crossover', c.genre === campaignGenre ? '✓' : '~'],
+              ];
+              return items.map(function(it){
+                return '<div style="display:flex;justify-content:space-between;font-size:9px;margin-bottom:4px">'
+                  + '<span style="color:var(--text-muted)">' + it[0] + '</span>'
+                  + '<span style="color:var(--text-dim)">' + it[1] + '</span>'
+                  + '<span style="color:#FFD400;font-family:'DM Mono',monospace">' + it[2] + '</span>'
+                + '</div>';
+              }).join('');
+            })()}
+          </div>
         </div>
 
         <!-- COST ESTIMATE -->
@@ -7224,6 +7616,59 @@ function openProfileOverlay(id) {
         </div>
       </div>
 
+      <!-- AUDIENCE INTELLIGENCE -->
+      <div style="padding:20px 24px;border-top:1px solid var(--border)">
+        <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#0050FF;margin-bottom:14px">Audience Intelligence</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+          ${(function(){
+            var yt = YT_ENRICHMENT[c.id];
+            var country = (yt && yt.country) ? yt.country : (c.language === 'English' ? 'US/UK/AU' : null);
+            var joined  = (yt && yt.joinedDate) ? yt.joinedDate : null;
+            var subs    = parseSubs(c.subs);
+            // Geo estimate from country + language
+            var geoLabel = 'Mixed';
+            var geoFlag  = '🌍';
+            if (country === 'US') { geoLabel = 'North America'; geoFlag = '🇺🇸'; }
+            else if (country === 'GB') { geoLabel = 'United Kingdom'; geoFlag = '🇬🇧'; }
+            else if (country === 'DE') { geoLabel = 'Germany / DACH'; geoFlag = '🇩🇪'; }
+            else if (country === 'FR') { geoLabel = 'France'; geoFlag = '🇫🇷'; }
+            else if (country === 'ES') { geoLabel = 'Spain / LATAM'; geoFlag = '🇪🇸'; }
+            else if (country === 'MX') { geoLabel = 'LATAM / Mexico'; geoFlag = '🇲🇽'; }
+            else if (country === 'BR') { geoLabel = 'Brazil'; geoFlag = '🇧🇷'; }
+            else if (country === 'IN') { geoLabel = 'South Asia'; geoFlag = '🇮🇳'; }
+            else if (country === 'JP') { geoLabel = 'Japan'; geoFlag = '🇯🇵'; }
+            else if (country === 'KR') { geoLabel = 'South Korea'; geoFlag = '🇰🇷'; }
+            else if (country === 'AE' || country === 'SA') { geoLabel = 'MENA'; geoFlag = '🌍'; }
+            else if (country === 'AU') { geoLabel = 'Australia/NZ'; geoFlag = '🇦🇺'; }
+            else if (country === 'RU') { geoLabel = 'Russia / CIS'; geoFlag = '🇷🇺'; }
+            else if (country === 'PH') { geoLabel = 'Southeast Asia'; geoFlag = '🇵🇭'; }
+            else if (c.language && c.language !== 'English') { geoLabel = c.language + ' audience'; geoFlag = '🌐'; }
+            else if (country === 'US/UK/AU') { geoLabel = 'English-speaking'; geoFlag = '🌐'; }
+            // Demo estimate from genre
+            var genre = c.genre || '';
+            var maleEst = genre.includes('Gaming') ? '72%' : genre.includes('Beauty') ? '15%' : genre.includes('Finance') ? '68%' : genre.includes('Health') ? '50%' : genre.includes('Tech') ? '78%' : genre.includes('Music') ? '50%' : '55%';
+            var ageEst  = genre.includes('Gaming') ? '18–28' : genre.includes('Beauty') ? '18–34' : genre.includes('Finance') ? '25–42' : genre.includes('Tech') ? '22–38' : '20–35';
+            var platformLabel = c.platform === 'YouTube' ? 'YouTube native' : c.platform === 'Twitch' ? 'Twitch / live' : c.platform;
+            var channelAge = joined ? (new Date().getFullYear() - parseInt(joined.split('-')[0])) + ' yrs old' : 'Est. 2018+';
+            var items = [
+              ['Primary geography', geoFlag + ' ' + geoLabel],
+              ['Est. male audience', maleEst],
+              ['Core age band', ageEst],
+              ['Platform behaviour', platformLabel],
+              ['Channel age', channelAge],
+              ['Avg views / subs', subs > 0 ? Math.round(parseViews(c.avgViews)/subs*100)+'% VSR' : '—'],
+            ];
+            return items.map(function(it){
+              return '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:12px">'
+                + '<div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px">' + it[0] + '</div>'
+                + '<div style="font-size:13px;font-weight:600;color:var(--text)">' + it[1] + '</div>'
+              + '</div>';
+            }).join('');
+          })()}
+        </div>
+        <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--text-muted);margin-top:8px;opacity:.6">Geo and demographic estimates derived from channel country, language and genre benchmarks. Verified audience analytics coming in a future release.</div>
+      </div>
+
       <!-- TWITCH CONTEXT PANEL -->
       ${c.platform==='Twitch' ? getTwitchPanel(c) : ''}
 
@@ -7271,6 +7716,7 @@ function showScreen(name, btn) {
   if(name==='scoring') { renderScoringScreen(); renderFullScoreTable(); }
   if(name==='personas') renderPersonaScreen();
   if(name==='simulator') { computeSimResults(); updateSimDisplay(); updateBandDisplays(); renderEfficiencyCurve(); }
+  setTimeout(function(){ if(typeof applyAllTierGates==='function') applyAllTierGates(); },150);
 }
 
 
@@ -7661,6 +8107,19 @@ function updateSimDisplay() {
 }
 
 function runSimulation() {
+  // Tier sim counter
+  if (typeof getTierLevel === 'function') {
+    var _t = getTierLevel();
+    if (_t < 2) {
+      var _limit = _t >= 1 ? 10 : 3;
+      var _key = 'sf_sim_runs_' + new Date().toISOString().slice(0,7);
+      try {
+        var _runs = parseInt(sessionStorage.getItem(_key)||'0');
+        if (_runs >= _limit) { showUpgradePrompt('sim_unlimited', _t>=1?'Gold':'Silver'); return; }
+        sessionStorage.setItem(_key, _runs+1);
+      } catch(e) {}
+    }
+  }
   computeSimResults();
   showScreen('simulator', document.querySelector('.nav-tab:nth-child(4)'));
   updateSimDisplay();
@@ -7837,6 +8296,9 @@ function renderScoringScreen() {
         + '<div style="font-size:inherit;font-size:11px;color:var(--text-dim);margin-top:2px">' + e.fmt(e.ranges.ded[0]) + '–' + e.fmt(e.ranges.ded[1]) + ' ded</div>'
       + '</div>'
 
+    + '<div style="padding:0 20px 12px;display:flex;gap:8px">'
+        + '<button data-oc="toggleCompare(' + cr.id + ')" style="font-family:\'DM Mono\',monospace;font-size:8px;padding:5px 10px;background:' + (compareSet.has(cr.id) ? 'rgba(0,80,255,0.2)' : 'rgba(255,255,255,0.04)') + ';border:1px solid ' + (compareSet.has(cr.id) ? 'rgba(0,80,255,0.4)' : 'rgba(255,255,255,0.1)') + ';color:' + (compareSet.has(cr.id) ? '#6B9FFF' : 'var(--text-muted)') + ';border-radius:4px;cursor:pointer;letter-spacing:.05em">' + (compareSet.has(cr.id) ? '✓ IN COMPARE' : '+ COMPARE') + '</button>'
+      + '</div>'
     + '</div>';
   }).join('')
   || '<div style="padding:40px;text-align:center;color:var(--text-muted);font-size:inherit;font-size:11px">NO CREATORS TO SCORE · ADD CREATORS TO YOUR BRIEF OR CHANGE GENRE</div>';
@@ -7948,6 +8410,17 @@ function renderPersonaScreen() {
   // Budget tier context
   var budgetLabel = budget >= 250000 ? 'Tier 1 (£250K+)' : budget >= 100000 ? 'Tier 2 (£100K+)' : budget >= 40000 ? 'Tier 3 (£40K+)' : 'Tier 4 (<£40K)';
   var fmtBudget   = '£' + (budget >= 1000 ? (budget/1000).toFixed(0) + 'K' : budget);
+
+  // Tier cap on personas
+  var _personaCap = (function(){
+    var t = typeof getTierLevel==='function'?getTierLevel():0;
+    if(t>=3) return Infinity; if(t>=2) return 3; if(t>=1) return 1; return 0;
+  })();
+  if (_personaCap === 0) {
+    var _pGrid = document.getElementById('personaGrid');
+    if (_pGrid) _pGrid.innerHTML = '<div style="padding:60px;text-align:center"><div style="font-size:32px;margin-bottom:16px">&#128274;</div><div style="font-family:\'DM Mono\',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,212,0,0.8);margin-bottom:8px">SILVER+ FEATURE</div><div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:20px">AI Persona Matching is available from Silver tier.</div><button onclick="showUpgradePrompt(\'personas_1\',\'Silver\')" style="padding:10px 24px;background:#FFD400;color:#000;border:none;border-radius:6px;font-family:\'DM Mono\',monospace;font-size:10px;cursor:pointer;font-weight:700">UPGRADE</button></div>';
+    return;
+  }
 
   // Sort personas by score desc
   var scored = personas.map(function(p) {
@@ -8927,44 +9400,7 @@ function toggleTheme() {
 })();
 
 
-// ── ONBOARDING ────────────────────────────────────────────────────────
-var obSelectedGenre = '';
-
-function obPick(btn, genre) {
-  document.querySelectorAll('.ob-genre').forEach(function(b) {
-    b.classList.remove('selected');
-  });
-  btn.classList.add('selected');
-  obSelectedGenre = genre.replace(/&amp;/g, '&');
-  var launchBtn = document.getElementById('obLaunchBtn');
-  if (launchBtn) launchBtn.classList.add('ready');
-}
-
-function obLaunch() {
-  if (!obSelectedGenre) return;
-  var sel = document.getElementById('genre');
-  if (sel) {
-    for (var i = 0; i < sel.options.length; i++) {
-      if (sel.options[i].text.replace(/&amp;/g,'&') === obSelectedGenre ||
-          sel.options[i].text === obSelectedGenre) {
-        sel.selectedIndex = i;
-        break;
-      }
-    }
-    if (typeof onGenreChange === 'function') onGenreChange();
-    if (typeof renderCreatorGrid === 'function') renderCreatorGrid();
-  }
-  obDismiss();
-}
-
-function obSkip() { obDismiss(); }
-
-function obDismiss() {
-  var overlay = document.getElementById('sfOnboard');
-  if (!overlay) return;
-  overlay.classList.add('hiding');
-  setTimeout(function() { overlay.style.display = 'none'; }, 600);
-}
+// ── ONBOARDING (wired in gate script above) ──────────────────────
 
 // Check if arriving from signup
 window.addEventListener('DOMContentLoaded', function() {
@@ -9399,6 +9835,389 @@ function closePageModal(key) {
 
 
 
+
+<script>
+// ── FEATURE ENHANCEMENTS ─────────────────────────────────────────────
+
+// 1. CPI BREAKDOWN TOGGLE
+function toggleCpiBreakdown(id) {
+  var el = document.getElementById('cpi-breakdown-' + id);
+  if (!el) return;
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+  // Close on outside click
+  if (el.style.display === 'block') {
+    setTimeout(function() {
+      document.addEventListener('click', function closer(e) {
+        if (!el.contains(e.target)) { el.style.display = 'none'; }
+        document.removeEventListener('click', closer);
+      });
+    }, 100);
+  }
+}
+
+// 2. DURATION-AWARE SIMULATION
+// Patch computeSimResults to multiply impressions by duration
+var _origComputeSimResults = computeSimResults;
+computeSimResults = function() {
+  _origComputeSimResults();
+  if (!simResults) return;
+  var weeks = parseInt((document.getElementById('campaignDuration') || {value:'4'}).value) || 4;
+  var mult  = weeks / 4; // baseline is 4 weeks
+  // Scale impressions and conversions by duration (not CTR/ROAS which are rates)
+  simResults.impressions  = Math.round(simResults.impressions * mult);
+  simResults.conversions  = Math.round(simResults.conversions * mult);
+  simResults.clicks       = Math.round(simResults.clicks * mult);
+  simResults.p10.impressions = Math.round(simResults.p10.impressions * mult);
+  simResults.p50.impressions = Math.round(simResults.p50.impressions * mult);
+  simResults.p90.impressions = Math.round(simResults.p90.impressions * mult);
+};
+
+// Wire duration slider to re-run
+document.addEventListener('DOMContentLoaded', function() {
+  var dur = document.getElementById('campaignDuration');
+  if (dur) {
+    dur.addEventListener('change', function() {
+      if (typeof simResults !== 'undefined' && simResults) {
+        simResults = null; // force recompute
+        if (typeof runSimulation === 'function') runSimulation();
+      }
+    });
+  }
+
+  // 3. EXPORT SHORTLIST
+  var expBtn = document.getElementById('exportShortlistBtn');
+  if (expBtn) expBtn.addEventListener('click', exportShortlist);
+
+  // 5. SAVED CAMPAIGNS
+  loadSavedCampaigns();
+});
+
+// 3. EXPORT CREATOR SHORTLIST as CSV
+function exportShortlist() {
+  var genre = (typeof getSelectedGenre === 'function') ? getSelectedGenre() : 'All';
+  var _expLimit = (function(){ var t=typeof getTierLevel==='function'?getTierLevel():0; return t>=3?Infinity:t>=2?10:0; })();
+  if (_expLimit === 0) { showUpgradePrompt('export_10','Gold'); return; }
+  var sel = (typeof selectedCreators!=='undefined'&&selectedCreators.size>0)
+    ? CREATORS.filter(function(cr){return selectedCreators.has(cr.id);}).slice(0,_expLimit===Infinity?99999:_expLimit)
+    : CREATORS.filter(function(cr){return cr.genre===genre;}).slice(0,Math.min(50,_expLimit===Infinity?50:_expLimit));
+  if (_expLimit!==Infinity&&sel.length>=_expLimit) {
+    if(!confirm('Gold export limited to '+_expLimit+' creators. Continue?')) return;
+  }
+
+  if (!sel.length) { alert('No creators to export. Select some creators or set a genre.'); return; }
+
+  var headers = ['Name','Handle','Platform','Genre','CPI','Subscribers','Avg Views','Eng Rate','Est Int Rate (low)','Est Int Rate (high)'];
+  var rows = sel.map(function(cr) {
+    var e = (typeof computeCostEstimate === 'function') ? computeCostEstimate(cr) : {fmt:function(v){return v;},ranges:{int:[0,0]}};
+    return [
+      '"' + cr.name + '"',
+      cr.handle,
+      cr.platform,
+      '"' + cr.genre + '"',
+      cr.cpi,
+      cr.subs,
+      cr.avgViews,
+      cr.eng,
+      e.fmt(e.ranges.int[0]),
+      e.fmt(e.ranges.int[1])
+    ].join(',');
+  });
+
+  var csv  = [headers.join(',')].concat(rows).join('\n');
+  var blob = new Blob([csv], { type: 'text/csv' });
+  var url  = URL.createObjectURL(blob);
+  var a    = document.createElement('a');
+  a.href   = url;
+  a.download = 'simfluence-creators-' + genre.replace(/[^a-z0-9]/gi,'-').toLowerCase() + '-' + new Date().toISOString().slice(0,10) + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// 4. BUDGET ALLOCATION — render and update
+var customAllocations = {}; // creatorId → percentage override
+
+function renderBudgetAllocation() {
+  var el = document.getElementById('budgetAllocationContent');
+  var panel = document.getElementById('budgetAllocationPanel');
+  if (!el || !panel) return;
+
+  var budget = parseInt((document.getElementById('budget') || {value:'85000'}).value) || 85000;
+  var creators = [];
+  if (typeof selectedCreators !== 'undefined' && selectedCreators.size > 0 && typeof CREATORS !== 'undefined') {
+    selectedCreators.forEach(function(id) {
+      var cr = CREATORS.find(function(c) { return c.id === id; });
+      if (cr) creators.push(cr);
+    });
+  }
+
+  if (creators.length === 0) {
+    panel.style.display = 'none';
+    return;
+  }
+  panel.style.display = 'block';
+
+  // Default: proportional to avg views
+  var totalViews = creators.reduce(function(a, cr) {
+    return a + (typeof parseViews === 'function' ? (parseViews(cr.avgViews) || 1) : 1);
+  }, 0) || 1;
+
+  var allocs = creators.map(function(cr) {
+    if (customAllocations[cr.id] !== undefined) return customAllocations[cr.id];
+    return Math.round((typeof parseViews === 'function' ? (parseViews(cr.avgViews) || 1) : 1) / totalViews * 100);
+  });
+
+  // Normalize to 100%
+  var sum = allocs.reduce(function(a,b){return a+b;},0);
+  allocs = allocs.map(function(a){return Math.round(a/sum*100);});
+  // Fix rounding
+  var diff = 100 - allocs.reduce(function(a,b){return a+b;},0);
+  if (allocs.length) allocs[0] += diff;
+
+  el.innerHTML = '<div style="margin-bottom:12px;font-size:11px;color:var(--text-muted)">Adjust each creator\'s share of the total <strong style="color:#FFD400">£' + (budget>=1000?(budget/1000).toFixed(0)+'K':budget) + '</strong> budget. Drag sliders to redistribute.</div>'
+    + creators.map(function(cr, i) {
+      var pct  = allocs[i];
+      var amt  = Math.round(budget * pct / 100);
+      var fmtAmt = '£' + (amt >= 1000 ? (amt/1000).toFixed(0)+'K' : amt);
+      return '<div style="margin-bottom:16px">'
+        + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
+          + '<div style="display:flex;align-items:center;gap:10px">'
+            + '<div style="width:28px;height:28px;border-radius:50%;background:' + cr.color + '22;color:' + cr.color + ';display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0">' + cr.name.charAt(0) + '</div>'
+            + '<div><div style="font-size:13px;font-weight:600">' + cr.name + '</div><div style="font-size:10px;color:var(--text-muted)">' + cr.handle + ' · ' + cr.subs + ' subs</div></div>'
+          + '</div>'
+          + '<div style="text-align:right">'
+            + '<div style="font-size:18px;font-weight:700;color:#FFD400">' + fmtAmt + '</div>'
+            + '<div style="font-family:\'DM Mono\',monospace;font-size:10px;color:var(--text-muted)">' + pct + '%</div>'
+          + '</div>'
+        + '</div>'
+        + '<input type="range" min="5" max="90" value="' + pct + '" '
+          + 'data-creator-id="' + cr.id + '" '
+          + 'style="width:100%;accent-color:' + cr.color + ';cursor:pointer" '
+          + 'oninput="onAllocationChange(' + cr.id + ',parseInt(this.value))">'
+        + '<div style="height:4px;background:var(--bg3);border-radius:2px;margin-top:6px;overflow:hidden">'
+          + '<div style="height:100%;width:' + pct + '%;background:' + cr.color + ';border-radius:2px;transition:width .2s"></div>'
+        + '</div>'
+      + '</div>';
+    }).join('');
+}
+
+function onAllocationChange(creatorId, newPct) {
+  customAllocations[creatorId] = newPct;
+  renderBudgetAllocation();
+  // Trigger sim recompute if results exist
+  if (typeof simResults !== 'undefined' && simResults) {
+    simResults = null;
+    if (typeof updateSimDisplay === 'function') updateSimDisplay();
+  }
+}
+
+// Hook into updateSimDisplay to also render allocation
+var _origUpdateSimDisplay = typeof updateSimDisplay !== 'undefined' ? updateSimDisplay : null;
+if (_origUpdateSimDisplay) {
+  updateSimDisplay = function() {
+    _origUpdateSimDisplay();
+    renderBudgetAllocation();
+  };
+}
+
+// 5. SAVED CAMPAIGNS — localStorage
+var SAVE_KEY = 'sf_campaigns_v1';
+
+function saveCampaignToHistory() {
+  if (typeof simResults === 'undefined' || !simResults) return;
+  var genre = (typeof getSelectedGenre === 'function') ? getSelectedGenre() : '—';
+  var budget = simResults.budget || 85000;
+  var crNames = [];
+  if (typeof selectedCreators !== 'undefined' && typeof CREATORS !== 'undefined') {
+    selectedCreators.forEach(function(id) {
+      var cr = CREATORS.find(function(c) { return c.id === id; });
+      if (cr) crNames.push(cr.name);
+    });
+  }
+  var entry = {
+    id: Date.now(),
+    date: new Date().toLocaleDateString('en-GB'),
+    genre: genre,
+    budget: budget,
+    creators: crNames,
+    p50: simResults.p50.impressions,
+    ctr: simResults.ctr,
+    roas: simResults.roas
+  };
+  try {
+    var saved = JSON.parse(localStorage.getItem(SAVE_KEY) || '[]');
+    saved.unshift(entry);
+    var _sLimit = (function(){ var t=typeof getTierLevel==='function'?getTierLevel():0; return t>=3?999:t>=2?10:t>=1?3:0; })();
+    if (_sLimit===0) { return; }
+    if (saved.length > _sLimit) saved = saved.slice(0, _sLimit);
+    localStorage.setItem(SAVE_KEY, JSON.stringify(saved));
+    renderSavedCampaigns();
+    // Flash the save button
+    var btn = document.getElementById('saveCampaignBtn');
+    if (btn) {
+      var orig = btn.textContent;
+      btn.textContent = '✓ SAVED';
+      btn.style.background = '#00C46A';
+      setTimeout(function() { btn.textContent = orig; btn.style.background = '#0050FF'; }, 1500);
+    }
+  } catch(e) {}
+}
+
+function loadSavedCampaigns() {
+  renderSavedCampaigns();
+  // Wire save button to ALSO save to history
+  var btn = document.getElementById('saveCampaignBtn');
+  if (btn) {
+    btn.addEventListener('click', function() {
+      saveCampaignToHistory();
+    });
+  }
+}
+
+function renderSavedCampaigns() {
+  var el = document.getElementById('savedCampaignsPanel');
+  if (!el) return;
+  try {
+    var saved = JSON.parse(localStorage.getItem(SAVE_KEY) || '[]');
+    if (!saved.length) { el.style.display = 'none'; return; }
+    el.style.display = 'block';
+    el.innerHTML = '<div style="font-family:\'DM Mono\',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#0050FF;margin-bottom:12px">Recent Campaigns</div>'
+      + saved.map(function(s) {
+        var fmtBudget = '£' + (s.budget >= 1000 ? (s.budget/1000).toFixed(0)+'K' : s.budget);
+        var fmtImpr = s.p50 >= 1e6 ? (s.p50/1e6).toFixed(1)+'M' : s.p50 >= 1000 ? (s.p50/1000).toFixed(0)+'K' : s.p50;
+        return '<div style="padding:12px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;margin-bottom:8px;cursor:pointer" data-oc="loadCampaign(' + s.id + ')">'
+          + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'
+            + '<div style="font-size:12px;font-weight:600">' + s.genre + ' &nbsp;·&nbsp; ' + fmtBudget + '</div>'
+            + '<div style="font-family:\'DM Mono\',monospace;font-size:8px;color:var(--text-muted)">' + s.date + '</div>'
+          + '</div>'
+          + '<div style="font-size:10px;color:var(--text-muted)">' + (s.creators.slice(0,3).join(', ') + (s.creators.length > 3 ? ' +' + (s.creators.length-3) + ' more' : '')) + '</div>'
+          + '<div style="display:flex;gap:12px;margin-top:6px">'
+            + '<span style="font-family:\'DM Mono\',monospace;font-size:9px;color:#0050FF">' + fmtImpr + ' impr</span>'
+            + '<span style="font-family:\'DM Mono\',monospace;font-size:9px;color:#00C46A">' + s.ctr + '% CTR</span>'
+            + '<span style="font-family:\'DM Mono\',monospace;font-size:9px;color:#FFD400">' + s.roas + '× ROAS</span>'
+          + '</div>'
+        + '</div>';
+      }).join('')
+      + '<button data-oc="clearSavedCampaigns()" style="font-family:\'DM Mono\',monospace;font-size:8px;color:var(--text-muted);background:none;border:none;cursor:pointer;padding:4px 0;letter-spacing:.06em">CLEAR HISTORY</button>';
+  } catch(e) { el.style.display = 'none'; }
+}
+
+function clearSavedCampaigns() {
+  try { localStorage.removeItem(SAVE_KEY); } catch(e) {}
+  renderSavedCampaigns();
+}
+
+function loadCampaign(id) {
+  try {
+    var saved = JSON.parse(localStorage.getItem(SAVE_KEY) || '[]');
+    var entry = saved.find(function(s) { return s.id === id; });
+    if (!entry) return;
+    // Show notification — full reload not possible without full state, but guide user
+    alert('Campaign from ' + entry.date + ': ' + entry.genre + ' · ' + entry.creators.join(', ') + '\n\nTo reload: set genre to "' + entry.genre + '" and search for these creators.');
+  } catch(e) {}
+}
+
+// 6. SCORING COMPARE MODE
+var compareSet = new Set();
+
+function toggleCompare(id) {
+  var _cMax = (function(){ var t=typeof getTierLevel==='function'?getTierLevel():0; return t>=3?4:t>=2?2:0; })();
+  if (_cMax===0) { showUpgradePrompt('compare_2','Gold'); return; }
+  if (compareSet.has(id)) { compareSet.delete(id); }
+  else if (compareSet.size < _cMax) { compareSet.add(id); }
+  else { if(_cMax===2) showUpgradePrompt('compare_4','Platinum'); return; }
+  renderCompareBar();
+  // Re-render scoring to show compare state
+  if (typeof renderScoringScreen === 'function') renderScoringScreen();
+}
+
+function renderCompareBar() {
+  var el = document.getElementById('compareBar');
+  if (!el) return;
+  if (compareSet.size === 0) { el.style.display = 'none'; return; }
+  el.style.display = 'flex';
+  var creators = [];
+  if (typeof CREATORS !== 'undefined') {
+    compareSet.forEach(function(id) {
+      var cr = CREATORS.find(function(c) { return c.id === id; });
+      if (cr) creators.push(cr);
+    });
+  }
+  el.innerHTML = '<div style="display:flex;align-items:center;gap:12px;flex:1;flex-wrap:wrap">'
+    + '<span style="font-family:\'DM Mono\',monospace;font-size:9px;letter-spacing:.08em;color:var(--text-muted)">COMPARING:</span>'
+    + creators.map(function(cr) {
+        return '<div style="display:flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid ' + cr.color + '44;border-radius:4px;padding:4px 10px">'
+          + '<span style="font-size:12px;font-weight:600;color:' + cr.color + '">' + cr.name + '</span>'
+          + '<span data-oc="toggleCompare(' + cr.id + ')" style="font-size:10px;color:var(--text-muted);cursor:pointer;margin-left:4px">✕</span>'
+        + '</div>';
+      }).join('')
+    + '</div>'
+    + (compareSet.size >= 2 ? '<button data-oc="openCompareView()" style="font-family:\'DM Mono\',monospace;font-size:10px;padding:8px 16px;background:#0050FF;color:#fff;border:none;border-radius:5px;cursor:pointer;white-space:nowrap;letter-spacing:.05em">COMPARE ' + compareSet.size + ' →</button>' : '<span style="font-family:\'DM Mono\',monospace;font-size:9px;color:var(--text-muted)">Select ' + (2-compareSet.size) + ' more</span>');
+}
+
+function openCompareView() {
+  if (compareSet.size < 2 || typeof CREATORS === 'undefined') return;
+  var creators = [];
+  compareSet.forEach(function(id) {
+    var cr = CREATORS.find(function(c) { return c.id === id; });
+    if (cr) creators.push(cr);
+  });
+  var genre = (typeof getSelectedGenre === 'function') ? getSelectedGenre() : 'Gaming & Esports';
+
+  var cols = creators.map(function(cr) {
+    var gfi = (typeof computeGFI === 'function') ? computeGFI(cr) : 75;
+    var e   = (typeof computeCostEstimate === 'function') ? computeCostEstimate(cr) : {fmt:function(v){return v;},ranges:{int:[0,0],ded:[0,0]}};
+    var gfiCol = gfi >= 80 ? '#00C46A' : gfi >= 60 ? '#FF7A00' : '#FF3355';
+    var cpiCol = (typeof cpiScoreColor === 'function') ? cpiScoreColor(cr.cpi) : '#FFD400';
+    var vsr = (typeof parseSubs==='function'&&typeof parseViews==='function'&&parseSubs(cr.subs)>0) ? Math.round(parseViews(cr.avgViews)/parseSubs(cr.subs)*100)+'%' : '—';
+    var rows = [
+      ['Platform', cr.platform],
+      ['Subscribers', cr.subs],
+      ['Avg Views', cr.avgViews],
+      ['Eng Rate', cr.eng],
+      ['View/Sub Ratio', vsr],
+      ['CPI Score', '<span style="font-size:20px;font-weight:700;color:'+cpiCol+'">'+cr.cpi+'</span>'],
+      ['GFI for '+genre, '<span style="font-size:20px;font-weight:700;color:'+gfiCol+'">'+gfi+'%</span>'],
+      ['Int. Rate', e.fmt(e.ranges.int[0])+'–'+e.fmt(e.ranges.int[1])],
+      ['Ded. Rate', e.fmt(e.ranges.ded[0])+'–'+e.fmt(e.ranges.ded[1])],
+      ['Genre', cr.genre],
+    ];
+    return { cr: cr, rows: rows };
+  });
+
+  var win = window.open('', '_blank', 'width=900,height=700');
+  if (!win) return;
+  var css = 'body{font-family:Arial,sans-serif;margin:0;padding:32px;background:#0A0A14;color:#fff}'
+    + 'h1{font-size:22px;font-weight:700;color:#FFD400;margin:0 0 4px}'
+    + '.sub{font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:.08em;text-transform:uppercase;margin-bottom:28px}'
+    + 'table{width:100%;border-collapse:collapse}'
+    + 'th{padding:12px 16px;background:#0050FF;color:#fff;text-align:left;font-size:10px;letter-spacing:.08em;text-transform:uppercase}'
+    + 'td{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.06);font-size:13px;vertical-align:top}'
+    + 'tr:nth-child(even) td{background:rgba(255,255,255,0.02)}'
+    + '.label{color:rgba(255,255,255,0.4);font-size:11px}';
+
+  var headerRow = '<tr><th>Metric</th>' + cols.map(function(col) {
+    return '<th style="color:'+col.cr.color+'">' + col.cr.name + '<br><span style="font-weight:400;font-size:9px;opacity:.7">' + col.cr.handle + '</span></th>';
+  }).join('') + '</tr>';
+
+  var dataRows = cols[0].rows.map(function(_, ri) {
+    return '<tr><td class="label">' + cols[0].rows[ri][0] + '</td>'
+      + cols.map(function(col) { return '<td>' + col.rows[ri][1] + '</td>'; }).join('')
+      + '</tr>';
+  }).join('');
+
+  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Creator Comparison · Simfluence</title><style>'+css+'</style></head><body>'
+    + '<div style="font-size:15px;font-weight:700;color:#0050FF;margin-bottom:4px">Simfluence</div>'
+    + '<h1>Creator Comparison</h1>'
+    + '<div class="sub">' + genre + ' &nbsp;·&nbsp; ' + new Date().toLocaleDateString('en-GB') + '</div>'
+    + '<table><thead>' + headerRow + '</thead><tbody>' + dataRows + '</tbody></table>'
+    + '<div style="margin-top:24px;font-size:9px;color:rgba(255,255,255,0.2)">Generated by Simfluence · simfluence.ai</div>'
+    + '</body></html>');
+  win.document.close();
+}
+</script>
+
 <script>
 // ── GLOBAL EVENT DELEGATION (Cloudflare-safe) ────────────────────────
 // Handles all data-oc= attributes (replaces onclick= stripped by Cloudflare)
@@ -9465,8 +10284,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     var r = simResults;
     var genre   = (typeof getSelectedGenre === 'function') ? getSelectedGenre() : 'Campaign';
-    var budget  = r.budget || 85000;
-    var fmtBudget = budget >= 1000 ? ('£' + (budget/1000).toFixed(0) + 'K') : ('£' + budget);
+    var budget  = r.budget || parseInt((document.getElementById('budget')||{value:'85000'}).value) || 85000;
+    var fmtBudget = (document.getElementById('briefBudgetDisplay') ? document.getElementById('briefBudgetDisplay').textContent : ('£' + (budget >= 1000 ? (budget/1000).toFixed(0)+'K' : budget)));
     var format  = (document.getElementById('format') || {value:'Integrated'}).value;
     var fmtKey  = format === 'Dedicated' ? 'ded' : format === 'Mixed' ? 'mix' : 'int';
     var bench   = (typeof GENRE_BENCHMARKS !== 'undefined') ? (GENRE_BENCHMARKS[genre] || GENRE_BENCHMARKS['Gaming & Esports']) : {};
