@@ -1750,44 +1750,6 @@
   }
 
   </style>
-<script>
-var obSelectedGenre = '';
-function obPick(btn, genre) {
-  document.querySelectorAll('.ob-genre').forEach(function(b) {
-    b.classList.remove('selected');
-  });
-  btn.classList.add('selected');
-  obSelectedGenre = genre.replace(/&amp;/g, '&');
-  var launchBtn = document.getElementById('obLaunchBtn');
-  if (launchBtn) launchBtn.classList.add('ready');
-}
-
-function obLaunch() {
-  if (!obSelectedGenre) return;
-  var sel = document.getElementById('genre');
-  if (sel) {
-    for (var i = 0; i < sel.options.length; i++) {
-      if (sel.options[i].text.replace(/&amp;/g,'&') === obSelectedGenre ||
-          sel.options[i].text === obSelectedGenre) {
-        sel.selectedIndex = i;
-        break;
-      }
-    }
-    if (typeof onGenreChange === 'function') onGenreChange();
-    if (typeof renderCreatorGrid === 'function') renderCreatorGrid();
-  }
-  obDismiss();
-}
-
-function obSkip() { obDismiss(); }
-
-function obDismiss() {
-  var overlay = document.getElementById('sfOnboard');
-  if (!overlay) return;
-  overlay.classList.add('hiding');
-  setTimeout(function() { overlay.style.display = 'none'; }, 600);
-}
-</script>
 </head>
 <body>
 <!-- GATE -->
