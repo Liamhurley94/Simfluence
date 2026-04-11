@@ -7073,7 +7073,42 @@ function renderCreatorGrid(keepPage) {
       // Reward consistent avg views (high ratio = loyal audience)
       bonus += Math.min(viewRatio * 20, 15);
     }
+
     return bonus;
+  }
+
+  // ── REGION MATCH HELPER ───────────────────────────────────────────
+  var _REGION_COUNTRIES = {
+    'MENA':          ['AE','SA','EG','IQ','KW','QA','BH','OM','JO','LB','DZ','TN','MA','LY','YE','SD'],
+    'Europe':        ['GB','DE','FR','ES','IT','NL','PL','SE','NO','DK','FI','BE','AT','CH','PT','RO','HU','CZ','GR','UA','SK','HR','RS','BG'],
+    'North America': ['US','CA','MX'],
+    'APAC':          ['JP','KR','AU','NZ','PH','TH','ID','SG','MY','IN','CN','TW','HK','VN','BD','PK'],
+  };
+  var _REGION_LANGS = {
+    'MENA':          ['Arabic'],
+    'Europe':        ['German','French','Spanish','Italian','Polish','Dutch','Swedish','Norwegian','Finnish','Portuguese','Greek','Romanian','Ukrainian','Croatian'],
+    'North America': ['English','Spanish'],
+    'APAC':          ['Japanese','Korean','Chinese','Indonesian','Thai','Hindi','Vietnamese','Filipino','Malay'],
+  };
+  var _REGION_BIO = {
+    'MENA':          ['mena','dubai','arabic','arab','saudi','uae','egypt','kuwait','qatar','bahrain','jordan','morocco','tunisia','algeria','lebanon'],
+    'Europe':        ['europe','european','uk','united kingdom','germany','german','france','french','spain','spanish','netherlands','dutch','nordic','scandinavia','polish','italy','italian'],
+    'North America': ['usa','us ','american','canada','canadian','north america','united states'],
+    'APAC':          ['japan','japanese','korea','korean','australia','australian','asia','pacific','southeast asia','india','indian','taiwan','singapore','philippines','indonesia'],
+  };
+
+  function creatorRegionMatch(cr) {
+    var activeRegions = ['MENA','Europe','North America','APAC'].filter(function(r){ return hasObj(r); });
+    if (activeRegions.length === 0 || hasObj('Global')) return null; // no region filter active
+    var yt = (typeof YT_ENRICHMENT !== 'undefined') ? YT_ENRICHMENT[cr.id] : null;
+    var crCountry = (yt && yt.country) ? yt.country : null;
+    var crLang    = cr.language || 'English';
+    var bio       = (cr.bio || '' + cr.name + ' ' + cr.handle).toLowerCase();
+    return activeRegions.find(function(region) {
+      if (crCountry && (_REGION_COUNTRIES[region]||[]).indexOf(crCountry) !== -1) return true;
+      if ((_REGION_LANGS[region]||[]).indexOf(crLang) !== -1) return true;
+      return (_REGION_BIO[region]||[]).some(function(s){ return bio.indexOf(s) !== -1; });
+    }) || false;
   }
 
   // ── Sub-mode keyword scoring ───────────────────────────────────────
@@ -7232,7 +7267,10 @@ function renderCreatorGrid(keepPage) {
       const base = sortMode==='gfi'  ? (computeGFI(cr)) :
                    sortMode==='subs' ? parseSubs(cr.subs) / 1e6 :
                    cr.cpi;
-      return { cr, total: base + gScore + oScore + smScore };
+      const regionMatch = creatorRegionMatch(cr);
+      // regionBoost: region-matched creators get hard-partitioned to top
+      const regionBoost = regionMatch ? 10000 : 0;
+      return { cr, total: base + gScore + oScore + smScore + regionBoost, regionMatch };
     })
     .sort((a,b) => b.total - a.total);
 
@@ -7256,6 +7294,9 @@ function renderCreatorGrid(keepPage) {
       return `<span style="font-family:DM Mono,monospace;font-size:8px;padding:2px 6px;background:rgba(255,122,0,0.15);border:1px solid rgba(255,122,0,0.3);color:#FF7A00;border-radius:2px">💰 HIGH CONVERSION</span>`;
     if (subMode && subModeScore(cr) > 0)
       return `<span style="font-family:DM Mono,monospace;font-size:8px;padding:2px 6px;background:rgba(255,212,0,0.12);border:1px solid rgba(255,212,0,0.25);color:#FFD400;border-radius:2px">✓ SUB-MODE MATCH</span>`;
+    // Region match badge
+    var matchedRegion = creatorRegionMatch(cr);
+    if (matchedRegion) return `<span style="font-family:DM Mono,monospace;font-size:8px;padding:2px 6px;background:rgba(0,196,106,0.15);border:1px solid rgba(0,196,106,0.3);color:#00C46A;border-radius:2px">\uD83C\uDF0D ${matchedRegion.toUpperCase()}</span>`;
     return '';
   }
 
@@ -7362,6 +7403,26 @@ function renderCreatorGrid(keepPage) {
   const tierLabel  = tierLabels[tierMix] || 'All Tiers';
   const objLabel   = activeObjs.length > 0 ? ' · ' + activeObjs.slice(0,2).join(' + ') : '';
   var langLabel = selectedLang && selectedLang !== 'all' ? ' · ' + selectedLang.toUpperCase() : '';
+  // Region filter banner
+  var _regionBanner = document.getElementById('region-filter-banner');
+  if (_regionBanner) _regionBanner.remove();
+  var _activeRegions = ['MENA','Europe','North America','APAC'].filter(function(r){ return hasObj(r); });
+  if (_activeRegions.length > 0 && !hasObj('Global')) {
+    var _matchCount = _display.filter(function(item) {
+      return item && item.regionMatch;
+    }).length;
+    var _rb = document.createElement('div');
+    _rb.id = 'region-filter-banner';
+    _rb.style.cssText = 'margin:0 0 16px;padding:12px 18px;background:rgba(0,196,106,0.08);border:1px solid rgba(0,196,106,0.3);border-radius:8px;display:flex;align-items:center;justify-content:space-between';
+    _rb.innerHTML = '<span style="font-family:DM Mono,monospace;font-size:10px;color:#00C46A">'
+      + '\uD83C\uDF0D REGION FILTER: ' + _activeRegions.join(' + ').toUpperCase()
+      + ' &nbsp;&middot;&nbsp; ' + _matchCount + ' matched creators shown first'
+      + '</span>'
+      + '<span style="font-family:DM Mono,monospace;font-size:9px;color:var(--text-muted)">Remaining creators ranked below</span>';
+    var _cg = document.getElementById('creatorGrid');
+    if (_cg && _cg.parentElement) _cg.parentElement.insertBefore(_rb, _cg);
+  }
+
   // Tier cap banner
   var _capBanner = document.getElementById('tier-cap-banner');
   if (_capBanner) _capBanner.remove();
