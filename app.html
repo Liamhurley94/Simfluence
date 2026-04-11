@@ -1830,6 +1830,23 @@ function tierCan(feature) {
     'pdf_full': t>=3, 'pdf_summary': t>=2,
     'saved_unlimited': t>=3, 'saved_10': t>=2, 'saved_3': t>=1,
     'live_full': t>=2, 'live_genre': t>=1,
+    // Outreach CRM tiers
+    'outreach_unlimited': t>=3,  // Platinum+
+    'outreach_15':        t>=2,  // Gold
+    'outreach_5':         t>=1,  // Silver
+    'outreach_3':         t>=0,  // Bronze (t=0)
+    'outreach_1':         true,  // Free (everyone)
+    // Outreach data visibility
+    'outreach_rate':      t>=3,  // Platinum — full rate
+    'outreach_cpi':       t>=2,  // Gold — CPI visible
+    'outreach_subs':      t>=1,  // Silver — subs visible
+    'outreach_email':     t>=1,  // Silver — email visible
+    'outreach_notes':     t>=0,  // Bronze — notes visible
+    // Campaigns
+    'campaigns_unlimited':t>=3,  // Platinum
+    'campaigns_1':        t>=2,  // Gold — 1 campaign
+    // Audience overlap (Platinum only)
+    'audience_overlap':   t>=3,
     'admin': t>=5,
   };
   return rules[feature] || false;
@@ -1911,6 +1928,36 @@ function showUpgradePrompt(feature, targetTier) {
   overlay.appendChild(box);
   overlay.addEventListener('click', function(ev) { if (ev.target === overlay) overlay.remove(); });
   document.body.appendChild(overlay);
+}
+
+// ── OUTREACH TIER HELPERS ────────────────────────────────────────────
+function getOutreachCap() {
+  var t = getTierLevel();
+  if (t >= 3) return Infinity;  // Platinum
+  if (t >= 2) return 15;         // Gold
+  if (t >= 1) return 5;          // Silver
+  if (t === 0) return 3;         // Bronze
+  return 1;                       // Free/unknown
+}
+
+function getOutreachCapLabel() {
+  var t = getTierLevel();
+  if (t >= 3) return 'Unlimited';
+  if (t >= 2) return '15';
+  if (t >= 1) return '5';
+  if (t === 0) return '3';
+  return '1';
+}
+
+// Returns a blurred/locked cell based on tier
+function orGatedCell(value, feature, tierName, colSpan) {
+  if (tierCan(feature)) {
+    return value;
+  }
+  return '<span style="filter:blur(4px);user-select:none;color:var(--text-muted);cursor:pointer" '
+    + 'title="Upgrade to '+tierName+' to unlock" '
+    + 'data-action="outreach-upgrade" data-feature="'+feature+'" data-tier="'+tierName+'">'
+    + (value || '████') + '</span>';
 }
 
 function applyTierBlur(elementId, upgradeFeature, targetTier) {
@@ -2057,6 +2104,40 @@ function applyAllTierGates() {
       var rrb = document.getElementById('reRunSimBtn');
       if (rrb) rrb.title = runs + '/' + limit + ' simulations used this month';
     } catch(e) {}
+  }
+
+  // ── Campaigns tab — Gold+ ─────────────────────────────────────────
+  var campTabEl = document.getElementById('nav-campaigns');
+  if (campTabEl) {
+    campTabEl.style.opacity = t >= 2 ? '' : '0.4';
+    campTabEl.title = t >= 2 ? '' : 'Campaigns workspace — Gold+ feature';
+    var cBadge = document.getElementById('camp-tier-badge');
+    if (!cBadge) {
+      cBadge = document.createElement('span');
+      cBadge.id = 'camp-tier-badge';
+      cBadge.style.cssText = 'font-family:DM Mono,monospace;font-size:8px;padding:1px 5px;border-radius:2px;'
+        + 'background:rgba(201,166,0,0.15);border:1px solid rgba(201,166,0,0.3);color:#C9A600;'
+        + 'margin-left:4px;vertical-align:middle;letter-spacing:.04em';
+      cBadge.textContent = 'GOLD';
+      campTabEl.appendChild(cBadge);
+    }
+  }
+
+  // ── Outreach tab — all tiers, show cap ───────────────────────────
+  var outTabEl = document.getElementById('nav-outreach');
+  if (outTabEl) {
+    outTabEl.style.opacity = '';
+    var cap2 = getOutreachCap();
+    var oBadge = document.getElementById('out-tier-badge');
+    if (!oBadge) {
+      oBadge = document.createElement('span');
+      oBadge.id = 'out-tier-badge';
+      oBadge.style.cssText = 'font-family:DM Mono,monospace;font-size:8px;padding:1px 5px;border-radius:2px;'
+        + 'background:rgba(0,196,106,0.1);border:1px solid rgba(0,196,106,0.25);color:#00C46A;'
+        + 'margin-left:4px;vertical-align:middle;letter-spacing:.04em';
+      outTabEl.appendChild(oBadge);
+    }
+    oBadge.textContent = (cap2 === Infinity ? '∞' : _outreach.length + '/' + cap2);
   }
 }
 
@@ -10547,8 +10628,10 @@ function statusPill(s) {
 
 // ── CAMPAIGN WORKSPACE ────────────────────────────────────────────────
 function newCampaign() {
-  if (typeof getTierLevel === 'function' && getTierLevel() < 3) {
-    showUpgradePrompt('personas_all','Platinum'); return;
+  var t = typeof getTierLevel === 'function' ? getTierLevel() : 0;
+  if (t < 2) { showUpgradePrompt('campaigns_1','Gold'); return; }
+  if (t < 3 && _campaigns.length >= 1) {
+    showUpgradePrompt('campaigns_unlimited','Platinum'); return;
   }
   _editingCampaignId = null;
   document.getElementById('cm-name').value = '';
@@ -10676,8 +10759,13 @@ var _orSelectedCreator = null;
 var _orExtraGenres = [];
 
 function openOutreachModal(campaignId) {
-  if (typeof getTierLevel === 'function' && getTierLevel() < 3) {
-    showUpgradePrompt('personas_all','Platinum'); return;
+  // Check creator cap before opening
+  var cap = getOutreachCap();
+  if (_outreach.length >= cap) {
+    var t = getTierLevel();
+    var nextTier = t===0?'Silver':t===1?'Gold':'Platinum';
+    showUpgradePrompt('personas_all', nextTier);
+    return;
   }
   _editingOutreachId = null;
   _orSelectedCreator = null;
@@ -11016,6 +11104,9 @@ function renderOutreachScreen() {
   var stats  = document.getElementById('outreach-stats');
   if (!tbody) return;
 
+  var t   = (typeof getTierLevel === 'function') ? getTierLevel() : 0;
+  var cap = getOutreachCap();
+
   var campFilter   = (document.getElementById('outreach-campaign-filter')  || {value:'all'}).value;
   var statusFilter = (document.getElementById('outreach-status-filter')    || {value:'all'}).value;
   var filtered = _outreach.filter(function(o){
@@ -11024,16 +11115,38 @@ function renderOutreachScreen() {
     return true;
   });
 
-  // Stats bar
+  // Stats bar with cap tracker
   var counts = { shortlisted:0,contacted:0,negotiating:0,confirmed:0,declined:0 };
   _outreach.forEach(function(o){ if(counts[o.status]!==undefined) counts[o.status]++; });
+  var capStr = cap === Infinity ? '∞' : cap;
   if (stats) stats.innerHTML = Object.keys(counts).map(function(k){
     var st = _statusColors[k];
     return '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center">'
       + '<div style="font-size:20px;font-weight:700;color:'+st.text+';font-family:Space Grotesk,sans-serif">'+counts[k]+'</div>'
       + '<div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.06em;color:var(--text-muted);margin-top:2px">'+st.label.toUpperCase()+'</div>'
     + '</div>';
-  }).join('');
+  }).join('')
+  + '<div style="background:var(--bg2);border:1px solid '
+    + (_outreach.length >= cap ? 'rgba(230,0,35,0.3)' : 'var(--border)')
+    + ';border-radius:8px;padding:12px;text-align:center">'
+    + '<div style="font-size:20px;font-weight:700;color:'
+    + (_outreach.length >= cap ? '#E60023' : 'var(--text)')
+    + ';font-family:Space Grotesk,sans-serif">'+_outreach.length+' / '+capStr+'</div>'
+    + '<div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.06em;color:var(--text-muted);margin-top:2px">TRACKED</div>'
+  + '</div>';
+
+  // Update Add button — disable if capped
+  var abtn = document.getElementById('addOutreachBtn');
+  if (abtn) {
+    if (_outreach.length >= cap) {
+      abtn.style.opacity='0.4'; abtn.style.cursor='not-allowed';
+      abtn.title='Creator limit reached — upgrade to track more';
+      abtn.setAttribute('data-capped','1');
+    } else {
+      abtn.style.opacity=''; abtn.style.cursor='pointer';
+      abtn.title=''; abtn.removeAttribute('data-capped');
+    }
+  }
 
   if (filtered.length === 0) {
     tbody.innerHTML = '';
@@ -11043,27 +11156,65 @@ function renderOutreachScreen() {
   empty.style.display = 'none';
 
   var campMap = {};
-  _campaigns.forEach(function(c){ campMap[c.id]=c.name; });
+  _campaigns.forEach(function(cp){ campMap[cp.id]=cp.name; });
+
+  // Blurred placeholders
+  var BLUR     = '<span style="filter:blur(5px);user-select:none;pointer-events:none;opacity:0.5">████</span>';
+  var BLUR_RT  = '<span style="filter:blur(5px);user-select:none;pointer-events:none;opacity:0.5">$XX–$XX</span>';
 
   tbody.innerHTML = filtered.map(function(o){
     var campName = o.campaign ? (campMap[o.campaign]||'—') : '—';
-    var emailCell = o.email
-      ? '<a href="mailto:'+o.email+'" style="color:#6B9FFF;text-decoration:none;font-size:10px">'+o.email+'</a>'
-      : '<span style="color:var(--text-muted);font-size:10px;cursor:pointer" data-oid="'+o.id+'" data-action="prompt-email" title="Click to add email">+ add email</span>'
-    return '<tr style="border-bottom:1px solid var(--border);transition:background .15s" class="or-row">'
-      + '<td style="padding:12px 16px"><div style="font-weight:600;font-size:12px;color:var(--text)">'+o.name+'</div>'
-        + (o.handle ? '<div style="font-size:9px;color:var(--text-muted);margin-top:2px">'+o.handle+'</div>' : '') + '</td>'
+
+    // SUBS — Silver+
+    var subsCell = (typeof tierCan==='function' && tierCan('outreach_subs'))
+      ? '<span style="font-size:11px;color:var(--text-dim)">'+(o.subs||'—')+'</span>'
+      : BLUR;
+
+    // CPI — Gold+
+    var cpiColor = o.cpi>=85?'#00C46A':o.cpi>=70?'#FFD400':'#FF7A00';
+    var cpiCell  = (typeof tierCan==='function' && tierCan('outreach_cpi'))
+      ? '<span style="font-weight:700;color:'+cpiColor+'">'+(o.cpi||'—')+'</span>'
+      : (t>=1
+          ? '<span style="font-family:DM Mono,monospace;font-size:8px;padding:2px 5px;background:rgba(255,212,0,0.08);border:1px solid rgba(255,212,0,0.2);border-radius:3px;color:rgba(255,212,0,0.5);cursor:pointer" data-action="outreach-upgrade" data-tier="Gold">GOLD</span>'
+          : BLUR);
+
+    // RATE — Platinum only
+    var rateCell = (typeof tierCan==='function' && tierCan('outreach_rate'))
+      ? '<span style="font-size:11px;color:#FFD400">'+(o.rate||'—')+'</span>'
+      : (t>=2
+          ? '<span style="font-family:DM Mono,monospace;font-size:8px;padding:2px 5px;background:rgba(229,228,226,0.08);border:1px solid rgba(229,228,226,0.2);border-radius:3px;color:rgba(229,228,226,0.4);cursor:pointer" data-action="outreach-upgrade" data-tier="Platinum">PLT</span>'
+          : BLUR_RT);
+
+    // EMAIL — Silver+
+    var emailCell = (typeof tierCan==='function' && tierCan('outreach_email'))
+      ? (o.email
+          ? '<a href="mailto:'+o.email+'" style="color:#6B9FFF;text-decoration:none;font-size:10px">'+o.email+'</a>'
+          : '<span style="color:var(--text-muted);font-size:10px;cursor:pointer" data-oid="'+o.id+'" data-action="prompt-email">+ add email</span>')
+      : BLUR;
+
+    // NOTES — Bronze+
+    var notesCell = (typeof tierCan==='function' && tierCan('outreach_notes'))
+      ? (o.notes||'<span style="color:var(--text-muted);opacity:.4">—</span>')
+      : '—';
+
+    return '<tr class="or-row" style="border-bottom:1px solid var(--border)">'
+      + '<td style="padding:12px 16px">'
+        + '<div style="font-weight:600;font-size:12px;color:var(--text)">'+o.name+'</div>'
+        + (o.handle ? '<div style="font-size:9px;color:var(--text-muted);margin-top:2px">'+o.handle+'</div>' : '')
+      + '</td>'
       + '<td style="padding:12px 16px;font-size:11px;color:var(--text-dim)">'+campName+'</td>'
-      + '<td style="padding:12px 8px;text-align:center"><span style="font-weight:700;color:'+(o.cpi>=85?'#00C46A':o.cpi>=70?'#FFD400':'#FF7A00')+'">'+( o.cpi||'—')+'</span></td>'
-      + '<td style="padding:12px 8px;text-align:center;font-size:11px;color:var(--text-dim)">'+(o.subs||'—')+'</td>'
-      + '<td style="padding:12px 16px;font-size:11px;color:#FFD400">'+(o.rate||'—')+'</td>'
+      + '<td style="padding:12px 8px;text-align:center">'+subsCell+'</td>'
+      + '<td style="padding:12px 8px;text-align:center">'+cpiCell+'</td>'
+      + '<td style="padding:12px 16px">'+rateCell+'</td>'
       + '<td style="padding:12px 16px">'+emailCell+'</td>'
-      + '<td style="padding:12px 16px"><select data-oid="'+o.id+'" data-action="status-change" style="font-family:DM Mono,monospace;font-size:10px;background:transparent;border:none;color:'+(_statusColors[o.status]||{text:'#fff'}).text+';cursor:pointer;outline:none">'
+      + '<td style="padding:12px 16px">'
+        + '<select data-oid="'+o.id+'" data-action="status-change" style="font-family:DM Mono,monospace;font-size:10px;background:transparent;border:none;color:'+(_statusColors[o.status]||{text:'#fff'}).text+';cursor:pointer;outline:none">'
         + ['shortlisted','contacted','negotiating','confirmed','declined'].map(function(s){
             return '<option value="'+s+'"'+(o.status===s?' selected':'')+'>'+(_statusColors[s]||{label:s}).label+'</option>';
           }).join('')
-        + '</select></td>'
-      + '<td style="padding:12px 16px;font-size:11px;color:var(--text-muted);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+(o.notes||'')+'">'+(o.notes||'<span style="color:var(--text-muted);opacity:.4">—</span>')+'</td>'
+        + '</select>'
+      + '</td>'
+      + '<td style="padding:12px 12px;font-size:11px;color:var(--text-muted);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+(o.notes||'')+'">'+notesCell+'</td>'
       + '<td style="padding:12px 8px;text-align:center">'
         + '<button data-oid="'+o.id+'" data-action="delete-outreach" style="background:rgba(230,0,35,0.08);border:1px solid rgba(230,0,35,0.2);color:#E60023;border-radius:4px;padding:4px 8px;font-family:DM Mono,monospace;font-size:9px;cursor:pointer">✕</button>'
       + '</td>'
@@ -11145,14 +11296,14 @@ var _origShowScreen2 = showScreen;
 showScreen = function(name, btn) {
   _origShowScreen2(name, btn);
   if (name==='campaigns') {
-    if (typeof getTierLevel==='function' && getTierLevel()<3) {
-      showUpgradePrompt('personas_all','Platinum'); return;
+    if (typeof getTierLevel==='function' && getTierLevel()<2) {
+      showUpgradePrompt('campaigns_1','Gold'); return;
     }
     renderCampaignsScreen();
   }
   if (name==='outreach') {
-    if (typeof getTierLevel==='function' && getTierLevel()<3) {
-      showUpgradePrompt('personas_all','Platinum'); return;
+    if (typeof getTierLevel==='function' && getTierLevel()<1) {
+      showUpgradePrompt('outreach_3','Bronze'); return;
     }
     syncOutreachCampaignFilter();
     renderOutreachScreen();
@@ -11561,6 +11712,8 @@ document.addEventListener('click', function(e) {
       else if (action==='close-overlap') closeOverlapModal();
       else if (action==='overlap-toggle-creator') { var ooid=el.getAttribute('data-oid'); if(ooid) overlapRemoveCreator(parseInt(ooid)); }
       else if (action==='overlap-add-search') overlapAddFromSearch();
+      else if (action==='remove-subgenre') { var sg=el.getAttribute('data-sg'); if(sg) orRemoveSubgenre(sg); }
+      else if (action==='outreach-upgrade') { var utier=el.getAttribute('data-tier')||'Platinum'; showUpgradePrompt('personas_all',utier); }
       else if (action==='or-pick-creator') {
         var crid=parseInt(el.getAttribute('data-crid'));
         var found=(typeof CREATORS!=='undefined')?CREATORS.find(function(c){return c.id===crid;}):null;
