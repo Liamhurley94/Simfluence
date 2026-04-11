@@ -9259,85 +9259,233 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <script>
-// PDF EXPORT
+// PDF EXPORT — full simulator replica
 (function() {
-  function downloadCampaignPDF() {
-    var genre = (typeof getSelectedGenre === 'function') ? getSelectedGenre() : 'Campaign';
-    var budget = document.getElementById('budgetVal') ? document.getElementById('budgetVal').textContent : '';
-    var objectives = (typeof getSelectedObjectives === 'function') ? getSelectedObjectives().join(', ') : '';
-    var creators = [];
-    if (typeof selectedCreators !== 'undefined' && typeof CREATORS !== 'undefined') {
-      selectedCreators.forEach(function(id) {
-        var cr = CREATORS.find(function(c) { return c.id === id; });
-        if (cr) creators.push(cr);
-      });
+  function fmtN(n) {
+    if (!n && n !== 0) return '—';
+    if (n >= 1000000) return (n/1000000).toFixed(1) + 'M';
+    if (n >= 1000) return (n/1000).toFixed(0) + 'K';
+    return n.toString();
+  }
+
+  function buildPDF() {
+    if (typeof simResults === 'undefined' || !simResults) {
+      alert('Please run the simulation first.');
+      return;
     }
-    var bestText  = document.getElementById('bandBest')  ? document.getElementById('bandBest').innerText.replace(/\n/g,' ').substring(0,200)  : 'N/A';
-    var baseText  = document.getElementById('bandBase')  ? document.getElementById('bandBase').innerText.replace(/\n/g,' ').substring(0,200)  : 'N/A';
-    var worstText = document.getElementById('bandWorst') ? document.getElementById('bandWorst').innerText.replace(/\n/g,' ').substring(0,200) : 'N/A';
+    var r = simResults;
+    var genre   = (typeof getSelectedGenre === 'function') ? getSelectedGenre() : 'Campaign';
+    var budget  = r.budget || 85000;
+    var fmtBudget = budget >= 1000 ? ('£' + (budget/1000).toFixed(0) + 'K') : ('£' + budget);
+    var format  = (document.getElementById('format') || {value:'Integrated'}).value;
+    var fmtKey  = format === 'Dedicated' ? 'ded' : format === 'Mixed' ? 'mix' : 'int';
+    var bench   = (typeof GENRE_BENCHMARKS !== 'undefined') ? (GENRE_BENCHMARKS[genre] || GENRE_BENCHMARKS['Gaming & Esports']) : {};
+    var objectives = (typeof getSelectedObjectives === 'function') ? getSelectedObjectives().join(', ') : '';
     var now = new Date().toLocaleDateString('en-GB', {day:'numeric',month:'long',year:'numeric'});
 
-    var rows = creators.map(function(cr) {
-      return '<tr><td>' + cr.name + '</td><td>' + cr.handle + '</td><td>' + cr.platform + '</td><td>' + cr.genre + '</td><td style="color:#0050FF;font-weight:700">' + cr.cpi + '</td><td>' + (cr.subs||'') + '</td><td>' + (cr.avgViews||'') + '</td><td>' + (cr.eng||'') + '</td></tr>';
+    // Creators
+    var creators = [];
+    if (typeof selectedCreators !== 'undefined' && typeof CREATORS !== 'undefined') {
+      if (selectedCreators.size > 0) {
+        selectedCreators.forEach(function(id) {
+          var cr = CREATORS.find(function(c) { return c.id === id; });
+          if (cr) creators.push(cr);
+        });
+      } else {
+        creators = CREATORS.filter(function(cr) {
+          return cr.genre === genre || ((typeof GENRE_AFFINITY !== 'undefined' && (GENRE_AFFINITY[cr.genre]||{})[genre]||0) >= 0.6);
+        }).sort(function(a,b) {
+          return (b.cpi + (b.gfi||75)) - (a.cpi + (a.gfi||75));
+        }).slice(0, 5);
+      }
+    }
+
+    // Per-creator calculations (mirrors renderSimulation logic)
+    var totalViews = creators.reduce(function(a, cr) {
+      var v = typeof parseViews === 'function' ? (parseViews(cr.avgViews)||1) : 1;
+      return a + v;
+    }, 0) || 1;
+
+    var NICHE = (typeof NICHE_SPONSOR_CPM !== 'undefined') ? NICHE_SPONSOR_CPM : {};
+    var DEF_CPM = (typeof DEFAULT_CPM !== 'undefined') ? DEFAULT_CPM : {med:12, dedMult:1.6};
+
+    var crRows = creators.map(function(cr) {
+      var crViews     = (typeof parseViews === 'function') ? (parseViews(cr.avgViews)||1) : 1;
+      var budgetShare = Math.round(budget * (crViews / totalViews));
+      var gfi         = cr.gfi || 75;
+      var niche2      = NICHE[cr.genre] || DEF_CPM;
+      var crCpm       = niche2.med * (format === 'Dedicated' ? (niche2.dedMult||1.6) : 1.0) * Math.max(0.5, cr.cpi/100);
+      var crImpr      = Math.round((budgetShare / Math.max(crCpm,1)) * 1000);
+      var bCtr        = bench.ctrBase || 2.5;
+      var crCtr       = Math.round(bCtr * (cr.cpi/100) * (gfi/100 + 0.5) * 10) / 10;
+      var crClicks    = Math.round(crImpr * crCtr / 100);
+      var bCvr        = bench.cvrBase || 1.2;
+      var crCvr       = Math.round(bCvr * (cr.cpi/100) * 10) / 10;
+      var crConv      = Math.round(crClicks * crCvr / 100);
+      var crRoas      = Math.round((crConv * 30 / Math.max(budgetShare,1)) * 10) / 10;
+      var crEst       = (typeof computeCostEstimate === 'function') ? computeCostEstimate(cr) : {fmt:function(v){return '£'+v;},ranges:{int:[0,0],ded:[0,0],mix:[0,0]}};
+      var rate        = crEst.ranges[fmtKey] || [0,0];
+
+      var p10i = Math.round(crImpr*0.68), p50i = crImpr, p90i = Math.round(crImpr*1.42);
+      var p10c = Math.round(crCtr*0.68*10)/10, p50c = crCtr, p90c = Math.round(crCtr*1.42*10)/10;
+      var p10r = Math.round(crRoas*0.65*10)/10, p50r = crRoas, p90r = Math.round(crRoas*1.45*10)/10;
+
+      var gfiColor = gfi >= 80 ? '#00A855' : gfi >= 60 ? '#E07000' : '#CC0020';
+      var cpiColor = cr.cpi >= 85 ? '#00A855' : cr.cpi >= 65 ? '#E07000' : '#CC0020';
+
+      return '<div style="page-break-inside:avoid;border:1px solid #dde;border-radius:8px;margin-bottom:16px;overflow:hidden">' +
+        // Header
+        '<div style="background:#f8f9ff;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #dde">' +
+          '<div>' +
+            '<div style="font-size:15px;font-weight:700;color:#0A0A14">' + cr.name + '</div>' +
+            '<div style="font-size:11px;color:#666;margin-top:2px">' + cr.handle + ' &nbsp;·&nbsp; ' + cr.platform + ' &nbsp;·&nbsp; ' + cr.genre + ' &nbsp;·&nbsp; ' + (cr.subs||'') + ' subs</div>' +
+          '</div>' +
+          '<div style="display:flex;gap:16px;align-items:center">' +
+            '<div style="text-align:center"><div style="font-size:9px;color:#888;letter-spacing:.06em;text-transform:uppercase">CPI</div><div style="font-size:22px;font-weight:700;color:' + cpiColor + '">' + cr.cpi + '</div></div>' +
+            '<div style="text-align:center"><div style="font-size:9px;color:#888;letter-spacing:.06em;text-transform:uppercase">GFI</div><div style="font-size:22px;font-weight:700;color:#fff;background:' + gfiColor + ';border-radius:4px;padding:2px 8px">' + gfi + '%</div></div>' +
+            '<div style="text-align:center"><div style="font-size:9px;color:#888;letter-spacing:.06em;text-transform:uppercase">Budget Share</div><div style="font-size:18px;font-weight:700;color:#0050FF">' + crEst.fmt(budgetShare) + '</div></div>' +
+            '<div style="text-align:center"><div style="font-size:9px;color:#888;letter-spacing:.06em;text-transform:uppercase">Rate Range</div><div style="font-size:13px;font-weight:700;color:#333">' + crEst.fmt(rate[0]) + '–' + crEst.fmt(rate[1]) + '</div></div>' +
+          '</div>' +
+        '</div>' +
+        // 5 metric boxes
+        '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:0;border-bottom:1px solid #dde">' +
+          [['Est. Impressions', fmtN(crImpr), '#0050FF'],
+           ['CTR', crCtr+'%', '#00A855'],
+           ['Est. Clicks', fmtN(crClicks), '#E07000'],
+           ['Est. Conversions', fmtN(crConv), '#7B1FA2'],
+           ['Avg Views', cr.avgViews||'—', '#555']
+          ].map(function(m, i) {
+            return '<div style="padding:14px;text-align:center' + (i>0?';border-left:1px solid #dde':'') + '">' +
+              '<div style="font-size:9px;color:#888;letter-spacing:.07em;text-transform:uppercase;margin-bottom:6px">' + m[0] + '</div>' +
+              '<div style="font-size:20px;font-weight:700;color:' + m[2] + '">' + m[1] + '</div>' +
+            '</div>';
+          }).join('') +
+        '</div>' +
+        // P10 / P50 / P90
+        '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0">' +
+          '<div style="padding:16px;border-right:1px solid #dde;background:#fff8f8">' +
+            '<div style="font-size:9px;font-weight:700;color:#CC0020;letter-spacing:.07em;margin-bottom:10px">P10 — WORST CASE</div>' +
+            '<div style="font-size:22px;font-weight:700;color:#CC0020">' + fmtN(p10i) + '</div>' +
+            '<div style="font-size:10px;color:#CC002099;margin-top:4px">impressions</div>' +
+            '<div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:6px">' +
+              '<div style="background:#ffeef0;border-radius:4px;padding:8px;text-align:center"><div style="font-size:8px;color:#CC0020;letter-spacing:.05em">CTR</div><div style="font-size:15px;font-weight:700;color:#CC0020">' + p10c + '%</div></div>' +
+              '<div style="background:#ffeef0;border-radius:4px;padding:8px;text-align:center"><div style="font-size:8px;color:#CC0020;letter-spacing:.05em">ROAS</div><div style="font-size:15px;font-weight:700;color:#CC0020">' + p10r + '×</div></div>' +
+            '</div>' +
+          '</div>' +
+          '<div style="padding:16px;border-right:1px solid #dde;background:#fffdf0">' +
+            '<div style="font-size:9px;font-weight:700;color:#B38A00;letter-spacing:.07em;margin-bottom:10px">P50 — BASE CASE</div>' +
+            '<div style="font-size:22px;font-weight:700;color:#B38A00">' + fmtN(p50i) + '</div>' +
+            '<div style="font-size:10px;color:#B38A0099;margin-top:4px">impressions</div>' +
+            '<div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:6px">' +
+              '<div style="background:#fffbea;border-radius:4px;padding:8px;text-align:center"><div style="font-size:8px;color:#B38A00;letter-spacing:.05em">CTR</div><div style="font-size:15px;font-weight:700;color:#B38A00">' + p50c + '%</div></div>' +
+              '<div style="background:#fffbea;border-radius:4px;padding:8px;text-align:center"><div style="font-size:8px;color:#B38A00;letter-spacing:.05em">ROAS</div><div style="font-size:15px;font-weight:700;color:#B38A00">' + p50r + '×</div></div>' +
+            '</div>' +
+          '</div>' +
+          '<div style="padding:16px;background:#f0fff6">' +
+            '<div style="font-size:9px;font-weight:700;color:#00A855;letter-spacing:.07em;margin-bottom:10px">P90 — BEST CASE</div>' +
+            '<div style="font-size:22px;font-weight:700;color:#00A855">' + fmtN(p90i) + '</div>' +
+            '<div style="font-size:10px;color:#00A85599;margin-top:4px">impressions</div>' +
+            '<div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:6px">' +
+              '<div style="background:#e6faf0;border-radius:4px;padding:8px;text-align:center"><div style="font-size:8px;color:#00A855;letter-spacing:.05em">CTR</div><div style="font-size:15px;font-weight:700;color:#00A855">' + p90c + '%</div></div>' +
+              '<div style="background:#e6faf0;border-radius:4px;padding:8px;text-align:center"><div style="font-size:8px;color:#00A855;letter-spacing:.05em">ROAS</div><div style="font-size:15px;font-weight:700;color:#00A855">' + p90r + '×</div></div>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
     }).join('');
 
-    var css = [
-      'body{font-family:Arial,sans-serif;margin:0;padding:40px;color:#0A0A14}',
-      'h1{font-size:26px;font-weight:700;margin:0 0 4px}',
-      '.sub{font-size:11px;color:#666;letter-spacing:.1em;text-transform:uppercase;margin-bottom:28px}',
-      '.logo{font-size:18px;font-weight:700;color:#0050FF;margin-bottom:6px}',
-      'h2{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#0050FF;margin:24px 0 8px;padding-bottom:4px;border-bottom:2px solid #0050FF}',
-      '.grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:8px}',
-      '.box{background:#F4F6FF;border-radius:6px;padding:12px}',
-      '.lbl{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#666;margin-bottom:3px}',
-      '.val{font-size:16px;font-weight:700}',
-      '.bands{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:10px 0}',
-      '.band{border-radius:6px;padding:14px;text-align:center}',
-      '.best{background:#E6FAF0;border:2px solid #00C46A}',
-      '.base{background:#FFFBEA;border:2px solid #FFD400}',
-      '.wrst{background:#FFEEF0;border:2px solid #E60023}',
-      '.blbl{font-size:9px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;margin-bottom:4px}',
-      '.bval{font-size:13px;font-weight:700}',
-      'table{width:100%;border-collapse:collapse;font-size:11px}',
-      'th{background:#0050FF;color:#fff;padding:7px 9px;text-align:left;font-size:9px;letter-spacing:.06em;text-transform:uppercase}',
-      'td{padding:7px 9px;border-bottom:1px solid #eee}',
-      'tr:nth-child(even) td{background:#F8FAFF}',
-      '.footer{margin-top:36px;font-size:9px;color:#aaa;text-align:center;border-top:1px solid #eee;padding-top:12px}',
-      '@media print{body{padding:20px}}'
-    ].join('');
+    // Benchmark row
+    var benchRow = '';
+    if (bench.ctrBase) {
+      benchRow = '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px">' +
+        [['CTR', r.ctr+'%', bench.ctrBase+'%'],
+         ['ROAS', r.roas+'×', (bench.roasBase||'—')+'×'],
+         ['CVR', r.cvr+'%', (bench.cvrBase||'—')+'%'],
+         ['Eng Rate', r.engRate+'%', (bench.engBase||'—')+'%']
+        ].map(function(x) {
+          return '<div style="background:#f8f9ff;border:1px solid #dde;border-radius:6px;padding:14px;text-align:center">' +
+            '<div style="font-size:9px;color:#888;letter-spacing:.07em;text-transform:uppercase;margin-bottom:6px">' + x[0] + '</div>' +
+            '<div style="font-size:22px;font-weight:700;color:#0050FF">' + x[1] + '</div>' +
+            '<div style="font-size:10px;color:#888;margin-top:4px">vs ' + x[2] + ' industry avg</div>' +
+          '</div>';
+        }).join('') +
+      '</div>';
+    }
 
-    var html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Simfluence — ' + genre + '</title><style>' + css + '</style></head><body>' +
+    var css = 'body{font-family:Arial,Helvetica,sans-serif;margin:0;padding:36px;color:#0A0A14;font-size:13px}' +
+      'h1{font-size:26px;font-weight:700;margin:0 0 2px}' +
+      '.sub{font-size:11px;color:#777;letter-spacing:.08em;text-transform:uppercase;margin-bottom:28px}' +
+      '.logo{font-size:17px;font-weight:700;color:#0050FF;margin-bottom:4px}' +
+      'h2{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#0050FF;margin:28px 0 12px;padding-bottom:5px;border-bottom:2px solid #0050FF}' +
+      '.kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:20px}' +
+      '.kpi{background:#f4f6ff;border:1px solid #dde;border-radius:6px;padding:14px;text-align:center}' +
+      '.kpi-lbl{font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:#888;margin-bottom:6px}' +
+      '.kpi-val{font-size:20px;font-weight:700}' +
+      '.bands{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px}' +
+      '.band{border-radius:8px;padding:18px;text-align:center}' +
+      '.best{background:#e6faf0;border:2px solid #00A855}' +
+      '.base{background:#fffbea;border:2px solid #FFD400}' +
+      '.wrst{background:#ffeef0;border:2px solid #CC0020}' +
+      '.blbl{font-size:9px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;margin-bottom:6px}' +
+      '.bimpr{font-size:28px;font-weight:700;margin-bottom:4px}' +
+      '.bsub{font-size:11px;margin-top:4px}' +
+      '@media print{body{padding:18px}h2{margin-top:20px}}';
+
+    var html = '<!DOCTYPE html><html><head><meta charset="UTF-8">' +
+      '<title>Simfluence — ' + genre + ' Campaign Report</title>' +
+      '<style>' + css + '</style></head><body>' +
       '<div class="logo">Simfluence</div>' +
-      '<h1>' + genre + ' Campaign</h1>' +
-      '<div class="sub">Generated ' + now + ' &nbsp;·&nbsp; Confidential</div>' +
+      '<h1>' + genre + ' Campaign Report</h1>' +
+      '<div class="sub">Generated ' + now + ' &nbsp;·&nbsp; ' + format + ' format &nbsp;·&nbsp; ' + fmtBudget + ' budget &nbsp;·&nbsp; Confidential</div>' +
+
       '<h2>Campaign Overview</h2>' +
-      '<div class="grid">' +
-        '<div class="box"><div class="lbl">Genre</div><div class="val">' + genre + '</div></div>' +
-        '<div class="box"><div class="lbl">Budget</div><div class="val">' + budget + '</div></div>' +
-        '<div class="box"><div class="lbl">Creators</div><div class="val">' + creators.length + '</div></div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:' + (objectives?'8':'16') + 'px">' +
+        '<div style="background:#f4f6ff;border:1px solid #dde;border-radius:6px;padding:14px"><div style="font-size:9px;color:#888;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px">Genre</div><div style="font-size:17px;font-weight:700">' + genre + '</div></div>' +
+        '<div style="background:#f4f6ff;border:1px solid #dde;border-radius:6px;padding:14px"><div style="font-size:9px;color:#888;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px">Total Budget</div><div style="font-size:17px;font-weight:700">' + fmtBudget + '</div></div>' +
+        '<div style="background:#f4f6ff;border:1px solid #dde;border-radius:6px;padding:14px"><div style="font-size:9px;color:#888;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px">Creators</div><div style="font-size:17px;font-weight:700">' + creators.length + ' selected</div></div>' +
       '</div>' +
-      (objectives ? '<div style="margin:10px 0;font-size:12px"><strong>Objectives:</strong> ' + objectives + '</div>' : '') +
-      '<h2>Simulation Results</h2>' +
+      (objectives ? '<div style="margin-bottom:20px;padding:12px 16px;background:#f0f4ff;border-radius:6px;font-size:12px"><strong>Campaign Objectives:</strong> ' + objectives + '</div>' : '') +
+
+      '<h2>Campaign-Level Simulation Metrics</h2>' +
+      '<div class="kpi-grid">' +
+        [['Est. Impressions', fmtN(r.impressions), '#0050FF'],
+         ['CTR', r.ctr+'%', '#00A855'],
+         ['CPM', '£'+r.cpM, '#E07000'],
+         ['CVR', r.cvr+'%', '#7B1FA2'],
+         ['Est. Conversions', fmtN(r.conversions), '#C2185B'],
+         ['ROAS', r.roas+'×', '#B38A00']
+        ].map(function(m) {
+          return '<div class="kpi"><div class="kpi-lbl">' + m[0] + '</div><div class="kpi-val" style="color:' + m[2] + '">' + m[1] + '</div></div>';
+        }).join('') +
+      '</div>' +
+
+      '<h2>Confidence Bands</h2>' +
       '<div class="bands">' +
-        '<div class="band best"><div class="blbl" style="color:#00A855">Best Case</div><div class="bval">' + bestText + '</div></div>' +
-        '<div class="band base"><div class="blbl" style="color:#B38A00">Base Case</div><div class="bval">' + baseText + '</div></div>' +
-        '<div class="band wrst"><div class="blbl" style="color:#E60023">Worst Case</div><div class="bval">' + worstText + '</div></div>' +
+        '<div class="band best"><div class="blbl" style="color:#00A855">P90 — Best Case</div><div class="bimpr" style="color:#00A855">' + fmtN(r.p90.impressions) + '</div><div style="font-size:12px;color:#00A855">impressions</div><div class="bsub" style="color:#00A855">' + r.p90.ctr + '% CTR &nbsp;·&nbsp; ' + r.p90.roas + '× ROAS</div></div>' +
+        '<div class="band base"><div class="blbl" style="color:#B38A00">P50 — Base Case</div><div class="bimpr" style="color:#B38A00">' + fmtN(r.p50.impressions) + '</div><div style="font-size:12px;color:#B38A00">impressions</div><div class="bsub" style="color:#B38A00">' + r.p50.ctr + '% CTR &nbsp;·&nbsp; ' + r.p50.roas + '× ROAS</div></div>' +
+        '<div class="band wrst"><div class="blbl" style="color:#CC0020">P10 — Worst Case</div><div class="bimpr" style="color:#CC0020">' + fmtN(r.p10.impressions) + '</div><div style="font-size:12px;color:#CC0020">impressions</div><div class="bsub" style="color:#CC0020">' + r.p10.ctr + '% CTR &nbsp;·&nbsp; ' + r.p10.roas + '× ROAS</div></div>' +
       '</div>' +
-      '<h2>Selected Creators (' + creators.length + ')</h2>' +
-      (rows ? '<table><thead><tr><th>Name</th><th>Handle</th><th>Platform</th><th>Genre</th><th>CPI</th><th>Subscribers</th><th>Avg Views</th><th>Eng Rate</th></tr></thead><tbody>' + rows + '</tbody></table>' : '<p style="color:#999;font-size:12px">No creators selected.</p>') +
-      '<div class="footer">Generated by Simfluence &nbsp;·&nbsp; simfluence.ai &nbsp;·&nbsp; Campaign Intelligence Platform</div>' +
-      '</body></html>';
+
+      (bench.ctrBase ? '<h2>vs Industry Benchmarks — ' + genre + '</h2>' + benchRow : '') +
+
+      '<h2>Per-Creator Forecast (' + creators.length + ' creators)</h2>' +
+      (crRows || '<p style="color:#888">No creators selected.</p>') +
+
+      '<div style="margin-top:32px;padding-top:14px;border-top:1px solid #eee;font-size:9px;color:#aaa;text-align:center">' +
+        'Generated by Simfluence &nbsp;·&nbsp; simfluence.ai &nbsp;·&nbsp; Campaign Intelligence Platform' +
+      '</div>' +
+    '</body></html>';
 
     var win = window.open('', '_blank');
-    if (!win) { alert('Please allow popups to download the PDF.'); return; }
+    if (!win) { alert('Please allow popups to generate the PDF.'); return; }
     win.document.write(html);
     win.document.close();
-    setTimeout(function() { win.focus(); win.print(); }, 600);
+    setTimeout(function() { win.focus(); win.print(); }, 700);
   }
 
   document.addEventListener('DOMContentLoaded', function() {
     var btn = document.getElementById('saveCampaignBtn');
-    if (btn) btn.addEventListener('click', downloadCampaignPDF);
+    if (btn) btn.addEventListener('click', buildPDF);
   });
 })();
 </script>
