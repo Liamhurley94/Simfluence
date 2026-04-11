@@ -1750,6 +1750,44 @@
   }
 
   </style>
+<script>
+var obSelectedGenre = '';
+function obPick(btn, genre) {
+  document.querySelectorAll('.ob-genre').forEach(function(b) {
+    b.classList.remove('selected');
+  });
+  btn.classList.add('selected');
+  obSelectedGenre = genre.replace(/&amp;/g, '&');
+  var launchBtn = document.getElementById('obLaunchBtn');
+  if (launchBtn) launchBtn.classList.add('ready');
+}
+
+function obLaunch() {
+  if (!obSelectedGenre) return;
+  var sel = document.getElementById('genre');
+  if (sel) {
+    for (var i = 0; i < sel.options.length; i++) {
+      if (sel.options[i].text.replace(/&amp;/g,'&') === obSelectedGenre ||
+          sel.options[i].text === obSelectedGenre) {
+        sel.selectedIndex = i;
+        break;
+      }
+    }
+    if (typeof onGenreChange === 'function') onGenreChange();
+    if (typeof renderCreatorGrid === 'function') renderCreatorGrid();
+  }
+  obDismiss();
+}
+
+function obSkip() { obDismiss(); }
+
+function obDismiss() {
+  var overlay = document.getElementById('sfOnboard');
+  if (!overlay) return;
+  overlay.classList.add('hiding');
+  setTimeout(function() { overlay.style.display = 'none'; }, 600);
+}
+</script>
 </head>
 <body>
 <!-- GATE -->
@@ -1807,24 +1845,24 @@ document.getElementById('GP').focus();
 
     <div class="ob-genre-label">Choose your campaign genre</div>
     <div class="ob-genres" id="obGenres">
-      <button class="ob-genre" data-genre="Gaming &amp; Esports">Gaming<br>&amp; Esports</button>
-      <button class="ob-genre" data-genre="Tech &amp; Gadgets">Tech<br>&amp; Gadgets</button>
-      <button class="ob-genre" data-genre="Health &amp; Fitness">Health<br>&amp; Fitness</button>
-      <button class="ob-genre" data-genre="Beauty &amp; Skincare">Beauty<br>&amp; Skincare</button>
-      <button class="ob-genre" data-genre="Automotive">Automotive</button>
-      <button class="ob-genre" data-genre="Finance &amp; Investing">Finance<br>&amp; Investing</button>
-      <button class="ob-genre" data-genre="Travel &amp; Adventure">Travel<br>&amp; Adventure</button>
-      <button class="ob-genre" data-genre="Food &amp; Cooking">Food<br>&amp; Cooking</button>
-      <button class="ob-genre" data-genre="Entertainment &amp; Comedy">Entertainment<br>&amp; Comedy</button>
-      <button class="ob-genre" data-genre="Education &amp; Self-Development">Education<br>&amp; Dev</button>
-      <button class="ob-genre" data-genre="Lifestyle &amp; Vlogs">Lifestyle<br>&amp; Vlogs</button>
-      <button class="ob-genre" data-genre="Music">Music</button>
+      <button class="ob-genre" data-genre="Gaming &amp; Esports" onmousedown="obPick(this,'Gaming &amp; Esports')">Gaming<br>&amp; Esports</button>
+      <button class="ob-genre" data-genre="Tech &amp; Gadgets" onmousedown="obPick(this,'Tech &amp; Gadgets')">Tech<br>&amp; Gadgets</button>
+      <button class="ob-genre" data-genre="Health &amp; Fitness" onmousedown="obPick(this,'Health &amp; Fitness')">Health<br>&amp; Fitness</button>
+      <button class="ob-genre" data-genre="Beauty &amp; Skincare" onmousedown="obPick(this,'Beauty &amp; Skincare')">Beauty<br>&amp; Skincare</button>
+      <button class="ob-genre" data-genre="Automotive" onmousedown="obPick(this,'Automotive')">Automotive</button>
+      <button class="ob-genre" data-genre="Finance &amp; Investing" onmousedown="obPick(this,'Finance &amp; Investing')">Finance<br>&amp; Investing</button>
+      <button class="ob-genre" data-genre="Travel &amp; Adventure" onmousedown="obPick(this,'Travel &amp; Adventure')">Travel<br>&amp; Adventure</button>
+      <button class="ob-genre" data-genre="Food &amp; Cooking" onmousedown="obPick(this,'Food &amp; Cooking')">Food<br>&amp; Cooking</button>
+      <button class="ob-genre"data-genre="Entertainment &amp; Comedy" onmousedown="obPick(this,'Entertainment &amp; Comedy')">Entertainment<br>&amp; Comedy</button>
+      <button class="ob-genre" data-genre="Education &amp; Self-Development" onmousedown="obPick(this,'Education &amp; Self-Development')">Education<br>&amp; Dev</button>
+      <button class="ob-genre" data-genre="Lifestyle &amp; Vlogs" onmousedown="obPick(this,'Lifestyle &amp; Vlogs')">Lifestyle<br>&amp; Vlogs</button>
+      <button class="ob-genre" data-genre="Music" onmousedown="obPick(this,'Music')">Music</button>
     </div>
 
-    <button class="ob-btn" id="obLaunchBtn">
+    <button class="ob-btn" id="obLaunchBtn" onmousedown="obLaunch()">
       Launch my dashboard →
     </button>
-    <button class="ob-skip">Skip — explore everything</button>
+    <button class="ob-skip" onmousedown="obSkip()">Skip — explore everything</button>
 
   </div>
 </div>
@@ -9133,7 +9171,7 @@ function checkGate() {
 </div>
 
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
 function openPageModal(key) {
   var el = document.getElementById('modal-' + key);
   if (!el) return;
