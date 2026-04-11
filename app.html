@@ -2225,7 +2225,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         <div class="field">
           <label>Campaign Genre</label>
-          <select id="genre" onchange="onGenreChange()">
+          <select id="genre" >
             <optgroup label="— Core Entertainment —">
               <option selected>Gaming &amp; Esports</option>
               <option>Entertainment &amp; Comedy</option>
@@ -2271,7 +2271,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         <div class="field">
           <label>Sponsored Format</label>
-          <select id="format" onchange="updateTierLabel((document.getElementById('budget')||{value:'85000'}).value)">
+          <select id="format" >
             <option value="Integrated">Integrated (60–90 sec)</option>
             <option value="Dedicated">Dedicated (full video)</option>
             <option value="Mixed">Mixed</option>
@@ -2292,7 +2292,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         <div class="field">
           <label>Creator Tier Mix</label>
-          <select id="tierMix" onchange="renderCreatorGrid();updateSim()">
+          <select id="tierMix" >
             <option value="0">Micro only (≤50K)</option>
             <option value="1">Mid-tier (50K–500K)</option>
             <option value="2">Established (500K–2M)</option>
@@ -2303,7 +2303,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         <div class="field" style="margin-top:10px">
           <label>Creator Language</label>
-          <select id="langFilter" onchange="renderCreatorGrid()">
+          <select id="langFilter" >
             <option value="all">All Languages</option>
             <option value="English">English</option>
             <option value="Spanish">Spanish</option>
@@ -2384,7 +2384,7 @@ document.addEventListener('DOMContentLoaded', function() {
           <div class="page-meta" id="discoveryMeta">ALL CREATORS · GAMING &amp; ESPORTS</div>
         </div>
         <div style="display:flex;gap:8px;align-items:center">
-          <select onchange="setSortMode(this.value)" style="font-family:'DM Mono',monospace;font-size:10px;background:var(--bg3);border:1px solid var(--border);color:var(--text-dim);padding:6px 10px;border-radius:var(--radius)">
+          <select id="sortModeSelect" style="font-family:'DM Mono',monospace;font-size:10px;background:var(--bg3);border:1px solid var(--border);color:var(--text-dim);padding:6px 10px;border-radius:var(--radius)">
             <option value="cpi">Sort: CPI Score</option>
             <option value="gfi">Sort: GFI Score</option>
             <option value="subs">Sort: Subscribers</option>
@@ -10294,6 +10294,19 @@ document.addEventListener('DOMContentLoaded', function() {
   wireId('runSimFromPersonasBtn', function() { if(typeof showScreen==='function') showScreen('simulator', document.querySelector('.nav-tab:nth-child(4)')); });
   wireId('simThisCampaignBtn', function() { if(typeof showScreen==='function') showScreen('simulator', document.querySelector('.nav-tab:nth-child(4)')); if(typeof runSimulation==='function') runSimulation(); });
   wireId('GBtn',               function() { if(typeof GC==='function') GC(); });
+  // Genre, format, tier, language, sort selects
+  (function() {
+    function wire(id, fn) {
+      var el = document.getElementById(id);
+      if (el) el.addEventListener('change', fn);
+    }
+    wire('genre',        function() { if(typeof onGenreChange==='function') onGenreChange(); });
+    wire('format',       function() { if(typeof updateTierLabel==='function') updateTierLabel((document.getElementById('budget')||{value:'85000'}).value); if(typeof renderCreatorGrid==='function') renderCreatorGrid(); });
+    wire('tierMix',      function() { if(typeof renderCreatorGrid==='function') renderCreatorGrid(); if(typeof updateSim==='function') updateSim(); });
+    wire('langFilter',   function() { if(typeof renderCreatorGrid==='function') renderCreatorGrid(); });
+    wire('sortModeSelect', function(e) { if(typeof setSortMode==='function') setSortMode(e.target.value); });
+  })();
+
   // Search input
   var searchInput = document.getElementById('creatorSearch');
   if (searchInput) {
