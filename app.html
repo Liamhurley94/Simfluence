@@ -2036,38 +2036,38 @@ document.addEventListener('DOMContentLoaded', function() {
           <div>
             <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:#0050FF;margin-bottom:6px;">Awareness</div>
             <div style="display:flex;flex-wrap:wrap;gap:4px;">
-              <button class="chip active" data-oc="toggleChip(this)" data-obj="Brand Awareness">Brand Awareness</button>
-              <button class="chip" data-oc="toggleChip(this)" data-obj="Reach &amp; Impressions">Reach</button>
-              <button class="chip" data-oc="toggleChip(this)" data-obj="Content Virality">Virality</button>
-              <button class="chip" data-oc="toggleChip(this)" data-obj="Sentiment Shift">Sentiment</button>
+              <button class="chip active" data-oc="toggleChip(currentTarget)" data-obj="Brand Awareness">Brand Awareness</button>
+              <button class="chip" data-oc="toggleChip(currentTarget)" data-obj="Reach &amp; Impressions">Reach</button>
+              <button class="chip" data-oc="toggleChip(currentTarget)" data-obj="Content Virality">Virality</button>
+              <button class="chip" data-oc="toggleChip(currentTarget)" data-obj="Sentiment Shift">Sentiment</button>
             </div>
           </div>
           <div>
             <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:#0050FF;margin-bottom:6px;">Sales &amp; Conversion</div>
             <div style="display:flex;flex-wrap:wrap;gap:4px;">
-              <button class="chip" data-oc="toggleChip(this)" data-obj="Direct Sales">Direct Sales</button>
-              <button class="chip" data-oc="toggleChip(this)" data-obj="App Install">App Install</button>
-              <button class="chip" data-oc="toggleChip(this)" data-obj="Promo / Affiliate">Affiliate</button>
-              <button class="chip" data-oc="toggleChip(this)" data-obj="Lead Generation">Leads</button>
+              <button class="chip" data-oc="toggleChip(currentTarget)" data-obj="Direct Sales">Direct Sales</button>
+              <button class="chip" data-oc="toggleChip(currentTarget)" data-obj="App Install">App Install</button>
+              <button class="chip" data-oc="toggleChip(currentTarget)" data-obj="Promo / Affiliate">Affiliate</button>
+              <button class="chip" data-oc="toggleChip(currentTarget)" data-obj="Lead Generation">Leads</button>
             </div>
           </div>
           <div>
             <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:#0050FF;margin-bottom:6px;">Engagement &amp; Growth</div>
             <div style="display:flex;flex-wrap:wrap;gap:4px;">
-              <button class="chip" data-oc="toggleChip(this)" data-obj="Community Growth">Community</button>
-              <button class="chip" data-oc="toggleChip(this)" data-obj="Engagement Rate">Engagement</button>
-              <button class="chip" data-oc="toggleChip(this)" data-obj="Pre-launch Sign-up">Pre-launch</button>
-              <button class="chip" data-oc="toggleChip(this)" data-obj="Retention">Retention</button>
+              <button class="chip" data-oc="toggleChip(currentTarget)" data-obj="Community Growth">Community</button>
+              <button class="chip" data-oc="toggleChip(currentTarget)" data-obj="Engagement Rate">Engagement</button>
+              <button class="chip" data-oc="toggleChip(currentTarget)" data-obj="Pre-launch Sign-up">Pre-launch</button>
+              <button class="chip" data-oc="toggleChip(currentTarget)" data-obj="Retention">Retention</button>
             </div>
           </div>
           <div>
             <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:#0050FF;margin-bottom:6px;">Targeting Region</div>
             <div style="display:flex;flex-wrap:wrap;gap:4px;">
-              <button class="chip" data-oc="toggleChip(this)" data-obj="Global">Global</button>
-              <button class="chip" data-oc="toggleChip(this)" data-obj="MENA">MENA</button>
-              <button class="chip" data-oc="toggleChip(this)" data-obj="Europe">Europe</button>
-              <button class="chip" data-oc="toggleChip(this)" data-obj="North America">North America</button>
-              <button class="chip" data-oc="toggleChip(this)" data-obj="APAC">APAC</button>
+              <button class="chip" data-oc="toggleChip(currentTarget)" data-obj="Global">Global</button>
+              <button class="chip" data-oc="toggleChip(currentTarget)" data-obj="MENA">MENA</button>
+              <button class="chip" data-oc="toggleChip(currentTarget)" data-obj="Europe">Europe</button>
+              <button class="chip" data-oc="toggleChip(currentTarget)" data-obj="North America">North America</button>
+              <button class="chip" data-oc="toggleChip(currentTarget)" data-obj="APAC">APAC</button>
             </div>
           </div>
         </div>
@@ -7702,7 +7702,7 @@ function onGenreChange() {
   if (field) field.style.display = modes.length ? 'block' : 'none';
   activeSubMode = modes[0] || '';
   container.innerHTML = modes.map((m,i) =>
-    `<button class="chip ${i===0?'active':''}" data-oc="setSubMode('${m.replace(/'/g,"\'")}',this)">${m}</button>`
+    `<button class="chip ${i===0?'active':''}" data-oc="setSubMode('${m.replace(/'/g,"\'")}',currentTarget)">${m}</button>`
   ).join('');
   renderCreatorGrid();
   updateBriefPanel();
@@ -9281,9 +9281,10 @@ document.addEventListener('click', function(e) {
     if (oc) {
       e.stopPropagation();
       try {
-        // Execute the handler with 'this' bound to the element
-        var fn = new Function('event', 'with(window){' + oc + '}');
-        fn.call(el, e);
+        // Expose 'currentTarget' so data-oc="fn(currentTarget)" works
+        // Also bind 'this' to the element
+        var fn = new Function('event', 'currentTarget', 'with(window){' + oc + '}');
+        fn.call(el, e, el);
       } catch(err) {
         console.error('data-oc error:', oc, err);
       }
@@ -9393,9 +9394,10 @@ document.addEventListener('click', function(e) {
     if (oc) {
       e.stopPropagation();
       try {
-        // Execute the handler with 'this' bound to the element
-        var fn = new Function('event', 'with(window){' + oc + '}');
-        fn.call(el, e);
+        // Expose 'currentTarget' so data-oc="fn(currentTarget)" works
+        // Also bind 'this' to the element
+        var fn = new Function('event', 'currentTarget', 'with(window){' + oc + '}');
+        fn.call(el, e, el);
       } catch(err) {
         console.error('data-oc error:', oc, err);
       }
