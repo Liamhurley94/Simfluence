@@ -1883,10 +1883,10 @@ document.addEventListener('DOMContentLoaded', function() {
 <nav>
   <div class="logo">Sim<span>fluence</span></div>
   <div class="nav-tabs">
-    <button class="nav-tab active" onclick="showScreen('discovery',this)">Discovery</button>
-    <button class="nav-tab" onclick="showScreen('scoring',this)">Scoring</button>
-    <button class="nav-tab" onclick="showScreen('personas',this)">Personas</button>
-    <button class="nav-tab" onclick="showScreen('simulator',this)">Simulator</button>
+    <button class="nav-tab active" data-screen="discovery">Discovery</button>
+    <button class="nav-tab" data-screen="scoring">Scoring</button>
+    <button class="nav-tab" data-screen="personas">Personas</button>
+    <button class="nav-tab" data-screen="simulator">Simulator</button>
   </div>
   <div style="display:flex;align-items:center;gap:8px;position:relative">
     <div style="position:relative;display:flex;align-items:center">
@@ -1895,10 +1895,10 @@ document.addEventListener('DOMContentLoaded', function() {
         oninput="runCreatorSearch(this.value)"
         style="font-family:'DM Mono',monospace;font-size:11px;padding:7px 12px 7px 30px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;color:var(--text);width:220px;outline:none;transition:border-color .2s"
       >
-      <button id="searchClear" onclick="clearCreatorSearch()" style="display:none;position:absolute;right:8px;background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:14px;padding:0;line-height:1">✕</button>
+      <button id="searchClear" data-oc="clearCreatorSearch()" style="display:none;position:absolute;right:8px;background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:14px;padding:0;line-height:1">✕</button>
     </div>
   </div>
-  <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn" title="Toggle mode">🌙</button>
+  <button class="theme-toggle" data-oc="toggleTheme()" id="themeBtn" title="Toggle mode">🌙</button>
 </nav>
 
 
@@ -1910,7 +1910,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     <!-- LIVE CHANNELS PANEL -->
     <div id="liveChannelsPanel" style="border-bottom:2px solid var(--border);margin-bottom:4px">
-      <div onclick="toggleLivePanel()" style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;cursor:pointer;user-select:none">
+      <div id="livePanelToggle" style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;cursor:pointer;user-select:none">
         <div style="display:flex;align-items:center;gap:8px">
           <div id="liveDot" style="width:8px;height:8px;border-radius:50%;background:var(--text-muted);flex-shrink:0"></div>
           <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;color:var(--text);font-weight:700">LIVE CHANNELS</div>
@@ -2036,45 +2036,45 @@ document.addEventListener('DOMContentLoaded', function() {
           <div>
             <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:#0050FF;margin-bottom:6px;">Awareness</div>
             <div style="display:flex;flex-wrap:wrap;gap:4px;">
-              <button class="chip active" onclick="toggleChip(this)" data-obj="Brand Awareness">Brand Awareness</button>
-              <button class="chip" onclick="toggleChip(this)" data-obj="Reach &amp; Impressions">Reach</button>
-              <button class="chip" onclick="toggleChip(this)" data-obj="Content Virality">Virality</button>
-              <button class="chip" onclick="toggleChip(this)" data-obj="Sentiment Shift">Sentiment</button>
+              <button class="chip active" data-oc="toggleChip(this)" data-obj="Brand Awareness">Brand Awareness</button>
+              <button class="chip" data-oc="toggleChip(this)" data-obj="Reach &amp; Impressions">Reach</button>
+              <button class="chip" data-oc="toggleChip(this)" data-obj="Content Virality">Virality</button>
+              <button class="chip" data-oc="toggleChip(this)" data-obj="Sentiment Shift">Sentiment</button>
             </div>
           </div>
           <div>
             <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:#0050FF;margin-bottom:6px;">Sales &amp; Conversion</div>
             <div style="display:flex;flex-wrap:wrap;gap:4px;">
-              <button class="chip" onclick="toggleChip(this)" data-obj="Direct Sales">Direct Sales</button>
-              <button class="chip" onclick="toggleChip(this)" data-obj="App Install">App Install</button>
-              <button class="chip" onclick="toggleChip(this)" data-obj="Promo / Affiliate">Affiliate</button>
-              <button class="chip" onclick="toggleChip(this)" data-obj="Lead Generation">Leads</button>
+              <button class="chip" data-oc="toggleChip(this)" data-obj="Direct Sales">Direct Sales</button>
+              <button class="chip" data-oc="toggleChip(this)" data-obj="App Install">App Install</button>
+              <button class="chip" data-oc="toggleChip(this)" data-obj="Promo / Affiliate">Affiliate</button>
+              <button class="chip" data-oc="toggleChip(this)" data-obj="Lead Generation">Leads</button>
             </div>
           </div>
           <div>
             <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:#0050FF;margin-bottom:6px;">Engagement &amp; Growth</div>
             <div style="display:flex;flex-wrap:wrap;gap:4px;">
-              <button class="chip" onclick="toggleChip(this)" data-obj="Community Growth">Community</button>
-              <button class="chip" onclick="toggleChip(this)" data-obj="Engagement Rate">Engagement</button>
-              <button class="chip" onclick="toggleChip(this)" data-obj="Pre-launch Sign-up">Pre-launch</button>
-              <button class="chip" onclick="toggleChip(this)" data-obj="Retention">Retention</button>
+              <button class="chip" data-oc="toggleChip(this)" data-obj="Community Growth">Community</button>
+              <button class="chip" data-oc="toggleChip(this)" data-obj="Engagement Rate">Engagement</button>
+              <button class="chip" data-oc="toggleChip(this)" data-obj="Pre-launch Sign-up">Pre-launch</button>
+              <button class="chip" data-oc="toggleChip(this)" data-obj="Retention">Retention</button>
             </div>
           </div>
           <div>
             <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:#0050FF;margin-bottom:6px;">Targeting Region</div>
             <div style="display:flex;flex-wrap:wrap;gap:4px;">
-              <button class="chip" onclick="toggleChip(this)" data-obj="Global">Global</button>
-              <button class="chip" onclick="toggleChip(this)" data-obj="MENA">MENA</button>
-              <button class="chip" onclick="toggleChip(this)" data-obj="Europe">Europe</button>
-              <button class="chip" onclick="toggleChip(this)" data-obj="North America">North America</button>
-              <button class="chip" onclick="toggleChip(this)" data-obj="APAC">APAC</button>
+              <button class="chip" data-oc="toggleChip(this)" data-obj="Global">Global</button>
+              <button class="chip" data-oc="toggleChip(this)" data-obj="MENA">MENA</button>
+              <button class="chip" data-oc="toggleChip(this)" data-obj="Europe">Europe</button>
+              <button class="chip" data-oc="toggleChip(this)" data-obj="North America">North America</button>
+              <button class="chip" data-oc="toggleChip(this)" data-obj="APAC">APAC</button>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <button class="run-btn" onclick="runSimulation()">▶ RUN SIMULATION</button>
+    <button class="run-btn" id="runSimBtn">▶ RUN SIMULATION</button>
   </div>
 
   <!-- MAIN CONTENT -->
@@ -2093,12 +2093,12 @@ document.addEventListener('DOMContentLoaded', function() {
             <option value="gfi">Sort: GFI Score</option>
             <option value="subs">Sort: Subscribers</option>
           </select>
-          <button onclick="showScreen('scoring',document.querySelector('.nav-tab:nth-child(2)'))" style="padding:8px 16px;background:#0050FF;color:#fff;border:none;border-radius:var(--radius);font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;letter-spacing:0.05em">SCORE SELECTED →</button>
+          <button id="scoreSelectedBtn" style="padding:8px 16px;background:#0050FF;color:#fff;border:none;border-radius:var(--radius);font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;letter-spacing:0.05em">SCORE SELECTED →</button>
         </div>
       </div>
       <div id="selectedBar" class="selected-bar" style="display:none">
         <span id="selectedCount">0 creators selected</span>
-        <button onclick="clearSelection()" style="font-family:'DM Mono',monospace;font-size:9px;padding:4px 10px;background:transparent;border:1px solid var(--border);border-radius:3px;color:var(--text-muted);cursor:pointer">CLEAR</button>
+        <button data-oc="clearSelection()" style="font-family:'DM Mono',monospace;font-size:9px;padding:4px 10px;background:transparent;border:1px solid var(--border);border-radius:3px;color:var(--text-muted);cursor:pointer">CLEAR</button>
       </div>
       <div id="creatorGrid" class="creator-grid"></div>
       <div id="sfPageControls" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:24px 0;flex-wrap:wrap;"></div>
@@ -2111,7 +2111,7 @@ document.addEventListener('DOMContentLoaded', function() {
           <div class="page-title">CPI &amp; GFI <em>Scoring</em></div>
           <div class="page-meta" id="scoringMeta">CAMPAIGN INTELLIGENCE SCORES</div>
         </div>
-        <button onclick="if(selectedCreators.size===0){personaAutoSelect();} showScreen('personas',document.querySelector('.nav-tab:nth-child(3)'));" style="padding:10px 20px;background:#0050FF;color:#fff;border:none;border-radius:var(--radius);font-size:11px;cursor:pointer;letter-spacing:.05em">VIEW PERSONA MATCHES →</button>
+        <button id="viewPersonasBtn" style="padding:10px 20px;background:#0050FF;color:#fff;border:none;border-radius:var(--radius);font-size:11px;cursor:pointer;letter-spacing:.05em">VIEW PERSONA MATCHES →</button>
       </div>
 
       <!-- OVERVIEW STAT CARDS -->
@@ -2168,8 +2168,8 @@ document.addEventListener('DOMContentLoaded', function() {
           <div class="page-meta">AUDIENCE ARCHETYPE ALIGNMENT</div>
         </div>
         <div style="display:flex;gap:10px;align-items:center">
-          <button onclick="personaAutoSelect()" style="padding:10px 18px;background:rgba(255,212,0,0.12);border:1px solid rgba(255,212,0,0.3);color:#FFD400;border-radius:var(--radius);font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;letter-spacing:.05em" title="Auto-select 5 top creators matching this persona">⚡ AUTO-SELECT CREATORS</button>
-          <button onclick="showScreen('simulator',document.querySelector('.nav-tab:nth-child(4)'))" style="padding:10px 18px;background:#0050FF;color:#fff;border:none;border-radius:var(--radius);font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;letter-spacing:.05em">RUN SIMULATION →</button>
+          <button data-oc="personaAutoSelect()" style="padding:10px 18px;background:rgba(255,212,0,0.12);border:1px solid rgba(255,212,0,0.3);color:#FFD400;border-radius:var(--radius);font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;letter-spacing:.05em" title="Auto-select 5 top creators matching this persona">⚡ AUTO-SELECT CREATORS</button>
+          <button id="runSimFromPersonasBtn" style="padding:10px 18px;background:#0050FF;color:#fff;border:none;border-radius:var(--radius);font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;letter-spacing:.05em">RUN SIMULATION →</button>
         </div>
       </div>
 
@@ -2178,8 +2178,8 @@ document.addEventListener('DOMContentLoaded', function() {
         <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#FFD400;margin-bottom:6px">⚡ Auto-selected Campaign</div>
         <div id="personaRecommendText" style="font-size:13px;color:var(--text-dim);line-height:1.6"></div>
         <div style="margin-top:12px;display:flex;gap:8px">
-          <button onclick="showScreen('simulator',document.querySelector('.nav-tab:nth-child(4)'));runSimulation()" style="padding:8px 16px;background:#FFD400;color:#000;border:none;border-radius:4px;font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;font-weight:700;letter-spacing:.05em">SIMULATE THIS CAMPAIGN →</button>
-          <button onclick="document.getElementById('personaRecommendation').style.display='none'" style="padding:8px 16px;background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:4px;font-family:'DM Mono',monospace;font-size:10px;cursor:pointer">DISMISS</button>
+          <button id="simThisCampaignBtn" style="padding:8px 16px;background:#FFD400;color:#000;border:none;border-radius:4px;font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;font-weight:700;letter-spacing:.05em">SIMULATE THIS CAMPAIGN →</button>
+          <button data-oc="document.getElementById('personaRecommendation').style.display='none'" style="padding:8px 16px;background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:4px;font-family:'DM Mono',monospace;font-size:10px;cursor:pointer">DISMISS</button>
         </div>
       </div>
 
@@ -2196,26 +2196,26 @@ document.addEventListener('DOMContentLoaded', function() {
           <div class="page-title">Campaign <em>Simulator</em></div>
           <div class="page-meta">PROBABILISTIC OUTCOME FORECAST</div>
         </div>
-        <button onclick="runSimulation()" style="padding:10px 20px;background:#FF7A00;color:#fff;border:none;border-radius:var(--radius);font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;letter-spacing:.05em;font-weight:700">▶ RE-RUN</button>
+        <button id="reRunSimBtn" style="padding:10px 20px;background:#FF7A00;color:#fff;border:none;border-radius:var(--radius);font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;letter-spacing:.05em;font-weight:700">▶ RE-RUN</button>
       </div>
 
       <!-- P10 / P50 / P90 — BOLD, VISIBLE, CLICKABLE -->
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">
-        <div id="bandWorst" onclick="expandBand('worst')" style="background:rgba(230,0,35,0.08);border:2px solid rgba(230,0,35,0.4);border-radius:10px;padding:20px;cursor:pointer;transition:all .2s" title="Click for breakdown">
+        <div id="bandWorst" data-oc="expandBand('worst')" style="background:rgba(230,0,35,0.08);border:2px solid rgba(230,0,35,0.4);border-radius:10px;padding:20px;cursor:pointer;transition:all .2s" title="Click for breakdown">
           <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#E60023;margin-bottom:6px">P10 — WORST CASE</div>
           <div id="bandWorstImpr" style="font-family:'Space Grotesk',sans-serif;font-size:36px;font-weight:700;color:#E60023;line-height:1">—</div>
           <div style="font-family:'DM Mono',monospace;font-size:9px;color:rgba(230,0,35,0.6);margin-top:4px">IMPRESSIONS</div>
           <div id="bandWorstSub" style="margin-top:10px;font-size:12px;color:rgba(255,255,255,0.4)"></div>
           <div style="font-family:'DM Mono',monospace;font-size:9px;color:rgba(230,0,35,0.5);margin-top:8px;text-align:right">CLICK FOR DETAIL ↓</div>
         </div>
-        <div id="bandBase" onclick="expandBand('base')" style="background:rgba(255,212,0,0.08);border:2px solid rgba(255,212,0,0.5);border-radius:10px;padding:20px;cursor:pointer;transition:all .2s" title="Click for breakdown">
+        <div id="bandBase" data-oc="expandBand('base')" style="background:rgba(255,212,0,0.08);border:2px solid rgba(255,212,0,0.5);border-radius:10px;padding:20px;cursor:pointer;transition:all .2s" title="Click for breakdown">
           <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#FFD400;margin-bottom:6px">P50 — BASE CASE</div>
           <div id="bandBaseImpr" style="font-family:'Space Grotesk',sans-serif;font-size:36px;font-weight:700;color:#FFD400;line-height:1">—</div>
           <div style="font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,212,0,0.6);margin-top:4px">IMPRESSIONS</div>
           <div id="bandBaseSub" style="margin-top:10px;font-size:12px;color:rgba(255,255,255,0.4)"></div>
           <div style="font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,212,0,0.5);margin-top:8px;text-align:right">CLICK FOR DETAIL ↓</div>
         </div>
-        <div id="bandBest" onclick="expandBand('best')" style="background:rgba(0,196,106,0.08);border:2px solid rgba(0,196,106,0.4);border-radius:10px;padding:20px;cursor:pointer;transition:all .2s" title="Click for breakdown">
+        <div id="bandBest" data-oc="expandBand('best')" style="background:rgba(0,196,106,0.08);border:2px solid rgba(0,196,106,0.4);border-radius:10px;padding:20px;cursor:pointer;transition:all .2s" title="Click for breakdown">
           <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#00C46A;margin-bottom:6px">P90 — BEST CASE</div>
           <div id="bandBestImpr" style="font-family:'Space Grotesk',sans-serif;font-size:36px;font-weight:700;color:#00C46A;line-height:1">—</div>
           <div style="font-family:'DM Mono',monospace;font-size:9px;color:rgba(0,196,106,0.6);margin-top:4px">IMPRESSIONS</div>
@@ -8807,7 +8807,7 @@ document.addEventListener('DOMContentLoaded', () => {
 <!-- SIGN UP MODAL -->
 <div class="signup-overlay" id="signupOverlay" style="display:none">
   <div class="signup-modal">
-    <button class="su-close" onclick="hideSignUpModal()">✕</button>
+    <button class="su-close" data-oc="hideSignUpModal()">✕</button>
     <div class="su-logo">Sim<span>fluence</span></div>
     <div class="su-sub">Create your free account. See the full creator database and start building your campaign brief.</div>
     <div class="su-field">
@@ -8822,7 +8822,7 @@ document.addEventListener('DOMContentLoaded', () => {
       <label>PASSWORD</label>
       <input type="password" id="suPass" placeholder="Min 8 characters" />
     </div>
-    <button class="su-btn" onclick="handleFreeSignUp()">CREATE FREE ACCOUNT →</button>
+    <button class="su-btn" data-oc="handleFreeSignUp()">CREATE FREE ACCOUNT →</button>
     <div class="su-free-note"><strong>Free forever.</strong> No card required. Upgrade anytime to unlock the simulator.</div>
   </div>
 </div>
@@ -8920,17 +8920,17 @@ document.addEventListener('DOMContentLoaded', () => {
     <div>
       <div class="footer-col-title">Company</div>
       <div class="footer-links">
-        <button class="footer-link" onclick="openPageModal('about')">About Simfluence</button>
+        <button class="footer-link" data-oc="openPageModal('about')">About Simfluence</button>
         <a href="/cdn-cgi/l/email-protection#6c20050d012c3f05010a001909020f09422d25" class="footer-link" style="text-decoration:none;display:block;text-align:left;">Contact Us</a>
-        <button class="footer-link" onclick="openPageModal('terms')">Terms of Use</button>
-        <button class="footer-link" onclick="openPageModal('legal')">Legal Notice</button>
+        <button class="footer-link" data-oc="openPageModal('terms')">Terms of Use</button>
+        <button class="footer-link" data-oc="openPageModal('legal')">Legal Notice</button>
       </div>
     </div>
 
     <div>
       <div class="footer-col-title">Plans</div>
       <div class="footer-links">
-        <button class="footer-link" onclick="showSignUpModal()">Free Account</button>
+        <button class="footer-link" data-oc="showSignUpModal()">Free Account</button>
         <a href="/cdn-cgi/l/email-protection#4e02272f230e1d272328223b2b202d2b600f07713d3b2c242b2d3a731d3a2f3c3a2b3c6b7c7e1e222f206b7c7e0b203f3b273c37" class="footer-link" style="text-decoration:none;display:block;text-align:left;">Starter — £199/mo</a>
         <a href="/cdn-cgi/l/email-protection#44082d252904172d29222831212a27216a050d7b3731262e21273079173031202d2b61767414362b6176741428252a617674012a35312d363d" class="footer-link" style="text-decoration:none;display:block;text-align:left;">Studio Pro — £699/mo</a>
         <a href="/cdn-cgi/l/email-protection#c884a1a9a5889ba1a5aea4bdada6abade68981f7bbbdaaa2adabbcf598bdaaa4a1bba0adbaedfaf88da4a1bcadedfaf898a4a9a6edfaf88da6b9bda1bab1" class="footer-link" style="text-decoration:none;display:block;text-align:left;">Publisher Elite — £1,999/mo</a>
@@ -8943,9 +8943,9 @@ document.addEventListener('DOMContentLoaded', () => {
   <div class="footer-bottom">
     <div class="footer-copy">© 2025 Simfluence Ltd · Dubai, United Arab Emirates · All rights reserved</div>
     <div class="footer-legal-links">
-      <button class="footer-legal-link" onclick="openPageModal('about')">About</button>
-      <button class="footer-legal-link" onclick="openPageModal('terms')">Terms of Use</button>
-      <button class="footer-legal-link" onclick="openPageModal('legal')">Legal Notice</button>
+      <button class="footer-legal-link" data-oc="openPageModal('about')">About</button>
+      <button class="footer-legal-link" data-oc="openPageModal('terms')">Terms of Use</button>
+      <button class="footer-legal-link" data-oc="openPageModal('legal')">Legal Notice</button>
       <a href="/cdn-cgi/l/email-protection#7834111915382b11151e140d1d161b1d563931" class="footer-legal-link" style="text-decoration:none;">Contact</a>
     </div>
   </div>
@@ -8954,7 +8954,7 @@ document.addEventListener('DOMContentLoaded', () => {
 <!-- ══ ABOUT MODAL ══════════════════════════════════════════════════ -->
 <div class="page-modal-overlay" id="modal-about" style="display:none">
   <div class="page-modal">
-    <button class="page-modal-close" onclick="closePageModal('about')">✕ CLOSE</button>
+    <button class="page-modal-close" data-oc="closePageModal('about')">✕ CLOSE</button>
     <h1>About <em>Simfluence</em></h1>
     <div class="page-date">Dubai, United Arab Emirates</div>
 
@@ -8985,7 +8985,7 @@ document.addEventListener('DOMContentLoaded', () => {
 <!-- ══ TERMS OF USE MODAL ═══════════════════════════════════════════ -->
 <div class="page-modal-overlay" id="modal-terms" style="display:none">
   <div class="page-modal">
-    <button class="page-modal-close" onclick="closePageModal('terms')">✕ CLOSE</button>
+    <button class="page-modal-close" data-oc="closePageModal('terms')">✕ CLOSE</button>
     <h1>Terms of <em>Use</em></h1>
     <div class="page-date">Effective date: 1 January 2025 · Last updated: April 2025</div>
 
@@ -9044,7 +9044,7 @@ document.addEventListener('DOMContentLoaded', () => {
 <!-- ══ LEGAL NOTICE MODAL ════════════════════════════════════════════ -->
 <div class="page-modal-overlay" id="modal-legal" style="display:none">
   <div class="page-modal">
-    <button class="page-modal-close" onclick="closePageModal('legal')">✕ CLOSE</button>
+    <button class="page-modal-close" data-oc="closePageModal('legal')">✕ CLOSE</button>
     <h1>Legal <em>Notice</em></h1>
     <div class="page-date">Effective date: 1 January 2025</div>
 
@@ -9126,8 +9126,8 @@ function checkGate() {
         <div class="brief-creators" id="briefCreatorChips"></div>
       </div>
       <div class="brief-actions" style="flex-shrink:0">
-        <button class="brief-clear-btn" onclick="clearSelection()">CLEAR ALL</button>
-        <button class="brief-run-btn" onclick="runFromBrief()">▶ SIMULATE →</button>
+        <button class="brief-clear-btn" data-oc="clearSelection()">CLEAR ALL</button>
+        <button class="brief-run-btn" data-oc="runFromBrief()">▶ SIMULATE →</button>
       </div>
     </div>
 
@@ -9206,6 +9206,93 @@ function closePageModal(key) {
 });
 </script>
 
+
+<script>
+// ── MASTER EVENT WIRING (Cloudflare-safe — no inline handlers) ──────
+(function() {
+  function wire() {
+    // Nav tabs
+    document.querySelectorAll('.nav-tab[data-screen]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        if (typeof showScreen === 'function') showScreen(btn.getAttribute('data-screen'), btn);
+      });
+    });
+
+    // Live panel toggle
+    var lpt = document.getElementById('livePanelToggle');
+    if (lpt) lpt.addEventListener('click', function() {
+      if (typeof toggleLivePanel === 'function') toggleLivePanel();
+    });
+
+    // Run simulation
+    var rsb = document.getElementById('runSimBtn');
+    if (rsb) rsb.addEventListener('click', function() {
+      if (typeof runSimulation === 'function') runSimulation();
+    });
+
+    var rrb = document.getElementById('reRunSimBtn');
+    if (rrb) rrb.addEventListener('click', function() {
+      if (typeof runSimulation === 'function') runSimulation();
+    });
+
+    // Score selected
+    var ssb = document.getElementById('scoreSelectedBtn');
+    if (ssb) ssb.addEventListener('click', function() {
+      if (typeof showScreen === 'function') showScreen('scoring', document.querySelector('.nav-tab:nth-child(2)'));
+    });
+
+    // View personas
+    var vpb = document.getElementById('viewPersonasBtn');
+    if (vpb) vpb.addEventListener('click', function() {
+      if (typeof personaAutoSelect === 'function' && typeof selectedCreators !== 'undefined' && selectedCreators.size === 0) personaAutoSelect();
+      if (typeof showScreen === 'function') showScreen('personas', document.querySelector('.nav-tab:nth-child(3)'));
+    });
+
+    // Run sim from personas
+    var rsfp = document.getElementById('runSimFromPersonasBtn');
+    if (rsfp) rsfp.addEventListener('click', function() {
+      if (typeof showScreen === 'function') showScreen('simulator', document.querySelector('.nav-tab:nth-child(4)'));
+    });
+
+    var stc = document.getElementById('simThisCampaignBtn');
+    if (stc) stc.addEventListener('click', function() {
+      if (typeof showScreen === 'function') showScreen('simulator', document.querySelector('.nav-tab:nth-child(4)'));
+      if (typeof runSimulation === 'function') runSimulation();
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', wire);
+  } else {
+    wire();
+  }
+})();
+</script>
+
+<script>
+// ── GLOBAL EVENT DELEGATION (Cloudflare-safe) ────────────────────────
+// All onclick= replaced with data-oc= to survive Cloudflare stripping
+// This script executes them via event delegation
+document.addEventListener('click', function(e) {
+  var el = e.target;
+  // Walk up the DOM to find an element with data-oc
+  while (el && el !== document) {
+    var oc = el.getAttribute('data-oc');
+    if (oc) {
+      e.stopPropagation();
+      try {
+        // Execute the handler with 'this' bound to the element
+        var fn = new Function('event', 'with(window){' + oc + '}');
+        fn.call(el, e);
+      } catch(err) {
+        console.error('data-oc error:', oc, err);
+      }
+      return;
+    }
+    el = el.parentElement;
+  }
+}, true); // useCapture=true so it fires before anything else
+</script>
 </body>
 </html>
 
@@ -9231,6 +9318,93 @@ function closePageModal(key) {
 });
 </script>
 
+
+<script>
+// ── MASTER EVENT WIRING (Cloudflare-safe — no inline handlers) ──────
+(function() {
+  function wire() {
+    // Nav tabs
+    document.querySelectorAll('.nav-tab[data-screen]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        if (typeof showScreen === 'function') showScreen(btn.getAttribute('data-screen'), btn);
+      });
+    });
+
+    // Live panel toggle
+    var lpt = document.getElementById('livePanelToggle');
+    if (lpt) lpt.addEventListener('click', function() {
+      if (typeof toggleLivePanel === 'function') toggleLivePanel();
+    });
+
+    // Run simulation
+    var rsb = document.getElementById('runSimBtn');
+    if (rsb) rsb.addEventListener('click', function() {
+      if (typeof runSimulation === 'function') runSimulation();
+    });
+
+    var rrb = document.getElementById('reRunSimBtn');
+    if (rrb) rrb.addEventListener('click', function() {
+      if (typeof runSimulation === 'function') runSimulation();
+    });
+
+    // Score selected
+    var ssb = document.getElementById('scoreSelectedBtn');
+    if (ssb) ssb.addEventListener('click', function() {
+      if (typeof showScreen === 'function') showScreen('scoring', document.querySelector('.nav-tab:nth-child(2)'));
+    });
+
+    // View personas
+    var vpb = document.getElementById('viewPersonasBtn');
+    if (vpb) vpb.addEventListener('click', function() {
+      if (typeof personaAutoSelect === 'function' && typeof selectedCreators !== 'undefined' && selectedCreators.size === 0) personaAutoSelect();
+      if (typeof showScreen === 'function') showScreen('personas', document.querySelector('.nav-tab:nth-child(3)'));
+    });
+
+    // Run sim from personas
+    var rsfp = document.getElementById('runSimFromPersonasBtn');
+    if (rsfp) rsfp.addEventListener('click', function() {
+      if (typeof showScreen === 'function') showScreen('simulator', document.querySelector('.nav-tab:nth-child(4)'));
+    });
+
+    var stc = document.getElementById('simThisCampaignBtn');
+    if (stc) stc.addEventListener('click', function() {
+      if (typeof showScreen === 'function') showScreen('simulator', document.querySelector('.nav-tab:nth-child(4)'));
+      if (typeof runSimulation === 'function') runSimulation();
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', wire);
+  } else {
+    wire();
+  }
+})();
+</script>
+
+<script>
+// ── GLOBAL EVENT DELEGATION (Cloudflare-safe) ────────────────────────
+// All onclick= replaced with data-oc= to survive Cloudflare stripping
+// This script executes them via event delegation
+document.addEventListener('click', function(e) {
+  var el = e.target;
+  // Walk up the DOM to find an element with data-oc
+  while (el && el !== document) {
+    var oc = el.getAttribute('data-oc');
+    if (oc) {
+      e.stopPropagation();
+      try {
+        // Execute the handler with 'this' bound to the element
+        var fn = new Function('event', 'with(window){' + oc + '}');
+        fn.call(el, e);
+      } catch(err) {
+        console.error('data-oc error:', oc, err);
+      }
+      return;
+    }
+    el = el.parentElement;
+  }
+}, true); // useCapture=true so it fires before anything else
+</script>
 </body>
 </html// ── PERSONA SCREEN ────────────────────────────────────────────────────
 function renderPersonaScreen() {
@@ -9282,7 +9456,7 @@ function renderPersonaScreen() {
         + selectedList.map(function(cr) {
           var gfi = computeGFI(cr);
           var gfiCol = gfi>=70?'#00C46A':gfi>=45?'#FF7A00':'#E60023';
-          return '<div style="display:flex;align-items:center;gap:8px;padding:6px 12px;background:var(--bg2);border:1px solid ' + cr.color + '44;border-radius:20px;cursor:pointer" onclick="openProfileOverlay(' + cr.id + ')">'
+          return '<div style="display:flex;align-items:center;gap:8px;padding:6px 12px;background:var(--bg2);border:1px solid ' + cr.color + '44;border-radius:20px;cursor:pointer" data-oc="openProfileOverlay(' + cr.id + ')">'
             + '<div style="width:24px;height:24px;border-radius:50%;background:' + cr.color + '22;color:' + cr.color + ';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700">' + cr.name.charAt(0) + '</div>'
             + '<div style="font-size:12px;font-weight:600;color:var(--text)">' + cr.name + '</div>'
             + '<div style="font-size:9px;color:var(--text-muted)">' + cr.subs + '</div>'
