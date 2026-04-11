@@ -7894,6 +7894,196 @@ function expandBand(band) {
 }
 
 // ── PERSONA AUTO-SELECT ────────────────────────────────────────────────
+
+// ── PERSONA SCREEN ─────────────────────────────────────────────────────
+function renderPersonaScreen() {
+  var genre      = getSelectedGenre() || 'Gaming & Esports';
+  var subMode    = activeSubMode || 'default';
+  var budget     = parseInt((document.getElementById('budget') || {value:'85000'}).value) || 85000;
+  var format     = (document.getElementById('format') || {value:'Integrated'}).value;
+  var objectives = typeof getSelectedObjectives === 'function' ? getSelectedObjectives() : [];
+  var bench      = (typeof GENRE_BENCHMARKS !== 'undefined') ? (GENRE_BENCHMARKS[genre] || GENRE_BENCHMARKS['Gaming & Esports']) : {};
+
+  // Get personas for this genre + sub-mode
+  var genreData  = (typeof GENRE_PERSONAS !== 'undefined') ? (GENRE_PERSONAS[genre] || GENRE_PERSONAS['default'] || {}) : {};
+  var personas   = genreData[subMode] || genreData['default'] || (typeof GENRE_PERSONAS !== 'undefined' ? (GENRE_PERSONAS['default'] || {}).default || [] : []);
+
+  // Score personas against objectives
+  var OBJ_TRAIT_MAP = {
+    'Brand Awareness':     ['reach','community','virality','broad_demo'],
+    'Reach & Impressions': ['reach','broad_demo','young'],
+    'Content Virality':    ['virality','community','young'],
+    'Sentiment Shift':     ['loyal','long_form','analytical'],
+    'Direct Sales':        ['direct_sales','high_cpi','early_adopter'],
+    'App Install':         ['direct_sales','high_eng','young'],
+    'Promo / Affiliate':   ['promo','direct_sales','reach'],
+    'Lead Generation':     ['direct_sales','analytical','long_form'],
+    'Community Growth':    ['community','virality','retention'],
+    'Engagement Rate':     ['high_eng','community','loyal'],
+    'Pre-launch Sign-up':  ['early_adopter','virality','direct_sales'],
+    'Retention':           ['retention','loyal','long_form'],
+    'Global':              ['broad_demo','reach','community'],
+    'MENA':                ['community','loyal','reach'],
+    'Europe':              ['analytical','premium','loyal'],
+    'North America':       ['direct_sales','early_adopter','high_eng'],
+    'APAC':                ['community','young','virality'],
+  };
+
+  function scorePersona(p) {
+    if (!objectives.length) return 70 + Math.round(p.color.charCodeAt(1) % 25); // visual spread
+    var score = 0;
+    var total = 0;
+    objectives.forEach(function(obj) {
+      var traits = OBJ_TRAIT_MAP[obj] || [];
+      var pTraits = p.traits || [];
+      traits.forEach(function(t) {
+        total++;
+        if (pTraits.indexOf(t) > -1) score++;
+      });
+    });
+    if (!total) return 65;
+    return Math.min(98, Math.round(50 + (score / total) * 48));
+  }
+
+  // Budget tier context
+  var budgetLabel = budget >= 250000 ? 'Tier 1 (£250K+)' : budget >= 100000 ? 'Tier 2 (£100K+)' : budget >= 40000 ? 'Tier 3 (£40K+)' : 'Tier 4 (<£40K)';
+  var fmtBudget   = '£' + (budget >= 1000 ? (budget/1000).toFixed(0) + 'K' : budget);
+
+  // Sort personas by score desc
+  var scored = personas.map(function(p) {
+    return { p: p, score: scorePersona(p) };
+  }).sort(function(a, b) { return b.score - a.score; });
+
+  // Find matched creators for each persona
+  var genreCreators = (typeof CREATORS !== 'undefined') ? CREATORS.filter(function(cr) {
+    return cr.genre === genre || ((typeof GENRE_AFFINITY !== 'undefined') && ((GENRE_AFFINITY[cr.genre]||{})[genre]||0) >= 0.6);
+  }) : [];
+
+  function creatorsForPersona(p) {
+    var traits = p.traits || [];
+    return genreCreators.filter(function(cr) {
+      // Match creators whose bio contains trait-related keywords
+      var bio = (cr.bio || '').toLowerCase();
+      var traitMatch = traits.some(function(t) {
+        var kwMap = {
+          'high_eng': ['high eng','15.0%','12.'],
+          'long_form': ['long form','analysis','essay','deep dive'],
+          'analytical': ['analytical','guide','build','tier list'],
+          'virality': ['viral','funny','sketch','prank'],
+          'community': ['community','squad','multiplayer'],
+          'competitive': ['competitive','ranked','esports'],
+          'direct_sales': [],
+          'premium': ['premium','luxury'],
+          'loyal': [],
+          'early_adopter': ['launch','first'],
+          'retention': [],
+          'young': [],
+          'reach': [],
+          'broad_demo': [],
+          'promo': [],
+          'daily_active': [],
+          'high_cpi': [],
+        };
+        var kws = kwMap[t] || [];
+        return kws.some(function(kw) { return bio.indexOf(kw) > -1; });
+      });
+      return cr.cpi >= 65 && (traitMatch || genreCreators.indexOf(cr) < 10);
+    }).sort(function(a, b) { return (b.cpi + computeGFI(b)) - (a.cpi + computeGFI(a)); }).slice(0, 3);
+  }
+
+  // Update persona banner with context
+  var bannerEl = document.getElementById('personaBanner');
+  if (bannerEl) {
+    var selCount = typeof selectedCreators !== 'undefined' ? selectedCreators.size : 0;
+    if (selCount > 0) {
+      bannerEl.style.display = 'block';
+      bannerEl.innerHTML = '<span style="font-family:\'DM Mono\',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#6B9FFF">'
+        + selCount + ' CREATOR' + (selCount !== 1 ? 'S' : '') + ' IN BRIEF &nbsp;·&nbsp; '
+        + genre.toUpperCase() + (subMode && subMode !== 'default' ? ' &nbsp;·&nbsp; ' + subMode.toUpperCase() : '')
+        + ' &nbsp;·&nbsp; ' + fmtBudget + ' BUDGET'
+        + (objectives.length ? ' &nbsp;·&nbsp; ' + objectives.slice(0,2).join(' + ').toUpperCase() : '')
+        + '</span>';
+    } else {
+      bannerEl.style.display = 'none';
+    }
+  }
+
+  // Build persona grid
+  var gridEl = document.getElementById('personaGrid');
+  if (!gridEl) return;
+
+  if (!scored.length) {
+    gridEl.innerHTML = '<div style="padding:60px;text-align:center;color:var(--text-muted);font-family:\'DM Mono\',monospace;font-size:11px">NO PERSONAS FOUND FOR THIS GENRE &amp; SUB-MODE</div>';
+    return;
+  }
+
+  gridEl.innerHTML = scored.map(function(item, idx) {
+    var p      = item.p;
+    var score  = item.score;
+    var isPrimary = idx === 0;
+    var scoreCol = score >= 80 ? '#00C46A' : score >= 60 ? '#FF7A00' : '#FF3355';
+    var matchLabel = score >= 85 ? 'PRIMARY MATCH' : score >= 70 ? 'STRONG FIT' : score >= 55 ? 'MODERATE FIT' : 'PARTIAL FIT';
+    var crs    = creatorsForPersona(p);
+
+    return '<div style="background:var(--bg2);border:' + (isPrimary ? '2px solid ' + p.color : '1px solid var(--border)') + ';border-radius:12px;padding:24px;position:relative;overflow:hidden">'
+      // Match badge
+      + '<div style="position:absolute;top:16px;right:16px;font-family:\'DM Mono\',monospace;font-size:8px;letter-spacing:.08em;padding:3px 8px;border-radius:3px;background:' + scoreCol + '22;color:' + scoreCol + ';border:1px solid ' + scoreCol + '44">' + matchLabel + '</div>'
+      // Icon + Name
+      + '<div style="font-size:32px;margin-bottom:12px">' + p.icon + '</div>'
+      + '<div style="font-family:\'Space Grotesk\',sans-serif;font-size:18px;font-weight:700;color:' + p.color + ';margin-bottom:4px">' + p.name + '</div>'
+      + '<div style="font-family:\'DM Mono\',monospace;font-size:9px;color:var(--text-muted);letter-spacing:.06em;margin-bottom:12px">' + p.demo + '</div>'
+      + '<div style="font-size:12px;color:var(--text-dim);line-height:1.6;margin-bottom:16px">' + p.desc + '</div>'
+      // Match score bar
+      + '<div style="margin-bottom:16px">'
+        + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'
+          + '<span style="font-family:\'DM Mono\',monospace;font-size:9px;color:var(--text-muted);letter-spacing:.06em">CAMPAIGN MATCH</span>'
+          + '<span style="font-family:\'DM Mono\',monospace;font-size:11px;font-weight:700;color:' + scoreCol + '">' + score + '%</span>'
+        + '</div>'
+        + '<div style="height:4px;background:var(--bg3);border-radius:2px;overflow:hidden">'
+          + '<div style="height:100%;width:' + score + '%;background:' + scoreCol + ';border-radius:2px;transition:width 1s ease"></div>'
+        + '</div>'
+      + '</div>'
+      // Budget & format fit
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">'
+        + '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:10px">'
+          + '<div style="font-family:\'DM Mono\',monospace;font-size:8px;color:var(--text-muted);letter-spacing:.06em;margin-bottom:4px">PURCHASE BEHAVIOUR</div>'
+          + '<div style="font-size:11px;color:var(--text-dim);line-height:1.5">' + p.purchase + '</div>'
+        + '</div>'
+        + '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:10px">'
+          + '<div style="font-family:\'DM Mono\',monospace;font-size:8px;color:var(--text-muted);letter-spacing:.06em;margin-bottom:4px">BRAND FIT</div>'
+          + '<div style="font-size:11px;color:var(--text-dim);line-height:1.5">' + p.brands + '</div>'
+        + '</div>'
+      + '</div>'
+      // CTA
+      + '<div style="background:' + p.color + '15;border:1px solid ' + p.color + '33;border-radius:6px;padding:10px 14px;margin-bottom:16px">'
+        + '<div style="font-family:\'DM Mono\',monospace;font-size:8px;color:' + p.color + ';letter-spacing:.08em;margin-bottom:2px">SUGGESTED CTA</div>'
+        + '<div style="font-size:13px;font-weight:600;color:' + p.color + '">' + p.cta + '</div>'
+      + '</div>'
+      // Budget context
+      + '<div style="font-family:\'DM Mono\',monospace;font-size:8px;color:var(--text-muted);letter-spacing:.06em;margin-bottom:8px">CREATOR FIT FOR ' + fmtBudget + ' BUDGET &nbsp;·&nbsp; ' + format.toUpperCase() + '</div>'
+      // Matched creators
+      + (crs.length > 0 ? '<div style="display:flex;flex-direction:column;gap:6px">'
+        + crs.map(function(cr) {
+            var gfi = computeGFI(cr);
+            var gfiCol = gfi >= 80 ? '#00C46A' : gfi >= 60 ? '#FF7A00' : '#FF3355';
+            return '<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--bg3);border-radius:6px;cursor:pointer" data-oc="openProfileOverlay(' + cr.id + ')">'
+              + '<div style="width:32px;height:32px;border-radius:50%;background:' + cr.color + '22;color:' + cr.color + ';display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0">' + cr.name.charAt(0) + '</div>'
+              + '<div style="flex:1;min-width:0">'
+                + '<div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + cr.name + '</div>'
+                + '<div style="font-size:9px;color:var(--text-muted)">' + cr.handle + ' &nbsp;·&nbsp; ' + cr.platform + ' &nbsp;·&nbsp; ' + cr.subs + ' subs</div>'
+              + '</div>'
+              + '<div style="display:flex;gap:8px;flex-shrink:0">'
+                + '<div style="text-align:center"><div style="font-size:8px;color:var(--text-muted)">CPI</div><div style="font-size:16px;font-weight:700;color:' + cpiScoreColor(cr.cpi) + '">' + cr.cpi + '</div></div>'
+                + '<div style="text-align:center"><div style="font-size:8px;color:var(--text-muted)">GFI</div><div style="font-size:14px;font-weight:700;color:#fff;background:' + gfiCol + ';border-radius:3px;padding:1px 5px">' + gfi + '%</div></div>'
+              + '</div>'
+              + '<button data-oc="event.stopPropagation();toggleCreator(' + cr.id + ')" style="font-family:\'DM Mono\',monospace;font-size:8px;padding:4px 8px;background:rgba(0,80,255,0.12);border:1px solid rgba(0,80,255,0.3);color:#6B9FFF;border-radius:3px;cursor:pointer;white-space:nowrap;flex-shrink:0">+ ADD</button>'
+            + '</div>';
+          }).join('')
+        + '</div>' : '<div style="font-size:11px;color:var(--text-muted);text-align:center;padding:12px">No matched creators for this sub-mode</div>')
+    + '</div>';
+  }).join('');
+}
+
 function personaAutoSelect() {
   const genre = getSelectedGenre() || 'Gaming & Esports';
 
