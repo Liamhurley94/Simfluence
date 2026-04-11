@@ -8177,6 +8177,16 @@ window.__liveCheckTimer = null;
 window.__livePanelOpen  = false;
 
 // Get all Twitch creator handles from the database
+
+function sfExpandLive() {
+  var content = document.getElementById('liveMoreContent');
+  var toggle = document.getElementById('liveMoreToggle');
+  if (!content || !toggle) return;
+  if (content.style.display === 'none') {
+    content.style.display = 'block';
+    toggle.style.display = 'none';
+  }
+}
 function getTwitchHandles() {
   return CREATORS
     .filter(function(cr) { return cr.platform === 'Twitch' || (cr.allPlatforms && cr.allPlatforms.includes('Twitch')); })
@@ -8235,10 +8245,15 @@ function renderLivePanel() {
   var campaignGenre = getSelectedGenre() || '';
   var subMode       = activeSubMode || '';
 
-  // All live creators
+  // All live creators — deduplicated by handle
+  var _seenHandles = {};
   var allLive = CREATORS.filter(function(cr) {
-    var data = window.__twitchLive[cr.handle.replace('@','').toLowerCase()];
-    return data && data.live;
+    var handle = cr.handle.replace('@','').toLowerCase();
+    var data = window.__twitchLive[handle];
+    if (!data || !data.live) return false;
+    if (_seenHandles[handle]) return false;
+    _seenHandles[handle] = true;
+    return true;
   });
 
   if (!allLive.length) {
@@ -8289,9 +8304,10 @@ function renderLivePanel() {
     var viewers     = liveData.viewerCount ? liveData.viewerCount.toLocaleString() : '0';
     var game        = liveData.gameName || cr.genre;
     var liveCPI     = computeLiveCPI(cr, liveData.viewerCount || 0);
-    var liveGFI     = showGFI ? computeGFI(cr) : null;
+    var _selGenre   = getSelectedGenre();
+    var liveGFI     = (showGFI && _selGenre) ? computeGFI(cr) : null;
     var cpiCol      = liveCPI >= 70 ? '#00C46A' : liveCPI >= 55 ? '#FF7A00' : '#E60023';
-    var gfiCol      = liveGFI >= 80 ? '#00C46A' : liveGFI >= 60 ? '#FFD400' : '#FF7A00';
+    var gfiCol      = liveGFI >= 80 ? '#00C46A' : liveGFI >= 60 ? '#FFD400' : '#E60023';
     var twitchLogin = cr.handle.replace('@','').toLowerCase();
 
     return '<div style="display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:5px;cursor:pointer;margin-bottom:3px;border:1px solid var(--border);background:var(--bg2)" onclick="openProfileOverlay(' + cr.id + ')">'
@@ -8341,7 +8357,11 @@ function renderLivePanel() {
       html += renderCreatorRow(cr, false);
     });
     if (otherLive.length > 5) {
-      html += '<div style="font-size:9px;color:var(--text-muted);padding:4px 8px">+ ' + (otherLive.length - 5) + ' more...</div>';
+      var _remaining = otherLive.slice(5);
+      html += '<div id="liveMoreToggle" onmousedown="sfExpandLive()" style="font-size:9px;color:#6B9FFF;padding:4px 8px;cursor:pointer;letter-spacing:.04em">+ ' + _remaining.length + ' more — tap to show</div>';
+      html += '<div id="liveMoreContent" style="display:none">';
+      _remaining.forEach(function(cr) { html += renderCreatorRow(cr, false); });
+      html += '</div>';
     }
     html += '</div>';
   }
