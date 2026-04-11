@@ -303,7 +303,7 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
       <h2 class="section-h2" style="margin-top:16px;">The platform,<br><em>animated.</em></h2>
       <p style="font-size:18px;color:var(--muted);font-weight:300;max-width:520px;margin-top:16px;">Watch the platform discover a creator and open their full profile — CPI breakdown, engagement quality, genre fit and campaign simulation.</p>
     </div>
-    <div style="background:#050508;border-radius:16px;padding:24px;font-family:DM Mono,monospace;border:1px solid rgba(255,255,255,0.06);">
+    <div style="background:#050508;border-radius:16px;padding:24px;font-family:DM Mono,monospace;border:1px solid rgba(255,255,255,0.06);position:relative;overflow:hidden;">
       <div style="font-size:9px;letter-spacing:.1em;color:rgba(255,255,255,0.3);margin-bottom:14px;">CREATOR DISCOVERY · GAMING & ESPORTS · MID-TIER</div>
 
       <!-- Creator cards grid -->
@@ -365,7 +365,7 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
       </div>
 
       <!-- Animated cursor -->
-      <div id="sf-cursor" style="position:absolute;width:18px;height:18px;border-radius:50%;background:rgba(255,212,0,0.5);pointer-events:none;transition:left 0.7s cubic-bezier(.23,1,.32,1),top 0.7s cubic-bezier(.23,1,.32,1);z-index:10;display:flex;align-items:center;justify-content:center;left:50px;top:50px;">
+      <div id="sf-cursor" style="position:absolute;width:18px;height:18px;border-radius:50%;background:rgba(255,212,0,0.5);pointer-events:none;transition:left 0.7s cubic-bezier(.23,1,.32,1),top 0.7s cubic-bezier(.23,1,.32,1),opacity 0.3s ease;z-index:10;display:flex;align-items:center;justify-content:center;left:50px;top:50px;opacity:0;">
         <div style="width:6px;height:6px;border-radius:50%;background:#FFD400;"></div>
       </div>
       <div id="sf-ring" style="position:absolute;width:18px;height:18px;border-radius:50%;border:2px solid #FFD400;pointer-events:none;opacity:0;z-index:10;left:50px;top:50px;"></div>
@@ -430,6 +430,7 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
   var currentIdx=0;
 
   function moveCursor(x,y,delay,cb){
+    cur.style.opacity='1';
     setTimeout(function(){
       cur.style.left=x+'px'; cur.style.top=y+'px';
       if(cb) setTimeout(cb,700);
@@ -1015,12 +1016,11 @@ setTimeout(simRun,1600);
         <div class="p-saving-line" id="bronzeSaving">&nbsp;</div>
         <div class="p-divider"></div>
         <div class="p-features">
-          <div class="p-feat"><span class="p-feat-dash">—</span>25 creator results per search</div>
-          <div class="p-feat"><span class="p-feat-dash">—</span>CPI &amp; GFI scores (blurred on profiles)</div>
-          <div class="p-feat"><span class="p-feat-dash">—</span>Genre, platform &amp; tier filters</div>
-          <div class="p-feat"><span class="p-feat-dash">—</span>Campaign brief builder</div>
-          <div class="p-feat"><span class="p-feat-dash">—</span>3 simulations per month</div>
-          <div class="p-feat"><span class="p-feat-dash">—</span>P10/P50/P90 blurred</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>25 creator results per search · genre, platform &amp; tier filters</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>CPI &amp; GFI scores on every creator card</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>3 campaign simulations per month · confidence bands available at Silver</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Live Twitch panel — see who is streaming right now (10 channels)</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Creator outreach tracker — log up to 3 creators with status &amp; notes</div>
           <div class="p-feat"><span class="p-feat-dash">—</span>Email support</div>
         </div>
         <a href="preview.html?plan=bronze#request-access" class="p-btn p-btn-bronze">Get started</a>
@@ -1038,13 +1038,12 @@ setTimeout(simRun,1600);
         <div class="p-saving-line" id="silverSaving" style="color:#00C46A">&nbsp;</div>
         <div class="p-divider"></div>
         <div class="p-features">
-          <div class="p-feat"><span class="p-feat-dash">—</span>100 creator results per search</div>
-          <div class="p-feat"><span class="p-feat-dash">—</span>CPI &amp; GFI scores visible + live Twitch CPI</div>
-          <div class="p-feat"><span class="p-feat-dash">—</span>Language, budget &amp; sub-genre filters</div>
-          <div class="p-feat"><span class="p-feat-dash">—</span>1 AI audience persona per campaign</div>
-          <div class="p-feat"><span class="p-feat-dash">—</span>10 simulations per month · P50 base case</div>
-          <div class="p-feat"><span class="p-feat-dash">—</span>3 saved campaigns</div>
-          <div class="p-feat"><span class="p-feat-dash">—</span>Priority support</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>100 creator results · language &amp; sub-genre filters · live Twitch CPI scoring</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Full CPI &amp; GFI scores · 1 AI audience persona per campaign</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>10 simulations per month · base case forecast · P10/P90 range at Gold</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Live Twitch panel — 20 channels · real-time viewer data &amp; genre fit</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Outreach tracker — 5 creators · subscriber count &amp; contact email included</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>3 saved campaign briefs · priority support</div>
         </div>
         <a href="preview.html?plan=silver#request-access" class="p-btn p-btn-silver">Get started</a>
       </div>
@@ -1061,14 +1060,13 @@ setTimeout(simRun,1600);
         <div class="p-saving-line" id="goldSaving" style="color:#00C46A">&nbsp;</div>
         <div class="p-divider"></div>
         <div class="p-features">
-          <div class="p-feat"><span class="p-feat-dash">—</span>Unlimited creator database access</div>
-          <div class="p-feat"><span class="p-feat-dash">—</span>Full creator profiles · CPI breakdown · audience intelligence</div>
-          <div class="p-feat"><span class="p-feat-dash">—</span>GFI methodology · all objectives &amp; region targeting</div>
-          <div class="p-feat"><span class="p-feat-dash">—</span>3 AI personas · top creator match per persona</div>
-          <div class="p-feat"><span class="p-feat-dash">—</span>Unlimited simulations · P10/P50/P90 · 1–12 week duration</div>
-          <div class="p-feat"><span class="p-feat-dash">—</span>Budget allocation view · PDF summary export · 10 saved campaigns</div>
-          <div class="p-feat"><span class="p-feat-dash">—</span>Shortlist CSV export (10 creators) · side-by-side compare 2</div>
-          <div class="p-feat"><span class="p-feat-dash">—</span>Dedicated account manager</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Unlimited creator database · full profiles · CPI breakdown · audience intelligence</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>GFI methodology · all region &amp; sub-genre targeting · unlimited simulations · P10/P50/P90</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>3 AI audience personas · top creator match per persona · 1–12 week campaign duration</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Campaigns workspace — manage 1 active brief · live Twitch panel (50 channels)</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Outreach tracker — 15 creators · CPI score included · estimated rates at Platinum</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Budget split view · PDF summary · 10 saved briefs · CSV shortlist · compare 2 creators</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Direct line to Simfluence founder</div>
         </div>
         <a href="preview.html?plan=gold#request-access" class="p-btn p-btn-gold">Get started</a>
       </div>
@@ -1085,13 +1083,13 @@ setTimeout(simRun,1600);
         <div class="p-saving-line" id="platinumSaving" style="color:#00C46A">&nbsp;</div>
         <div class="p-divider"></div>
         <div class="p-features">
-          <div class="p-feat"><span class="p-feat-dash">—</span>Unlimited creator database · full profiles · CPI breakdown · audience intelligence</div>
-          <div class="p-feat"><span class="p-feat-dash">—</span>All persona archetypes · top 3 creator matches per persona</div>
-          <div class="p-feat"><span class="p-feat-dash">—</span>Editable budget allocation — drag to adjust per-creator split in real time</div>
-          <div class="p-feat"><span class="p-feat-dash">—</span>Compare up to 4 creators side-by-side with full CPI, GFI &amp; rate data</div>
-          <div class="p-feat"><span class="p-feat-dash">—</span>Full PDF report with per-creator P10 / P50 / P90 confidence breakdown</div>
-          <div class="p-feat"><span class="p-feat-dash">—</span>Unlimited simulations · 1–12 week duration modelling · unlimited saved campaigns</div>
-          <div class="p-feat"><span class="p-feat-dash">—</span>Full live Twitch panel · unlimited CSV export · API access</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Unlimited creator database · full profiles · CPI &amp; GFI breakdown · audience intelligence</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>All AI persona archetypes · top 3 creator matches · sub-genre targeting</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Unlimited campaign briefs · outreach CRM for your full roster · estimated rates included</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Audience overlap engine — know exactly how much of your budget reaches new eyes</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Live Twitch panel — unlimited channels · editable budget split · compare 4 creators</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Full P10/P50/P90 PDF report · unlimited CSV export · unlimited saved briefs · API access</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Direct line to Simfluence founder</div>
         </div>
         <a href="preview.html?plan=platinum#request-access" class="p-btn p-btn-platinum">Get started</a>
       </div>
@@ -1108,13 +1106,13 @@ setTimeout(simRun,1600);
         <div class="p-saving-line">&nbsp;</div>
         <div class="p-divider"></div>
         <div class="p-features">
-          <div class="p-feat"><span class="p-feat-dash">—</span>Weekly 1-to-1 &amp; daily WhatsApp contact with Simfluence founder</div>
-          <div class="p-feat"><span class="p-feat-dash">—</span>Custom persona builds mapped to your brand, audience &amp; category</div>
-          <div class="p-feat"><span class="p-feat-dash">—</span>White-label PDF reports — export with your own branding for clients</div>
-          <div class="p-feat"><span class="p-feat-dash">—</span>Top 3 creator recommendations per persona, exportable to brief</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Weekly 1-to-1 &amp; daily WhatsApp with Simfluence founder — your campaign, your call</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Custom audience personas built around your specific brand, category &amp; objectives</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>White-label PDF reports — your branding, ready to send straight to clients</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Top 3 creator picks per persona, packaged as a ready-to-brief shortlist</div>
           <div class="p-feat"><span class="p-feat-dash">—</span>SSO, role-based access &amp; enterprise-grade security</div>
-          <div class="p-feat"><span class="p-feat-dash">—</span>Direct product roadmap input &amp; co-development partnership</div>
-          <div class="p-feat"><span class="p-feat-dash">—</span>Dedicated implementation · bespoke contract &amp; SLA</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Input on the product roadmap — help shape what gets built next</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Bespoke contract, dedicated onboarding &amp; a named SLA</div>
         </div>
         <a href="/cdn-cgi/l/email-protection#afe3c6cec2effcc6c2c9c3dacac1ccca81eee690dcdacdc5caccdb92ebc6cec2c0c1cb8a9d9fffc3cec18a9d9feac1dedac6ddd6" class="p-btn p-btn-diamond">Contact us</a>
       </div>
