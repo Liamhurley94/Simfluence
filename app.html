@@ -1791,6 +1791,53 @@ function GC(){
   }
 }
 document.getElementById('GP').focus();
+
+// ── ONBOARDING FUNCTIONS (defined early so available before page parses) ──
+var obSelectedGenre = '';
+
+function obPick(btn, genre) {
+  document.querySelectorAll('.ob-genre').forEach(function(b) { b.classList.remove('selected'); });
+  btn.classList.add('selected');
+  obSelectedGenre = genre.replace(/&amp;/g, '&');
+  var lb = document.getElementById('obLaunchBtn');
+  if (lb) lb.classList.add('ready');
+}
+
+function obLaunch() {
+  if (!obSelectedGenre) return;
+  var sel = document.getElementById('genre');
+  if (sel) {
+    for (var i = 0; i < sel.options.length; i++) {
+      if (sel.options[i].text.replace(/&amp;/g,'&') === obSelectedGenre || sel.options[i].text === obSelectedGenre) {
+        sel.selectedIndex = i; break;
+      }
+    }
+    if (typeof onGenreChange === 'function') onGenreChange();
+    if (typeof renderCreatorGrid === 'function') renderCreatorGrid();
+  }
+  obDismiss();
+}
+
+function obSkip() { obDismiss(); }
+
+function obDismiss() {
+  var overlay = document.getElementById('sfOnboard');
+  if (!overlay) return;
+  overlay.classList.add('hiding');
+  setTimeout(function() { overlay.style.display = 'none'; }, 600);
+}
+
+// Wire ob buttons after DOM ready
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.ob-genre[data-genre]').forEach(function(btn) {
+    btn.addEventListener('click', function() { obPick(btn, btn.getAttribute('data-genre')); });
+    btn.addEventListener('mousedown', function() { obPick(btn, btn.getAttribute('data-genre')); });
+  });
+  var lb = document.getElementById('obLaunchBtn');
+  if (lb) { lb.addEventListener('click', obLaunch); lb.addEventListener('mousedown', obLaunch); }
+  var sk = document.querySelector('.ob-skip');
+  if (sk) { sk.addEventListener('click', obSkip); sk.addEventListener('mousedown', obSkip); }
+});
 </script>
 
 
@@ -1807,24 +1854,24 @@ document.getElementById('GP').focus();
 
     <div class="ob-genre-label">Choose your campaign genre</div>
     <div class="ob-genres" id="obGenres">
-      <button class="ob-genre" data-genre="Gaming &amp; Esports" onmousedown="obPick(this,'Gaming &amp; Esports')">Gaming<br>&amp; Esports</button>
-      <button class="ob-genre" data-genre="Tech &amp; Gadgets" onmousedown="obPick(this,'Tech &amp; Gadgets')">Tech<br>&amp; Gadgets</button>
-      <button class="ob-genre" data-genre="Health &amp; Fitness" onmousedown="obPick(this,'Health &amp; Fitness')">Health<br>&amp; Fitness</button>
-      <button class="ob-genre" data-genre="Beauty &amp; Skincare" onmousedown="obPick(this,'Beauty &amp; Skincare')">Beauty<br>&amp; Skincare</button>
-      <button class="ob-genre" data-genre="Automotive" onmousedown="obPick(this,'Automotive')">Automotive</button>
-      <button class="ob-genre" data-genre="Finance &amp; Investing" onmousedown="obPick(this,'Finance &amp; Investing')">Finance<br>&amp; Investing</button>
-      <button class="ob-genre" data-genre="Travel &amp; Adventure" onmousedown="obPick(this,'Travel &amp; Adventure')">Travel<br>&amp; Adventure</button>
-      <button class="ob-genre" data-genre="Food &amp; Cooking" onmousedown="obPick(this,'Food &amp; Cooking')">Food<br>&amp; Cooking</button>
-      <button class="ob-genre"data-genre="Entertainment &amp; Comedy" onmousedown="obPick(this,'Entertainment &amp; Comedy')">Entertainment<br>&amp; Comedy</button>
-      <button class="ob-genre" data-genre="Education &amp; Self-Development" onmousedown="obPick(this,'Education &amp; Self-Development')">Education<br>&amp; Dev</button>
-      <button class="ob-genre" data-genre="Lifestyle &amp; Vlogs" onmousedown="obPick(this,'Lifestyle &amp; Vlogs')">Lifestyle<br>&amp; Vlogs</button>
-      <button class="ob-genre" data-genre="Music" onmousedown="obPick(this,'Music')">Music</button>
+      <button class="ob-genre" data-genre="Gaming &amp; Esports">Gaming<br>&amp; Esports</button>
+      <button class="ob-genre" data-genre="Tech &amp; Gadgets">Tech<br>&amp; Gadgets</button>
+      <button class="ob-genre" data-genre="Health &amp; Fitness">Health<br>&amp; Fitness</button>
+      <button class="ob-genre" data-genre="Beauty &amp; Skincare">Beauty<br>&amp; Skincare</button>
+      <button class="ob-genre" data-genre="Automotive">Automotive</button>
+      <button class="ob-genre" data-genre="Finance &amp; Investing">Finance<br>&amp; Investing</button>
+      <button class="ob-genre" data-genre="Travel &amp; Adventure">Travel<br>&amp; Adventure</button>
+      <button class="ob-genre" data-genre="Food &amp; Cooking">Food<br>&amp; Cooking</button>
+      <button class="ob-genre"data-genre="Entertainment &amp; Comedy">Entertainment<br>&amp; Comedy</button>
+      <button class="ob-genre" data-genre="Education &amp; Self-Development">Education<br>&amp; Dev</button>
+      <button class="ob-genre" data-genre="Lifestyle &amp; Vlogs">Lifestyle<br>&amp; Vlogs</button>
+      <button class="ob-genre" data-genre="Music">Music</button>
     </div>
 
-    <button class="ob-btn" id="obLaunchBtn" onmousedown="obLaunch()">
+    <button class="ob-btn" id="obLaunchBtn">
       Launch my dashboard →
     </button>
-    <button class="ob-skip" onmousedown="obSkip()">Skip — explore everything</button>
+    <button class="ob-skip">Skip — explore everything</button>
 
   </div>
 </div>
@@ -9155,37 +9202,6 @@ function closePageModal(key) {
 });
 </script>
 
-<script>
-(function() {
-  function wireOnboarding() {
-    // Wire genre buttons
-    var genreBtns = document.querySelectorAll('.ob-genre[data-genre]');
-    genreBtns.forEach(function(btn) {
-      btn.addEventListener('click', function() {
-        obPick(btn, btn.getAttribute('data-genre'));
-      });
-    });
-
-    // Wire launch button
-    var launchBtn = document.getElementById('obLaunchBtn');
-    if (launchBtn) {
-      launchBtn.addEventListener('click', function() { obLaunch(); });
-    }
-
-    // Wire skip button
-    var skipBtn = document.querySelector('.ob-skip');
-    if (skipBtn) {
-      skipBtn.addEventListener('click', function() { obSkip(); });
-    }
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', wireOnboarding);
-  } else {
-    wireOnboarding();
-  }
-})();
-</script>
 </body>
 </html>
 
@@ -9211,37 +9227,6 @@ function closePageModal(key) {
 });
 </script>
 
-<script>
-(function() {
-  function wireOnboarding() {
-    // Wire genre buttons
-    var genreBtns = document.querySelectorAll('.ob-genre[data-genre]');
-    genreBtns.forEach(function(btn) {
-      btn.addEventListener('click', function() {
-        obPick(btn, btn.getAttribute('data-genre'));
-      });
-    });
-
-    // Wire launch button
-    var launchBtn = document.getElementById('obLaunchBtn');
-    if (launchBtn) {
-      launchBtn.addEventListener('click', function() { obLaunch(); });
-    }
-
-    // Wire skip button
-    var skipBtn = document.querySelector('.ob-skip');
-    if (skipBtn) {
-      skipBtn.addEventListener('click', function() { obSkip(); });
-    }
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', wireOnboarding);
-  } else {
-    wireOnboarding();
-  }
-})();
-</script>
 </body>
 </html// ── PERSONA SCREEN ────────────────────────────────────────────────────
 function renderPersonaScreen() {
