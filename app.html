@@ -8333,36 +8333,32 @@ function renderLivePanel() {
     isFiltered = true;
 
     matchingLive = allLive.filter(function(cr) {
-      // Must be exact genre match — no affinity crossover
-      if (cr.genre !== campaignGenre) return false;
-      // If sub-mode selected, creator bio must signal it
-      if (subMode) {
-        var keywords = SUBMODE_KEYWORDS[subMode] || [];
-        if (keywords.length) {
-          var hay = ((cr.bio||'') + ' ' + cr.name + ' ' + cr.handle).toLowerCase();
-          var bioMatch = keywords.some(function(kw) { return hay.indexOf(kw.toLowerCase()) !== -1; });
-          // Also check what they're currently streaming
-          var liveData = window.__twitchLive[cr.handle.replace('@','').toLowerCase()] || {};
-          var gameLower = (liveData.gameName || '').toLowerCase();
-          var liveMatch = keywords.some(function(kw) { return gameLower.indexOf(kw.toLowerCase()) !== -1; });
-          if (!bioMatch && !liveMatch) return false;
-        }
-      }
-      return true;
+      // Primary: exact genre match
+      if (cr.genre === campaignGenre) return true;
+      // Secondary: strong affinity crossover (>=0.7) — e.g. Gaming Setup <-> Gaming
+      var aff = (GENRE_AFFINITY[cr.genre] || {})[campaignGenre] || 0;
+      return aff >= 0.7;
     });
 
-    // Other live = wrong genre entirely — only show if no matching creators found
-    otherLive = matchingLive.length === 0 ? allLive.filter(function(cr) {
-      return cr.genre !== campaignGenre;
-    }) : [];
+    // Other live = everyone else, shown below as context
+    otherLive = allLive.filter(function(cr) {
+      var aff = cr.genre === campaignGenre ? 1.0 : ((GENRE_AFFINITY[cr.genre] || {})[campaignGenre] || 0);
+      return aff < 0.7;
+    });
   }
 
-  // Sort matching by GFI desc (pure genre fit, no CPI influence)
-  matchingLive.sort(function(a, b) { return computeGFI(b) - computeGFI(a); });
+  // Sort matching: GFI descending first, then CPI descending as tiebreaker
+  matchingLive.sort(function(a, b) {
+    var gfiDiff = computeGFI(b) - computeGFI(a);
+    if (Math.abs(gfiDiff) > 3) return gfiDiff;
+    return b.cpi - a.cpi;
+  });
+
+  // Sort others: GFI desc then CPI desc as well
   otherLive.sort(function(a, b) {
-    var va = (window.__twitchLive[a.handle.replace('@','').toLowerCase()] || {}).viewerCount || 0;
-    var vb = (window.__twitchLive[b.handle.replace('@','').toLowerCase()] || {}).viewerCount || 0;
-    return vb - va;
+    var gfiDiff = computeGFI(b) - computeGFI(a);
+    if (Math.abs(gfiDiff) > 3) return gfiDiff;
+    return b.cpi - a.cpi;
   });
 
   var html = '';
