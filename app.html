@@ -2686,12 +2686,11 @@ document.addEventListener('DOMContentLoaded', function() {
             <div id="or-campaign-hint" style="font-family:DM Mono,monospace;font-size:9px;color:var(--text-muted);margin-top:4px;display:none"></div>
           </div>
 
-          <!-- STEP 2: Genre targets -->
+          <!-- STEP 2: Genre + Sub-genre -->
           <div>
-            <label style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.06em;color:var(--text-muted);display:block;margin-bottom:5px">STEP 2 · BRAND CATEGORY <span style="color:var(--text-dim);font-size:8px">· auto-filled from campaign · add more to cross-target</span></label>
-            <div style="display:flex;gap:8px;align-items:center">
-              <select id="or-genre-primary" style="flex:1;font-family:DM Mono,monospace;font-size:12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:9px 12px;color:var(--text)">
-                <option value="">— Select primary genre —</option>
+            <label style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.06em;color:var(--text-muted);display:block;margin-bottom:5px">STEP 2 · BRAND CATEGORY <span style="color:var(--text-dim);font-size:8px">· auto-filled from campaign</span></label>
+            <select id="or-genre-primary" style="width:100%;font-family:DM Mono,monospace;font-size:12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:9px 12px;color:var(--text)">
+              <option value="">— Select genre —</option>
               <option value="ASMR & Relaxation">ASMR & Relaxation</option>
               <option value="Animals & Pets">Animals & Pets</option>
               <option value="Art & Creative">Art & Creative</option>
@@ -2711,40 +2710,19 @@ document.addEventListener('DOMContentLoaded', function() {
               <option value="Tech & Gadgets">Tech & Gadgets</option>
               <option value="Travel & Adventure">Travel & Adventure</option>
               <option value="Unboxing">Unboxing</option>
+            </select>
+            <!-- Sub-genre: appears once genre is selected -->
+            <div id="or-subgenre-wrap" style="display:none;margin-top:8px">
+              <label style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.06em;color:var(--text-muted);display:block;margin-bottom:5px">SUB-GENRE <span style="color:var(--text-dim);font-size:8px">· optional · narrows creator pool · select multiple</span></label>
+              <select id="or-subgenre" style="width:100%;font-family:DM Mono,monospace;font-size:12px;background:var(--bg3);border:1px solid rgba(109,40,217,0.3);border-radius:6px;padding:9px 12px;color:var(--text)">
+                <option value="">— All sub-genres —</option>
               </select>
-              <button id="or-genre-add-btn" style="padding:8px 12px;background:rgba(0,80,255,0.1);border:1px solid rgba(0,80,255,0.3);color:#6B9FFF;border-radius:6px;font-family:DM Mono,monospace;font-size:9px;cursor:pointer;white-space:nowrap;letter-spacing:.04em">+ ADD TARGET</button>
-            </div>
-            <!-- Additional genre targets -->
-            <div id="or-genre-extras" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px"></div>
-            <!-- Genre add row (hidden until + ADD TARGET clicked) -->
-            <div id="or-genre-extra-row" style="display:none;margin-top:8px">
-              <select id="or-genre-secondary" style="width:100%;font-family:DM Mono,monospace;font-size:12px;background:var(--bg3);border:1px solid rgba(0,80,255,0.3);border-radius:6px;padding:9px 12px;color:var(--text)">
-                <option value="">— Select additional genre —</option>
-              <option value="ASMR & Relaxation">ASMR & Relaxation</option>
-              <option value="Animals & Pets">Animals & Pets</option>
-              <option value="Art & Creative">Art & Creative</option>
-              <option value="Beauty & Skincare">Beauty & Skincare</option>
-              <option value="Education & Self-Development">Education & Self-Development</option>
-              <option value="Entertainment & Comedy">Entertainment & Comedy</option>
-              <option value="Finance & Investing">Finance & Investing</option>
-              <option value="Food & Cooking">Food & Cooking</option>
-              <option value="Gaming & Esports">Gaming & Esports</option>
-              <option value="Health & Fitness">Health & Fitness</option>
-              <option value="Kids & Family / Toys">Kids & Family / Toys</option>
-              <option value="Lifestyle & Vlogs">Lifestyle & Vlogs</option>
-              <option value="Music">Music</option>
-              <option value="News & Commentary">News & Commentary</option>
-              <option value="Sports & Athletics">Sports & Athletics</option>
-              <option value="Talk & Entertainment">Talk & Entertainment</option>
-              <option value="Tech & Gadgets">Tech & Gadgets</option>
-              <option value="Travel & Adventure">Travel & Adventure</option>
-              <option value="Unboxing">Unboxing</option>
-              </select>
+              <div id="or-subgenre-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px"></div>
             </div>
             <div id="or-genre-hint" style="font-family:DM Mono,monospace;font-size:9px;color:var(--text-muted);margin-top:6px"></div>
           </div>
 
-          <!-- STEP 3: Creator dropdown (filtered) -->
+                    <!-- STEP 3: Creator dropdown (filtered) -->
           <div>
             <label style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.06em;color:var(--text-muted);display:block;margin-bottom:5px">STEP 3 · SELECT CREATOR <span id="or-creator-count" style="color:var(--text-dim);font-size:8px"></span></label>
             <div style="position:relative">
