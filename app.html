@@ -2197,6 +2197,7 @@ document.addEventListener('DOMContentLoaded', function() {
           <div class="page-meta">PROBABILISTIC OUTCOME FORECAST</div>
         </div>
         <button id="reRunSimBtn" style="padding:10px 20px;background:#FF7A00;color:#fff;border:none;border-radius:var(--radius);font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;letter-spacing:.05em;font-weight:700">▶ RE-RUN</button>
+        <button id="saveCampaignBtn" style="padding:10px 20px;background:#0050FF;color:#fff;border:none;border-radius:var(--radius);font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;letter-spacing:.05em;font-weight:700">⬇ SAVE AS PDF</button>
       </div>
 
       <!-- P10 / P50 / P90 — BOLD, VISIBLE, CLICKABLE -->
@@ -9207,309 +9208,139 @@ function closePageModal(key) {
 </script>
 
 
-<script>
-// ── MASTER EVENT WIRING (Cloudflare-safe — no inline handlers) ──────
-(function() {
-  function wire() {
-    // Nav tabs
-    document.querySelectorAll('.nav-tab[data-screen]').forEach(function(btn) {
-      btn.addEventListener('click', function() {
-        if (typeof showScreen === 'function') showScreen(btn.getAttribute('data-screen'), btn);
-      });
-    });
-
-    // Live panel toggle
-    var lpt = document.getElementById('livePanelToggle');
-    if (lpt) lpt.addEventListener('click', function() {
-      if (typeof toggleLivePanel === 'function') toggleLivePanel();
-    });
-
-    // Run simulation
-    var rsb = document.getElementById('runSimBtn');
-    if (rsb) rsb.addEventListener('click', function() {
-      if (typeof runSimulation === 'function') runSimulation();
-    });
-
-    var rrb = document.getElementById('reRunSimBtn');
-    if (rrb) rrb.addEventListener('click', function() {
-      if (typeof runSimulation === 'function') runSimulation();
-    });
-
-    // Score selected
-    var ssb = document.getElementById('scoreSelectedBtn');
-    if (ssb) ssb.addEventListener('click', function() {
-      if (typeof showScreen === 'function') showScreen('scoring', document.querySelector('.nav-tab:nth-child(2)'));
-    });
-
-    // View personas
-    var vpb = document.getElementById('viewPersonasBtn');
-    if (vpb) vpb.addEventListener('click', function() {
-      if (typeof personaAutoSelect === 'function' && typeof selectedCreators !== 'undefined' && selectedCreators.size === 0) personaAutoSelect();
-      if (typeof showScreen === 'function') showScreen('personas', document.querySelector('.nav-tab:nth-child(3)'));
-    });
-
-    // Run sim from personas
-    var rsfp = document.getElementById('runSimFromPersonasBtn');
-    if (rsfp) rsfp.addEventListener('click', function() {
-      if (typeof showScreen === 'function') showScreen('simulator', document.querySelector('.nav-tab:nth-child(4)'));
-    });
-
-    var stc = document.getElementById('simThisCampaignBtn');
-    if (stc) stc.addEventListener('click', function() {
-      if (typeof showScreen === 'function') showScreen('simulator', document.querySelector('.nav-tab:nth-child(4)'));
-      if (typeof runSimulation === 'function') runSimulation();
-    });
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', wire);
-  } else {
-    wire();
-  }
-})();
-</script>
 
 <script>
 // ── GLOBAL EVENT DELEGATION (Cloudflare-safe) ────────────────────────
-// All onclick= replaced with data-oc= to survive Cloudflare stripping
-// This script executes them via event delegation
+// Handles all data-oc= attributes (replaces onclick= stripped by Cloudflare)
 document.addEventListener('click', function(e) {
   var el = e.target;
-  // Walk up the DOM to find an element with data-oc
   while (el && el !== document) {
+    // Handle data-oc (replaces onclick)
     var oc = el.getAttribute('data-oc');
     if (oc) {
       e.stopPropagation();
       try {
-        // Expose 'currentTarget' so data-oc="fn(currentTarget)" works
-        // Also bind 'this' to the element
         var fn = new Function('event', 'currentTarget', 'with(window){' + oc + '}');
         fn.call(el, e, el);
       } catch(err) {
-        console.error('data-oc error:', oc, err);
+        console.warn('data-oc error:', oc, err);
       }
+      return;
+    }
+    // Handle nav tabs with data-screen
+    var screen = el.getAttribute('data-screen');
+    if (screen && el.classList.contains('nav-tab')) {
+      if (typeof showScreen === 'function') showScreen(screen, el);
+      return;
+    }
+    // Handle live panel toggle
+    if (el.id === 'livePanelToggle' || el.closest && el.closest('#livePanelToggle')) {
+      if (typeof toggleLivePanel === 'function') toggleLivePanel();
       return;
     }
     el = el.parentElement;
   }
-}, true); // useCapture=true so it fires before anything else
-</script>
-</body>
-</html>
+}, true);
 
-<script>
-function openPageModal(key) {
-  var el = document.getElementById('modal-' + key);
-  if (!el) return;
-  el.style.display = 'flex';
-  document.body.style.overflow = 'hidden';
-}
-function closePageModal(key) {
-  var el = document.getElementById('modal-' + key);
-  if (!el) return;
-  el.style.display = 'none';
-  document.body.style.overflow = '';
-}
-// Close on overlay click
-['about','terms','legal'].forEach(function(key) {
-  var el = document.getElementById('modal-' + key);
-  if (el) el.addEventListener('mousedown', function(e) {
-    if (e.target === el) closePageModal(key);
-  });
+// Wire buttons that need IDs (run simulation, re-run, etc.)
+document.addEventListener('DOMContentLoaded', function() {
+  function wireId(id, fn) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('click', fn);
+  }
+  wireId('runSimBtn',          function() { if(typeof runSimulation==='function') runSimulation(); });
+  wireId('reRunSimBtn',        function() { if(typeof runSimulation==='function') runSimulation(); });
+  wireId('scoreSelectedBtn',   function() { if(typeof showScreen==='function') showScreen('scoring', document.querySelector('.nav-tab:nth-child(2)')); });
+  wireId('viewPersonasBtn',    function() { if(typeof selectedCreators!=='undefined'&&selectedCreators.size===0&&typeof personaAutoSelect==='function') personaAutoSelect(); if(typeof showScreen==='function') showScreen('personas', document.querySelector('.nav-tab:nth-child(3)')); });
+  wireId('runSimFromPersonasBtn', function() { if(typeof showScreen==='function') showScreen('simulator', document.querySelector('.nav-tab:nth-child(4)')); });
+  wireId('simThisCampaignBtn', function() { if(typeof showScreen==='function') showScreen('simulator', document.querySelector('.nav-tab:nth-child(4)')); if(typeof runSimulation==='function') runSimulation(); });
+  wireId('GBtn',               function() { if(typeof GC==='function') GC(); });
 });
 </script>
 
-
 <script>
-// ── MASTER EVENT WIRING (Cloudflare-safe — no inline handlers) ──────
+// PDF EXPORT
 (function() {
-  function wire() {
-    // Nav tabs
-    document.querySelectorAll('.nav-tab[data-screen]').forEach(function(btn) {
-      btn.addEventListener('click', function() {
-        if (typeof showScreen === 'function') showScreen(btn.getAttribute('data-screen'), btn);
+  function downloadCampaignPDF() {
+    var genre = (typeof getSelectedGenre === 'function') ? getSelectedGenre() : 'Campaign';
+    var budget = document.getElementById('budgetVal') ? document.getElementById('budgetVal').textContent : '';
+    var objectives = (typeof getSelectedObjectives === 'function') ? getSelectedObjectives().join(', ') : '';
+    var creators = [];
+    if (typeof selectedCreators !== 'undefined' && typeof CREATORS !== 'undefined') {
+      selectedCreators.forEach(function(id) {
+        var cr = CREATORS.find(function(c) { return c.id === id; });
+        if (cr) creators.push(cr);
       });
-    });
+    }
+    var bestText  = document.getElementById('bandBest')  ? document.getElementById('bandBest').innerText.replace(/\n/g,' ').substring(0,200)  : 'N/A';
+    var baseText  = document.getElementById('bandBase')  ? document.getElementById('bandBase').innerText.replace(/\n/g,' ').substring(0,200)  : 'N/A';
+    var worstText = document.getElementById('bandWorst') ? document.getElementById('bandWorst').innerText.replace(/\n/g,' ').substring(0,200) : 'N/A';
+    var now = new Date().toLocaleDateString('en-GB', {day:'numeric',month:'long',year:'numeric'});
 
-    // Live panel toggle
-    var lpt = document.getElementById('livePanelToggle');
-    if (lpt) lpt.addEventListener('click', function() {
-      if (typeof toggleLivePanel === 'function') toggleLivePanel();
-    });
+    var rows = creators.map(function(cr) {
+      return '<tr><td>' + cr.name + '</td><td>' + cr.handle + '</td><td>' + cr.platform + '</td><td>' + cr.genre + '</td><td style="color:#0050FF;font-weight:700">' + cr.cpi + '</td><td>' + (cr.subs||'') + '</td><td>' + (cr.avgViews||'') + '</td><td>' + (cr.eng||'') + '</td></tr>';
+    }).join('');
 
-    // Run simulation
-    var rsb = document.getElementById('runSimBtn');
-    if (rsb) rsb.addEventListener('click', function() {
-      if (typeof runSimulation === 'function') runSimulation();
-    });
+    var css = [
+      'body{font-family:Arial,sans-serif;margin:0;padding:40px;color:#0A0A14}',
+      'h1{font-size:26px;font-weight:700;margin:0 0 4px}',
+      '.sub{font-size:11px;color:#666;letter-spacing:.1em;text-transform:uppercase;margin-bottom:28px}',
+      '.logo{font-size:18px;font-weight:700;color:#0050FF;margin-bottom:6px}',
+      'h2{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#0050FF;margin:24px 0 8px;padding-bottom:4px;border-bottom:2px solid #0050FF}',
+      '.grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:8px}',
+      '.box{background:#F4F6FF;border-radius:6px;padding:12px}',
+      '.lbl{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#666;margin-bottom:3px}',
+      '.val{font-size:16px;font-weight:700}',
+      '.bands{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:10px 0}',
+      '.band{border-radius:6px;padding:14px;text-align:center}',
+      '.best{background:#E6FAF0;border:2px solid #00C46A}',
+      '.base{background:#FFFBEA;border:2px solid #FFD400}',
+      '.wrst{background:#FFEEF0;border:2px solid #E60023}',
+      '.blbl{font-size:9px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;margin-bottom:4px}',
+      '.bval{font-size:13px;font-weight:700}',
+      'table{width:100%;border-collapse:collapse;font-size:11px}',
+      'th{background:#0050FF;color:#fff;padding:7px 9px;text-align:left;font-size:9px;letter-spacing:.06em;text-transform:uppercase}',
+      'td{padding:7px 9px;border-bottom:1px solid #eee}',
+      'tr:nth-child(even) td{background:#F8FAFF}',
+      '.footer{margin-top:36px;font-size:9px;color:#aaa;text-align:center;border-top:1px solid #eee;padding-top:12px}',
+      '@media print{body{padding:20px}}'
+    ].join('');
 
-    var rrb = document.getElementById('reRunSimBtn');
-    if (rrb) rrb.addEventListener('click', function() {
-      if (typeof runSimulation === 'function') runSimulation();
-    });
+    var html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Simfluence — ' + genre + '</title><style>' + css + '</style></head><body>' +
+      '<div class="logo">Simfluence</div>' +
+      '<h1>' + genre + ' Campaign</h1>' +
+      '<div class="sub">Generated ' + now + ' &nbsp;·&nbsp; Confidential</div>' +
+      '<h2>Campaign Overview</h2>' +
+      '<div class="grid">' +
+        '<div class="box"><div class="lbl">Genre</div><div class="val">' + genre + '</div></div>' +
+        '<div class="box"><div class="lbl">Budget</div><div class="val">' + budget + '</div></div>' +
+        '<div class="box"><div class="lbl">Creators</div><div class="val">' + creators.length + '</div></div>' +
+      '</div>' +
+      (objectives ? '<div style="margin:10px 0;font-size:12px"><strong>Objectives:</strong> ' + objectives + '</div>' : '') +
+      '<h2>Simulation Results</h2>' +
+      '<div class="bands">' +
+        '<div class="band best"><div class="blbl" style="color:#00A855">Best Case</div><div class="bval">' + bestText + '</div></div>' +
+        '<div class="band base"><div class="blbl" style="color:#B38A00">Base Case</div><div class="bval">' + baseText + '</div></div>' +
+        '<div class="band wrst"><div class="blbl" style="color:#E60023">Worst Case</div><div class="bval">' + worstText + '</div></div>' +
+      '</div>' +
+      '<h2>Selected Creators (' + creators.length + ')</h2>' +
+      (rows ? '<table><thead><tr><th>Name</th><th>Handle</th><th>Platform</th><th>Genre</th><th>CPI</th><th>Subscribers</th><th>Avg Views</th><th>Eng Rate</th></tr></thead><tbody>' + rows + '</tbody></table>' : '<p style="color:#999;font-size:12px">No creators selected.</p>') +
+      '<div class="footer">Generated by Simfluence &nbsp;·&nbsp; simfluence.ai &nbsp;·&nbsp; Campaign Intelligence Platform</div>' +
+      '</body></html>';
 
-    // Score selected
-    var ssb = document.getElementById('scoreSelectedBtn');
-    if (ssb) ssb.addEventListener('click', function() {
-      if (typeof showScreen === 'function') showScreen('scoring', document.querySelector('.nav-tab:nth-child(2)'));
-    });
-
-    // View personas
-    var vpb = document.getElementById('viewPersonasBtn');
-    if (vpb) vpb.addEventListener('click', function() {
-      if (typeof personaAutoSelect === 'function' && typeof selectedCreators !== 'undefined' && selectedCreators.size === 0) personaAutoSelect();
-      if (typeof showScreen === 'function') showScreen('personas', document.querySelector('.nav-tab:nth-child(3)'));
-    });
-
-    // Run sim from personas
-    var rsfp = document.getElementById('runSimFromPersonasBtn');
-    if (rsfp) rsfp.addEventListener('click', function() {
-      if (typeof showScreen === 'function') showScreen('simulator', document.querySelector('.nav-tab:nth-child(4)'));
-    });
-
-    var stc = document.getElementById('simThisCampaignBtn');
-    if (stc) stc.addEventListener('click', function() {
-      if (typeof showScreen === 'function') showScreen('simulator', document.querySelector('.nav-tab:nth-child(4)'));
-      if (typeof runSimulation === 'function') runSimulation();
-    });
+    var win = window.open('', '_blank');
+    if (!win) { alert('Please allow popups to download the PDF.'); return; }
+    win.document.write(html);
+    win.document.close();
+    setTimeout(function() { win.focus(); win.print(); }, 600);
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', wire);
-  } else {
-    wire();
-  }
+  document.addEventListener('DOMContentLoaded', function() {
+    var btn = document.getElementById('saveCampaignBtn');
+    if (btn) btn.addEventListener('click', downloadCampaignPDF);
+  });
 })();
 </script>
 
-<script>
-// ── GLOBAL EVENT DELEGATION (Cloudflare-safe) ────────────────────────
-// All onclick= replaced with data-oc= to survive Cloudflare stripping
-// This script executes them via event delegation
-document.addEventListener('click', function(e) {
-  var el = e.target;
-  // Walk up the DOM to find an element with data-oc
-  while (el && el !== document) {
-    var oc = el.getAttribute('data-oc');
-    if (oc) {
-      e.stopPropagation();
-      try {
-        // Expose 'currentTarget' so data-oc="fn(currentTarget)" works
-        // Also bind 'this' to the element
-        var fn = new Function('event', 'currentTarget', 'with(window){' + oc + '}');
-        fn.call(el, e, el);
-      } catch(err) {
-        console.error('data-oc error:', oc, err);
-      }
-      return;
-    }
-    el = el.parentElement;
-  }
-}, true); // useCapture=true so it fires before anything else
-</script>
 </body>
-</html// ── PERSONA SCREEN ────────────────────────────────────────────────────
-function renderPersonaScreen() {
-  const genre = getSelectedGenre() || 'Gaming & Esports';
-  const sm    = activeSubMode;
-  const genreData = GENRE_PERSONAS[genre] || GENRE_PERSONAS['default'];
-  const personas  = genreData[sm] || genreData['default'] || Object.values(genreData)[0] || [];
-
-  // Find creators that best match each persona
-  function creatorsForPersona(p) {
-    const traits = p.traits || [];
-    return CREATORS
-      .filter(cr => cr.genre === genre || ((GENRE_AFFINITY[cr.genre]||{})[genre]||0) >= 0.6)
-      .map(cr => {
-        let score = 0;
-        const eng  = parseFloat(cr.eng) || 2;
-        const subs = parseSubs(cr.subs);
-        if (traits.includes('high_eng') && eng >= 4)   score += 20;
-        if (traits.includes('high_eng') && eng >= 6)   score += 15;
-        if (traits.includes('early_adopter') && cr.cpi >= 85) score += 15;
-        if (traits.includes('analytical') && cr.cpi >= 80)    score += 12;
-        if (traits.includes('loyal') && subs >= 200e3) score += 10;
-        if (traits.includes('premium') && subs >= 500e3) score += 10;
-        if (traits.includes('reach') && subs >= 1e6)   score += 15;
-        if (traits.includes('virality')) score += Math.min(eng * 2, 12);
-        if (traits.includes('community') && eng >= 3)  score += 10;
-        if (traits.includes('direct_sales') && cr.cpi >= 82) score += 12;
-        if (traits.includes('mid_tier') && subs >= 50e3 && subs <= 2e6) score += 8;
-        if (traits.includes('young') && subs < 500e3) score += 6;
-        score += cr.cpi / 10; // baseline CPI factor
-        return { cr, score };
-      })
-      .sort((a,b) => b.score - a.score)
-      .slice(0, 3)
-      .map(x => x.cr);
-  }
-
-  const grid = document.getElementById('personaGrid');
-  if (!grid) return;
-
-  // Selected creators banner
-  const selectedList = CREATORS.filter(cr => selectedCreators.has(cr.id));
-  const bannerEl = document.getElementById('personaBanner');
-  if (bannerEl) {
-    if (selectedList.length > 0) {
-      bannerEl.style.display = 'block';
-      bannerEl.innerHTML = '<div style="font-size:9px;color:#0050FF;letter-spacing:.1em;margin-bottom:10px">YOUR BRIEF · ' + selectedList.length + ' CREATOR' + (selectedList.length>1?'S':'') + ' BEING MATCHED</div>'
-        + '<div style="display:flex;gap:8px;flex-wrap:wrap">'
-        + selectedList.map(function(cr) {
-          var gfi = computeGFI(cr);
-          var gfiCol = gfi>=70?'#00C46A':gfi>=45?'#FF7A00':'#E60023';
-          return '<div style="display:flex;align-items:center;gap:8px;padding:6px 12px;background:var(--bg2);border:1px solid ' + cr.color + '44;border-radius:20px;cursor:pointer" data-oc="openProfileOverlay(' + cr.id + ')">'
-            + '<div style="width:24px;height:24px;border-radius:50%;background:' + cr.color + '22;color:' + cr.color + ';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700">' + cr.name.charAt(0) + '</div>'
-            + '<div style="font-size:12px;font-weight:600;color:var(--text)">' + cr.name + '</div>'
-            + '<div style="font-size:9px;color:var(--text-muted)">' + cr.subs + '</div>'
-            + '<div style="font-size:9px;font-weight:700;color:' + gfiCol + '">' + gfi + '% GFI</div>'
-          + '</div>';
-        }).join('')
-        + '</div>';
-    } else {
-      bannerEl.style.display = 'block';
-      bannerEl.innerHTML = '<div style="display:flex;align-items:center;gap:12px">'
-        + '<div style="font-size:18px">⚡</div>'
-        + '<div><div style="font-size:12px;font-weight:600;color:#FFD400">Auto-matched top creators for ' + genre + '</div>'
-        + '<div style="font-size:9px;color:var(--text-muted);margin-top:2px">Add creators to your brief for personalised persona matching</div></div>'
-      + '</div>';
-    }
-  }
-
-  grid.innerHTML = personas.map((p, i) => {
-    const matchedCreators = creatorsForPersona(p);
-    return `
-    <div class="persona-card" style="border-color:${p.color}44;cursor:default">
-
-      <!-- Header -->
-      <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:16px">
-        <div style="font-size:32px;line-height:1;flex-shrink:0">${p.icon}</div>
-        <div>
-          <div style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:${p.color};margin-bottom:4px">${p.name}</div>
-          <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted)">${genre.toUpperCase()} · PERSONA ${i+1} OF ${personas.length}</div>
-        </div>
-      </div>
-
-      <!-- Description -->
-      <div style="font-size:12px;color:var(--text-dim);line-height:1.7;margin-bottom:14px">${p.desc}</div>
-
-      <!-- Demo + Purchase -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
-        <div style="background:var(--bg3);border-radius:5px;padding:10px">
-          <div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:${p.color};margin-bottom:5px">Demographics</div>
-          <div style="font-size:11px;color:var(--text-dim);line-height:1.5">${p.demo}</div>
-        </div>
-        <div style="background:var(--bg3);border-radius:5px;padding:10px">
-          <div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:${p.color};margin-bottom:5px">Purchase Behaviour</div>
-          <div style="font-size:11px;color:var(--text-dim);line-height:1.5">${p.purchase}</div>
-        </div>
-      </div>
-
-      <!-- Brand fit -->
-      <div style="background:${p.color}08;border:1px solid ${p.color}22;border-radius:5px;padding:10px;margin-bottom:14px">
-        <div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:${p.color};margin-bottom:5px">Brand Fit Examples</div>
-        <div style="font-size:11px;color:var(--text-dim);line-height:1.5">${p.brands}</div>
-      </div>
-
-      <!-- CTA -->
-      <div s
+</html>
