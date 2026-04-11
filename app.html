@@ -8301,15 +8301,19 @@ function renderLivePanel() {
         + '<div style="font-size:8px;color:#E60023;font-weight:600;margin-top:1px">' + viewers + ' watching</div>'
       + '</div>'
       + (showGFI && liveGFI !== null
-        ? '<div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;min-width:34px">'
-            + '<div style="font-size:15px;font-weight:700;color:' + gfiCol + ';line-height:1">' + liveGFI + '%</div>'
+        ? '<div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;min-width:40px">'
+            + '<div style="font-size:17px;font-weight:700;color:' + gfiCol + ';line-height:1">' + liveGFI + '%</div>'
             + '<div style="font-size:7px;color:var(--text-muted);letter-spacing:.03em">GFI</div>'
           + '</div>'
-        : '')
-      + '<div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;min-width:34px">'
-        + '<div style="font-size:15px;font-weight:700;color:' + cpiCol + ';line-height:1">' + liveCPI + '</div>'
-        + '<div style="font-size:7px;color:var(--text-muted);letter-spacing:.03em">LIVE CPI</div>'
-      + '</div>'
+          + '<div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;min-width:30px">'
+            + '<div style="font-size:12px;font-weight:700;color:' + cpiCol + ';line-height:1;opacity:.6">' + liveCPI + '</div>'
+            + '<div style="font-size:7px;color:var(--text-muted);letter-spacing:.03em">CPI</div>'
+          + '</div>'
+        : '<div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;min-width:34px">'
+            + '<div style="font-size:15px;font-weight:700;color:' + cpiCol + ';line-height:1">' + liveCPI + '</div>'
+            + '<div style="font-size:7px;color:var(--text-muted);letter-spacing:.03em">LIVE CPI</div>'
+          + '</div>'
+      )
       + '<a href="https://twitch.tv/' + twitchLogin + '" target="_blank" onclick="event.stopPropagation()" style="padding:4px 7px;background:#9146FF;border-radius:3px;font-size:9px;font-weight:700;color:#fff;text-decoration:none;flex-shrink:0">&#9654;</a>'
     + '</div>';
   }
@@ -8678,7 +8682,7 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="footer-brand-name">Sim<span>fluence</span></div>
       <div class="footer-tagline">AI-powered campaign intelligence for creator-driven brands. Know your CTR, CPM, CVR and ROAS before you spend a single penny.</div>
       <div class="footer-contact">
-        Questions? <a href="mailto:Liam@Simfluence.AI">Liam@Simfluence.AI</a>
+        Questions? <a href="/cdn-cgi/l/email-protection#aae6c3cbc7eaf9c3c7ccc6dfcfc4c9cf84ebe3"><span class="__cf_email__" data-cfemail="25694c444865764c48434950404b46400b646c">[email&#160;protected]</span></a>
       </div>
     </div>
 
@@ -8688,7 +8692,7 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="footer-col-title">Company</div>
       <div class="footer-links">
         <button class="footer-link" onclick="openPageModal('about')">About Simfluence</button>
-        <a href="mailto:Liam@Simfluence.AI" class="footer-link" style="text-decoration:none;display:block;text-align:left;">Contact Us</a>
+        <a href="/cdn-cgi/l/email-protection#6c20050d012c3f05010a001909020f09422d25" class="footer-link" style="text-decoration:none;display:block;text-align:left;">Contact Us</a>
         <button class="footer-link" onclick="openPageModal('terms')">Terms of Use</button>
         <button class="footer-link" onclick="openPageModal('legal')">Legal Notice</button>
       </div>
@@ -8698,10 +8702,10 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="footer-col-title">Plans</div>
       <div class="footer-links">
         <button class="footer-link" onclick="showSignUpModal()">Free Account</button>
-        <a href="mailto:Liam@Simfluence.AI?subject=Starter%20Plan%20Enquiry" class="footer-link" style="text-decoration:none;display:block;text-align:left;">Starter — £199/mo</a>
-        <a href="mailto:Liam@Simfluence.AI?subject=Studio%20Pro%20Plan%20Enquiry" class="footer-link" style="text-decoration:none;display:block;text-align:left;">Studio Pro — £699/mo</a>
-        <a href="mailto:Liam@Simfluence.AI?subject=Publisher%20Elite%20Plan%20Enquiry" class="footer-link" style="text-decoration:none;display:block;text-align:left;">Publisher Elite — £1,999/mo</a>
-        <a href="mailto:Liam@Simfluence.AI" class="footer-link" style="text-decoration:none;display:block;text-align:left;">Enterprise</a>
+        <a href="/cdn-cgi/l/email-protection#4e02272f230e1d272328223b2b202d2b600f07713d3b2c242b2d3a731d3a2f3c3a2b3c6b7c7e1e222f206b7c7e0b203f3b273c37" class="footer-link" style="text-decoration:none;display:block;text-align:left;">Starter — £199/mo</a>
+        <a href="/cdn-cgi/l/email-protection#44082d252904172d29222831212a27216a050d7b3731262e21273079173031202d2b61767414362b6176741428252a617674012a35312d363d" class="footer-link" style="text-decoration:none;display:block;text-align:left;">Studio Pro — £699/mo</a>
+        <a href="/cdn-cgi/l/email-protection#c884a1a9a5889ba1a5aea4bdada6abade68981f7bbbdaaa2adabbcf598bdaaa4a1bba0adbaedfaf88da4a1bcadedfaf898a4a9a6edfaf88da6b9bda1bab1" class="footer-link" style="text-decoration:none;display:block;text-align:left;">Publisher Elite — £1,999/mo</a>
+        <a href="/cdn-cgi/l/email-protection#55193c343815063c38333920303b36307b141c" class="footer-link" style="text-decoration:none;display:block;text-align:left;">Enterprise</a>
       </div>
     </div>
 
@@ -8713,7 +8717,7 @@ document.addEventListener('DOMContentLoaded', () => {
       <button class="footer-legal-link" onclick="openPageModal('about')">About</button>
       <button class="footer-legal-link" onclick="openPageModal('terms')">Terms of Use</button>
       <button class="footer-legal-link" onclick="openPageModal('legal')">Legal Notice</button>
-      <a href="mailto:Liam@Simfluence.AI" class="footer-legal-link" style="text-decoration:none;">Contact</a>
+      <a href="/cdn-cgi/l/email-protection#7834111915382b11151e140d1d161b1d563931" class="footer-legal-link" style="text-decoration:none;">Contact</a>
     </div>
   </div>
 </footer>
@@ -8745,7 +8749,7 @@ document.addEventListener('DOMContentLoaded', () => {
     <p>We do not take commission on deals. We do not monetise creator relationships. We charge a flat subscription for access to the platform and nothing else. Your data, your campaigns, and your creator relationships remain entirely yours.</p>
 
     <hr class="divider-line">
-    <p>For enquiries, partnerships, or pilot access: <a href="mailto:Liam@Simfluence.AI">Liam@Simfluence.AI</a></p>
+    <p>For enquiries, partnerships, or pilot access: <a href="/cdn-cgi/l/email-protection#400c29212d0013292d262c35252e23256e0109"><span class="__cf_email__" data-cfemail="3f73565e527f6c565259534a5a515c5a117e76">[email&#160;protected]</span></a></p>
   </div>
 </div>
 
@@ -8765,7 +8769,7 @@ document.addEventListener('DOMContentLoaded', () => {
     <p>Simfluence provides AI-generated campaign forecasting tools, creator discovery and scoring, and audience intelligence for influencer marketing planning. All forecast outputs are probabilistic models based on historical benchmark data and machine learning inference. They are provided for planning and decision-support purposes only and do not constitute guarantees of campaign performance.</p>
 
     <h2>3. Your account</h2>
-    <p>To access the full platform you must register an account with a valid work email address. You are responsible for maintaining the confidentiality of your login credentials and for all activity that occurs under your account. You must notify us immediately at <a href="mailto:Liam@Simfluence.AI">Liam@Simfluence.AI</a> if you suspect any unauthorised use of your account.</p>
+    <p>To access the full platform you must register an account with a valid work email address. You are responsible for maintaining the confidentiality of your login credentials and for all activity that occurs under your account. You must notify us immediately at <a href="/cdn-cgi/l/email-protection#5c10353d311c0f35313a302939323f39721d15"><span class="__cf_email__" data-cfemail="fcb0959d91bcaf95919a908999929f99d2bdb5">[email&#160;protected]</span></a> if you suspect any unauthorised use of your account.</p>
     <p>You agree to provide accurate, current, and complete information when registering and to update this information as necessary.</p>
 
     <h2>4. Acceptable use</h2>
@@ -8795,7 +8799,7 @@ document.addEventListener('DOMContentLoaded', () => {
     <p>In no event shall Simfluence Ltd be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the platform or reliance on any forecast output, even if we have been advised of the possibility of such damages. Our total aggregate liability to you for any claims arising under these terms shall not exceed the total fees paid by you to us in the three months preceding the claim.</p>
 
     <h2>9. Data and privacy</h2>
-    <p>We collect and process personal data in accordance with applicable data protection laws including the UAE Personal Data Protection Law (Federal Decree-Law No. 45 of 2021) and, where applicable to our European users, the EU General Data Protection Regulation (GDPR). We do not sell your personal data to third parties. For full details of how we collect, use, and protect your data, please contact us at <a href="mailto:Liam@Simfluence.AI">Liam@Simfluence.AI</a>.</p>
+    <p>We collect and process personal data in accordance with applicable data protection laws including the UAE Personal Data Protection Law (Federal Decree-Law No. 45 of 2021) and, where applicable to our European users, the EU General Data Protection Regulation (GDPR). We do not sell your personal data to third parties. For full details of how we collect, use, and protect your data, please contact us at <a href="/cdn-cgi/l/email-protection#7d31141c103d2e14101b110818131e18533c34"><span class="__cf_email__" data-cfemail="b5f9dcd4d8f5e6dcd8d3d9c0d0dbd6d09bf4fc">[email&#160;protected]</span></a>.</p>
 
     <h2>10. Governing law</h2>
     <p>These terms are governed by the laws of the United Arab Emirates. Any disputes arising from or relating to these terms or the platform shall be subject to the exclusive jurisdiction of the courts of Dubai, UAE, except where mandatory consumer protection laws in your jurisdiction require otherwise.</p>
@@ -8804,7 +8808,7 @@ document.addEventListener('DOMContentLoaded', () => {
     <p>We may update these terms from time to time. Material changes will be notified to your registered email address at least 14 days before taking effect. Continued use of the platform after that date constitutes acceptance of the revised terms.</p>
 
     <h2>12. Contact</h2>
-    <p>For any questions regarding these Terms of Use: <a href="mailto:Liam@Simfluence.AI">Liam@Simfluence.AI</a></p>
+    <p>For any questions regarding these Terms of Use: <a href="/cdn-cgi/l/email-protection#a9e5c0c8c4e9fac0c4cfc5dcccc7cacc87e8e0"><span class="__cf_email__" data-cfemail="561a3f373b16053f3b303a233338353378171f">[email&#160;protected]</span></a></p>
   </div>
 </div>
 
@@ -8819,7 +8823,7 @@ document.addEventListener('DOMContentLoaded', () => {
     <p><strong>Trading name:</strong> Simfluence<br>
     <strong>Legal entity:</strong> Simfluence Ltd<br>
     <strong>Registered address:</strong> Dubai, United Arab Emirates<br>
-    <strong>Contact:</strong> <a href="mailto:Liam@Simfluence.AI">Liam@Simfluence.AI</a></p>
+    <strong>Contact:</strong> <a href="/cdn-cgi/l/email-protection#15597c747855467c78737960707b76703b545c"><span class="__cf_email__" data-cfemail="45092c242805162c28232930202b26206b040c">[email&#160;protected]</span></a></p>
 
     <h2>Nature of the service</h2>
     <p>Simfluence operates a Software-as-a-Service (SaaS) platform providing AI-generated campaign forecasting and creator intelligence for influencer marketing professionals. The platform is a planning and decision-support tool. It does not broker, negotiate, or execute agreements between brands and creators, and does not act as an agent, intermediary, or marketplace for influencer deals.</p>
@@ -8840,7 +8844,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     <h2>Data protection</h2>
     <p>Simfluence processes personal data in accordance with the UAE Personal Data Protection Law (Federal Decree-Law No. 45 of 2021) and applicable international data protection regulations. Users located in the European Economic Area benefit from protections under the EU General Data Protection Regulation (GDPR). We act as a data controller for account registration data and as a data processor for campaign data submitted by subscribing brands.</p>
-    <p>You have the right to request access to, correction of, or deletion of your personal data at any time by contacting <a href="mailto:Liam@Simfluence.AI">Liam@Simfluence.AI</a>.</p>
+    <p>You have the right to request access to, correction of, or deletion of your personal data at any time by contacting <a href="/cdn-cgi/l/email-protection#216d48404c6172484c474d54444f42440f6068"><span class="__cf_email__" data-cfemail="74381d151934271d19121801111a17115a353d">[email&#160;protected]</span></a>.</p>
 
     <h2>No financial or investment advice</h2>
     <p>Nothing on the Simfluence platform constitutes financial, investment, or professional marketing advice. Forecast outputs are tools to inform your own independent decision-making. You should conduct your own due diligence before committing any marketing budget.</p>
@@ -8852,7 +8856,7 @@ document.addEventListener('DOMContentLoaded', () => {
     <p>This legal notice and any disputes arising from the operation of the Simfluence platform are governed by the laws of the United Arab Emirates.</p>
 
     <h2>Contact for legal matters</h2>
-    <p>For legal enquiries: <a href="mailto:Liam@Simfluence.AI"><span class="__cf_
+    <p>For legal enquiries: <a href="/cdn-cgi/l/email-protection#df93b6beb29f8cb6b2b9b3aabab1bcbaf19e96"><span class="__cf_
 
 // PASSWORD GATE
 var GATE_PASS = 'Simfluence2025!';
@@ -8951,7 +8955,7 @@ function checkGate() {
 </div>
 
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 function openPageModal(key) {
   var el = document.getElementById('modal-' + key);
   if (!el) return;
@@ -9101,18 +9105,4 @@ function renderPersonaScreen() {
       </div>
 
       <!-- CTA -->
-      <div style="font-family:'DM Mono',monospace;font-size:10px;padding:10px 14px;background:${p.color}15;border:1px solid ${p.color}35;border-radius:5px;color:${p.color};margin-bottom:16px;font-style:italic">"${p.cta}"</div>
-
-      <!-- Matched creators -->
-      ${matchedCreators.length > 0 ? `
-      <div style="border-top:1px solid var(--border);padding-top:12px">
-        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px">Best Creator Matches</div>
-        <div style="display:flex;flex-direction:column;gap:6px">
-          ${matchedCreators.map(cr => `
-            <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--bg3);border-radius:5px;cursor:pointer" onclick="openProfileOverlay(${cr.id})">
-              <div style="width:28px;height:28px;border-radius:50%;background:${cr.color}22;color:${cr.color};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0">${cr.name.charAt(0)}</div>
-              <div style="flex:1;min-width:0">
-                <div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${cr.name}</div>
-                <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted)">${cr.subs} · CPI ${cr.cpi}</div>
-              </div>
-              <div style="display:flex;gap
+      <div s
