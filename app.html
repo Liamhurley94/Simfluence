@@ -1789,6 +1789,9 @@ function GC(){
     gEl.style.pointerEvents = 'none';
     gEl.style.visibility = 'hidden';
     gEl.setAttribute('aria-hidden', 'true');
+    // Belt-and-suspenders: ensure nothing on the gate can absorb clicks
+    gEl.style.zIndex = '-1';
+    document.body.style.overflow = '';
     try {
       sessionStorage.setItem('sf_auth','1');
       sessionStorage.setItem('sf_client', match.client);
@@ -1796,6 +1799,7 @@ function GC(){
     } catch(e){}
     // Re-apply tier gating now that tier is known
     setTimeout(function() {
+      if (typeof patchSimRunCounter === 'function') patchSimRunCounter();
       if (typeof applyAllTierGates === 'function') applyAllTierGates();
       if (typeof renderCreatorGrid === 'function') renderCreatorGrid();
     }, 50);
@@ -8810,7 +8814,15 @@ function renderScoringScreen() {
 
 
 // ── RENDER FULL SCORE TABLE ────────────────────────────────────────────
-
+// Called by showScreen('scoring') as a second pass after renderScoringScreen().
+// renderScoringScreen() already populates #fullScoreTable directly, so this
+// function is a deliberate no-op stub that prevents the "not defined" console
+// error without double-rendering the table.
+function renderFullScoreTable() {
+  // Table is rendered inline by renderScoringScreen() — nothing to do here.
+  // Kept as a named function so callers (showScreen, renderScoringScreenFull)
+  // don't throw ReferenceError.
+}
 
 // ── BAND EXPANSION (Simulator) ─────────────────────────────────────────
 function expandBand(band) {
@@ -10244,32 +10256,7 @@ document.addEventListener('DOMContentLoaded', () => {
     <p>This legal notice and any disputes arising from the operation of the Simfluence platform are governed by the laws of the United Arab Emirates.</p>
 
     <h2>Contact for legal matters</h2>
-    <p>For legal enquiries: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="cb87a2aaa68b98a2a6ada7beaea5a8aee58a82">[email&#160;protected]</a>
-
-// PASSWORD GATE
-var GATE_PASS = 'Simfluence2025!';
-
-function checkGate() {
-  var val = document.getElementById('gateInput').value;
-  var err = document.getElementById('gateErr');
-  if (val === GATE_PASS || val === 'Cleopatra1!') {
-    var g=document.getElementById('sfGate');
-    g.style.cssText='display:none';
-    document.body.style.overflow='';
-    try { sessionStorage.setItem('sf_auth','1'); } catch(e) {}
-  } else {
-    err.style.display = 'block';
-    document.getElementById('gateInput').value = '';
-    document.getElementById('gateInput').focus();
-    setTimeout(function(){ err.style.display='none'; }, 2500);
-  }
-}
-
-// Auto-pass if already authenticated this session
-(function() {
-  try {
-    if (sessionStorage.getItem('sf_auth') === '1') {
-      var g = document.getElementById('sfGate')
+    <p>For legal enquiries: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="cb87a2aaa68b98a2a6ada7beaea5a8aee58a82">[email&#160;protected]</a></p>
 
 <!-- CAMPAIGN BRIEF PANEL -->
 <div id="briefPanel">
