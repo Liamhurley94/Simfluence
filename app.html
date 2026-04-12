@@ -10339,7 +10339,7 @@ function checkGate() {
 </div>
 
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
 function openPageModal(key) {
   var el = document.getElementById('modal-' + key);
   if (!el) return;
@@ -10891,6 +10891,7 @@ function renderCampaignsScreen() {
     var confirmed  = linked.filter(function(o) { return o.status === 'confirmed'; }).length;
     var negotiating= linked.filter(function(o) { return o.status === 'negotiating'; }).length;
     var contacted  = linked.filter(function(o) { return o.status === 'contacted'; }).length;
+    var dateStr = cmp.date ? new Date(cmp.date).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '—';
     return '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:20px;position:relative">'
       + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap">'
         + '<div>'
