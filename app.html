@@ -1792,6 +1792,9 @@ function GC(){
     // Belt-and-suspenders: ensure nothing on the gate can absorb clicks
     gEl.style.zIndex = '-1';
     document.body.style.overflow = '';
+    // Immediately kill onboarding overlay so it can never block modals
+    var obEl = document.getElementById('sfOnboard');
+    if (obEl) { obEl.style.display = 'none'; obEl.style.pointerEvents = 'none'; }
     try {
       sessionStorage.setItem('sf_auth','1');
       sessionStorage.setItem('sf_client', match.client);
@@ -2231,8 +2234,9 @@ function obSkip() { obDismiss(); }
 function obDismiss() {
   var overlay = document.getElementById('sfOnboard');
   if (!overlay) return;
+  overlay.style.pointerEvents = 'none'; // immediately stop absorbing clicks
   overlay.classList.add('hiding');
-  setTimeout(function() { overlay.style.display = 'none'; }, 600);
+  setTimeout(function() { overlay.style.display = 'none'; overlay.style.pointerEvents = ''; }, 650);
 }
 
 // Wire ob buttons after DOM ready
@@ -12027,7 +12031,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
   <!-- AUDIENCE OVERLAP MODAL -->
-  <div id="overlap-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:700;align-items:flex-start;justify-content:center;padding:32px 16px;overflow-y:auto">
+  <div id="overlap-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:1200;align-items:flex-start;justify-content:center;padding:32px 16px;overflow-y:auto">
     <div style="background:var(--bg2);border:1px solid rgba(109,40,217,0.4);border-radius:14px;padding:32px;max-width:760px;width:100%;position:relative">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
         <div>
