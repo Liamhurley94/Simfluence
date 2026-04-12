@@ -2094,11 +2094,18 @@ function applyAllTierGates() {
 
   // PDF export — gold+
   var pdfBtn = document.getElementById('saveCampaignBtn');
-  if (pdfBtn && !tierCan('pdf_summary')) {
-    pdfBtn.style.opacity = '0.4';
-    pdfBtn.style.cursor = 'not-allowed';
-    pdfBtn.title = 'PDF export: Gold+ feature';
-    pdfBtn.onclick = function(e){ e.stopImmediatePropagation(); showUpgradePrompt('pdf_summary','Gold'); return false; };
+  if (pdfBtn) {
+    if (!tierCan('pdf_summary')) {
+      pdfBtn.style.opacity = '0.4';
+      pdfBtn.style.cursor = 'not-allowed';
+      pdfBtn.title = 'PDF export: Gold+ feature';
+      pdfBtn.setAttribute('data-tier-blocked', '1');
+    } else {
+      pdfBtn.removeAttribute('data-tier-blocked');
+      pdfBtn.style.opacity = '';
+      pdfBtn.style.cursor = '';
+      pdfBtn.title = '';
+    }
   }
 
   // Saved campaigns — silver+
@@ -2109,11 +2116,18 @@ function applyAllTierGates() {
 
   // Export shortlist — gold+
   var expBtn = document.getElementById('exportShortlistBtn');
-  if (expBtn && !tierCan('export_10')) {
-    expBtn.style.opacity = '0.4';
-    expBtn.style.cursor = 'not-allowed';
-    expBtn.title = 'CSV export: Gold+ feature';
-    expBtn.onclick = function(e){ e.stopImmediatePropagation(); showUpgradePrompt('export_10','Gold'); return false; };
+  if (expBtn) {
+    if (!tierCan('export_10')) {
+      expBtn.style.opacity = '0.4';
+      expBtn.style.cursor = 'not-allowed';
+      expBtn.title = 'CSV export: Gold+ feature';
+      expBtn.setAttribute('data-tier-blocked', '1');
+    } else {
+      expBtn.removeAttribute('data-tier-blocked');
+      expBtn.style.opacity = '';
+      expBtn.style.cursor = '';
+      expBtn.title = '';
+    }
   }
 
   // Compare buttons — gold+
@@ -8632,10 +8646,18 @@ function runSimulation() {
       } catch(e) {}
     }
   }
+  simResults = null; // force fresh compute
   computeSimResults();
-  showScreen('simulator', document.querySelector('.nav-tab:nth-child(4)'));
-  updateSimDisplay();
-  renderEfficiencyCurve();
+  // Only navigate to simulator screen if not already on it
+  var simScreen = document.getElementById('screen-simulator');
+  if (simScreen && !simScreen.classList.contains('active')) {
+    showScreen('simulator', document.querySelector('.nav-tab[data-screen="simulator"]'));
+  } else {
+    // Already on simulator — just refresh displays without triggering showScreen double-compute
+    updateSimDisplay();
+    updateBandDisplays();
+    renderEfficiencyCurve();
+  }
 }
 
 function renderEfficiencyCurve() {
@@ -12011,19 +12033,53 @@ document.addEventListener('change', function(e) {
   }
 });
 
-// Wire buttons that need IDs (run simulation, re-run, etc.)
+// ── DIRECT BUTTON WIRING (Cloudflare + capture-phase safe) ───────────
+// All buttons wired with direct addEventListener — no delegation dependency.
+// e.stopPropagation() prevents the capture-phase delegation from interfering.
 document.addEventListener('DOMContentLoaded', function() {
-  function wireId(id, fn) {
+  function wire(id, fn) {
     var el = document.getElementById(id);
-    if (el) el.addEventListener('click', fn);
+    if (!el) return;
+    el.addEventListener('click', function(e) { e.stopPropagation(); fn(e); });
   }
-  wireId('runSimBtn',          function() { if(typeof runSimulation==='function') runSimulation(); });
-  wireId('reRunSimBtn',        function() { if(typeof runSimulation==='function') runSimulation(); });
-  wireId('scoreSelectedBtn',   function() { if(typeof showScreen==='function') showScreen('scoring', document.querySelector('.nav-tab:nth-child(2)')); });
-  wireId('viewPersonasBtn',    function() { if(typeof selectedCreators!=='undefined'&&selectedCreators.size===0&&typeof personaAutoSelect==='function') personaAutoSelect(); if(typeof showScreen==='function') showScreen('personas', document.querySelector('.nav-tab:nth-child(3)')); });
-  wireId('runSimFromPersonasBtn', function() { if(typeof showScreen==='function') showScreen('simulator', document.querySelector('.nav-tab:nth-child(4)')); });
-  wireId('simThisCampaignBtn', function() { if(typeof showScreen==='function') showScreen('simulator', document.querySelector('.nav-tab:nth-child(4)')); if(typeof runSimulation==='function') runSimulation(); });
-  wireId('GBtn',               function() { if(typeof GC==='function') GC(); });
+
+  // Simulation
+  wire('runSimBtn',            function() { if(typeof runSimulation==='function') runSimulation(); });
+  wire('reRunSimBtn',          function() { if(typeof runSimulation==='function') runSimulation(); });
+
+  // Navigation buttons
+  wire('scoreSelectedBtn',     function() { if(typeof showScreen==='function') showScreen('scoring',   document.querySelector('[data-screen="scoring"]')); });
+  wire('viewPersonasBtn',      function() {
+    if(typeof selectedCreators!=='undefined' && selectedCreators.size===0 && typeof personaAutoSelect==='function') personaAutoSelect();
+    if(typeof showScreen==='function') showScreen('personas', document.querySelector('[data-screen="personas"]'));
+  });
+  wire('runSimFromPersonasBtn', function() { if(typeof showScreen==='function') showScreen('simulator', document.querySelector('[data-screen="simulator"]')); });
+  // simThisCampaignBtn: showScreen already calls computeSimResults — don't double-call runSimulation
+  wire('simThisCampaignBtn',   function() { if(typeof showScreen==='function') showScreen('simulator', document.querySelector('[data-screen="simulator"]')); });
+
+  // Auth gate
+  wire('GBtn', function() { if(typeof GC==='function') GC(); });
+
+  // New campaign
+  wire('newCampaignBtn', function() { if(typeof newCampaign==='function') newCampaign(); });
+
+  // Outreach add button
+  wire('addOutreachBtn', function() { if(typeof openOutreachModal==='function') openOutreachModal(null); });
+
+  // Export shortlist — respects tier gate
+  wire('exportShortlistBtn', function() {
+    var btn = document.getElementById('exportShortlistBtn');
+    if (btn && btn.getAttribute('data-tier-blocked')) { showUpgradePrompt('export_10','Gold'); return; }
+    if (typeof exportShortlist==='function') exportShortlist();
+  });
+
+  // Save as PDF / campaign history
+  // Save as PDF / campaign history — respects tier gate set by applyAllTierGates
+  wire('saveCampaignBtn', function() {
+    var btn = document.getElementById('saveCampaignBtn');
+    if (btn && btn.getAttribute('data-tier-blocked')) { showUpgradePrompt('pdf_summary','Gold'); return; }
+    if (typeof saveCampaignToHistory==='function') saveCampaignToHistory();
+  });
   // Genre, format, tier, language, sort selects
   (function() {
     function wire(id, fn) {
