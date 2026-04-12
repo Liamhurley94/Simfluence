@@ -45,10 +45,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:cen
 .hero-h1 .gold{color:var(--gold);font-style:italic;font-weight:300;}
 .hero-sub{font-size:clamp(17px,2.2vw,22px);color:var(--muted);max-width:620px;line-height:1.6;margin:0 auto 48px;font-weight:300;opacity:0;animation:fadeUp 0.9s ease 0.5s forwards;}
 .hero-actions{display:flex;gap:16px;justify-content:center;align-items:center;opacity:0;animation:fadeUp 0.9s ease 0.65s forwards;}
-.hero-scroll{position:absolute;bottom:40px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;opacity:0;animation:fadeUp 1s ease 1.2s forwards;z-index:2;}
-.hero-scroll span{font-family:"DM Mono",monospace;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--dim);}
-.scroll-line{width:1px;height:48px;background:var(--dim);animation:scrollPulse 2s ease infinite;}
-@keyframes scrollPulse{0%{transform:scaleY(1);opacity:0.3;}50%{transform:scaleY(0.5);opacity:0.8;}100%{transform:scaleY(1);opacity:0.3;}}
+/* scroll indicator removed */
 @keyframes fadeUp{from{opacity:0;transform:translateY(28px);}to{opacity:1;transform:translateY(0);}}
 
 .btn-xl{padding:18px 40px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-family:"DM Mono",monospace;font-size:13px;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;text-decoration:none;transition:all 0.2s;}
@@ -62,11 +59,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:cen
 .stat-n{font-family:"Clash Display",sans-serif;font-size:clamp(44px,5vw,64px);font-weight:600;line-height:1;letter-spacing:-0.03em;margin-bottom:10px;}
 .stat-l{font-family:"DM Mono",monospace;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);line-height:1.5;}
 
-.ticker{overflow:hidden;padding:14px 0;border-bottom:1px solid var(--border);background:var(--bg);}
-.ticker-inner{display:flex;gap:0;animation:tickerScroll 35s linear infinite;white-space:nowrap;}
-.ticker-item{font-family:"DM Mono",monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--dim);padding:0 36px;flex-shrink:0;}
-.ticker-sep{color:var(--blue);}
-@keyframes tickerScroll{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+/* ticker removed */
 
 .section-problem{padding:140px 48px;max-width:1300px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:100px;align-items:center;}
 .section-eyebrow{font-family:"DM Mono",monospace;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:var(--blue);margin-bottom:24px;display:block;}
@@ -1087,7 +1080,7 @@ setTimeout(simRun,1600);
           <div class="p-feat"><span class="p-feat-dash">—</span>All AI persona archetypes · top 3 creator matches · sub-genre targeting</div>
           <div class="p-feat"><span class="p-feat-dash">—</span>Unlimited campaign briefs · outreach CRM for your full roster · estimated rates included</div>
           <div class="p-feat"><span class="p-feat-dash">—</span>Audience overlap engine — know exactly how much of your budget reaches new eyes</div>
-          <div class="p-feat"><span class="p-feat-dash">—</span>Live Twitch panel — unlimited channels · editable budget split · compare 4 creators</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Live Twitch panel — unlimited channels · editable budget split · compare creators</div>
           <div class="p-feat"><span class="p-feat-dash">—</span>Full P10/P50/P90 PDF report · unlimited CSV export · unlimited saved briefs · API access</div>
           <div class="p-feat"><span class="p-feat-dash">—</span>Direct line to Simfluence founder</div>
         </div>
@@ -1427,7 +1420,10 @@ setTimeout(initReveal,300); setTimeout(initReveal,800);
   var W,H,particles=[];
   function resize(){W=canvas.width=canvas.offsetWidth;H=canvas.height=canvas.offsetHeight;}
   function init(){particles=[];for(var i=0;i<60;i++)particles.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.4,vy:(Math.random()-.5)*.4,r:Math.random()*1.5+.5,o:Math.random()*.3+.1});}
-  function draw(){ctx.clearRect(0,0,W,H);particles.forEach(function(p){p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>W)p.vx*=-1;if(p.y<0||p.y>H)p.vy*=-1;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle='rgba(255,255,255,'+p.o+')';ctx.fill();});requestAnimationFrame(draw);}
+  var _rafId=null,_paused=false;
+  function draw(){if(_paused){_rafId=requestAnimationFrame(draw);return;}ctx.clearRect(0,0,W,H);particles.forEach(function(p){p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>W)p.vx*=-1;if(p.y<0||p.y>H)p.vy*=-1;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle='rgba(255,255,255,'+p.o+')';ctx.fill();});_rafId=requestAnimationFrame(draw);}
+  var _io=new IntersectionObserver(function(e){_paused=!e[0].isIntersecting;},{threshold:0});
+  _io.observe(canvas);
   window.addEventListener('resize',function(){resize();init();});
   resize();init();draw();
 })();
