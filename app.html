@@ -1886,12 +1886,54 @@ function gActivateSession(email, tier, client) {
     sessionStorage.setItem('sf_client', client || 'Free');
     sessionStorage.setItem('sf_email',  email  || '');
   } catch(e) {}
+  // Show user menu in nav
+  sfShowUserMenu(email, tier);
   setTimeout(function() {
     if (typeof patchSimRunCounter === 'function') patchSimRunCounter();
     if (typeof applyAllTierGates  === 'function') applyAllTierGates();
     if (typeof renderCreatorGrid  === 'function') renderCreatorGrid();
   }, 50);
 }
+
+function sfShowUserMenu(email, tier) {
+  var menu = document.getElementById('sf-user-menu');
+  var emailEl = document.getElementById('sf-user-email');
+  var tierLabel = document.getElementById('sf-user-tier-label');
+  if (menu) menu.style.display = 'block';
+  if (emailEl) emailEl.textContent = email || 'Account';
+  if (tierLabel) {
+    var tierNames = { free:'Free Plan', bronze:'Bronze', silver:'Silver', gold:'Gold', platinum:'Platinum', diamond:'Diamond', admin:'Admin' };
+    tierLabel.textContent = (tierNames[tier] || tier || 'Free').toUpperCase();
+  }
+}
+
+function sfToggleUserMenu() {
+  var dd = document.getElementById('sf-user-dropdown');
+  if (dd) dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
+}
+
+function sfSignOut() {
+  // Clear session
+  try { sessionStorage.clear(); } catch(e) {}
+  // Sign out from Supabase Auth (fire and forget)
+  try {
+    var key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5c2p4c2x6bGJvam9pdnhqcmNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM0MzA2MDIsImV4cCI6MjA1OTAwNjYwMn0.AqbQqRs3AiGYhRGZw1SG2TNqlQQ1rPbICbzNBE3Uvj4';
+    fetch('https://iysjxslzlbojoivxjrce.supabase.co/auth/v1/logout', {
+      method: 'POST', headers: { 'apikey': key, 'Content-Type': 'application/json' }
+    }).catch(function(){});
+  } catch(e) {}
+  // Reload — gate will show again
+  window.location.reload();
+}
+
+// Close user dropdown when clicking outside
+document.addEventListener('click', function(e) {
+  var dd = document.getElementById('sf-user-dropdown');
+  var btn = document.getElementById('sf-user-btn');
+  if (dd && dd.style.display === 'block' && !dd.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
+    dd.style.display = 'none';
+  }
+});
 
 // ── SIGN UP (Supabase Auth) ───────────────────────────────────────────
 function GFSignUp() {
@@ -2546,6 +2588,10 @@ document.addEventListener('DOMContentLoaded', function() {
       var obEl = document.getElementById('sfOnboard');
       if (obEl) { obEl.style.display='none'; obEl.style.pointerEvents='none'; }
       document.body.style.overflow = '';
+      // Restore user menu
+      var restoredEmail = sessionStorage.getItem('sf_email') || '';
+      var restoredTier  = sessionStorage.getItem('sf_tier')  || 'free';
+      setTimeout(function() { if (typeof sfShowUserMenu === 'function') sfShowUserMenu(restoredEmail, restoredTier); }, 100);
     }
   } catch(e) {}
   setTimeout(function() {
@@ -2677,7 +2723,20 @@ document.addEventListener('DOMContentLoaded', function() {
       <button id="searchClear" data-oc="clearCreatorSearch()" style="display:none;position:absolute;right:8px;background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:14px;padding:0;line-height:1">✕</button>
     </div>
   </div>
-  <button class="theme-toggle" data-oc="toggleTheme()" id="themeBtn" title="Toggle mode">🌙</button>
+  <div style="display:flex;align-items:center;gap:10px">
+    <button class="theme-toggle" data-oc="toggleTheme()" id="themeBtn" title="Toggle mode">🌙</button>
+    <!-- User menu -->
+    <div id="sf-user-menu" style="position:relative;display:none">
+      <button id="sf-user-btn" onclick="sfToggleUserMenu()" style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:6px;padding:6px 10px;cursor:pointer;font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);letter-spacing:.04em">
+        <span id="sf-user-email" style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+        <span style="font-size:8px;opacity:0.5">▾</span>
+      </button>
+      <div id="sf-user-dropdown" style="display:none;position:absolute;right:0;top:calc(100% + 6px);background:#0D0D18;border:1px solid var(--border);border-radius:8px;padding:6px;min-width:160px;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,0.4)">
+        <div id="sf-user-tier-label" style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.08em;color:var(--text-muted);padding:4px 8px 8px;border-bottom:1px solid var(--border);margin-bottom:4px"></div>
+        <button onclick="sfSignOut()" style="width:100%;text-align:left;background:none;border:none;padding:8px 10px;font-family:'DM Mono',monospace;font-size:10px;color:#E60023;cursor:pointer;border-radius:4px;letter-spacing:.04em">Sign out</button>
+      </div>
+    </div>
+  </div>
 </nav>
 
 
