@@ -1753,6 +1753,16 @@
   }
 
   /* ── PRINT / PDF EXPORT ───────────────────────────────────────────── */
+  /* ── FREE TIER SCORE BLUR ────────────────────────────────────────── */
+  .free-score-blur .score-bar-fill,
+  .free-score-blur [id^="cpi-score-"],
+  .free-score-blur .cpi-val,
+  .free-score-blur .gfi-val {
+    filter: blur(6px);
+    user-select: none;
+  }
+  .free-score-blur #fullScoreTable > div { filter: blur(5px); pointer-events: none; user-select: none; }
+
   @media print {
     /* Hide everything except the simulator screen content */
     nav, #G, #sfOnboard, #briefPanel, .sidebar,
@@ -1778,13 +1788,37 @@
 </head>
 <body>
 <!-- GATE -->
-<div id="G" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#000;z-index:99999;display:flex;align-items:center;justify-content:center">
-  <div style="background:#0A0A10;border:1px solid #0050FF;border-radius:12px;padding:40px;width:340px;text-align:center;font-family:sans-serif">
-    <div style="font-size:22px;font-weight:700;color:#FFD400;margin-bottom:4px">Sim<em style="font-style:italic;font-weight:300">fluence</em></div>
-    <div style="font-size:11px;color:rgba(255,255,255,0.3);margin-bottom:28px;letter-spacing:.1em">STUDIO PRO ACCESS</div>
-    <input id="GP" type="password" placeholder="Access code" style="width:100%;padding:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:#fff;font-size:16px;text-align:center;letter-spacing:.1em;outline:none;box-sizing:border-box;margin-bottom:10px">
-    <button id="GBtn" style="width:100%;padding:13px;background:#0050FF;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-weight:600">Enter</button>
-    <div id="GE" style="color:#ff5555;font-size:11px;margin-top:10px;display:none">Incorrect. Try again.</div>
+<div id="G" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.97);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box">
+  <div style="background:#0A0A10;border:1px solid rgba(0,80,255,0.4);border-radius:16px;padding:40px;width:100%;max-width:420px;text-align:center;font-family:sans-serif;box-sizing:border-box">
+    <!-- Logo -->
+    <div style="font-size:26px;font-weight:700;color:#FFD400;margin-bottom:4px;font-family:'Space Grotesk',sans-serif">Sim<em style="font-style:italic;font-weight:300">fluence</em></div>
+    <div style="font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:32px;letter-spacing:.12em">CAMPAIGN INTELLIGENCE PLATFORM</div>
+
+    <!-- TAB SWITCHER -->
+    <div id="G-tabs" style="display:flex;background:rgba(255,255,255,0.04);border-radius:8px;padding:4px;margin-bottom:28px;gap:4px">
+      <button id="G-tab-free" onclick="gSwitchTab('free')" style="flex:1;padding:9px 0;border:none;border-radius:6px;background:#0050FF;color:#fff;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.06em;cursor:pointer;font-weight:700;transition:all .2s">TRY FREE</button>
+      <button id="G-tab-code" onclick="gSwitchTab('code')" style="flex:1;padding:9px 0;border:none;border-radius:6px;background:transparent;color:rgba(255,255,255,0.4);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.06em;cursor:pointer;font-weight:600;transition:all .2s">HAVE A CODE</button>
+    </div>
+
+    <!-- FREE SIGNUP PANEL -->
+    <div id="G-panel-free">
+      <div style="font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,255,255,0.35);letter-spacing:.08em;margin-bottom:20px;line-height:1.6">Create your free account to explore the platform.<br>See 10 creators, run the simulator, explore AI personas.</div>
+      <input id="GFEmail" type="email" placeholder="Work email" autocomplete="email" style="width:100%;padding:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:#fff;font-size:14px;outline:none;box-sizing:border-box;margin-bottom:10px;font-family:sans-serif">
+      <input id="GFPass" type="password" placeholder="Create password (min 8 chars)" autocomplete="new-password" style="width:100%;padding:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:#fff;font-size:14px;outline:none;box-sizing:border-box;margin-bottom:16px;font-family:sans-serif">
+      <button id="GFBtn" style="width:100%;padding:13px;background:#0050FF;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-weight:700;font-family:'DM Mono',monospace;letter-spacing:.06em">CREATE FREE ACCOUNT →</button>
+      <div id="GFE" style="color:#ff5555;font-size:11px;margin-top:10px;display:none">Please enter a valid email and password (8+ chars).</div>
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.06)">
+        <a href="https://calendly.com/liam-simfluence" target="_blank" style="font-family:'DM Mono',monospace;font-size:9px;color:#FFD400;text-decoration:none;letter-spacing:.06em">📅 BOOK A LIVE DEMO INSTEAD →</a>
+      </div>
+    </div>
+
+    <!-- CODE PANEL -->
+    <div id="G-panel-code" style="display:none">
+      <div style="font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,255,255,0.35);letter-spacing:.08em;margin-bottom:20px">Enter your access code to sign in.</div>
+      <input id="GP" type="password" placeholder="Access code" autocomplete="current-password" style="width:100%;padding:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:#fff;font-size:16px;text-align:center;letter-spacing:.1em;outline:none;box-sizing:border-box;margin-bottom:10px">
+      <button id="GBtn" style="width:100%;padding:13px;background:#0050FF;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-weight:600">Enter</button>
+      <div id="GE" style="color:#ff5555;font-size:11px;margin-top:10px;display:none">Incorrect. Try again.</div>
+    </div>
   </div>
 </div>
 <script>
@@ -1800,6 +1834,60 @@ var CLIENTS = {
   'Platinum2026!':   { client: 'Demo',        tier: 'platinum' },
   'Diamond2026!':    { client: 'Demo',        tier: 'diamond'  },
 };
+
+// ── GATE TAB SWITCHER ────────────────────────────────────────────────
+function gSwitchTab(tab) {
+  var isFree = tab === 'free';
+  document.getElementById('G-panel-free').style.display = isFree ? 'block' : 'none';
+  document.getElementById('G-panel-code').style.display = isFree ? 'none' : 'block';
+  document.getElementById('G-tab-free').style.background = isFree ? '#0050FF' : 'transparent';
+  document.getElementById('G-tab-free').style.color = isFree ? '#fff' : 'rgba(255,255,255,0.4)';
+  document.getElementById('G-tab-code').style.background = isFree ? 'transparent' : '#0050FF';
+  document.getElementById('G-tab-code').style.color = isFree ? 'rgba(255,255,255,0.4)' : '#fff';
+  if (isFree) { setTimeout(function(){ var e=document.getElementById('GFEmail'); if(e) e.focus(); },50); }
+  else { setTimeout(function(){ var e=document.getElementById('GP'); if(e) e.focus(); },50); }
+}
+
+// ── FREE ACCOUNT SIGNUP ───────────────────────────────────────────────
+function GFSignUp() {
+  var emailEl = document.getElementById('GFEmail');
+  var passEl  = document.getElementById('GFPass');
+  var errEl   = document.getElementById('GFE');
+  var email   = emailEl ? emailEl.value.trim() : '';
+  var pass    = passEl  ? passEl.value : '';
+  if (!email || email.indexOf('@') < 0 || email.indexOf('.') < 0 || pass.length < 8) {
+    if (errEl) errEl.style.display = 'block';
+    setTimeout(function(){ if(errEl) errEl.style.display='none'; }, 3000);
+    return;
+  }
+  // Store to Supabase signups table
+  fetch('https://iysjxslzlbojoivxjrce.supabase.co/rest/v1/signups', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5c2p4c2x6bGJvam9pdnhqcmNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM0MzA2MDIsImV4cCI6MjA1OTAwNjYwMn0.AqbQqRs3AiGYhRGZw1SG2TNqlQQ1rPbICbzNBE3Uvj4',
+      'Prefer': 'return=minimal'
+    },
+    body: JSON.stringify({ email: email, source: 'free_gate', tier: 'free', created_at: new Date().toISOString() })
+  }).catch(function(){});
+  // Activate free tier session
+  var gEl = document.getElementById('G');
+  gEl.style.display = 'none'; gEl.style.pointerEvents = 'none'; gEl.style.visibility = 'hidden'; gEl.style.zIndex = '-1';
+  var obEl = document.getElementById('sfOnboard');
+  if (obEl) { obEl.style.display = 'none'; obEl.style.pointerEvents = 'none'; }
+  document.body.style.overflow = '';
+  try {
+    sessionStorage.setItem('sf_auth', '1');
+    sessionStorage.setItem('sf_tier', 'free');
+    sessionStorage.setItem('sf_client', 'Free');
+    sessionStorage.setItem('sf_email', email);
+  } catch(e) {}
+  setTimeout(function() {
+    if (typeof patchSimRunCounter === 'function') patchSimRunCounter();
+    if (typeof applyAllTierGates === 'function') applyAllTierGates();
+    if (typeof renderCreatorGrid === 'function') renderCreatorGrid();
+  }, 50);
+}
 
 document.getElementById('GP').addEventListener('keydown',function(e){if(e.key==='Enter')GC();});
 function GC(){
@@ -1841,7 +1929,7 @@ function GC(){
 // ══════════════════════════════════════════════════════════════════════
 // TIER ENGINE
 // ══════════════════════════════════════════════════════════════════════
-var TIER_LEVELS = { bronze:0, silver:1, gold:2, platinum:3, diamond:4, admin:5 };
+var TIER_LEVELS = { free:-1, bronze:0, silver:1, gold:2, platinum:3, diamond:4, admin:5 };
 
 function getTierLevel() {
   try { return TIER_LEVELS[sessionStorage.getItem('sf_tier')] || 0; } catch(e) { return 0; }
@@ -1862,40 +1950,42 @@ function tierCan(feature) {
     'personas_all': t>=3, 'personas_3': t>=2, 'personas_1': t>=1,
     'persona_creators_3': t>=3, 'persona_creators_1': t>=2,
     'sim_unlimited': t>=2, 'sim_10': t>=1,
+    'sim_free': t>=-1,      // Free can run simulator (results blurred)
     'duration_slider': t>=2,
     'budget_allocation_edit': t>=3, 'budget_allocation_view': t>=2,
     'bands_all': t>=2, 'band_p50_only': t>=1,
+    'bands_free_blurred': t>=-1,  // Free sees blurred bands
     'pdf_full': t>=3, 'pdf_summary': t>=2,
     'saved_unlimited': t>=3, 'saved_10': t>=2, 'saved_3': t>=1,
     'live_full': t>=2, 'live_genre': t>=1,
-    // Live panel channel caps (all tiers get access, capped by count)
-    'live_cap_unlimited': t>=3, // Platinum: unlimited
-    'live_cap_50':        t>=2, // Gold: 50
-    'live_cap_20':        t>=1, // Silver: 20
-    'live_cap_10':        true, // Bronze: 10
+    // Live panel channel caps
+    'live_cap_unlimited': t>=3, 'live_cap_50': t>=2,
+    'live_cap_20': t>=1, 'live_cap_10': true,
     // Outreach CRM tiers
-    'outreach_unlimited': t>=3,  // Platinum+
-    'outreach_15':        t>=2,  // Gold
-    'outreach_5':         t>=1,  // Silver
-    'outreach_3':         t>=0,  // Bronze (t=0)
-    'outreach_1':         true,  // Free (everyone)
+    'outreach_unlimited': t>=3, 'outreach_15': t>=2,
+    'outreach_5': t>=1, 'outreach_3': t>=0, 'outreach_1': true,
     // Outreach data visibility
-    'outreach_rate':      t>=3,  // Platinum — full rate
-    'outreach_cpi':       t>=2,  // Gold — CPI visible
-    'outreach_subs':      t>=1,  // Silver — subs visible
-    'outreach_email':     t>=1,  // Silver — email visible
-    'outreach_notes':     t>=0,  // Bronze — notes visible
+    'outreach_rate': t>=3, 'outreach_cpi': t>=2,
+    'outreach_subs': t>=1, 'outreach_email': t>=1, 'outreach_notes': t>=0,
     // Campaigns
-    'campaigns_unlimited':t>=3,  // Platinum
-    'campaigns_1':        t>=2,  // Gold — 1 campaign
-    // Audience overlap (Platinum only)
-    'audience_overlap':   t>=3,
+    'campaigns_unlimited': t>=3, 'campaigns_1': t>=2,
+    // Audience overlap
+    'audience_overlap': t>=3,
+    // Free tier specific
+    'free_discovery':   t>=-1,   // Free: 10 creators visible
+    'free_sim_blur':    t===-1,  // Free: simulator results blurred
+    'free_persona_blur':t===-1,  // Free: personas non-clickable, creators hidden
+    'free_score_blur':  t===-1,  // Free: CPI/GFI blurred
     'admin': t>=5,
   };
   return rules[feature] || false;
 }
 
 function showUpgradePrompt(feature, targetTier) {
+  // Free tier users always get the demo CTA, not a generic upgrade prompt
+  if (typeof getTierLevel === 'function' && getTierLevel() < 0) {
+    if (typeof showFreeTierPrompt === 'function') { showFreeTierPrompt(); return; }
+  }
   targetTier = targetTier || 'Gold';
   var msgs = {
     'cpi_breakdown':          'See exactly why each creator scored what they did.',
@@ -2036,7 +2126,8 @@ function getDiscoveryCap() {
   var t = getTierLevel();
   if (t >= 2) return Infinity;
   if (t >= 1) return 100;
-  return 25;
+  if (t >= 0) return 25;
+  return 10; // free tier
 }
 
 function applyTierBadge(tn) {
@@ -2052,12 +2143,103 @@ function applyTierBadge(tn) {
   nav.appendChild(badge);
 }
 
+// ── FREE TIER GATE ENGINE ─────────────────────────────────────────────
+function applyFreeTierGates() {
+  // Simulator bands — blur all results
+  ['bandWorst','bandBase','bandBest'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el && !el.querySelector('.free-blur-overlay')) {
+      el.style.position = 'relative';
+      var ov = document.createElement('div');
+      ov.className = 'free-blur-overlay';
+      ov.style.cssText = 'position:absolute;inset:0;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);background:rgba(10,10,20,0.5);z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:inherit;cursor:pointer;gap:8px';
+      ov.innerHTML = '<div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.1em;color:rgba(255,255,255,0.6);text-align:center">🔒 UPGRADE TO UNLOCK</div>'
+        + '<button style="padding:5px 14px;background:#FFD400;color:#000;border:none;border-radius:4px;font-family:DM Mono,monospace;font-size:9px;cursor:pointer;font-weight:700" onclick="showFreeTierPrompt()">SEE PLANS</button>';
+      el.appendChild(ov);
+    }
+  });
+
+  // Discovery — blur creators beyond 10 (handled by renderCreatorGrid cap)
+  // Add a "blurred" call-to-action banner below the grid
+  var discScreen = document.getElementById('screen-discovery');
+  if (discScreen && !document.getElementById('free-discovery-cta')) {
+    var cta = document.createElement('div');
+    cta.id = 'free-discovery-cta';
+    cta.style.cssText = 'margin:0 0 24px;padding:20px 24px;background:rgba(0,80,255,0.06);border:1px solid rgba(0,80,255,0.2);border-radius:10px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap';
+    cta.innerHTML = '<div>'
+      + '<div style="font-family:DM Mono,monospace;font-size:10px;letter-spacing:.08em;color:#6B9FFF;margin-bottom:4px">FREE PLAN · 10 OF 3,600+ CREATORS</div>'
+      + '<div style="font-size:13px;color:rgba(255,255,255,0.6)">Upgrade to unlock the full database, simulator, outreach CRM and more.</div>'
+      + '</div>'
+      + '<div style="display:flex;gap:10px;flex-shrink:0">'
+      + '<button onclick="showFreeTierPrompt()" style="padding:9px 18px;background:#FFD400;color:#000;border:none;border-radius:6px;font-family:DM Mono,monospace;font-size:10px;cursor:pointer;font-weight:700;letter-spacing:.04em">SEE PLANS</button>'
+      + '<a href="https://calendly.com/liam-simfluence" target="_blank" style="padding:9px 18px;background:transparent;border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.6);border-radius:6px;font-family:DM Mono,monospace;font-size:10px;cursor:pointer;font-weight:600;letter-spacing:.04em;text-decoration:none;display:inline-block">📅 BOOK DEMO</a>'
+      + '</div>';
+    discScreen.insertBefore(cta, discScreen.firstChild);
+  }
+
+  // Personas — make cards non-clickable, hide creator section
+  var pgrid = document.getElementById('personaGrid');
+  if (pgrid) {
+    pgrid.style.pointerEvents = 'none';
+    pgrid.querySelectorAll('[id^="persona-creators-"]').forEach(function(el){ el.style.display='none'; });
+    if (!pgrid.querySelector('.free-persona-note')) {
+      var note = document.createElement('div');
+      note.className = 'free-persona-note';
+      note.style.cssText = 'position:absolute;bottom:0;left:0;right:0;padding:16px;background:linear-gradient(transparent,rgba(10,10,20,0.95));text-align:center;pointer-events:all;';
+      note.innerHTML = '<button onclick="showFreeTierPrompt()" style="padding:8px 20px;background:#FFD400;color:#000;border:none;border-radius:5px;font-family:DM Mono,monospace;font-size:10px;cursor:pointer;font-weight:700">UNLOCK FULL PERSONAS →</button>';
+      pgrid.style.position = 'relative';
+      pgrid.appendChild(note);
+    }
+  }
+
+  // Nav tabs — lock Outreach and Campaigns
+  ['nav-campaigns','nav-outreach'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) {
+      el.style.opacity = '0.35';
+      el.style.cursor = 'not-allowed';
+      el.setAttribute('data-free-locked', '1');
+    }
+  });
+
+  // Scoring CPI/GFI — blur via CSS class on the screen
+  var scoreScreen = document.getElementById('screen-scoring');
+  if (scoreScreen) scoreScreen.classList.add('free-score-blur');
+}
+
+// ── FREE TIER UPGRADE PROMPT ──────────────────────────────────────────
+function showFreeTierPrompt() {
+  var existing = document.getElementById('sf-free-prompt');
+  if (existing) existing.remove();
+  var overlay = document.createElement('div');
+  overlay.id = 'sf-free-prompt';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:99990;display:flex;align-items:center;justify-content:center;padding:24px;';
+  overlay.innerHTML = '<div style="background:#0D0D18;border:1px solid rgba(0,80,255,0.3);border-radius:16px;padding:40px;max-width:480px;width:100%;text-align:center">'
+    + '<div style="font-size:28px;margin-bottom:16px">🚀</div>'
+    + '<div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.12em;color:#FFD400;margin-bottom:10px">UNLOCK SIMFLUENCE</div>'
+    + '<div style="font-family:Space Grotesk,sans-serif;font-size:22px;font-weight:700;color:#fff;margin-bottom:12px">See the full platform in action</div>'
+    + '<div style="font-size:13px;color:rgba(255,255,255,0.5);line-height:1.7;margin-bottom:28px">Get access to 3,600+ creators, the full campaign simulator, AI persona matching, outreach CRM and more. Book a live demo with Liam and we\'ll walk you through everything.</div>'
+    + '<div style="display:flex;flex-direction:column;gap:10px">'
+    + '<a href="https://calendly.com/liam-simfluence" target="_blank" style="display:block;padding:14px;background:#FFD400;color:#000;border-radius:8px;font-family:DM Mono,monospace;font-size:11px;font-weight:700;letter-spacing:.06em;text-decoration:none;cursor:pointer">📅 BOOK A LIVE DEMO</a>'
+    + '<a href="mailto:liam@simfluence.ai?subject=Upgrade%20Enquiry" style="display:block;padding:14px;background:rgba(0,80,255,0.15);border:1px solid rgba(0,80,255,0.3);color:#6B9FFF;border-radius:8px;font-family:DM Mono,monospace;font-size:11px;font-weight:600;letter-spacing:.06em;text-decoration:none">✉ CONTACT US</a>'
+    + '<button onclick="document.getElementById(\'sf-free-prompt\').remove()" style="padding:10px;background:transparent;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.4);border-radius:8px;font-family:DM Mono,monospace;font-size:10px;cursor:pointer">CONTINUE FREE PLAN</button>'
+    + '</div>'
+    + '</div>';
+  overlay.addEventListener('click', function(e){ if(e.target===overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+}
+
 function applyAllTierGates() {
   var t = getTierLevel();
   var tn = getTierName();
 
   // Tier badge
   applyTierBadge(tn);
+
+  // ── FREE TIER GATES ───────────────────────────────────────────────
+  if (t === -1) {
+    applyFreeTierGates();
+  }
 
   // Personas nav tab — locked for bronze
   var personaTab = document.querySelector('.nav-tab[data-screen="personas"]');
@@ -2230,6 +2412,16 @@ function patchSimRunCounter() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+  // Auto-restore session — skip gate if already authenticated this session
+  try {
+    if (sessionStorage.getItem('sf_auth') === '1') {
+      var gEl = document.getElementById('G');
+      if (gEl) { gEl.style.display='none'; gEl.style.pointerEvents='none'; gEl.style.visibility='hidden'; gEl.style.zIndex='-1'; }
+      var obEl = document.getElementById('sfOnboard');
+      if (obEl) { obEl.style.display='none'; obEl.style.pointerEvents='none'; }
+      document.body.style.overflow = '';
+    }
+  } catch(e) {}
   setTimeout(function() {
     patchSimRunCounter();
     applyAllTierGates();
@@ -2238,6 +2430,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
 document.getElementById('GP').focus();
 document.getElementById('GBtn').addEventListener('click', GC);
+// Free signup button + enter key
+(function() {
+  var fb = document.getElementById('GFBtn');
+  if (fb) fb.addEventListener('click', GFSignUp);
+  var fp = document.getElementById('GFPass');
+  if (fp) fp.addEventListener('keydown', function(e){ if(e.key==='Enter') GFSignUp(); });
+  var fe = document.getElementById('GFEmail');
+  if (fe) fe.addEventListener('keydown', function(e){ if(e.key==='Enter') { var p=document.getElementById('GFPass'); if(p) p.focus(); } });
+})();
 
 // ── ONBOARDING FUNCTIONS (defined early so available before page parses) ──
 var obSelectedGenre = '';
@@ -8233,6 +8434,11 @@ function closeProfileOverlay() {
 
 // ── SCREENS ───────────────────────────────────────────────────────────
 function showScreen(name, btn) {
+  // Block campaigns/outreach for free tier
+  if ((name==='campaigns' || name==='outreach') && typeof getTierLevel==='function' && getTierLevel() < 0) {
+    if (typeof showFreeTierPrompt==='function') showFreeTierPrompt();
+    return;
+  }
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   const screen = document.getElementById('screen-' + name);
@@ -12047,6 +12253,11 @@ document.addEventListener('click', function(e) {
     // Handle nav tabs with data-screen
     var screen = el.getAttribute('data-screen');
     if (screen && el.classList.contains('nav-tab')) {
+      // Block locked tabs for free tier
+      if (el.getAttribute('data-free-locked') && typeof getTierLevel==='function' && getTierLevel() < 0) {
+        if (typeof showFreeTierPrompt==='function') showFreeTierPrompt();
+        return;
+      }
       if (typeof showScreen === 'function') showScreen(screen, el);
       return;
     }
