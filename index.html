@@ -263,12 +263,12 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
     <li><a href="#how">How it works</a></li>
     <li><a href="#features">Features</a></li>
     <li><a href="#pricing">Pricing</a></li>
-    <li><a href="app.html" target="_blank">See the platform</a></li>
+    <li><a href="#" onclick="openFreeSignup();return false;">See the platform</a></li>
   </ul>
   <div class="nav-right">
     <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn" title="Toggle mode">🌙</button>
-    <a href="app.html" target="_blank" class="nav-login">Sign in</a>
-    <a href="/cdn-cgi/l/email-protection#d79bbeb6ba9784bebab1bba2b2b9b4b2f9969ee8a4a2b5bdb2b4a3ea9bbea1b2f2e5e793b2bab8f2e5e785b2a6a2b2a4a3" class="nav-cta">Book a live demo</a>
+    <button onclick="openSignIn()" class="nav-login" style="background:none;border:none;cursor:pointer;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.06em;color:var(--muted)">Sign in</button>
+    <button onclick="openFreeSignup()" class="nav-cta" style="border:none;cursor:pointer">Try Free</button>
   </div>
 </nav>
 
@@ -1241,7 +1241,7 @@ function simShow(){
       <input id="sfEmail" type="email" class="sf-input" placeholder="you@company.com" autocomplete="email">
       <div id="sfE1" class="sf-err">Please fill in all fields with a valid email.</div>
       <button onclick="sfStep1()" class="sf-btn">Continue →</button>
-      <div class="sf-note">Already using Simfluence? <a href="app.html" target="_blank">Sign in</a></div>
+      <div class="sf-note">Already using Simfluence? <a href="#" onclick="openSignIn();return false;">Sign in</a></div>
     </div>
     <!-- Step 2 — Plan select -->
     <div id="sfS2" style="display:none">
@@ -1440,7 +1440,7 @@ async function sfSave(){
 }
 
 function sfLaunch(){
-  window.open('app.html','_blank');
+  window.location.href = 'app.html';
 }
 
 document.addEventListener('click',function(e){ if(e.target&&e.target.id==='sfModal') sfClose(); });
@@ -1511,6 +1511,122 @@ document.addEventListener('click', function(e) {
   var sp = e.target.closest('[data-scrollplan]');
   if (sp) { e.preventDefault(); scrollToPlan(sp.getAttribute('data-scrollplan')); return; }
 });
+
+/* ── Supabase Auth ───────────────────────────────────────── */
+var IDX_URL = 'https://iysjxslzlbojoivxjrce.supabase.co';
+var IDX_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5c2p4c2x6bGJvam9pdnhqcmNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM0MzA2MDIsImV4cCI6MjA1OTAwNjYwMn0.AqbQqRs3AiGYhRGZw1SG2TNqlQQ1rPbICbzNBE3Uvj4';
+
+function openSignIn() {
+  document.getElementById('sfSignInModal').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+  setTimeout(function(){ var e=document.getElementById('siEmail'); if(e) e.focus(); }, 150);
+}
+function sfSignInClose() {
+  document.getElementById('sfSignInModal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+function openFreeSignup() {
+  document.getElementById('sfFreeModal').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+  setTimeout(function(){ var e=document.getElementById('freeEmail'); if(e) e.focus(); }, 150);
+}
+function sfFreeClose() {
+  document.getElementById('sfFreeModal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function sfSignIn() {
+  var email = document.getElementById('siEmail').value.trim();
+  var pass  = document.getElementById('siPass').value;
+  var errEl = document.getElementById('siErr');
+  var btn   = document.querySelector('#sfSignInModal button[onclick="sfSignIn()"]');
+  if (!email || !pass) { errEl.style.display='block'; setTimeout(function(){errEl.style.display='none';},3000); return; }
+  if (btn) { btn.textContent='SIGNING IN...'; btn.disabled=true; }
+  fetch(IDX_URL + '/auth/v1/token?grant_type=password', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json','apikey':IDX_KEY},
+    body: JSON.stringify({email:email, password:pass})
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    if (!data.access_token) {
+      errEl.style.display='block';
+      setTimeout(function(){errEl.style.display='none';},3000);
+      if(btn){btn.textContent='SIGN IN →';btn.disabled=false;}
+      return;
+    }
+    // Success — redirect to app
+    window.location.href = 'app.html';
+  })
+  .catch(function(){
+    errEl.style.display='block';
+    setTimeout(function(){errEl.style.display='none';},3000);
+    if(btn){btn.textContent='SIGN IN →';btn.disabled=false;}
+  });
+}
+
+function sfForgotPassword() {
+  var email = document.getElementById('siEmail').value.trim();
+  var okEl  = document.getElementById('siForgotOk');
+  var errEl = document.getElementById('siErr');
+  if (!email || !email.includes('@')) {
+    errEl.textContent = 'Enter your email above first.';
+    errEl.style.display='block';
+    setTimeout(function(){errEl.style.display='none'; errEl.textContent='Incorrect email or password. Try again.';},3000);
+    return;
+  }
+  fetch(IDX_URL + '/auth/v1/recover', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json','apikey':IDX_KEY},
+    body: JSON.stringify({email:email})
+  }).then(function(){ okEl.style.display='block'; setTimeout(function(){okEl.style.display='none';},5000); })
+    .catch(function(){ okEl.style.display='block'; });
+}
+
+function sfFreeSignup() {
+  var email = document.getElementById('freeEmail').value.trim();
+  var pass  = document.getElementById('freePass').value;
+  var errEl = document.getElementById('freeErr');
+  var btn   = document.getElementById('freeBtn');
+  if (!email || !email.includes('@') || !email.includes('.') || pass.length < 8) {
+    errEl.style.display='block';
+    setTimeout(function(){errEl.style.display='none';},3000);
+    return;
+  }
+  if(btn){btn.textContent='CREATING ACCOUNT...';btn.disabled=true;}
+  fetch(IDX_URL + '/auth/v1/signup', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json','apikey':IDX_KEY},
+    body: JSON.stringify({email:email, password:pass})
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    if (data.error) {
+      var msg = (data.error && data.error.message) || 'Sign up failed.';
+      if (msg.toLowerCase().includes('already')) msg = 'Email already registered — sign in instead.';
+      errEl.textContent = msg;
+      errEl.style.display='block';
+      setTimeout(function(){errEl.style.display='none';},4000);
+      if(btn){btn.textContent='CREATE FREE ACCOUNT →';btn.disabled=false;}
+      return;
+    }
+    // Success — redirect to app as free user
+    window.location.href = 'app.html';
+  })
+  .catch(function(){
+    errEl.textContent='Connection error. Please try again.';
+    errEl.style.display='block';
+    setTimeout(function(){errEl.style.display='none';},3000);
+    if(btn){btn.textContent='CREATE FREE ACCOUNT →';btn.disabled=false;}
+  });
+}
+
+// Close modals on overlay click
+document.addEventListener('click', function(e) {
+  if (e.target && e.target.id === 'sfSignInModal') sfSignInClose();
+  if (e.target && e.target.id === 'sfFreeModal')   sfFreeClose();
+});
+
 </script>
 
 <!-- ══ FEATURE MODALS ════════════════════════════════════════════════ -->
