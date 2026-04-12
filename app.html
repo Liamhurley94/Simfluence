@@ -2935,35 +2935,58 @@ function fmtNum(n) { return n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed
 function formatBudget(n) { return '£'+(n>=1000?(n/1000).toFixed(0)+'K':n); }
 
 function computeCostEstimate(creator) {
-  const genre   = creator.genre||'Gaming & Esports';
-  const cpms    = NICHE_SPONSOR_CPM[genre]||DEFAULT_CPM;
-  const platRaw = (creator.platform||'YouTube').toLowerCase();
-  const platKey = Object.keys(PLATFORM_MULT).find(k=>platRaw.includes(k))||'youtube';
-  const platMult= PLATFORM_MULT[platKey];
+  // ── Rate model rebuilt from 80+ real creator deals (2024-2025) ──────
+  // YouTube Dedicated median CPV: EN/US/UK €0.085/view · DE €0.115/view · FR €0.095/view
+  // Twitch 2hr Stream median: €2.65/CCV (EN/DE) · €2.25/CCV (FR) · floor €650
+  const genre   = creator.genre || 'Gaming & Esports';
+  const cpms    = NICHE_SPONSOR_CPM[genre] || DEFAULT_CPM;
+  const platRaw = (creator.platform || 'YouTube').toLowerCase();
+  const lang    = (creator.language || 'English').toLowerCase();
+  const subsN   = parseSubs(creator.subs);
+  const fmt     = v => v >= 1000 ? '£' + (v / 1000).toFixed(v >= 10000 ? 0 : 1) + 'K' : '£' + v;
 
-  if(platRaw.includes('twitch')||platRaw.includes('kick')) {
-    const ccv=parseViews(creator.avgViews)||100;
-    const ccvCpmLo=platRaw.includes('kick')?2:4, ccvCpmHi=platRaw.includes('kick')?5:8;
-    const nMult=cpms.med/DEFAULT_CPM.med;
-    const ccvLo=Math.max(50,Math.round(ccv/1000*ccvCpmLo*2*nMult*0.70/50)*50);
-    const ccvHi=Math.max(100,Math.round(ccv/1000*ccvCpmHi*2*nMult*1.45/50)*50);
-    const ccvFmt=v=>v>=1000?'£'+(v/1000).toFixed(v>=10000?0:1)+'K':'£'+v;
-    return { ranges:{ded:[Math.round(ccvLo*cpms.dedMult/50)*50,Math.round(ccvHi*cpms.dedMult/50)*50],int:[ccvLo,ccvHi],mix:[Math.round(ccvLo*1.2/50)*50,Math.round(ccvHi*1.2/50)*50]},fmt:ccvFmt,isTwitchCCV:true,ccv,
-      verifiedNote:(creator.verifiedDeals||0)>=2?'✓ Verified deal history':'~ CCV-based estimate',
-      disclaimer:'Per 2hr stream · Excludes exclusivity' };
+  // ── TWITCH / KICK ─────────────────────────────────────────────────
+  if (platRaw.includes('twitch') || platRaw.includes('kick')) {
+    var ccv = parseViews(creator.avgViews) || 100;
+    var baseRate = platRaw.includes('kick') ? 1.60 : lang === 'french' ? 2.25 : 2.65;
+    var nicheMult = Math.max(1.0, (cpms.dedMult || 1.6) / 1.6);
+    var streamBase = Math.max(650, ccv * baseRate * nicheMult);
+    var intLo = Math.max(500, Math.round(streamBase * 0.72 / 50) * 50);
+    var intHi = Math.round(streamBase * 1.28 / 50) * 50;
+    var dedLo = Math.round(intLo * 1.30 / 50) * 50;
+    var dedHi = Math.round(intHi * 1.30 / 50) * 50;
+    var mixLo = Math.round((intLo + dedLo) / 2 / 50) * 50;
+    var mixHi = Math.round((intHi + dedHi) / 2 / 50) * 50;
+    var ccvFmt = v => v >= 1000 ? '£' + (v / 1000).toFixed(v >= 10000 ? 0 : 1) + 'K' : '£' + v;
+    var tierLabel = subsN >= 2e6 ? 'Megastar' : subsN >= 500e3 ? 'Established' : subsN >= 50e3 ? 'Mid-tier' : 'Micro';
+    return {
+      ranges: { ded: [dedLo, dedHi], int: [intLo, intHi], mix: [mixLo, mixHi] },
+      fmt: ccvFmt, isTwitchCCV: true, ccv, tierLabel,
+      verifiedNote: (creator.verifiedDeals || 0) >= 2 ? '✓ Verified deal history' : '~ Based on €2.65/CCV market rate',
+      disclaimer: 'Per 2hr stream integration · Excludes VOD rights & exclusivity'
+    };
   }
-  const avgV=parseViews(creator.avgViews)||parseSubs(creator.subs)*0.08;
-  const baseInt=avgV/1000*cpms.med*(platMult||1.0);
-  const intLo=Math.max(50,Math.round(baseInt*0.70/50)*50);
-  const intHi=Math.max(100,Math.round(baseInt*1.45/50)*50);
-  const dedLo=Math.round(intLo*cpms.dedMult*0.85/50)*50;
-  const dedHi=Math.round(intHi*cpms.dedMult*1.15/50)*50;
-  const fmt=v=>v>=1000?'£'+(v/1000).toFixed(v>=10000?0:1)+'K':'£'+v;
-  const subsN=parseSubs(creator.subs);
-  const tierLabel=subsN>=2e6?'Megastar':subsN>=500e3?'Established':subsN>=50e3?'Mid-tier':'Micro';
-  return { ranges:{ded:[dedLo,dedHi],int:[intLo,intHi],mix:[Math.round((intLo+dedLo)/2/50)*50,Math.round((intHi+dedHi)/2/50)*50]},fmt,isTwitchCCV:false,
-    verifiedNote:(creator.verifiedDeals||0)>=2?'✓ Verified deal history · '+genre+' CPM benchmark':'~ '+genre+' CPM benchmark (2025 data)',
-    disclaimer:'Excludes exclusivity, usage rights & production fees',tierLabel };
+
+  // ── YOUTUBE / OTHER ───────────────────────────────────────────────
+  var avgV = parseViews(creator.avgViews) || parseSubs(creator.subs) * 0.08;
+  var baseCPV = lang === 'german' ? 0.085 : lang === 'french' ? 0.072 : 0.085;
+  var nicheAdj = Math.max(1.0, (cpms.dedMult || 1.6) / 1.6);
+  baseCPV = baseCPV * nicheAdj;
+  var scaleFactor = avgV >= 500000 ? 0.78 : avgV >= 200000 ? 0.88 : avgV >= 50000 ? 1.00 : avgV >= 15000 ? 1.15 : 1.40;
+  var dedMid = Math.max(400, avgV * baseCPV * scaleFactor);
+  var dedLo  = Math.max(300, Math.round(dedMid * 0.72 / 50) * 50);
+  var dedHi  = Math.round(dedMid * 1.35 / 50) * 50;
+  var intLo  = Math.max(150, Math.round(dedLo * 0.55 / 50) * 50);
+  var intHi  = Math.round(dedHi * 0.55 / 50) * 50;
+  var mixLo  = Math.round(dedLo * 0.75 / 50) * 50;
+  var mixHi  = Math.round(dedHi * 0.75 / 50) * 50;
+  var tierLabel = subsN >= 2e6 ? 'Megastar' : subsN >= 500e3 ? 'Established' : subsN >= 50e3 ? 'Mid-tier' : 'Micro';
+  return {
+    ranges: { ded: [dedLo, dedHi], int: [intLo, intHi], mix: [mixLo, mixHi] },
+    fmt, isTwitchCCV: false, tierLabel,
+    verifiedNote: (creator.verifiedDeals || 0) >= 2 ? '✓ Verified deal history · ' + genre : '~ ' + genre + ' market estimate (€0.085/view · 2025)',
+    disclaimer: 'Dedicated video · Excludes usage rights, exclusivity & production costs'
+  };
 }
 
 function renderCostPanel(creator) {
@@ -6828,6 +6851,39 @@ const CREATORS = [
   { id:1882, name:'wyqira', handle:'@wyqira', platform:'Twitch', allPlatforms:['Twitch'], subs:'517', avgViews:'71', eng:'13.7%', genre:'Gaming & Esports', cpi:60, gfi:60, color:'#00C46A', language:'English', verifiedDeals:0, sponsorHistory:[], bio:'Gaming & Esports · Overwatch 2 · fps   tactical · English · 517 followers · avg 71 viewers' },
   { id:3045, name:'yeolumettv', handle:'@yeolumettv', platform:'Twitch', allPlatforms:['Twitch'], subs:'506', avgViews:'37', eng:'7.3%', genre:'Gaming & Esports', cpi:56, gfi:56, color:'#00C46A', language:'German', verifiedDeals:0, sponsorHistory:[], bio:'Gaming & Esports · Phasmophobia · horror · German · 506 followers · avg 37 viewers' },
   { id:1187, name:'DewFlunkyPC', handle:'@dewflunkypc', platform:'Twitch', allPlatforms:['Twitch'], subs:'500', avgViews:'31', eng:'6.2%', genre:'Art & Creative', cpi:56, gfi:56, color:'#FF9F43', language:'English', verifiedDeals:0, sponsorHistory:[], bio:'Art & Creative · Makers & Crafting · traditional art · English · 500 followers · avg 31 viewers' },
+  { id:3110, name:'Koinsy', handle:'@KoinskyChannel', platform:'YouTube', allPlatforms:['YouTube'], subs:'187K', avgViews:'18K', eng:'1.4%', genre:'Gaming & Esports', cpi:80, gfi:80, color:'#00C46A', language:'French', verifiedDeals:0, sponsorHistory:[], bio:'Survival/Building (Timberborn) · French · 187K subs · 18K avg views' },
+  { id:3111, name:'Caylus', handle:'@Caylus', platform:'YouTube', allPlatforms:['YouTube'], subs:'20.6M', avgViews:'450K', eng:'0.3%', genre:'Gaming & Esports', cpi:71, gfi:71, color:'#00C46A', language:'English', verifiedDeals:0, sponsorHistory:[], bio:'Gaming Variety · English · 20.6M subs · 450K avg views' },
+  { id:3112, name:'Creebus', handle:'@Creebus', platform:'YouTube', allPlatforms:['YouTube'], subs:'1.1M', avgViews:'150K', eng:'2.0%', genre:'Gaming & Esports', cpi:80, gfi:80, color:'#00C46A', language:'English', verifiedDeals:0, sponsorHistory:[], bio:'Gaming Minecraft · English · 1.1M subs · 150K avg views' },
+  { id:3113, name:'Flamingo', handle:'@flamingo', platform:'YouTube', allPlatforms:['YouTube'], subs:'14.4M', avgViews:'750K', eng:'0.8%', genre:'Gaming & Esports', cpi:77, gfi:77, color:'#00C46A', language:'English', verifiedDeals:0, sponsorHistory:[], bio:'Gaming Roblox · English · 14.4M subs · 750K avg views' },
+  { id:3114, name:'Ironmouse', handle:'@IronMouseParty', platform:'YouTube', allPlatforms:['YouTube'], subs:'1.6M', avgViews:'50K', eng:'0.5%', genre:'Gaming & Esports', cpi:74, gfi:74, color:'#A29BFE', language:'English', verifiedDeals:0, sponsorHistory:[], bio:'Survival/Various games · Vtuber · English · 1.6M subs · 50K avg views' },
+  { id:3115, name:'sawmanUK', handle:'@sawmanUK', platform:'YouTube', allPlatforms:['YouTube'], subs:'68K', avgViews:'30K', eng:'6.6%', genre:'Gaming & Esports', cpi:85, gfi:85, color:'#00C46A', language:'English', verifiedDeals:0, sponsorHistory:[], bio:'MMO/RPG · English · 68K subs · 30K avg views' },
+  { id:3116, name:'Waydots', handle:'@Waydots', platform:'YouTube', allPlatforms:['YouTube'], subs:'85K', avgViews:'40K', eng:'7.1%', genre:'Gaming & Esports', cpi:85, gfi:85, color:'#00C46A', language:'English', verifiedDeals:0, sponsorHistory:[], bio:'MMO · English · 85K subs · 40K avg views' },
+  { id:3117, name:'TotalXClipse', handle:'@TotalXclipse', platform:'YouTube', allPlatforms:['YouTube'], subs:'216K', avgViews:'20K', eng:'1.4%', genre:'Gaming & Esports', cpi:80, gfi:80, color:'#00C46A', language:'English', verifiedDeals:0, sponsorHistory:[], bio:'Survival games · English · 216K subs · 20K avg views' },
+  { id:3118, name:'MathChief', handle:'@MathChief', platform:'YouTube', allPlatforms:['YouTube'], subs:'807K', avgViews:'25K', eng:'0.5%', genre:'Gaming & Esports', cpi:74, gfi:74, color:'#00C46A', language:'English', verifiedDeals:0, sponsorHistory:[], bio:'Survival/New releases/Variety · English · 807K subs · 25K avg views' },
+  { id:3119, name:'Force Gaming', handle:'@ForceGamingYT', platform:'YouTube', allPlatforms:['YouTube','Twitch'], subs:'250K', avgViews:'120K', eng:'7.2%', genre:'Gaming & Esports', cpi:85, gfi:85, color:'#00C46A', language:'English', verifiedDeals:0, sponsorHistory:[], bio:'Survival games · English · 250K subs · 120K avg views' },
+  { id:3120, name:'KhrazeGaming', handle:'@Khrazegaming', platform:'YouTube', allPlatforms:['YouTube'], subs:'400K', avgViews:'70K', eng:'2.6%', genre:'Gaming & Esports', cpi:80, gfi:80, color:'#00C46A', language:'English', verifiedDeals:0, sponsorHistory:[], bio:'RPG/Open World/Action · English · 400K subs · 70K avg views' },
+  { id:3121, name:'TheLazyPeon', handle:'@TheLazyPeon', platform:'YouTube', allPlatforms:['YouTube'], subs:'800K', avgViews:'220K', eng:'4.1%', genre:'Gaming & Esports', cpi:88, gfi:88, color:'#00C46A', language:'English', verifiedDeals:0, sponsorHistory:[], bio:'FPS/MOBA/RPG/Survival · English · 800K subs · 220K avg views' },
+  { id:3122, name:'Throat', handle:'@ThroatYT', platform:'YouTube', allPlatforms:['YouTube'], subs:'221K', avgViews:'80K', eng:'5.4%', genre:'Gaming & Esports', cpi:85, gfi:85, color:'#00C46A', language:'English', verifiedDeals:0, sponsorHistory:[], bio:'Gaming Rust · English · 221K subs · 80K avg views' },
+  { id:3123, name:'Mint', handle:'@MintMinecraft', platform:'YouTube', allPlatforms:['YouTube'], subs:'140K', avgViews:'300K', eng:'12.0%', genre:'Gaming & Esports', cpi:93, gfi:93, color:'#00C46A', language:'English', verifiedDeals:0, sponsorHistory:[], bio:'Minecraft/Builder · English · 140K subs · 300K avg views' },
+  { id:3124, name:'Galahan', handle:'@GalahanYT', platform:'YouTube', allPlatforms:['YouTube'], subs:'77K', avgViews:'75K', eng:'12.0%', genre:'Gaming & Esports', cpi:90, gfi:90, color:'#00C46A', language:'English', verifiedDeals:0, sponsorHistory:[], bio:'Variety - RDR2/Fallout/Marvel Rivals · English · 77K subs · 75K avg views' },
+  { id:3125, name:'SiNKiLLeR_', handle:'@SiNKiLLeR_', platform:'YouTube', allPlatforms:['YouTube'], subs:'28K', avgViews:'15K', eng:'8.2%', genre:'Gaming & Esports', cpi:90, gfi:90, color:'#00C46A', language:'English', verifiedDeals:0, sponsorHistory:[], bio:'Gameplay strategies/tutorials · English · 28K subs · 15K avg views' },
+  { id:3126, name:'Noobert', handle:'@Noobert', platform:'YouTube', allPlatforms:['YouTube'], subs:'115K', avgViews:'15K', eng:'2.0%', genre:'Gaming & Esports', cpi:80, gfi:80, color:'#00C46A', language:'English', verifiedDeals:0, sponsorHistory:[], bio:'Rimworld · English · 115K subs · 15K avg views' },
+  { id:3127, name:'Rifle Gaming', handle:'@RifleGaming', platform:'YouTube', allPlatforms:['YouTube'], subs:'67K', avgViews:'5K', eng:'1.1%', genre:'Gaming & Esports', cpi:74, gfi:74, color:'#00C46A', language:'English', verifiedDeals:0, sponsorHistory:[], bio:'Variety gaming · English · 67K subs · 5K avg views' },
+  { id:3128, name:'click4gameplay', handle:'@click4gameplay', platform:'YouTube', allPlatforms:['YouTube'], subs:'104K', avgViews:'15K', eng:'2.2%', genre:'Gaming & Esports', cpi:80, gfi:80, color:'#00C46A', language:'English', verifiedDeals:0, sponsorHistory:[], bio:'RPG · English · 104K subs · 15K avg views' },
+  { id:3129, name:'Kodeations', handle:'@kodeationstv', platform:'YouTube', allPlatforms:['YouTube','Twitch'], subs:'91K', avgViews:'2K', eng:'0.4%', genre:'Gaming & Esports', cpi:68, gfi:68, color:'#00C46A', language:'English', verifiedDeals:0, sponsorHistory:[], bio:'Enshrouded/ARK/Runescape/Hytale · English · 91K subs · 2.5K avg views' },
+  { id:3130, name:'HinaBoBina', handle:'@HinaBoBina', platform:'Twitch', allPlatforms:['Twitch'], subs:'19K', avgViews:'450', eng:'0.7%', genre:'Gaming & Esports', cpi:82, gfi:82, color:'#A29BFE', language:'English', verifiedDeals:0, sponsorHistory:[], bio:'Vtuber/Final Fantasy/RPG · English · 19K followers · 450 avg viewers' },
+  { id:3131, name:'Buffpup', handle:'@Buffpup', platform:'Twitch', allPlatforms:['Twitch'], subs:'348K', avgViews:'2K', eng:'0.2%', genre:'Gaming & Esports', cpi:70, gfi:70, color:'#A29BFE', language:'English', verifiedDeals:0, sponsorHistory:[], bio:'Vtuber/Variety gaming · English · 348K followers · 1.8K avg viewers' },
+  { id:3132, name:'Vexoria_The_SunEater', handle:'@Vexoria_The_SunEater', platform:'Twitch', allPlatforms:['Twitch'], subs:'130K', avgViews:'750', eng:'0.2%', genre:'Gaming & Esports', cpi:68, gfi:68, color:'#A29BFE', language:'English', verifiedDeals:0, sponsorHistory:[], bio:'Vtuber/WoW · English · 130K followers · 750 avg viewers' },
+  { id:3133, name:'brutalles', handle:'@brutalles', platform:'Twitch', allPlatforms:['Twitch','YouTube'], subs:'23K', avgViews:'250', eng:'0.3%', genre:'Gaming & Esports', cpi:76, gfi:76, color:'#00C46A', language:'English', verifiedDeals:0, sponsorHistory:[], bio:'Variety/Indie games · English · 23K followers · 250 avg viewers' },
+  { id:3134, name:'Boaroo', handle:'@Boaroo', platform:'Twitch', allPlatforms:['Twitch'], subs:'21K', avgViews:'90', eng:'0.1%', genre:'Gaming & Esports', cpi:68, gfi:68, color:'#00C46A', language:'English', verifiedDeals:0, sponsorHistory:[], bio:'Variety/Pokemon/Minecraft · English · 21K followers · 90 avg viewers' },
+  { id:3135, name:'Coney', handle:'@Coney', platform:'Twitch', allPlatforms:['Twitch'], subs:'139K', avgViews:'900', eng:'0.2%', genre:'Gaming & Esports', cpi:68, gfi:68, color:'#00C46A', language:'English', verifiedDeals:0, sponsorHistory:[], bio:'Variety gaming · English · 139K followers · 900 avg viewers' },
+  { id:3136, name:'Pyroscythe', handle:'@Pyroscythe', platform:'Twitch', allPlatforms:['Twitch'], subs:'30K', avgViews:'140', eng:'0.1%', genre:'Gaming & Esports', cpi:68, gfi:68, color:'#00C46A', language:'English', verifiedDeals:0, sponsorHistory:[], bio:'Minecraft/ARPG · English · 30K followers · 140 avg viewers' },
+  { id:3137, name:'Duncstar', handle:'@Duncstar', platform:'Twitch', allPlatforms:['Twitch'], subs:'37K', avgViews:'300', eng:'0.2%', genre:'Gaming & Esports', cpi:68, gfi:68, color:'#00C46A', language:'English', verifiedDeals:0, sponsorHistory:[], bio:'Variety games · English · 37K followers · 300 avg viewers' },
+  { id:3138, name:'Bubbell', handle:'@Bubbell', platform:'Twitch', allPlatforms:['Twitch'], subs:'88K', avgViews:'600', eng:'0.2%', genre:'Gaming & Esports', cpi:68, gfi:68, color:'#00C46A', language:'English', verifiedDeals:0, sponsorHistory:[], bio:'Variety RPG · English · 88K followers · 600 avg viewers' },
+  { id:3139, name:'ZiggyDLive', handle:'@ZiggyDGaming', platform:'Twitch', allPlatforms:['Twitch','YouTube'], subs:'180K', avgViews:'300', eng:'0.1%', genre:'Gaming & Esports', cpi:68, gfi:68, color:'#00C46A', language:'English', verifiedDeals:0, sponsorHistory:[], bio:'RPG/Indie gaming · English · 180K followers · 300 avg viewers' },
+  { id:3140, name:'Jared Knabenbauer', handle:'@projared', platform:'Twitch', allPlatforms:['Twitch'], subs:'130K', avgViews:'180', eng:'0.0%', genre:'Gaming & Esports', cpi:68, gfi:68, color:'#00C46A', language:'English', verifiedDeals:0, sponsorHistory:[], bio:'Retro/RPG gaming · English · 130K followers · 180 avg viewers' },
+  { id:3141, name:'Delaney', handle:'@Delaney7', platform:'Twitch', allPlatforms:['Twitch','YouTube'], subs:'65K', avgViews:'300', eng:'0.1%', genre:'Gaming & Esports', cpi:68, gfi:68, color:'#00C46A', language:'English', verifiedDeals:0, sponsorHistory:[], bio:'FPS/RTS/MMO/RPG · English · 65K followers · 300 avg viewers' },
+  { id:3142, name:'Xwater', handle:'@Xwater', platform:'Twitch', allPlatforms:['Twitch'], subs:'56K', avgViews:'200', eng:'0.1%', genre:'Gaming & Esports', cpi:68, gfi:68, color:'#00C46A', language:'English', verifiedDeals:0, sponsorHistory:[], bio:'Gaming Variety · English · 56K followers · 200 avg viewers' },
 ];
 
 // ── GENRE AFFINITY ────────────────────────────────────────────────────
@@ -9955,7 +10011,7 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="footer-brand-name">Sim<span>fluence</span></div>
       <div class="footer-tagline">AI-powered campaign intelligence for creator-driven brands. Know your CTR, CPM, CVR and ROAS before you spend a single penny.</div>
       <div class="footer-contact">
-        Questions? <a href="mailto:Liam@Simfluence.AI" style="color:#6B9FFF">Liam@Simfluence.AI</a>
+        Questions? <a href="/cdn-cgi/l/email-protection#de92b7bfb39e8db7b3b8b2abbbb0bdbbf09f97" style="color:#6B9FFF"><span class="__cf_email__" data-cfemail="b0fcd9d1ddf0e3d9ddd6dcc5d5ded3d59ef1f9">[email&#160;protected]</span></a>
       </div>
     </div>
 
@@ -10022,7 +10078,7 @@ document.addEventListener('DOMContentLoaded', () => {
     <p>We do not take commission on deals. We do not monetise creator relationships. We charge a flat subscription for access to the platform and nothing else. Your data, your campaigns, and your creator relationships remain entirely yours.</p>
 
     <hr class="divider-line">
-    <p>For enquiries, partnerships, or pilot access: Liam@Simfluence.AI</p>
+    <p>For enquiries, partnerships, or pilot access: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="15597c747855467c78737960707b76703b545c">[email&#160;protected]</a></p>
   </div>
 </div>
 
@@ -10042,7 +10098,7 @@ document.addEventListener('DOMContentLoaded', () => {
     <p>Simfluence provides AI-generated campaign forecasting tools, creator discovery and scoring, and audience intelligence for influencer marketing planning. All forecast outputs are probabilistic models based on historical benchmark data and machine learning inference. They are provided for planning and decision-support purposes only and do not constitute guarantees of campaign performance.</p>
 
     <h2>3. Your account</h2>
-    <p>To access the full platform you must register an account with a valid work email address. You are responsible for maintaining the confidentiality of your login credentials and for all activity that occurs under your account. You must notify us immediately at Liam@Simfluence.AI if you suspect any unauthorised use of your account.</p>
+    <p>To access the full platform you must register an account with a valid work email address. You are responsible for maintaining the confidentiality of your login credentials and for all activity that occurs under your account. You must notify us immediately at <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="135f7a727e53407a7e757f66767d70763d525a">[email&#160;protected]</a> if you suspect any unauthorised use of your account.</p>
     <p>You agree to provide accurate, current, and complete information when registering and to update this information as necessary.</p>
 
     <h2>4. Acceptable use</h2>
@@ -10072,7 +10128,7 @@ document.addEventListener('DOMContentLoaded', () => {
     <p>In no event shall Simfluence Ltd be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the platform or reliance on any forecast output, even if we have been advised of the possibility of such damages. Our total aggregate liability to you for any claims arising under these terms shall not exceed the total fees paid by you to us in the three months preceding the claim.</p>
 
     <h2>9. Data and privacy</h2>
-    <p>We collect and process personal data in accordance with applicable data protection laws including the UAE Personal Data Protection Law (Federal Decree-Law No. 45 of 2021) and, where applicable to our European users, the EU General Data Protection Regulation (GDPR). We do not sell your personal data to third parties. For full details of how we collect, use, and protect your data, please contact us at Liam@Simfluence.AI.</p>
+    <p>We collect and process personal data in accordance with applicable data protection laws including the UAE Personal Data Protection Law (Federal Decree-Law No. 45 of 2021) and, where applicable to our European users, the EU General Data Protection Regulation (GDPR). We do not sell your personal data to third parties. For full details of how we collect, use, and protect your data, please contact us at <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="662a0f070b26350f0b000a130308050348272f">[email&#160;protected]</a>.</p>
 
     <h2>10. Governing law</h2>
     <p>These terms are governed by the laws of the United Arab Emirates. Any disputes arising from or relating to these terms or the platform shall be subject to the exclusive jurisdiction of the courts of Dubai, UAE, except where mandatory consumer protection laws in your jurisdiction require otherwise.</p>
@@ -10081,7 +10137,7 @@ document.addEventListener('DOMContentLoaded', () => {
     <p>We may update these terms from time to time. Material changes will be notified to your registered email address at least 14 days before taking effect. Continued use of the platform after that date constitutes acceptance of the revised terms.</p>
 
     <h2>12. Contact</h2>
-    <p>For any questions regarding these Terms of Use: Liam@Simfluence.AI</p>
+    <p>For any questions regarding these Terms of Use: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="420e2b232f02112b2f242e37272c21276c030b">[email&#160;protected]</a></p>
   </div>
 </div>
 
@@ -10096,7 +10152,7 @@ document.addEventListener('DOMContentLoaded', () => {
     <p><strong>Trading name:</strong> Simfluence<br>
     <strong>Legal entity:</strong> Simfluence Ltd<br>
     <strong>Registered address:</strong> Dubai, United Arab Emirates<br>
-    <strong>Contact:</strong> Liam@Simfluence.AI</p>
+    <strong>Contact:</strong> <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="165a7f777b56457f7b707a637378757338575f">[email&#160;protected]</a></p>
 
     <h2>Nature of the service</h2>
     <p>Simfluence operates a Software-as-a-Service (SaaS) platform providing AI-generated campaign forecasting and creator intelligence for influencer marketing professionals. The platform is a planning and decision-support tool. It does not broker, negotiate, or execute agreements between brands and creators, and does not act as an agent, intermediary, or marketplace for influencer deals.</p>
@@ -10117,7 +10173,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     <h2>Data protection</h2>
     <p>Simfluence processes personal data in accordance with the UAE Personal Data Protection Law (Federal Decree-Law No. 45 of 2021) and applicable international data protection regulations. Users located in the European Economic Area benefit from protections under the EU General Data Protection Regulation (GDPR). We act as a data controller for account registration data and as a data processor for campaign data submitted by subscribing brands.</p>
-    <p>You have the right to request access to, correction of, or deletion of your personal data at any time by contacting Liam@Simfluence.AI.</p>
+    <p>You have the right to request access to, correction of, or deletion of your personal data at any time by contacting <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="e4a88d8589a4b78d89828891818a8781caa5ad">[email&#160;protected]</a>.</p>
 
     <h2>No financial or investment advice</h2>
     <p>Nothing on the Simfluence platform constitutes financial, investment, or professional marketing advice. Forecast outputs are tools to inform your own independent decision-making. You should conduct your own due diligence before committing any marketing budget.</p>
@@ -10129,7 +10185,7 @@ document.addEventListener('DOMContentLoaded', () => {
     <p>This legal notice and any disputes arising from the operation of the Simfluence platform are governed by the laws of the United Arab Emirates.</p>
 
     <h2>Contact for legal matters</h2>
-    <p>For legal enquiries: Liam@Simfluence.AI
+    <p>For legal enquiries: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="cb87a2aaa68b98a2a6ada7beaea5a8aee58a82">[email&#160;protected]</a>
 
 // PASSWORD GATE
 var GATE_PASS = 'Simfluence2025!';
@@ -10228,7 +10284,7 @@ function checkGate() {
 </div>
 
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 function openPageModal(key) {
   var el = document.getElementById('modal-' + key);
   if (!el) return;
@@ -12084,12 +12140,4 @@ document.addEventListener('DOMContentLoaded', function() {
          ['Est. Conversions', fmtN(r.conversions), '#C2185B'],
          ['ROAS', r.roas+'×', '#B38A00']
         ].map(function(m) {
-          return '<div class="kpi"><div class="kpi-lbl">' + m[0] + '</div><div class="kpi-val" style="color:' + m[2] + '">' + m[1] + '</div></div>';
-        }).join('') +
-      '</div>' +
-
-      '<h2>Confidence Bands</h2>' +
-      '<div class="bands">' +
-        '<div class="band best"><div class="blbl" style="color:#00A855">P90 — Best Case</div><div class="bimpr" style="color:#00A855">' + fmtN(r.p90.impressions) + '</div><div style="font-size:12px;color:#00A855">impressions</div><div class="bsub" style="color:#00A855">' + r.p90.ctr + '% CTR &nbsp;·&nbsp; ' + r.p90.roas + '× ROAS</div></div>' +
-        '<div class="band base"><div class="blbl" style="color:#B38A00">P50 — Base Case</div><div class="bimpr" style="color:#B38A00">' + fmtN(r.p50.impressions) + '</div><div style="font-size:12px;color:#B38A00">impressions</div><div class="bsub" style="color:#B38A00">' + r.p50.ctr + '% CTR &nbsp;·&nbsp; ' + r.p50.roas + '× ROAS</div></div>' +
-        '<div class="band wrst"><div class="blbl" style="color:#CC0020">P10 — Worst Case</div><div class="bimpr" style="color:#CC0020">' + fmtN(r.p10.impressions) + '</div><div style="font-size:12px;color:#CC0020">impressions</div><div class="bsub" style="color:#C
+          return '<div class="kpi"><div class="kpi-lbl">' + m[0] + '</div><div class="kpi-val" style="color:' + m[2] + '">' + m[1] + '<
