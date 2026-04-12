@@ -1555,8 +1555,15 @@ function sfSignIn() {
       if(btn){btn.textContent='SIGN IN →';btn.disabled=false;}
       return;
     }
-    // Success — redirect to app
-    window.location.href = 'app.html';
+    // Success — set session then redirect
+    var userEmail = document.getElementById('siEmail').value.trim();
+    try {
+      sessionStorage.setItem('sf_auth',   '1');
+      sessionStorage.setItem('sf_tier',   'free');
+      sessionStorage.setItem('sf_client', 'Free');
+      sessionStorage.setItem('sf_email',  userEmail);
+    } catch(e) {}
+    window.location.href = 'app.html?authed=1';
   })
   .catch(function(){
     errEl.style.display='block';
@@ -1610,8 +1617,15 @@ function sfFreeSignup() {
       if(btn){btn.textContent='CREATE FREE ACCOUNT →';btn.disabled=false;}
       return;
     }
-    // Success — redirect to app as free user
-    window.location.href = 'app.html';
+    // Success — set session then redirect as free user
+    var userEmail = document.getElementById('freeEmail').value.trim();
+    try {
+      sessionStorage.setItem('sf_auth',   '1');
+      sessionStorage.setItem('sf_tier',   'free');
+      sessionStorage.setItem('sf_client', 'Free');
+      sessionStorage.setItem('sf_email',  userEmail);
+    } catch(e) {}
+    window.location.href = 'app.html?authed=1';
   })
   .catch(function(){
     errEl.textContent='Connection error. Please try again.';
