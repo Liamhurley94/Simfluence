@@ -2581,7 +2581,13 @@ function patchSimRunCounter() {
 
 document.addEventListener('DOMContentLoaded', function() {
   // Auto-restore session — skip gate if already authenticated this session
+  // Also handles redirect from index.html with ?authed=1
   try {
+    var urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('authed') === '1') {
+      // Clean the URL without reloading
+      history.replaceState({}, '', window.location.pathname);
+    }
     if (sessionStorage.getItem('sf_auth') === '1') {
       var gEl = document.getElementById('G');
       if (gEl) { gEl.style.display='none'; gEl.style.pointerEvents='none'; gEl.style.visibility='hidden'; gEl.style.zIndex='-1'; }
