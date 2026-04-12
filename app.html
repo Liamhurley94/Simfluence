@@ -2735,7 +2735,7 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 
     <!-- CAMPAIGN MODAL -->
-    <div id="campaign-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:600;display:none;align-items:center;justify-content:center;padding:24px">
+    <div id="campaign-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:600;align-items:center;justify-content:center;padding:24px">
       <div style="background:var(--bg2);border:1px solid var(--border-bright);border-radius:14px;padding:32px;max-width:500px;width:100%">
         <div style="font-family:DM Mono,monospace;font-size:10px;letter-spacing:.1em;color:var(--text-muted);margin-bottom:16px" id="campaign-modal-title">NEW CAMPAIGN</div>
         <div style="display:flex;flex-direction:column;gap:12px">
@@ -2755,8 +2755,8 @@ document.addEventListener('DOMContentLoaded', function() {
             <textarea id="cm-notes" placeholder="Campaign objectives, region, format..." rows="2" style="width:100%;font-family:DM Mono,monospace;font-size:12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text);outline:none;resize:vertical"></textarea></div>
         </div>
         <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">
-          <button data-oc="closeCampaignModal()" style="padding:8px 18px;background:transparent;border:1px solid var(--border);color:var(--text-dim);border-radius:6px;font-family:DM Mono,monospace;font-size:10px;cursor:pointer">CANCEL</button>
-          <button id="cm-save-btn" data-oc="saveCampaignWorkspace()" style="padding:8px 18px;background:#0050FF;color:#fff;border:none;border-radius:6px;font-family:DM Mono,monospace;font-size:10px;cursor:pointer;font-weight:700">SAVE CAMPAIGN</button>
+          <button data-action="close-campaign-modal" style="padding:8px 18px;background:transparent;border:1px solid var(--border);color:var(--text-dim);border-radius:6px;font-family:DM Mono,monospace;font-size:10px;cursor:pointer">CANCEL</button>
+          <button id="cm-save-btn" data-action="save-campaign" style="padding:8px 18px;background:#0050FF;color:#fff;border:none;border-radius:6px;font-family:DM Mono,monospace;font-size:10px;cursor:pointer;font-weight:700">SAVE CAMPAIGN</button>
         </div>
       </div>
     </div>
@@ -11405,6 +11405,8 @@ function promptEmail(id) {
 document.addEventListener('DOMContentLoaded', function() {
   var nbtn = document.getElementById('newCampaignBtn');
   if (nbtn) nbtn.addEventListener('click', newCampaign);
+  var savebtn = document.getElementById('cm-save-btn');
+  if (savebtn) savebtn.addEventListener('click', saveCampaignWorkspace);
   var abtn = document.getElementById('addOutreachBtn');
   if (abtn) abtn.addEventListener('click', openOutreachModal);
   var cf = document.getElementById('outreach-campaign-filter');
@@ -11874,7 +11876,9 @@ document.addEventListener('click', function(e) {
     var oid = el.getAttribute('data-oid');
     if (action) {
       e.stopPropagation();
-      if (action==='edit-campaign' && cid) editCampaign(cid);
+      if (action==='save-campaign') { saveCampaignWorkspace(); return; }
+      else if (action==='close-campaign-modal') { closeCampaignModal(); return; }
+      else if (action==='edit-campaign' && cid) editCampaign(cid);
       else if (action==='add-outreach-campaign' && cid) addOutreachToCampaign(cid);
       else if (action==='delete-campaign' && cid) deleteCampaign(cid);
       else if (action==='view-outreach-campaign' && cid) { showScreen('outreach',null); setTimeout(function(){ filterOutreachByCampaign(cid); },50); }
