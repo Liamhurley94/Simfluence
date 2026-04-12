@@ -8184,6 +8184,7 @@ function updateObjCount() {
   const count = document.querySelectorAll('#objectiveGroups .chip.active').length;
   const el = document.getElementById('objCount');
   if (el) el.textContent = count + ' SELECTED';
+  if (typeof applyObjectiveSortHint==='function') applyObjectiveSortHint();
 }
 
 function getSelectedObjectives() {
@@ -8200,6 +8201,23 @@ function getObjWeights() {
   const eW = objs.filter(o => engagement.includes(o)).length;
   const total = Math.max(aW + sW + eW, 1);
   return { awarenessW: aW/total, salesW: sW/total, engagementW: eW/total };
+}
+
+function applyObjectiveSortHint() {
+  var w = getObjWeights();
+  var aW=w.awarenessW, sW=w.salesW, eW=w.engagementW;
+  var dominant = (aW>sW && aW>eW) ? 'awareness' : (sW>aW && sW>eW) ? 'sales' : (eW>aW && eW>sW) ? 'engagement' : null;
+  if (!dominant) return;
+  var sortSel = document.getElementById('sortModeSelect');
+  if (sortSel) sortSel.title = dominant==='awareness'
+    ? 'Subscribers sort recommended for Reach objectives'
+    : dominant==='sales' ? 'CPI sort recommended for Sales objectives'
+    : 'GFI sort recommended for Engagement objectives';
+  if (dominant==='awareness' && typeof sortMode!=='undefined' && sortMode==='cpi') {
+    if (typeof setSortMode==='function') setSortMode('subs');
+  } else if (dominant!=='awareness' && typeof sortMode!=='undefined' && sortMode==='subs') {
+    if (typeof setSortMode==='function') setSortMode('cpi');
+  }
 }
 
 // ── SIMULATION ────────────────────────────────────────────────────────
@@ -8280,9 +8298,13 @@ function computeSimResults() {
   const cpmActual  = cpmBase * Math.max(0.6, avgCPI);
   const impressions = Math.round((budget / Math.max(cpmActual, 1)) * 1000 * subModeMult * formatMult);
 
-  const ctrMult    = avgCPI * (1 + awarenessW * 0.1 - salesW * 0.05);
-  const ctr        = Math.min(bench.ctrBase * ctrMult * formatMult, 15);
-  const cvr        = Math.min(bench.cvrBase * (1 + salesW * 0.3 - awarenessW * 0.1) * avgCPI, 20);
+  // Dedicated: full video narrative → higher CTR; less urgency → lower CVR
+  // Integrated: mid-roll segment → lower CTR; engaged viewer → higher CVR
+  var fmtCtrAdj = format==='Dedicated' ? 1.35 : format==='Mixed' ? 1.12 : 1.0;
+  var fmtCvrAdj = format==='Dedicated' ? 0.80 : format==='Mixed' ? 0.95 : 1.15;
+  const ctrMult    = avgCPI * (1 + awarenessW * 0.15 - salesW * 0.05) * fmtCtrAdj;
+  const ctr        = Math.min(bench.ctrBase * ctrMult, 15);
+  const cvr        = Math.min(bench.cvrBase * (1 + salesW * 0.3 - awarenessW * 0.1) * avgCPI * fmtCvrAdj, 20);
   const clicks     = Math.round(impressions * ctr / 100);
   const conversions = Math.round(clicks * cvr / 100);
   const revenue    = conversions * 30;
@@ -10387,10 +10409,9 @@ function renderBudgetAllocation() {
           + '</div>'
         + '</div>'
         + '<input type="range" min="5" max="90" value="' + pct + '" '
-          + 'data-creator-id="' + cr.id + '" '
+          + 'data-alloc-id="' + cr.id + '" '
           + 'style="width:100%;accent-color:' + cr.color + ';cursor:pointer" '
-          + 'oninput="onAllocationChange(' + cr.id + ',parseInt(this.value))">'
-        + '<div style="height:4px;background:var(--bg3);border-radius:2px;margin-top:6px;overflow:hidden">'
+          + 'style="width:100%;accent-color:' + cr.color + ';cursor:pointer">'
           + '<div style="height:100%;width:' + pct + '%;background:' + cr.color + ';border-radius:2px;transition:width .2s"></div>'
         + '</div>'
       + '</div>';
@@ -10817,12 +10838,12 @@ function openOutreachModal(campaignId) {
   var orHint = document.getElementById('or-campaign-hint');
   if (orHint) orHint.style.display = 'none';
   document.getElementById('or-status').value = 'shortlisted';
-  document.getElementById('or-creator-search').value = '';
-  document.getElementById('or-creator-dropdown').style.display = 'none';
-  document.getElementById('or-creator-preview').style.display = 'none';
-  document.getElementById('or-genre-extra-row').style.display = 'none';
-  document.getElementById('or-genre-extras').innerHTML = '';
-  document.getElementById('or-genre-hint').textContent = '';
+  var _s=document.getElementById('or-creator-search'); if(_s)_s.value='';
+  var _dd=document.getElementById('or-creator-dropdown'); if(_dd)_dd.style.display='none';
+  var _pv=document.getElementById('or-creator-preview'); if(_pv)_pv.style.display='none';
+  var _ger=document.getElementById('or-genre-extra-row'); if(_ger)_ger.style.display='none';
+  var _gex=document.getElementById('or-genre-extras'); if(_gex)_gex.innerHTML='';
+  var _gh=document.getElementById('or-genre-hint'); if(_gh)_gh.textContent='';
   syncOutreachCampaignSelect();
   // Pre-select campaign if provided
   if (campaignId) {
@@ -10924,7 +10945,7 @@ function orAddExtraGenre() {
   if (!val) return;
   if (_orExtraGenres.indexOf(val) === -1) _orExtraGenres.push(val);
   sel.value = '';
-  document.getElementById('or-genre-extra-row').style.display = 'none';
+  var _gr=document.getElementById('or-genre-extra-row'); if(_gr)_gr.style.display='none';
   orRenderExtraGenreChips();
   orRefreshCreatorCount();
 }
@@ -11301,8 +11322,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // + ADD TARGET button toggles secondary genre row
   var orGenBtn = document.getElementById('or-genre-add-btn');
   if (orGenBtn) orGenBtn.addEventListener('click', function(){
-    var row = document.getElementById('or-genre-extra-row');
-    row.style.display = row.style.display==='none' ? 'block' : 'none';
+    var row=document.getElementById('or-genre-extra-row'); if(row)row.style.display=row.style.display==='none'?'block':'none';
   });
 
   // Creator search input — filter on type, show dropdown
@@ -11790,6 +11810,16 @@ document.addEventListener('click', function(e) {
     el = el.parentElement;
   }
 }, true);
+
+// Budget allocation sliders — wired via input event (Cloudflare-safe)
+document.addEventListener('input', function(e) {
+  if (e.target && e.target.type === 'range') {
+    var aid = e.target.getAttribute('data-alloc-id');
+    if (aid && typeof onAllocationChange === 'function') {
+      onAllocationChange(parseInt(aid), parseInt(e.target.value));
+    }
+  }
+});
 
 // Wire outreach status selects (they fire 'change' not 'click')
 document.addEventListener('change', function(e) {
