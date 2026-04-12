@@ -10886,7 +10886,6 @@ function renderCampaignsScreen() {
     var confirmed  = linked.filter(function(o) { return o.status === 'confirmed'; }).length;
     var negotiating= linked.filter(function(o) { return o.status === 'negotiating'; }).length;
     var contacted  = linked.filter(function(o) { return o.status === 'contacted'; }).length;
-    var dateStr = cmp.date ? new Date(cmp.date).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '—';
     return '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:20px;position:relative">'
       + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap">'
         + '<div>'
@@ -10910,12 +10909,8 @@ function renderCampaignsScreen() {
         + (confirmed   ? '<span style="font-family:DM Mono,monospace;font-size:9px;color:#00C46A">✓ '+confirmed+' CONFIRMED</span>'   : '')
         + (negotiating ? '<span style="font-family:DM Mono,monospace;font-size:9px;color:#FF7A00">⇄ '+negotiating+' NEGOTIATING</span>' : '')
         + (contacted   ? '<span style="font-family:DM Mono,monospace;font-size:9px;color:#FFD400">→ '+contacted+' CONTACTED</span>'    : '')
-        + (linked.length > 0
-          ? '<button data-cid="'+cmp.id+'" data-action="view-outreach-campaign" style="margin-left:auto;padding:5px 12px;background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:4px;font-family:DM Mono,monospace;font-size:9px;cursor:pointer;letter-spacing:.04em">VIEW OUTREACH &#x2192;</button>'
-            + (linked.filter(function(o){ return o.status==='confirmed'||o.status==='shortlisted'||o.status==='negotiating'; }).length >= 2
-              ? '<button data-cid="'+cmp.id+'" data-action="open-overlap" style="padding:5px 12px;background:rgba(109,40,217,0.12);border:1px solid rgba(109,40,217,0.35);color:#A78BFA;border-radius:4px;font-family:DM Mono,monospace;font-size:9px;cursor:pointer;letter-spacing:.04em">&#x25C6; AUDIENCE OVERLAP</button>'
-              : '')
-          : '')
+        + '<button data-cid="'+cmp.id+'" data-action="view-outreach-campaign" style="margin-left:auto;padding:5px 12px;background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:4px;font-family:DM Mono,monospace;font-size:9px;cursor:pointer;letter-spacing:.04em">VIEW OUTREACH &#x2192;</button>'
+        + '<button data-cid="'+cmp.id+'" data-action="open-overlap" style="padding:5px 12px;background:rgba(109,40,217,0.12);border:1px solid rgba(109,40,217,0.35);color:#A78BFA;border-radius:4px;font-family:DM Mono,monospace;font-size:9px;cursor:pointer;letter-spacing:.04em">&#x25C6; AUDIENCE OVERLAP</button>'
       + '</div>'
     + '</div>';
   }).join('');
