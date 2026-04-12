@@ -1790,6 +1790,11 @@ function GC(){
       sessionStorage.setItem('sf_client', match.client);
       sessionStorage.setItem('sf_tier', match.tier);
     } catch(e){}
+    // Re-apply tier gating now that tier is known
+    setTimeout(function() {
+      if (typeof applyAllTierGates === 'function') applyAllTierGates();
+      if (typeof renderCreatorGrid === 'function') renderCreatorGrid();
+    }, 50);
   } else {
 
 
