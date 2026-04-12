@@ -826,12 +826,40 @@ function cdLoop(){
       cdShowCards();
       setTimeout(function(){
         cdHideCards();
-        cdClearText(function(){setTimeout(cdLoop,800);});
+        cdClearText(function(){(function(){
+  var _cdActive=false;
+  var _cdObs=new IntersectionObserver(function(e){
+    if(e[0].isIntersecting && !_cdActive){_cdActive=true;setTimeout(cdLoop,400);}
+    if(!e[0].isIntersecting){_cdActive=false;}
+  },{threshold:0.2});
+  var el=document.getElementById('cd-grid');
+  if(el)_cdObs.observe(el.closest('[id^="section"]')||el);
+  // Also stop the loop when invisible by wrapping cdLoop
+  var _origCdLoop=cdLoop;
+  cdLoop=function(){
+    if(!_cdActive)return;
+    _origCdLoop();
+  };
+})();});
       },5500);
     });
   },1000);
 }
-setTimeout(cdLoop,800);
+(function(){
+  var _cdActive=false;
+  var _cdObs=new IntersectionObserver(function(e){
+    if(e[0].isIntersecting && !_cdActive){_cdActive=true;setTimeout(cdLoop,400);}
+    if(!e[0].isIntersecting){_cdActive=false;}
+  },{threshold:0.2});
+  var el=document.getElementById('cd-grid');
+  if(el)_cdObs.observe(el.closest('[id^="section"]')||el);
+  // Also stop the loop when invisible by wrapping cdLoop
+  var _origCdLoop=cdLoop;
+  cdLoop=function(){
+    if(!_cdActive)return;
+    _origCdLoop();
+  };
+})();
 
 // ── PERSONA MATCHING ANIMATION ───────────────────────────────────────
 var PM_PERSONAS=[
@@ -916,7 +944,20 @@ function pmRun(){
   },1800);
   setTimeout(pmRun,7000);
 }
-setTimeout(pmRun,1200);
+(function(){
+  var _pmActive=false;
+  var _pmObs=new IntersectionObserver(function(e){
+    if(e[0].isIntersecting && !_pmActive){_pmActive=true;setTimeout(pmRun,400);}
+    if(!e[0].isIntersecting){_pmActive=false;}
+  },{threshold:0.2});
+  var el=document.getElementById('pm-grid');
+  if(el)_pmObs.observe(el.closest('[id^="section"]')||el);
+  var _origPmRun=pmRun;
+  pmRun=function(){
+    if(!_pmActive)return;
+    _origPmRun();
+  };
+})();
 
 // ── CAMPAIGN SIMULATOR ANIMATION ─────────────────────────────────────
 function simReset(){
@@ -965,7 +1006,20 @@ function simShow(){
   },600);
   setTimeout(simRun,6500);
 }
-setTimeout(simRun,1600);
+(function(){
+  var _simActive=false;
+  var _simObs=new IntersectionObserver(function(e){
+    if(e[0].isIntersecting && !_simActive){_simActive=true;setTimeout(simRun,400);}
+    if(!e[0].isIntersecting){_simActive=false;}
+  },{threshold:0.2});
+  var el=document.getElementById('sim-bc0');
+  if(el)_simObs.observe(el.closest('[id^="section"]')||el);
+  var _origSimRun=simRun;
+  simRun=function(){
+    if(!_simActive)return;
+    _origSimRun();
+  };
+})();
 
 })();
 </script>
@@ -1409,17 +1463,25 @@ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded'
 
 /* ── Scroll to pricing plan ─────────────────────────────── */
 function scrollToPlan(planClass) {
-  var pricing = document.getElementById('pricing');
-  if (!pricing) return;
-  pricing.scrollIntoView({behavior:'smooth'});
+  var card = document.querySelector('.p-card.'+planClass);
+  if (!card) {
+    var pricing = document.getElementById('pricing');
+    if (pricing) pricing.scrollIntoView({behavior:'smooth'});
+    return;
+  }
+  // Scroll the card into view with a little top offset
+  var top = card.getBoundingClientRect().top + window.pageYOffset - 100;
+  window.scrollTo({top: top, behavior: 'smooth'});
+  // Flash highlight
   setTimeout(function(){
-    var card = document.querySelector('.p-card.'+planClass);
-    if (card) {
-      card.style.transition = 'box-shadow 0.3s ease';
-      card.style.boxShadow = '0 0 0 2px rgba(255,212,0,0.6)';
-      setTimeout(function(){ card.style.boxShadow = ''; }, 1800);
-    }
-  }, 600);
+    card.style.transition = 'box-shadow 0.3s ease, transform 0.3s ease';
+    card.style.boxShadow = '0 0 0 3px rgba(255,212,0,0.7), 0 8px 32px rgba(255,212,0,0.15)';
+    card.style.transform = 'translateY(-4px)';
+    setTimeout(function(){
+      card.style.boxShadow = '';
+      card.style.transform = '';
+    }, 2000);
+  }, 500);
 }
 
 /* ── Hero canvas ─────────────────────────────────────────── */
