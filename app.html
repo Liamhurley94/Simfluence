@@ -10939,6 +10939,17 @@ function renderCampaignsScreen() {
       + '</div>'
     + '</div>';
   }).join('');
+
+  // Direct-wire overlap buttons — bypasses delegation entirely
+  list.querySelectorAll('button[data-action="open-overlap"]').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      e.preventDefault();
+      var cid = btn.getAttribute('data-cid');
+      console.log('[Overlap] direct onclick fired, cid=', cid);
+      openOverlapModal(cid);
+    });
+  });
 }
 
 // ── OUTREACH CRM ──────────────────────────────────────────────────────
@@ -11652,10 +11663,12 @@ function fmtReach(n) {
 
 // ── OPEN OVERLAP MODAL ────────────────────────────────────────────────
 function openOverlapModal(campaignId) {
-  if (typeof getTierLevel === 'function' && getTierLevel() < 3) {
-    showUpgradePrompt('personas_all','Platinum'); return;
+  console.log('[Overlap] openOverlapModal called, tier=', typeof getTierLevel==='function' ? getTierLevel() : 'unknown');
+  if (typeof getTierLevel === 'function' && getTierLevel() < 2) {
+    showUpgradePrompt('audience_overlap','Gold'); return;
   }
-  // Pre-populate with creators tracked for this campaign
+  var existing = document.getElementById('overlap-modal');
+  if (existing) existing.remove();
   _overlapCreators = [];
   if (campaignId && typeof _outreach !== 'undefined') {
     var linked = _outreach.filter(function(o) {
@@ -11663,29 +11676,54 @@ function openOverlapModal(campaignId) {
              (o.status === 'confirmed' || o.status === 'shortlisted' || o.status === 'negotiating');
     });
     linked.forEach(function(entry) {
-      // Try to match to CREATORS array
       if (typeof CREATORS !== 'undefined') {
         var nameSearch = (entry.name || '').toLowerCase().replace('@','').replace(/\s*\(.*\)/,'').trim();
         var cr = CREATORS.find(function(c) {
           return c.name.toLowerCase() === nameSearch ||
                  c.handle.toLowerCase().replace('@','') === nameSearch ||
-                 c.name.toLowerCase().includes(nameSearch.split(' ')[0]) && nameSearch.length > 3;
+                 (c.name.toLowerCase().includes(nameSearch.split(' ')[0]) && nameSearch.length > 3);
         });
         if (cr && _overlapCreators.indexOf(cr.id) === -1) _overlapCreators.push(cr.id);
       }
     });
   }
-
-  // Set title
   var cmp = (typeof _campaigns !== 'undefined') ? _campaigns.find(function(c){ return c.id===campaignId; }) : null;
-  document.getElementById('overlap-title').textContent = (cmp ? cmp.name+' — ' : '') + 'Audience Overlap';
-
-  document.getElementById('overlap-modal').style.display = 'flex';
+  var titleText = (cmp ? cmp.name + ' \u2014 ' : '') + 'Audience Overlap';
+  var overlay = document.createElement('div');
+  overlay.id = 'overlap-modal';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:99990;display:flex;align-items:flex-start;justify-content:center;padding:32px 16px;overflow-y:auto;';
+  var box = document.createElement('div');
+  box.style.cssText = 'background:#0E0E1A;border:1px solid rgba(109,40,217,0.45);border-radius:14px;padding:32px;max-width:760px;width:100%;position:relative;';
+  box.innerHTML =
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">' +
+      '<div>' +
+        '<div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.1em;color:#A78BFA;margin-bottom:4px">&#9670; AUDIENCE OVERLAP ENGINE</div>' +
+        '<div id="overlap-title" style="font-family:Space Grotesk,sans-serif;font-size:18px;font-weight:700;color:#fff">' + titleText + '</div>' +
+      '</div>' +
+      '<button id="overlap-close-btn" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.6);border-radius:6px;padding:6px 14px;cursor:pointer;font-family:DM Mono,monospace;font-size:10px;letter-spacing:.05em">&#x2715; CLOSE</button>' +
+    '</div>' +
+    '<div style="margin-bottom:20px">' +
+      '<div style="font-family:DM Mono,monospace;font-size:8px;letter-spacing:.08em;color:rgba(255,255,255,0.35);margin-bottom:8px">ADD CREATORS TO ANALYSE</div>' +
+      '<div style="display:flex;gap:8px;margin-bottom:12px">' +
+        '<input id="overlap-search" type="text" placeholder="Search by name or handle..." style="flex:1;font-family:DM Mono,monospace;font-size:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:#fff;outline:none">' +
+        '<button id="overlap-add-btn" style="padding:8px 16px;background:rgba(109,40,217,0.15);border:1px solid rgba(109,40,217,0.4);color:#A78BFA;border-radius:6px;font-family:DM Mono,monospace;font-size:10px;cursor:pointer;letter-spacing:.04em">+ ADD</button>' +
+      '</div>' +
+      '<div id="overlap-creator-chips" style="display:flex;flex-wrap:wrap;gap:8px;min-height:32px"></div>' +
+      '<div id="overlap-count-warn" style="display:none;font-family:DM Mono,monospace;font-size:9px;color:#FF7A00;margin-top:6px">Maximum 10 creators for analysis</div>' +
+    '</div>' +
+    '<div id="overlap-results"></div>';
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+  console.log('[Overlap] modal appended to body');
+  document.getElementById('overlap-close-btn').addEventListener('click', closeOverlapModal);
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) closeOverlapModal(); });
+  document.getElementById('overlap-add-btn').addEventListener('click', overlapAddFromSearch);
   renderOverlapModal();
 }
 
 function closeOverlapModal() {
-  document.getElementById('overlap-modal').style.display = 'none';
+  var _om = document.getElementById('overlap-modal');
+  if (_om) _om.remove();
 }
 
 function renderOverlapModal() {
@@ -11908,7 +11946,7 @@ document.addEventListener('click', function(e) {
       else if (action==='delete-campaign' && cid) deleteCampaign(cid);
       else if (action==='view-outreach-campaign' && cid) { showScreen('outreach',null); setTimeout(function(){ filterOutreachByCampaign(cid); },50); }
       else if (action==='delete-outreach' && oid) deleteOutreachEntry(oid);
-      else if (action==='open-overlap') { var cid2=el.getAttribute('data-cid'); openOverlapModal(cid2); }
+      else if (action==='open-overlap') { var cid2=el.getAttribute('data-cid'); console.log('[Overlap] delegation: open-overlap fired, cid=', cid2); openOverlapModal(cid2); }
       else if (action==='close-overlap') closeOverlapModal();
       else if (action==='overlap-toggle-creator') { var ooid=el.getAttribute('data-oid'); if(ooid) overlapRemoveCreator(parseInt(ooid)); }
       else if (action==='overlap-add-search') overlapAddFromSearch();
