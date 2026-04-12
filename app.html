@@ -11657,8 +11657,9 @@ function fmtReach(n) {
 
 // ── OPEN OVERLAP MODAL ────────────────────────────────────────────────
 function openOverlapModal(campaignId) {
-  if (typeof getTierLevel === 'function' && getTierLevel() < 3) {
-    showUpgradePrompt('personas_all','Platinum'); return;
+  var _t = (typeof getTierLevel === 'function') ? getTierLevel() : 0;
+  if (_t < 2) {
+    showUpgradePrompt('campaigns_1','Gold'); return;
   }
   // Pre-populate with creators tracked for this campaign
   _overlapCreators = [];
