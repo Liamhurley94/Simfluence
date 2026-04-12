@@ -1784,7 +1784,11 @@ function GC(){
   var v=document.getElementById('GP').value.trim();
   var match=CLIENTS[v];
   if(match){
-    document.getElementById('G').style.display='none';
+    var gEl = document.getElementById('G');
+    gEl.style.display = 'none';
+    gEl.style.pointerEvents = 'none';
+    gEl.style.visibility = 'hidden';
+    gEl.setAttribute('aria-hidden', 'true');
     try {
       sessionStorage.setItem('sf_auth','1');
       sessionStorage.setItem('sf_client', match.client);
