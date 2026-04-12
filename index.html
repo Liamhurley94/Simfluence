@@ -268,7 +268,7 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
   <div class="nav-right">
     <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn" title="Toggle mode">🌙</button>
     <a href="app.html" target="_blank" class="nav-login">Sign in</a>
-    <a href="mailto:Liam@Simfluence.AI?subject=Live%20Demo%20Request" class="nav-cta">Book a live demo</a>
+    <a href="/cdn-cgi/l/email-protection#d79bbeb6ba9784bebab1bba2b2b9b4b2f9969ee8a4a2b5bdb2b4a3ea9bbea1b2f2e5e793b2bab8f2e5e785b2a6a2b2a4a3" class="nav-cta">Book a live demo</a>
   </div>
 </nav>
 
@@ -279,7 +279,7 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
     <h1 class="hero-h1">Know<br>before you<br><span class="gold">spend.</span></h1>
     <p class="hero-sub">Predict your CTR, CPM, CVR and ROAS before a single penny is committed. Model your campaign. Know your outcome. Launch with certainty.</p>
     <div class="hero-actions">
-      <a href="mailto:Liam@Simfluence.AI?subject=Live%20Demo%20Request" class="btn-xl">Book a live demo</a>
+      <a href="/cdn-cgi/l/email-protection#d894b1b9b5988bb1b5beb4adbdb6bbbdf69991e7abadbab2bdbbace594b1aebdfdeae89cbdb5b7fdeae88abda9adbdabac" class="btn-xl">Book a live demo</a>
     </div>
   </div></div>
 </section>
@@ -367,7 +367,7 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
 .sf-demo-card.sf-active{border-color:#FFD400 !important;transform:translateY(-2px);box-shadow:0 6px 20px rgba(255,212,0,0.12);}
 </style>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 (function(){
   var ov=document.getElementById('sf-overlay');
   var cur=document.getElementById('sf-cursor');
@@ -759,7 +759,7 @@ var cdMeta=document.getElementById('cd-meta');
 CD_CREATORS.forEach(function(cr,idx){
   var d=document.createElement('div');
   d.id='cdc-'+idx;
-  d.style.cssText='background:#0A0A10;border:1px solid '+(cr.highlight?'#FFD400':'rgba(255,255,255,0.06)')+';border-radius:10px;padding:12px;opacity:0;transform:translateY(6px);transition:all 0.4s;';
+  d.style.cssText='background:#0A0A10;border:1px solid '+(cr.highlight?'#FFD400':'rgba(255,255,255,0.06)')+';border-radius:10px;padding:12px;opacity:0;transition:opacity 0.4s;';
   d.innerHTML='<div style="display:inline-block;font-size:7px;letter-spacing:.06em;padding:2px 6px;border-radius:3px;margin-bottom:6px;background:rgba(255,212,0,0.12);color:#FFD400;font-family:DM Mono,monospace;">Megastar</div>'
     +'<div style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;font-family:sans-serif;margin-bottom:6px;background:'+cr.avBg+';color:'+cr.avC+'">'+cr.av+'</div>'
     +'<div style="font-family:sans-serif;font-size:12px;font-weight:700;color:#fff;margin-bottom:2px;">'+cr.name+'</div>'
@@ -775,7 +775,7 @@ function cdShowCards(){
   CD_CREATORS.forEach(function(_,i){
     setTimeout(function(){
       var el=document.getElementById('cdc-'+i);
-      if(el){el.style.opacity='1';el.style.transform='translateY(0)';}
+      if(el){el.style.opacity='1';}
       setTimeout(function(){
         var cb=document.getElementById('cd-cpib-'+i);
         var gb=document.getElementById('cd-gfib-'+i);
@@ -789,7 +789,7 @@ function cdShowCards(){
 function cdHideCards(){
   CD_CREATORS.forEach(function(_,i){
     var el=document.getElementById('cdc-'+i);
-    if(el){el.style.opacity='0';el.style.transform='translateY(6px)';}
+    if(el){el.style.opacity='0';}
     var cb=document.getElementById('cd-cpib-'+i);
     var gb=document.getElementById('cd-gfib-'+i);
     if(cb)cb.style.width='0';
@@ -879,7 +879,7 @@ var pmCreatorsEl=document.getElementById('pm-creators');
 PM_PERSONAS.forEach(function(p,i){
   var d=document.createElement('div');
   d.id='pm-pc-'+i;
-  d.style.cssText='background:#0A0A10;border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:12px;opacity:0;transform:translateY(6px);transition:all 0.4s;';
+  d.style.cssText='background:#0A0A10;border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:12px;opacity:0;transition:opacity 0.4s;';
   d.innerHTML='<div style="width:28px;height:28px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:sans-serif;font-size:11px;font-weight:700;background:'+p.iconBg+';color:'+p.iconC+'">'+p.icon+'</div>'
     +'<div style="font-family:sans-serif;font-size:11px;font-weight:700;color:#fff;margin:6px 0 2px;">'+p.name+'</div>'
     +'<div style="font-size:7px;letter-spacing:.05em;color:rgba(255,255,255,0.3);margin-bottom:8px;font-family:DM Mono,monospace;line-height:1.5;">'+p.demo+'</div>'
@@ -891,7 +891,7 @@ PM_PERSONAS.forEach(function(p,i){
 PM_CREATORS.forEach(function(cr,i){
   var d=document.createElement('div');
   d.id='pm-cr-'+i;
-  d.style.cssText='background:#0A0A10;border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:10px;opacity:0;transition:all 0.4s;';
+  d.style.cssText='background:#0A0A10;border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:10px;opacity:0;transition:opacity 0.4s;';
   d.innerHTML='<div style="width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;font-family:sans-serif;flex-shrink:0;background:'+cr.avBg+';color:'+cr.avC+'">'+cr.av+'</div>'
     +'<div style="flex:1;min-width:0;"><div style="font-family:sans-serif;font-size:12px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+cr.name+'</div><div style="font-size:7px;letter-spacing:.05em;color:rgba(255,255,255,0.3);font-family:DM Mono,monospace;">'+cr.meta+'</div></div>'
     +'<div style="font-size:7px;letter-spacing:.05em;padding:2px 7px;border-radius:10px;border:1px solid '+cr.badgeBorder+';background:'+cr.badgeBg+';color:'+cr.badgeC+';flex-shrink:0;font-family:DM Mono,monospace;">'+cr.badge+'</div>'
@@ -904,7 +904,7 @@ function pmReset(){
     var pc=document.getElementById('pm-pc-'+i);
     var badge=document.getElementById('pm-badge-'+i);
     var bar=document.getElementById('pm-bar-'+i);
-    if(pc){pc.style.opacity='0';pc.style.transform='translateY(6px)';pc.style.border='1px solid rgba(255,255,255,0.06)';pc.style.background='#0A0A10';}
+    if(pc){pc.style.opacity='0';pc.style.border='1px solid rgba(255,255,255,0.06)';pc.style.background='#0A0A10';}
     if(badge){badge.style.background='rgba(255,255,255,0.05)';badge.style.color='rgba(255,255,255,0.3)';badge.textContent='Matching...';}
     if(bar)bar.style.width='0';
   });
@@ -921,7 +921,7 @@ function pmRun(){
   PM_PERSONAS.forEach(function(p,i){
     setTimeout(function(){
       var pc=document.getElementById('pm-pc-'+i);
-      if(pc){pc.style.opacity='1';pc.style.transform='translateY(0)';}
+      if(pc){pc.style.opacity='1';}
       setTimeout(function(){
         var bar=document.getElementById('pm-bar-'+i);
         var badge=document.getElementById('pm-badge-'+i);
@@ -1157,7 +1157,7 @@ function simShow(){
           <div class="p-feat"><span class="p-feat-dash">—</span>Input on the product roadmap — help shape what gets built next</div>
           <div class="p-feat"><span class="p-feat-dash">—</span>Bespoke contract, dedicated onboarding &amp; a named SLA</div>
         </div>
-        <a href="mailto:Liam@Simfluence.AI?subject=Diamond%20Plan%20Enquiry" class="p-btn p-btn-diamond">Contact us</a>
+        <a href="/cdn-cgi/l/email-protection#89c5e0e8e4c9dae0e4efe5fcece7eaeca7c8c0b6fafcebe3eceafdb4cde0e8e4e6e7edacbbb9d9e5e8e7acbbb9cce7f8fce0fbf0" class="p-btn p-btn-diamond">Contact us</a>
       </div>
 
     </div><!-- /pricing-cards -->
@@ -1170,7 +1170,7 @@ function simShow(){
   <h2 class="cta-h2">Your next campaign<br>already has<br>a <em>forecast.</em></h2>
   <p class="cta-sub">Run your brief. See your numbers. Launch knowing what to expect.</p>
   <div class="cta-btns">
-    <a href="mailto:Liam@Simfluence.AI?subject=Live%20Demo%20Request" class="btn-xl">Book a live demo</a>
+    <a href="/cdn-cgi/l/email-protection#430f2a222e03102a2e252f36262d20266d020a7c303621292620377e0f2a352666717307262e2c66717311263236263037" class="btn-xl">Book a live demo</a>
   </div>
 </section>
 
@@ -1178,7 +1178,7 @@ function simShow(){
   <div>
     <a href="index.html" class="f-logo">Sim<em>fluence</em></a>
     <p class="f-tag">AI-powered campaign intelligence. Know your CTR, CPM, CVR and ROAS before a single dollar is spent.</p>
-    <p class="f-email">Contact: <a href="mailto:Liam@Simfluence.AI">Liam@Simfluence.AI</a></p>
+    <p class="f-email">Contact: <a href="/cdn-cgi/l/email-protection#93dffaf2fed3c0fafef5ffe6f6fdf0f6bdd2da"><span class="__cf_email__" data-cfemail="317d58505c7162585c575d44545f52541f7078">[email&#160;protected]</span></a></p>
   </div>
   <div>
     <div class="f-col-title">Platform</div>
@@ -1193,7 +1193,7 @@ function simShow(){
     <div class="f-col-title">Company</div>
     <div class="f-links">
       <a href="preview.html" class="f-link">About Simfluence</a>
-      <a href="mailto:Liam@Simfluence.AI" class="f-link">Contact Us</a>
+      <a href="/cdn-cgi/l/email-protection#1a56737b775a4973777c766f7f74797f345b53" class="f-link">Contact Us</a>
       <a href="#" class="f-link" data-modal="terms">Terms of Use</a>
       <a href="#" class="f-link" data-modal="legal">Legal Notice</a>
     </div>
@@ -1205,7 +1205,7 @@ function simShow(){
       <a href="#pricing" class="f-link" style="color:#C0C0C0" data-scrollplan="silver">Silver — $3,500/mo</a>
       <a href="#pricing" class="f-link" style="color:#FFD400" data-scrollplan="gold">Gold — $7,500/mo</a>
       <a href="#pricing" class="f-link" style="color:#E5E4E2" data-scrollplan="platinum">Platinum — $15,000/mo</a>
-      <a href="mailto:Liam@Simfluence.AI?subject=Diamond%20Plan%20Enquiry" class="f-link" style="color:#B9F2FF">Diamond — Talk to us</a>
+      <a href="/cdn-cgi/l/email-protection#4905202824091a20242f253c2c272a2c670800763a3c2b232c2a3d740d20282426272d6c7b79192528276c7b790c27383c203b30" class="f-link" style="color:#B9F2FF">Diamond — Talk to us</a>
     </div>
   </div>
   <div class="f-bottom">
@@ -1213,7 +1213,7 @@ function simShow(){
     <div class="f-legal">
       <a href="#" data-modal="terms">Terms</a>
       <a href="#" data-modal="legal">Legal</a>
-      <a href="mailto:Liam@Simfluence.AI">Contact</a>
+      <a href="/cdn-cgi/l/email-protection#b6fadfd7dbf6e5dfdbd0dac3d3d8d5d398f7ff">Contact</a>
     </div>
   </div>
 </footer>
@@ -1283,7 +1283,7 @@ function simShow(){
   </div>
 </div>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 /* ── Pricing data ────────────────────────────────────────── */
 var PRICES = {
   bronze:   { monthly:1500,  annual:1500,  annualTotal:18000,  discount:0  },
@@ -1552,17 +1552,4 @@ document.addEventListener('click', function(e) {
 <script>
 var MODALS = {
   terms:{c:'#6B9FFF',e:'Legal · Terms of Use',t:'Terms of Use',d:'By accessing or using the Simfluence platform, you agree to be bound by these Terms of Use. Simfluence is a subscription-based creator intelligence platform providing forecasting, scoring and campaign simulation tools to brands and marketing professionals.',s:[{n:'2025',l:'Effective date'},{n:'Dubai',l:'Jurisdiction'},{n:'30 days',l:'Notice period'},{n:'UAE',l:'Entity'}],p:['Access and Subscription: Access to Simfluence is granted on a subscription basis. Your subscription is personal to your organisation and may not be shared, resold or transferred to any third party.','Billing and Cancellation: Subscriptions are billed monthly or annually as agreed. All fees are non-refundable except where required by applicable law. Pricing may be updated with 30 days written notice.','Platform Data: All creator data, scoring methodologies, forecasting models and platform outputs are proprietary to Simfluence Ltd. You may not extract, reproduce or redistribute any platform data without written consent.','Forecasting Disclaimer: All campaign simulations are probabilistic models based on historical data. They are not guarantees of campaign performance. Simfluence accepts no liability for campaign outcomes based on platform outputs.','Acceptable Use: You agree to use the platform solely for lawful internal business purposes. You must not attempt to reverse-engineer, scrape or circumvent any aspect of the platform.','Governing Law: These terms are governed by the laws of the United Arab Emirates. Disputes shall be subject to the exclusive jurisdiction of the courts of Dubai, UAE.','Contact: For all legal queries contact Liam@Simfluence.AI']},
-  legal:{c:'#9B8FDD',e:'Legal · Legal Notice',t:'Legal Notice',d:'Simfluence Ltd is a technology company incorporated in Dubai, United Arab Emirates. This legal notice governs your use of the Simfluence platform and all associated intellectual property.',s:[{n:'LLC',l:'Entity type'},{n:'Dubai',l:'Registered office'},{n:'UAE',l:'Jurisdiction'},{n:'2025',l:'Incorporated'}],p:['Entity: Simfluence Ltd is registered as a Limited Liability Company in Dubai, UAE. All platform operations and commercial agreements are conducted under this entity.','Intellectual Property: The Simfluence name, logo, platform design, CPI, GFI, scoring algorithms and forecasting models are the exclusive intellectual property of Simfluence Ltd. Unauthorised use or reproduction is strictly prohibited.','Data and Privacy: Simfluence processes creator data from publicly available platforms including YouTube and Twitch. User data is handled in accordance with UAE data protection regulations. We do not sell or share user data with third parties.','Liability Limitation: Simfluence Ltd provides its platform on an as-is basis. To the fullest extent permitted by law, Simfluence excludes all liability for indirect or consequential losses arising from platform use.','Third Party Services: The platform integrates with YouTube Data API, Twitch API and Supabase. Simfluence is not responsible for the availability or accuracy of these third-party services.','Governing Law: This legal notice is governed by the laws of the UAE. Disputes shall be resolved under the exclusive jurisdiction of the Dubai courts.','Contact: For all legal matters contact Liam@Simfluence.AI']}
-};
-
-function openFeatureModal(key){
-  var m = MODALS[key];
-  if(!m) return;
-  var el = document.getElementById('featureModal');
-  if(!el) return;
-  document.getElementById('fmBar').style.background = m.c;
-  document.getElementById('fmEye').textContent = m.e;
-  document.getElementById('fmTtl').textContent = m.t;
-  document.getElementById('fmDsc').textContent = m.d;
-  document.getElementById('fmG').innerHTML = m.s.map(function(s){
-    return '<div class="fm-sc"><div class="fm-sn" style=
+  legal:{c:'#9B8FDD',e:'Legal · Legal Notice',t:'Legal Notice',d:'Simfluence Ltd is a technology company incorporated in Dubai, United Arab Emirates. This legal notice governs your use of the Simfluence platform and all associated intellectual property.',s:[{n:'LLC',l:'Entity type'},{n:'Dubai',l:'Registered office'},{n:'UAE',l:'Jurisdiction'},{n:'2025',l:'Incorporated'}],p:['Entity: Simfluence Ltd is registered as a Limited Liability Company in Dubai, UAE. All platform operations and commercial agreements are conducted under this entity.','Intellectual Property: The Simfluence name, logo, platform design, CPI, GFI, scoring algorithms and forecasting models are the exclusive intellectual property of Simfluence Ltd. Unauthorised use or reproduction is strictly prohibited.','Data and Privacy: Simfluence processes creator data from publicly available platforms including YouTube and Twitch. User data is handled in accordance with UAE data protection regulations. We do not sell or share user data with third parties.','Liability Limitation: Simfluence Ltd provides its platform on an as-is basis. To the fullest extent permitted by law, Simfluence excludes all liability for indirect or consequential losses arising from platform use.','Third Party Services: The platform integrates with YouTube Data API, Twitch API and Supabase. Simflu
