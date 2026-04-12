@@ -1752,6 +1752,28 @@
     font-size: 18px; font-weight: 700; color: var(--text);
   }
 
+  /* ── PRINT / PDF EXPORT ───────────────────────────────────────────── */
+  @media print {
+    /* Hide everything except the simulator screen content */
+    nav, #G, #sfOnboard, #briefPanel, .sidebar,
+    #screen-discovery, #screen-scoring, #screen-personas,
+    #screen-campaigns, #screen-outreach,
+    #overlap-modal, #sf-upgrade-overlay, #profileOverlay,
+    #campaign-modal, #outreach-modal, #suModal,
+    .page-modal-overlay, #compareBar,
+    button, input[type="range"] { display: none !important; }
+
+    /* Show only simulator */
+    #screen-simulator { display: block !important; }
+    .main { padding: 0 !important; }
+
+    body { background: #fff !important; color: #000 !important; }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+    /* Keep band cards readable on white */
+    .band-card, [id^="band"] { border: 1px solid #ccc !important; }
+  }
+
   </style>
 </head>
 <body>
@@ -8646,18 +8668,38 @@ function runSimulation() {
       } catch(e) {}
     }
   }
+
+  // Visual feedback — flash the button so user knows it fired
+  var _rrb = document.getElementById('reRunSimBtn');
+  if (_rrb) {
+    _rrb.textContent = '⟳ RUNNING...';
+    _rrb.style.background = '#FFD400';
+    _rrb.style.color = '#000';
+    _rrb.disabled = true;
+  }
+
   simResults = null; // force fresh compute
   computeSimResults();
+
   // Only navigate to simulator screen if not already on it
   var simScreen = document.getElementById('screen-simulator');
   if (simScreen && !simScreen.classList.contains('active')) {
     showScreen('simulator', document.querySelector('.nav-tab[data-screen="simulator"]'));
   } else {
-    // Already on simulator — just refresh displays without triggering showScreen double-compute
     updateSimDisplay();
     updateBandDisplays();
     renderEfficiencyCurve();
   }
+
+  // Restore button
+  setTimeout(function() {
+    if (_rrb) {
+      _rrb.textContent = '▶ RE-RUN';
+      _rrb.style.background = '#FF7A00';
+      _rrb.style.color = '#fff';
+      _rrb.disabled = false;
+    }
+  }, 600);
 }
 
 function renderEfficiencyCurve() {
@@ -8701,6 +8743,8 @@ function onGenreChange() {
   renderCreatorGrid();
   updateBriefPanel();
   if (window.__livePanelOpen) renderLivePanel();
+  // Update personas immediately on genre change — no simulation needed
+  if (typeof renderPersonaScreen === 'function') renderPersonaScreen();
 }
 
 function setSubMode(m, btn) {
@@ -8709,7 +8753,8 @@ function setSubMode(m, btn) {
   if(btn) btn.classList.add('active');
   if (window.__livePanelOpen) renderLivePanel();
   renderCreatorGrid();
-  if (window.__livePanelOpen) renderLivePanel();
+  // Update personas immediately on sub-mode change — no simulation needed
+  if (typeof renderPersonaScreen === 'function') renderPersonaScreen();
 }
 
 // ── SCORING SCREEN ────────────────────────────────────────────────────
@@ -12074,11 +12119,16 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   // Save as PDF / campaign history
-  // Save as PDF / campaign history — respects tier gate set by applyAllTierGates
+  // Save as PDF — real browser print-to-PDF, respects tier gate
   wire('saveCampaignBtn', function() {
     var btn = document.getElementById('saveCampaignBtn');
     if (btn && btn.getAttribute('data-tier-blocked')) { showUpgradePrompt('pdf_summary','Gold'); return; }
-    if (typeof saveCampaignToHistory==='function') saveCampaignToHistory();
+    // Flash feedback
+    if (btn) { btn.textContent = '⟳ PREPARING...'; btn.disabled = true; }
+    setTimeout(function() {
+      window.print();
+      if (btn) { btn.textContent = '⬇ SAVE AS PDF'; btn.disabled = false; }
+    }, 200);
   });
   // Genre, format, tier, language, sort selects
   (function() {
