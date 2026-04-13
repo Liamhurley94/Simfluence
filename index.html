@@ -263,7 +263,7 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
     <li><a href="#how">How it works</a></li>
     <li><a href="#features">Features</a></li>
     <li><a href="#pricing">Pricing</a></li>
-    <li><a href="#" id="navSeePlatformLink">See the platform</a></li>
+    <li><a href="#" onclick="openFreeSignup();return false;">See the platform</a></li>
   </ul>
   <div class="nav-right">
     <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn" title="Toggle mode">🌙</button>
@@ -279,7 +279,7 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
     <h1 class="hero-h1">Know<br>before you<br><span class="gold">spend.</span></h1>
     <p class="hero-sub">Predict your CTR, CPM, CVR and ROAS before a single penny is committed. Model your campaign. Know your outcome. Launch with certainty.</p>
     <div class="hero-actions">
-      <a href="mailto:Liam@Simfluence.AI?subject=Book%20a%20Live%20Demo" class="btn-xl">Book a live demo</a>
+      <a href="/cdn-cgi/l/email-protection#d894b1b9b5988bb1b5beb4adbdb6bbbdf69991e7abadbab2bdbbace594b1aebdfdeae89cbdb5b7fdeae88abda9adbdabac" class="btn-xl">Book a live demo</a>
     </div>
   </div></div>
 </section>
@@ -1170,7 +1170,7 @@ function simShow(){
   <h2 class="cta-h2">Your next campaign<br>already has<br>a <em>forecast.</em></h2>
   <p class="cta-sub">Run your brief. See your numbers. Launch knowing what to expect.</p>
   <div class="cta-btns">
-    <a href="mailto:Liam@Simfluence.AI?subject=Book%20a%20Live%20Demo" class="btn-xl">Book a live demo</a>
+    <a href="/cdn-cgi/l/email-protection#430f2a222e03102a2e252f36262d20266d020a7c303621292620377e0f2a352666717307262e2c66717311263236263037" class="btn-xl">Book a live demo</a>
   </div>
 </section>
 
@@ -1241,7 +1241,7 @@ function simShow(){
       <input id="sfEmail" type="email" class="sf-input" placeholder="you@company.com" autocomplete="email">
       <div id="sfE1" class="sf-err">Please fill in all fields with a valid email.</div>
       <button onclick="sfStep1()" class="sf-btn">Continue →</button>
-      <div class="sf-note">Already using Simfluence? <a href="#" id="sfModalSignInLink">Sign in</a></div>
+      <div class="sf-note">Already using Simfluence? <a href="#" onclick="openSignIn();return false;">Sign in</a></div>
     </div>
     <!-- Step 2 — Plan select -->
     <div id="sfS2" style="display:none">
@@ -1545,7 +1545,7 @@ function sfSignIn() {
   var email = document.getElementById('siEmail').value.trim();
   var pass  = document.getElementById('siPass').value;
   var errEl = document.getElementById('siErr');
-  var btn   = document.getElementById('siSubmitBtn');
+  var btn   = document.querySelector('#sfSignInModal button[onclick="sfSignIn()"]');
   if (!email || !pass) { errEl.style.display='block'; setTimeout(function(){errEl.style.display='none';},3000); return; }
   if (btn) { btn.textContent='SIGNING IN...'; btn.disabled=true; }
   fetch(IDX_URL + '/auth/v1/token?grant_type=password', {
@@ -1648,130 +1648,38 @@ document.addEventListener('click', function(e) {
 });
 
 
-// Wire nav buttons — handles both before and after DOMContentLoaded
-
-// ── SUPABASE AUTH ─────────────────────────────────────────────────────
-var IDX_URL = 'https://iysjxslzlbojoivxjrce.supabase.co';
-var IDX_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5c2p4c2x6bGJvam9pdnhqcmNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM0MzA2MDIsImV4cCI6MjA1OTAwNjYwMn0.AqbQqRs3AiGYhRGZw1SG2TNqlQQ1rPbICbzNBE3Uvj4';
-
-function sfSignIn() {
-  var email = document.getElementById('siEmail') ? document.getElementById('siEmail').value.trim() : '';
-  var pass  = document.getElementById('siPass')  ? document.getElementById('siPass').value : '';
-  var errEl = document.getElementById('siErr');
-  var btn   = document.getElementById('siSubmitBtn');
-  if (!email || !pass) { if(errEl) errEl.style.display='block'; setTimeout(function(){if(errEl)errEl.style.display='none';},3000); return; }
-  if(btn){btn.textContent='SIGNING IN...';btn.disabled=true;}
-  fetch(IDX_URL+'/auth/v1/token?grant_type=password',{
-    method:'POST', headers:{'Content-Type':'application/json','apikey':IDX_KEY},
-    body:JSON.stringify({email:email,password:pass})
-  }).then(function(r){return r.json();}).then(function(data){
-    if(!data.access_token){
-      if(errEl)errEl.style.display='block';
-      setTimeout(function(){if(errEl)errEl.style.display='none';},3000);
-      if(btn){btn.textContent='SIGN IN →';btn.disabled=false;}
-      return;
-    }
-    try{
-      sessionStorage.setItem('sf_auth','1');
-      sessionStorage.setItem('sf_tier','free');
-      sessionStorage.setItem('sf_client','Free');
-      sessionStorage.setItem('sf_email',email);
-    }catch(e){}
-    window.location.href='app.html?authed=1';
-  }).catch(function(){
-    if(errEl)errEl.style.display='block';
-    setTimeout(function(){if(errEl)errEl.style.display='none';},3000);
-    if(btn){btn.textContent='SIGN IN →';btn.disabled=false;}
-  });
-}
-
-function sfFreeSignup() {
-  var email = document.getElementById('freeEmail') ? document.getElementById('freeEmail').value.trim() : '';
-  var pass  = document.getElementById('freePass')  ? document.getElementById('freePass').value : '';
-  var errEl = document.getElementById('freeErr');
-  var btn   = document.getElementById('freeBtn');
-  if(!email||email.indexOf('@')<0||email.indexOf('.')<0||pass.length<8){
-    if(errEl){errEl.style.display='block';}
-    setTimeout(function(){if(errEl)errEl.style.display='none';},3000);
-    return;
-  }
-  if(btn){btn.textContent='CREATING...';btn.disabled=true;}
-  fetch(IDX_URL+'/auth/v1/signup',{
-    method:'POST', headers:{'Content-Type':'application/json','apikey':IDX_KEY},
-    body:JSON.stringify({email:email,password:pass})
-  }).then(function(r){return r.json();}).then(function(data){
-    if(data.error){
-      var msg=(data.error&&data.error.message)||'Sign up failed.';
-      if(msg.toLowerCase().includes('already'))msg='Email already registered — sign in instead.';
-      if(errEl){errEl.textContent=msg;errEl.style.display='block';}
-      setTimeout(function(){if(errEl)errEl.style.display='none';},4000);
-      if(btn){btn.textContent='CREATE FREE ACCOUNT →';btn.disabled=false;}
-      return;
-    }
-    try{
-      sessionStorage.setItem('sf_auth','1');
-      sessionStorage.setItem('sf_tier','free');
-      sessionStorage.setItem('sf_client','Free');
-      sessionStorage.setItem('sf_email',email);
-    }catch(e){}
-    window.location.href='app.html?authed=1';
-  }).catch(function(){
-    if(errEl){errEl.textContent='Connection error.';errEl.style.display='block';}
-    setTimeout(function(){if(errEl)errEl.style.display='none';},3000);
-    if(btn){btn.textContent='CREATE FREE ACCOUNT →';btn.disabled=false;}
-  });
-}
-
-function sfForgotPassword() {
-  var email = document.getElementById('siEmail') ? document.getElementById('siEmail').value.trim() : '';
-  var okEl  = document.getElementById('siForgotOk');
-  var errEl = document.getElementById('siErr');
-  if(!email||email.indexOf('@')<0){
-    if(errEl){errEl.textContent='Enter your email above first.';errEl.style.display='block';}
-    setTimeout(function(){if(errEl){errEl.style.display='none';errEl.textContent='Incorrect email or password.';}},3000);
-    return;
-  }
-  fetch(IDX_URL+'/auth/v1/recover',{
-    method:'POST', headers:{'Content-Type':'application/json','apikey':IDX_KEY},
-    body:JSON.stringify({email:email})
-  }).then(function(){if(okEl){okEl.style.display='block';setTimeout(function(){okEl.style.display='none';},5000);}
-  }).catch(function(){if(okEl)okEl.style.display='block';});
-}
-
-// Wire ALL buttons via addEventListener — no onclick= (Cloudflare strips them)
+// Wire ALL interactive elements via addEventListener (Cloudflare strips onclick=)
 function sfWireAll() {
   function on(id, fn) {
     var el = document.getElementById(id);
     if (el) el.addEventListener('click', function(e) { e.preventDefault(); fn(); });
   }
-  // Nav
-  on('navSignInBtn',    openSignIn);
-  on('navTryFreeBtn',   openFreeSignup);
+  // Nav buttons
+  on('navSignInBtn',       openSignIn);
+  on('navTryFreeBtn',      openFreeSignup);
   on('navSeePlatformLink', openFreeSignup);
   on('sfModalSignInLink',  openSignIn);
-  // Sign in modal
-  on('siSubmitBtn',  sfSignIn);
-  on('siToFreeBtn',  function(){ sfSignInClose(); openFreeSignup(); });
-  on('siCloseBtn',   sfSignInClose);
-  on('siForgotBtn',  sfForgotPassword);
-  // Free modal
-  on('freeBtn',       sfFreeSignup);
-  on('freeToSignInBtn', function(){ sfFreeClose(); openSignIn(); });
-  on('freeCloseBtn',  sfFreeClose);
-  // Enter key
-  function enterKey(inputId, fn) {
-    var el = document.getElementById(inputId);
+  // Sign in modal buttons
+  on('siSubmitBtn',    sfSignIn);
+  on('siForgotBtn',    sfForgotPassword);
+  on('siToFreeBtn',    function(){ sfSignInClose(); openFreeSignup(); });
+  on('siCloseBtn',     sfSignInClose);
+  // Free signup modal buttons
+  on('freeBtn',        sfFreeSignup);
+  on('freeToSignInBtn',function(){ sfFreeClose(); openSignIn(); });
+  on('freeCloseBtn',   sfFreeClose);
+  // Enter keys
+  function ek(id, fn) {
+    var el = document.getElementById(id);
     if (el) el.addEventListener('keydown', function(e){ if(e.key==='Enter') fn(); });
   }
-  enterKey('siPass',   sfSignIn);
-  enterKey('freePass', sfFreeSignup);
-  enterKey('siEmail',  function(){ var p=document.getElementById('siPass'); if(p) p.focus(); });
-  enterKey('freeEmail',function(){ var p=document.getElementById('freePass'); if(p) p.focus(); });
+  ek('siEmail',  function(){ var p=document.getElementById('siPass'); if(p) p.focus(); });
+  ek('siPass',   sfSignIn);
+  ek('freeEmail',function(){ var p=document.getElementById('freePass'); if(p) p.focus(); });
+  ek('freePass', sfFreeSignup);
 }
-
-// Use window.onload so modal HTML below this script is fully parsed first
+// Fire after full page load so modal HTML at bottom of file is parsed
 window.addEventListener('load', sfWireAll);
-// Also try immediately in case load already fired
 if (document.readyState === 'complete') sfWireAll();
 
 </script>
@@ -1850,7 +1758,7 @@ var MODALS = {
       style="width:100%;padding:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:#fff;font-size:14px;outline:none;box-sizing:border-box;margin-bottom:10px;font-family:sans-serif;">
     <input id="freePass" type="password" placeholder="Create password (min 8 chars)" autocomplete="new-password"
       style="width:100%;padding:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:#fff;font-size:14px;outline:none;box-sizing:border-box;margin-bottom:16px;font-family:sans-serif;">
-    <button id="freeBtn" style="width:100%;padding:13px;background:#0050FF;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-weight:700;font-family:'DM Mono',monospace;letter-spacing:.06em;">CREATE FREE ACCOUNT →</button>
+    <button onclick="sfFreeSignup()" id="freeBtn" style="width:100%;padding:13px;background:#0050FF;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-weight:700;font-family:'DM Mono',monospace;letter-spacing:.06em;">CREATE FREE ACCOUNT →</button>
     <div id="freeErr" style="color:#ff5555;font-size:11px;margin-top:10px;display:none;">Please enter a valid email and password (8+ chars).</div>
     <div style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.08);">
       <span style="font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,255,255,0.3);">Already have an account? </span>
