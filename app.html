@@ -1796,9 +1796,9 @@
 
     <!-- TAB SWITCHER -->
     <div id="G-tabs" style="display:flex;background:rgba(255,255,255,0.04);border-radius:8px;padding:4px;margin-bottom:28px;gap:4px">
-      <button id="G-tab-free" onclick="gSwitchTab('free')" style="flex:1;padding:9px 0;border:none;border-radius:6px;background:#0050FF;color:#fff;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.06em;cursor:pointer;font-weight:700;transition:all .2s">SIGN UP FREE</button>
-      <button id="G-tab-signin" onclick="gSwitchTab('signin')" style="flex:1;padding:9px 0;border:none;border-radius:6px;background:transparent;color:rgba(255,255,255,0.4);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.06em;cursor:pointer;font-weight:600;transition:all .2s">SIGN IN</button>
-      <button id="G-tab-code" onclick="gSwitchTab('code')" style="flex:1;padding:9px 0;border:none;border-radius:6px;background:transparent;color:rgba(255,255,255,0.4);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.06em;cursor:pointer;font-weight:600;transition:all .2s">HAVE A CODE</button>
+      <button id="G-tab-free" style="flex:1;padding:9px 0;border:none;border-radius:6px;background:#0050FF;color:#fff;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.06em;cursor:pointer;font-weight:700;transition:all .2s">SIGN UP FREE</button>
+      <button id="G-tab-signin" style="flex:1;padding:9px 0;border:none;border-radius:6px;background:transparent;color:rgba(255,255,255,0.4);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.06em;cursor:pointer;font-weight:600;transition:all .2s">SIGN IN</button>
+      <button id="G-tab-code" style="flex:1;padding:9px 0;border:none;border-radius:6px;background:transparent;color:rgba(255,255,255,0.4);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.06em;cursor:pointer;font-weight:600;transition:all .2s">HAVE A CODE</button>
     </div>
 
     <!-- SIGN UP PANEL -->
@@ -1810,7 +1810,7 @@
       <div id="GFE" style="color:#ff5555;font-size:11px;margin-top:10px;display:none">Please enter a valid email and password (8+ chars).</div>
       <div style="margin-top:16px;text-align:center">
         <span style="font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,255,255,0.3)">Already have an account? </span>
-        <button onclick="gSwitchTab('signin')" style="background:none;border:none;font-family:'DM Mono',monospace;font-size:9px;color:#6B9FFF;cursor:pointer;padding:0;letter-spacing:.04em">SIGN IN →</button>
+        <button id="G-inline-signin" style="background:none;border:none;font-family:'DM Mono',monospace;font-size:9px;color:#6B9FFF;cursor:pointer;padding:0;letter-spacing:.04em">SIGN IN →</button>
       </div>
       <div style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.06);text-align:center">
         <a href="https://calendly.com/liam-simfluence" target="_blank" style="font-family:'DM Mono',monospace;font-size:9px;color:#FFD400;text-decoration:none;letter-spacing:.06em">📅 BOOK A LIVE DEMO INSTEAD →</a>
@@ -1827,7 +1827,7 @@
       <div id="GForgotOk" style="display:none;font-family:'DM Mono',monospace;font-size:9px;color:#00C46A;text-align:center;margin-top:6px">Reset email sent — check your inbox.</div>
       <div id="GSIE" style="color:#ff5555;font-size:11px;margin-top:10px;display:none">Incorrect email or password. Try again.</div>
       <div style="margin-top:12px;text-align:center">
-        <button id="GForgotBtn" onclick="gForgotPassword()" style="background:none;border:none;font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,255,255,0.4);cursor:pointer;padding:0;letter-spacing:.04em">Forgot password?</button>
+        <button id="GForgotBtn" id="GForgotPasswordBtn" style="background:none;border:none;font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,255,255,0.4);cursor:pointer;padding:0;letter-spacing:.04em">Forgot password?</button>
       </div>
       <div id="GForgotOk" style="display:none;margin-top:10px;font-family:'DM Mono',monospace;font-size:9px;color:#00C46A;text-align:center;line-height:1.6">Reset email sent — check your inbox.</div>
     </div>
@@ -2401,7 +2401,7 @@ function applyFreeTierGates() {
       ov.className = 'free-blur-overlay';
       ov.style.cssText = 'position:absolute;inset:0;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);background:rgba(10,10,20,0.5);z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:inherit;cursor:pointer;gap:8px';
       ov.innerHTML = '<div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.1em;color:rgba(255,255,255,0.6);text-align:center">🔒 UPGRADE TO UNLOCK</div>'
-        + '<button style="padding:5px 14px;background:#FFD400;color:#000;border:none;border-radius:4px;font-family:DM Mono,monospace;font-size:9px;cursor:pointer;font-weight:700" onclick="showFreeTierPrompt()">SEE PLANS</button>';
+        + '<button style="padding:5px 14px;background:#FFD400;color:#000;border:none;border-radius:4px;font-family:DM Mono,monospace;font-size:9px;cursor:pointer;font-weight:700" id="sfFreePlanBtn3">SEE PLANS</button>';
       el.appendChild(ov);
     }
   });
@@ -2415,7 +2415,7 @@ function applyFreeTierGates() {
     cta.style.cssText = 'display:flex;align-items:center;justify-content:space-between;background:rgba(0,80,255,0.08);border:1px solid rgba(0,80,255,0.2);border-radius:8px;padding:10px 20px;margin-bottom:20px;gap:16px;';
     cta.innerHTML = '<div style="font-family:DM Mono,monospace;font-size:10px;color:rgba(255,255,255,0.6);letter-spacing:.04em">FREE PLAN · <span style="color:#6B9FFF">10 OF 3,600+ CREATORS</span> · Upgrade to unlock the full database, simulator, outreach CRM and more.</div>'
       + '<div style="display:flex;gap:8px;flex-shrink:0">'
-      + '<button onclick="showFreeTierPrompt()" style="padding:6px 14px;background:#0050FF;color:#fff;border:none;border-radius:5px;font-family:DM Mono,monospace;font-size:9px;cursor:pointer;font-weight:700;letter-spacing:.06em">SEE PLANS</button>'
+      + '<button id="sfFreePlanBtn3" style="padding:6px 14px;background:#0050FF;color:#fff;border:none;border-radius:5px;font-family:DM Mono,monospace;font-size:9px;cursor:pointer;font-weight:700;letter-spacing:.06em">SEE PLANS</button>'
       + '<a href="mailto:Liam@Simfluence.AI?subject=Book%20a%20Live%20Demo" style="padding:6px 14px;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.5);border:1px solid rgba(255,255,255,0.1);border-radius:5px;font-family:DM Mono,monospace;font-size:9px;cursor:pointer;text-decoration:none;letter-spacing:.06em">BOOK DEMO</a>'
       + '</div>';
     discScreen.insertBefore(cta, discScreen.firstChild);
@@ -2430,7 +2430,7 @@ function applyFreeTierGates() {
       var note = document.createElement('div');
       note.className = 'free-persona-note';
       note.style.cssText = 'position:absolute;bottom:0;left:0;right:0;padding:16px;background:linear-gradient(transparent,rgba(10,10,20,0.95));text-align:center;pointer-events:all;';
-      note.innerHTML = '<button onclick="showFreeTierPrompt()" style="padding:8px 20px;background:#FFD400;color:#000;border:none;border-radius:5px;font-family:DM Mono,monospace;font-size:10px;cursor:pointer;font-weight:700">UNLOCK FULL PERSONAS →</button>';
+      note.innerHTML = '<button id="sfFreePlanBtn3" style="padding:8px 20px;background:#FFD400;color:#000;border:none;border-radius:5px;font-family:DM Mono,monospace;font-size:10px;cursor:pointer;font-weight:700">UNLOCK FULL PERSONAS →</button>';
       pgrid.style.position = 'relative';
       pgrid.appendChild(note);
     }
@@ -2699,6 +2699,30 @@ document.getElementById('GBtn').addEventListener('click', GC);
   // Sign in wiring
   var sib = document.getElementById('GSIBtn');
   if (sib) sib.addEventListener('click', GSignIn);
+  // Wire user menu + sign out
+  var umt = document.getElementById('sfUserMenuToggle');
+  if (umt) umt.addEventListener('click', sfToggleUserMenu);
+  var sob = document.getElementById('sfSignOutBtn');
+  if (sob) sob.addEventListener('click', sfSignOut);
+  // Wire forgot password (gate version)
+  var gfpb = document.getElementById('GForgotPasswordBtn');
+  if (gfpb) gfpb.addEventListener('click', gForgotPassword);
+  // Wire free plan buttons
+  ['sfFreePlanBtn1','sfFreePlanBtn2','sfFreePlanBtn3'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('click', showFreeTierPrompt);
+  });
+
+  // Wire gate tabs
+  var gtFree = document.getElementById('G-tab-free');
+  if (gtFree) gtFree.addEventListener('click', function() { gSwitchTab('free'); });
+  var gtSignin = document.getElementById('G-tab-signin');
+  if (gtSignin) gtSignin.addEventListener('click', function() { gSwitchTab('signin'); });
+  var gtCode = document.getElementById('G-tab-code');
+  if (gtCode) gtCode.addEventListener('click', function() { gSwitchTab('code'); });
+  var gtInline = document.getElementById('G-inline-signin');
+  if (gtInline) gtInline.addEventListener('click', function() { gSwitchTab('signin'); });
+
   var gfb = document.getElementById('GForgotBtn');
   if (gfb) gfb.addEventListener('click', function() {
     var email = document.getElementById('GSIEmail') ? document.getElementById('GSIEmail').value.trim() : '';
@@ -2828,13 +2852,13 @@ document.addEventListener('DOMContentLoaded', function() {
     <button class="theme-toggle" data-oc="toggleTheme()" id="themeBtn" title="Toggle mode">🌙</button>
     <!-- User menu -->
     <div id="sf-user-menu" style="position:relative;display:none">
-      <button id="sf-user-btn" onclick="sfToggleUserMenu()" style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:6px;padding:6px 10px;cursor:pointer;font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);letter-spacing:.04em">
+      <button id="sf-user-btn" id="sfUserMenuToggle" style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:6px;padding:6px 10px;cursor:pointer;font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);letter-spacing:.04em">
         <span id="sf-user-email" style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
         <span style="font-size:8px;opacity:0.5">▾</span>
       </button>
       <div id="sf-user-dropdown" style="display:none;position:absolute;right:0;top:calc(100% + 6px);background:#0D0D18;border:1px solid var(--border);border-radius:8px;padding:6px;min-width:160px;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,0.4)">
         <div id="sf-user-tier-label" style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.08em;color:var(--text-muted);padding:4px 8px 8px;border-bottom:1px solid var(--border);margin-bottom:4px"></div>
-        <button onclick="sfSignOut()" style="width:100%;text-align:left;background:none;border:none;padding:8px 10px;font-family:'DM Mono',monospace;font-size:10px;color:#E60023;cursor:pointer;border-radius:4px;letter-spacing:.04em">Sign out</button>
+        <button id="sfSignOutBtn" style="width:100%;text-align:left;background:none;border:none;padding:8px 10px;font-family:'DM Mono',monospace;font-size:10px;color:#E60023;cursor:pointer;border-radius:4px;letter-spacing:.04em">Sign out</button>
       </div>
     </div>
   </div>
