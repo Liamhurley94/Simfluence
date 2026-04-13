@@ -2015,7 +2015,7 @@ function GSignIn() {
     .then(function(r) { return r.json(); })
     .then(function(profile) {
       console.log('[Simfluence] Profile fetch result:', JSON.stringify(profile));
-      var tier   = (profile && profile[0] && profile[0].tier)   || 'free';
+      var tier   = ((profile && profile[0] && profile[0].tier) || 'free').trim();
       var client = (profile && profile[0] && profile[0].client) || 'Free';
       gActivateSession(email, tier, client);
     })
@@ -2104,12 +2104,12 @@ function getTierLevel() {
   try {
     var t = sessionStorage.getItem('sf_tier');
     if (!t) return -1;
-    var level = TIER_LEVELS[t.toLowerCase()];
+    var level = TIER_LEVELS[t.toLowerCase().trim()];
     return (level !== undefined) ? level : -1;
   } catch(e) { return -1; }
 }
 function getTierName() {
-  try { return (sessionStorage.getItem('sf_tier') || 'free').toLowerCase(); } catch(e) { return 'free'; }
+  try { return (sessionStorage.getItem('sf_tier') || 'free').toLowerCase().trim(); } catch(e) { return 'free'; }
 }
 
 function tierCan(feature) {
