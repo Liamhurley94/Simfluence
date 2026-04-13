@@ -1683,3 +1683,49 @@ document.addEventListener('click', function(e) {
 var MODALS = {
   terms:{c:'#6B9FFF',e:'Legal · Terms of Use',t:'Terms of Use',d:'By accessing or using the Simfluence platform, you agree to be bound by these Terms of Use. Simfluence is a subscription-based creator intelligence platform providing forecasting, scoring and campaign simulation tools to brands and marketing professionals.',s:[{n:'2025',l:'Effective date'},{n:'Dubai',l:'Jurisdiction'},{n:'30 days',l:'Notice period'},{n:'UAE',l:'Entity'}],p:['Access and Subscription: Access to Simfluence is granted on a subscription basis. Your subscription is personal to your organisation and may not be shared, resold or transferred to any third party.','Billing and Cancellation: Subscriptions are billed monthly or annually as agreed. All fees are non-refundable except where required by applicable law. Pricing may be updated with 30 days written notice.','Platform Data: All creator data, scoring methodologies, forecasting models and platform outputs are proprietary to Simfluence Ltd. You may not extract, reproduce or redistribute any platform data without written consent.','Forecasting Disclaimer: All campaign simulations are probabilistic models based on historical data. They are not guarantees of campaign performance. Simfluence accepts no liability for campaign outcomes based on platform outputs.','Acceptable Use: You agree to use the platform solely for lawful internal business purposes. You must not attempt to reverse-engineer, scrape or circumvent any aspect of the platform.','Governing Law: These terms are governed by the laws of the United Arab Emirates. Disputes shall be subject to the exclusive jurisdiction of the courts of Dubai, UAE.','Contact: For all legal queries contact Liam@Simfluence.AI']},
   legal:{c:'#9B8FDD',e:'Legal · Legal Notice',t:'Legal Notice',d:'Simfluence Ltd is a technology company incorporated in Dubai, United Arab Emirates. This legal notice governs your use of the Simfluence platform and all associated intellectual property.',s:[{n:'LLC',l:'Entity type'},{n:'Dubai',l:'Registered office'},{n:'UAE',l:'Jurisdiction'},{n:'2025',l:'Incorporated'}],p:['Entity: Simfluence Ltd is registered as a Limited Liability Company in Dubai, UAE. All platform operations and commercial agreements are conducted under this entity.','Intellectual Property: The Simfluence name, logo, platform design, CPI, GFI, scoring algorithms and forecasting models are the exclusive intellectual property of Simfluence Ltd. Unauthorised use or reproduction is strictly prohibited.','Data and Privacy: Simfluence processes creator data from publicly available platforms including YouTube and Twitch. User data is handled in accordance with UAE data protection regulations. We do not sell or share user data with third parties.','Liability Limitation: Simfluence Ltd provides its platform on an as-is basis. To the fullest extent permitted by law, Simfluence excludes all liability for indirect or consequential losses arising from platform use.','Third Party Services: The platform integrates with YouTube Data API, Twitch API and Supabase. Simflu
+
+<!-- ── Sign In Modal ─────────────────────────────────────── -->
+<div id="sfSignInModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.9);z-index:9999;overflow-y:auto;">
+  <div style="background:#0D0D18;border:1px solid rgba(0,80,255,0.3);border-radius:16px;padding:40px;max-width:400px;width:90%;margin:60px auto;text-align:center;box-sizing:border-box;">
+    <div style="font-size:24px;font-weight:700;color:#FFD400;margin-bottom:4px;font-family:'Space Grotesk',sans-serif">Sim<em style="font-style:italic;font-weight:300">fluence</em></div>
+    <div style="font-family:'DM Mono',monospace;font-size:10px;color:rgba(255,255,255,0.3);letter-spacing:.1em;margin-bottom:32px">SIGN IN TO YOUR ACCOUNT</div>
+    <input id="siEmail" type="email" placeholder="Email address" autocomplete="email"
+      style="width:100%;padding:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:#fff;font-size:14px;outline:none;box-sizing:border-box;margin-bottom:10px;font-family:sans-serif;">
+    <input id="siPass" type="password" placeholder="Password" autocomplete="current-password"
+      style="width:100%;padding:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:#fff;font-size:14px;outline:none;box-sizing:border-box;margin-bottom:16px;font-family:sans-serif;">
+    <button onclick="sfSignIn()" style="width:100%;padding:13px;background:#0050FF;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-weight:700;font-family:'DM Mono',monospace;letter-spacing:.06em;">SIGN IN →</button>
+    <div id="siErr" style="color:#ff5555;font-size:11px;margin-top:10px;display:none;">Incorrect email or password. Try again.</div>
+    <div style="margin-top:12px;">
+      <button onclick="sfForgotPassword()" style="background:none;border:none;font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,255,255,0.4);cursor:pointer;padding:0;letter-spacing:.04em;">Forgot password?</button>
+    </div>
+    <div id="siForgotOk" style="display:none;font-family:'DM Mono',monospace;font-size:9px;color:#00C46A;margin-top:8px;">Reset email sent — check your inbox.</div>
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.08);">
+      <span style="font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,255,255,0.3);">No account? </span>
+      <button onclick="sfSignInClose();openFreeSignup();" style="background:none;border:none;font-family:'DM Mono',monospace;font-size:9px;color:#6B9FFF;cursor:pointer;padding:0;">SIGN UP FREE →</button>
+    </div>
+    <button onclick="sfSignInClose()" style="margin-top:16px;background:none;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.3);border-radius:6px;padding:6px 16px;font-family:'DM Mono',monospace;font-size:9px;cursor:pointer;">CLOSE</button>
+  </div>
+</div>
+
+<!-- ── Free Signup Modal ──────────────────────────────────── -->
+<div id="sfFreeModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.9);z-index:9999;overflow-y:auto;">
+  <div style="background:#0D0D18;border:1px solid rgba(0,80,255,0.3);border-radius:16px;padding:40px;max-width:400px;width:90%;margin:60px auto;text-align:center;box-sizing:border-box;">
+    <div style="font-size:24px;font-weight:700;color:#FFD400;margin-bottom:4px;font-family:'Space Grotesk',sans-serif">Sim<em style="font-style:italic;font-weight:300">fluence</em></div>
+    <div style="font-family:'DM Mono',monospace;font-size:10px;color:rgba(255,255,255,0.3);letter-spacing:.1em;margin-bottom:8px">CREATE FREE ACCOUNT</div>
+    <div style="font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,255,255,0.3);margin-bottom:28px;line-height:1.6">10 creators · simulator · AI personas<br>No card required.</div>
+    <input id="freeEmail" type="email" placeholder="Work email" autocomplete="email"
+      style="width:100%;padding:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:#fff;font-size:14px;outline:none;box-sizing:border-box;margin-bottom:10px;font-family:sans-serif;">
+    <input id="freePass" type="password" placeholder="Create password (min 8 chars)" autocomplete="new-password"
+      style="width:100%;padding:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:#fff;font-size:14px;outline:none;box-sizing:border-box;margin-bottom:16px;font-family:sans-serif;">
+    <button onclick="sfFreeSignup()" id="freeBtn" style="width:100%;padding:13px;background:#0050FF;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-weight:700;font-family:'DM Mono',monospace;letter-spacing:.06em;">CREATE FREE ACCOUNT →</button>
+    <div id="freeErr" style="color:#ff5555;font-size:11px;margin-top:10px;display:none;">Please enter a valid email and password (8+ chars).</div>
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.08);">
+      <span style="font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,255,255,0.3);">Already have an account? </span>
+      <button onclick="sfFreeClose();openSignIn();" style="background:none;border:none;font-family:'DM Mono',monospace;font-size:9px;color:#6B9FFF;cursor:pointer;padding:0;">SIGN IN →</button>
+    </div>
+    <button onclick="sfFreeClose()" style="margin-top:16px;background:none;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.3);border-radius:6px;padding:6px 16px;font-family:'DM Mono',monospace;font-size:9px;cursor:pointer;">CLOSE</button>
+  </div>
+</div>
+
+</body>
+</html>
