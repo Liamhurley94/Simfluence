@@ -2723,32 +2723,30 @@ document.getElementById('GBtn').addEventListener('click', GC);
     if (el) el.addEventListener('click', showFreeTierPrompt);
   });
 
-  // Wire platform filter dropdown
-  var pdBtn  = document.getElementById('platformDropdownBtn');
-  var pdMenu = document.getElementById('platformDropdownMenu');
-  if (pdBtn && pdMenu) {
-    // Toggle open/close
-    pdBtn.addEventListener('click', function(e) {
+  // Wire platform filter dropdown — delegated from document so timing doesn't matter
+  document.addEventListener('click', function(e) {
+    var pdMenu = document.getElementById('platformDropdownMenu');
+    if (!pdMenu) return;
+
+    // Toggle button
+    if (e.target.closest('#platformDropdownBtn')) {
       e.stopPropagation();
       pdMenu.style.display = pdMenu.style.display === 'none' ? 'block' : 'none';
-    });
-    // Close when clicking outside
-    document.addEventListener('click', function(e) {
-      if (!e.target.closest('#platformDropdownWrap')) {
-        pdMenu.style.display = 'none';
-      }
-    });
-    // Handle option clicks
-    pdMenu.addEventListener('click', function(e) {
-      var opt = e.target.closest('.plat-opt');
-      var clr = e.target.closest('#platClearBtn');
+      return;
+    }
+
+    // Option click
+    var opt = e.target.closest('.plat-opt');
+    var clr = e.target.closest('#platClearBtn');
+    if (opt || clr) {
+      e.stopPropagation();
       if (clr) {
         activePlatforms.clear();
-      } else if (opt) {
+      } else {
         var plat = opt.getAttribute('data-plat');
         if (activePlatforms.has(plat)) activePlatforms.delete(plat);
         else activePlatforms.add(plat);
-      } else { return; }
+      }
       // Update checkmarks
       pdMenu.querySelectorAll('.plat-opt').forEach(function(o) {
         var p = o.getAttribute('data-plat');
@@ -2772,8 +2770,14 @@ document.getElementById('GBtn').addEventListener('click', GC);
       }
       currentPage = 1;
       renderCreatorGrid();
-    });
-  }
+      return;
+    }
+
+    // Close if clicking outside
+    if (!e.target.closest('#platformDropdownWrap')) {
+      pdMenu.style.display = 'none';
+    }
+  });
 
   // Wire gate tabs via delegation on parent
   var gateEl = document.getElementById('G');
