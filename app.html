@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Simfluence app.html v11.04.2026 | 167 creators | cpiScoreColor fix | stat labels visible -->
+<!-- Simfluence app.html v13.04.2026 | 167 creators | cpiScoreColor fix | stat labels visible -->
 
 <html lang="en">
 <head>
@@ -1823,6 +1823,8 @@
       <input id="GSIEmail" type="email" placeholder="Email address" autocomplete="email" style="width:100%;padding:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:#fff;font-size:14px;outline:none;box-sizing:border-box;margin-bottom:10px;font-family:sans-serif">
       <input id="GSIPass" type="password" placeholder="Password" autocomplete="current-password" style="width:100%;padding:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:#fff;font-size:14px;outline:none;box-sizing:border-box;margin-bottom:16px;font-family:sans-serif">
       <button id="GSIBtn" style="width:100%;padding:13px;background:#0050FF;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-weight:700;font-family:'DM Mono',monospace;letter-spacing:.06em">SIGN IN →</button>
+      <div style="text-align:center;margin-top:10px"><button id="GForgotBtn" style="background:none;border:none;font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,255,255,0.35);cursor:pointer;padding:0;letter-spacing:.04em">Forgot password?</button></div>
+      <div id="GForgotOk" style="display:none;font-family:'DM Mono',monospace;font-size:9px;color:#00C46A;text-align:center;margin-top:6px">Reset email sent — check your inbox.</div>
       <div id="GSIE" style="color:#ff5555;font-size:11px;margin-top:10px;display:none">Incorrect email or password. Try again.</div>
       <div style="margin-top:12px;text-align:center">
         <button id="GForgotBtn" onclick="gForgotPassword()" style="background:none;border:none;font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,255,255,0.4);cursor:pointer;padding:0;letter-spacing:.04em">Forgot password?</button>
@@ -1881,10 +1883,10 @@ function gActivateSession(email, tier, client) {
   if (obEl) { obEl.style.display='none'; obEl.style.pointerEvents='none'; }
   document.body.style.overflow = '';
   try {
-    sessionStorage.setItem('sf_auth',   '1');
-    sessionStorage.setItem('sf_tier',   tier   || 'free');
-    sessionStorage.setItem('sf_client', client || 'Free');
-    sessionStorage.setItem('sf_email',  email  || '');
+    localStorage.setItem('sf_auth',   '1');
+    localStorage.setItem('sf_tier',   tier   || 'free');
+    localStorage.setItem('sf_client', client || 'Free');
+    localStorage.setItem('sf_email',  email  || '');
   } catch(e) {}
   // Show user menu in nav
   sfShowUserMenu(email, tier);
@@ -1922,7 +1924,7 @@ function sfToggleUserMenu() {
 
 function sfSignOut() {
   // Clear session
-  try { sessionStorage.clear(); } catch(e) {}
+  try { sessionStorage.clear(); localStorage.removeItem('sf_auth'); localStorage.removeItem('sf_tier'); localStorage.removeItem('sf_client'); localStorage.removeItem('sf_email'); } catch(e) {}
   // Sign out from Supabase Auth (fire and forget)
   try {
     var key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5c2p4c2x6bGJvam9pdnhqcmNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0OTkyNjksImV4cCI6MjA5MTA3NTI2OX0.gGW_qclPJZT4x3eevXg6PFllq5CQWVifJUEaI3rqKnw';
@@ -2110,14 +2112,14 @@ var TIER_LEVELS = { free:-1, bronze:0, silver:1, gold:2, platinum:3, diamond:4, 
 
 function getTierLevel() {
   try {
-    var t = sessionStorage.getItem('sf_tier');
+    var t = localStorage.getItem('sf_tier') || sessionStorage.getItem('sf_tier');
     if (!t) return -1;
     var level = TIER_LEVELS[t.toLowerCase().trim()];
     return (level !== undefined) ? level : -1;
   } catch(e) { return -1; }
 }
 function getTierName() {
-  try { return (sessionStorage.getItem('sf_tier') || 'free').toLowerCase().trim(); } catch(e) { return 'free'; }
+  try { return (localStorage.getItem('sf_tier') || sessionStorage.getItem('sf_tier') || 'free').toLowerCase().trim(); } catch(e) { return 'free'; }
 }
 
 function tierCan(feature) {
@@ -2231,7 +2233,7 @@ function showUpgradePrompt(feature, targetTier) {
   var upgradeBtn = document.createElement('button');
   upgradeBtn.style.cssText = 'padding:10px 24px;background:#FFD400;color:#000;border:none;border-radius:6px;font-family:DM Mono,monospace;font-size:10px;cursor:pointer;font-weight:700;letter-spacing:.05em';
   upgradeBtn.textContent = 'UPGRADE \u2192';
-  upgradeBtn.onclick = function() { overlay.remove(); window.location.href = 'mailto:Liam\u0040Simfluence.AI?subject=Upgrade%20to%20' + targetTier; };
+  upgradeBtn.onclick = function() { overlay.remove(); window.location.href = 'https://simfluence.ai/#pricing'; };
 
   btnRow.appendChild(dismissBtn);
   btnRow.appendChild(upgradeBtn);
@@ -2386,16 +2388,13 @@ function applyFreeTierGates() {
   // Add a "blurred" call-to-action banner below the grid
   var discScreen = document.getElementById('screen-discovery');
   if (discScreen && !document.getElementById('free-discovery-cta')) {
-    var cta = document.createElement('div');
+        var cta = document.createElement('div');
     cta.id = 'free-discovery-cta';
-    cta.style.cssText = 'margin:0 0 24px;padding:20px 24px;background:rgba(0,80,255,0.06);border:1px solid rgba(0,80,255,0.2);border-radius:10px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap';
-    cta.innerHTML = '<div>'
-      + '<div style="font-family:DM Mono,monospace;font-size:10px;letter-spacing:.08em;color:#6B9FFF;margin-bottom:4px">FREE PLAN · 10 OF 3,600+ CREATORS</div>'
-      + '<div style="font-size:13px;color:rgba(255,255,255,0.6)">Upgrade to unlock the full database, simulator, outreach CRM and more.</div>'
-      + '</div>'
-      + '<div style="display:flex;gap:10px;flex-shrink:0">'
-      + '<button onclick="showFreeTierPrompt()" style="padding:9px 18px;background:#FFD400;color:#000;border:none;border-radius:6px;font-family:DM Mono,monospace;font-size:10px;cursor:pointer;font-weight:700;letter-spacing:.04em">SEE PLANS</button>'
-      + '<a href="https://calendly.com/liam-simfluence" target="_blank" style="padding:9px 18px;background:transparent;border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.6);border-radius:6px;font-family:DM Mono,monospace;font-size:10px;cursor:pointer;font-weight:600;letter-spacing:.04em;text-decoration:none;display:inline-block">📅 BOOK DEMO</a>'
+    cta.style.cssText = 'display:flex;align-items:center;justify-content:space-between;background:rgba(0,80,255,0.08);border:1px solid rgba(0,80,255,0.2);border-radius:8px;padding:10px 20px;margin-bottom:20px;gap:16px;';
+    cta.innerHTML = '<div style="font-family:DM Mono,monospace;font-size:10px;color:rgba(255,255,255,0.6);letter-spacing:.04em">FREE PLAN · <span style="color:#6B9FFF">10 OF 3,600+ CREATORS</span> · Upgrade to unlock the full database, simulator, outreach CRM and more.</div>'
+      + '<div style="display:flex;gap:8px;flex-shrink:0">'
+      + '<button onclick="showFreeTierPrompt()" style="padding:6px 14px;background:#0050FF;color:#fff;border:none;border-radius:5px;font-family:DM Mono,monospace;font-size:9px;cursor:pointer;font-weight:700;letter-spacing:.06em">SEE PLANS</button>'
+      + '<a href="mailto:Liam@Simfluence.AI?subject=Book%20a%20Live%20Demo" style="padding:6px 14px;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.5);border:1px solid rgba(255,255,255,0.1);border-radius:5px;font-family:DM Mono,monospace;font-size:9px;cursor:pointer;text-decoration:none;letter-spacing:.06em">BOOK DEMO</a>'
       + '</div>';
     discScreen.insertBefore(cta, discScreen.firstChild);
   }
@@ -2627,6 +2626,10 @@ function patchSimRunCounter() {
         return;
       }
       sessionStorage.setItem(key, runs + 1);
+      // Show remaining runs
+      var remaining = limit - runs - 1;
+      var reRunBtn = document.getElementById('reRunSimBtn');
+      if (reRunBtn && t < 2) reRunBtn.title = remaining + ' simulations remaining this month';
       applyAllTierGates();
     } catch(e) {}
     _orig();
@@ -2650,8 +2653,8 @@ document.addEventListener('DOMContentLoaded', function() {
       if (obEl) { obEl.style.display='none'; obEl.style.pointerEvents='none'; }
       document.body.style.overflow = '';
       // Restore user menu
-      var restoredEmail = sessionStorage.getItem('sf_email') || '';
-      var restoredTier  = sessionStorage.getItem('sf_tier')  || 'free';
+      var restoredEmail = localStorage.getItem('sf_email') || sessionStorage.getItem('sf_email') || '';
+      var restoredTier  = (localStorage.getItem('sf_tier') || sessionStorage.getItem('sf_tier') || 'free');
       setTimeout(function() { if (typeof sfShowUserMenu === 'function') sfShowUserMenu(restoredEmail, restoredTier); }, 100);
     }
   } catch(e) {}
@@ -2674,6 +2677,21 @@ document.getElementById('GBtn').addEventListener('click', GC);
   // Sign in wiring
   var sib = document.getElementById('GSIBtn');
   if (sib) sib.addEventListener('click', GSignIn);
+  var gfb = document.getElementById('GForgotBtn');
+  if (gfb) gfb.addEventListener('click', function() {
+    var email = document.getElementById('GSIEmail') ? document.getElementById('GSIEmail').value.trim() : '';
+    var okEl = document.getElementById('GForgotOk');
+    if (!email || email.indexOf('@') < 0) { alert('Enter your email above first.'); return; }
+    fetch(SF_URL + '/auth/v1/recover', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SF_KEY },
+      body: JSON.stringify({ email: email })
+    }).then(function() {
+      if (okEl) { okEl.style.display = 'block'; setTimeout(function(){ okEl.style.display='none'; }, 5000); }
+    }).catch(function() {
+      if (okEl) okEl.style.display = 'block';
+    });
+  });
   var sip = document.getElementById('GSIPass');
   if (sip) sip.addEventListener('keydown', function(e){ if(e.key==='Enter') GSignIn(); });
   var sie = document.getElementById('GSIEmail');
@@ -3180,7 +3198,7 @@ document.addEventListener('DOMContentLoaded', function() {
       <div class="page-header">
         <div>
           <div class="page-title">Campaign <em>Workspace</em></div>
-          <div class="page-meta" id="campaigns-meta">MULTI-BRIEF MANAGEMENT · PLATINUM</div>
+          <div class="page-meta" id="campaigns-meta">CAMPAIGN MANAGEMENT</div>
         </div>
         <button id="newCampaignBtn" style="padding:10px 20px;background:#0050FF;color:#fff;border:none;border-radius:var(--radius);font-family:DM Mono,monospace;font-size:11px;cursor:pointer;letter-spacing:.05em;font-weight:700">+ NEW CAMPAIGN</button>
       </div>
@@ -3198,7 +3216,7 @@ document.addEventListener('DOMContentLoaded', function() {
       <div class="page-header">
         <div>
           <div class="page-title">Creator <em>Outreach</em></div>
-          <div class="page-meta">CRM · CONTACT TRACKING · PLATINUM</div>
+          <div class="page-meta">CREATOR OUTREACH CRM</div>
         </div>
         <div style="display:flex;gap:8px;align-items:center">
           <select id="outreach-campaign-filter" style="font-family:DM Mono,monospace;font-size:10px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 10px">
@@ -8255,12 +8273,12 @@ function renderCreatorGrid(keepPage) {
         <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:10px 12px;">
           <div style="font-family:DM Mono,monospace;font-size:8px;letter-spacing:.08em;color:rgba(255,255,255,0.35);margin-bottom:4px;">CREATOR SCORE</div>
           <div style="font-family:Space Grotesk,sans-serif;font-size:26px;font-weight:700;line-height:1;color:${cpiScoreColor(cr.cpi)}">${cr.cpi}</div>
-          <div style="font-family:DM Mono,monospace;font-size:8px;color:rgba(255,255,255,0.3);margin-top:3px">${cr.cpi>=80?'Strong commercial performer':cr.cpi>=60?'Moderate performer':'Developing creator'}</div>
+          <div style="font-family:DM Mono,monospace;font-size:8px;color:rgba(255,255,255,0.3);margin-top:3px">${cr.cpi>=80?'Strong commercial performer':cr.cpi>=60?'Moderate performer':'Emerging creator'}</div>
         </div>
         <div style="background:rgba(255,255,255,0.03);border:1px solid ${gfi>=80?'rgba(0,212,122,0.25)':gfi>=60?'rgba(255,149,0,0.25)':'rgba(255,51,85,0.25)'};border-radius:8px;padding:10px 12px;">
-          <div style="font-family:DM Mono,monospace;font-size:8px;letter-spacing:.08em;color:rgba(255,255,255,0.35);margin-bottom:4px;">GENRE FIT</div>
+          <div style="font-family:DM Mono,monospace;font-size:8px;letter-spacing:.08em;color:rgba(255,255,255,0.35);margin-bottom:4px;">GFI SCORE</div>
           <div style="font-family:Space Grotesk,sans-serif;font-size:26px;font-weight:700;line-height:1;color:${gfi>=80?'#00D47A':gfi>=60?'#FF9500':'#FF3355'}">${gfi}%</div>
-          <div style="font-family:DM Mono,monospace;font-size:8px;color:rgba(255,255,255,0.3);margin-top:3px">${gfi>=80?'Strong fit for this campaign':gfi>=60?'Moderate fit — usable':mismatch?'Low fit · '+mismatch:'Low genre alignment'}</div>
+          <div style="font-family:DM Mono,monospace;font-size:8px;color:rgba(255,255,255,0.3);margin-top:3px">${gfi>=80?'Strong fit for this campaign':gfi>=60?'Moderate genre fit':mismatch?'Low fit · '+mismatch:'Low genre alignment'}</div>
         </div>
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;gap:6px;flex-wrap:wrap">
@@ -10612,7 +10630,7 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="footer-brand-name">Sim<span>fluence</span></div>
       <div class="footer-tagline">AI-powered campaign intelligence for creator-driven brands. Know your CTR, CPM, CVR and ROAS before you spend a single penny.</div>
       <div class="footer-contact">
-        Questions? <a href="/cdn-cgi/l/email-protection#de92b7bfb39e8db7b3b8b2abbbb0bdbbf09f97" style="color:#6B9FFF"><span class="__cf_email__" data-cfemail="b0fcd9d1ddf0e3d9ddd6dcc5d5ded3d59ef1f9">[email&#160;protected]</span></a>
+        Questions? <a href="mailto:Liam@Simfluence.AI" style="color:#6B9FFF"><span class="__cf_email__" data-cfemail="b0fcd9d1ddf0e3d9ddd6dcc5d5ded3d59ef1f9">[email&#160;protected]</span></a>
       </div>
     </div>
 
@@ -10631,10 +10649,10 @@ document.addEventListener('DOMContentLoaded', () => {
     <div>
       <div class="footer-col-title">Plans</div>
       <div class="footer-links">
-        <button class="footer-link" data-oc="window.location.href='mailto:Liam@Simfluence.AI?subject=Bronze%20Plan'" style="color:#CD7F32">Bronze — $1,500/mo</button>
-        <button class="footer-link" data-oc="window.location.href='mailto:Liam@Simfluence.AI?subject=Silver%20Plan'" style="color:#C0C0C0">Silver — $3,500/mo</button>
-        <button class="footer-link" data-oc="window.location.href='mailto:Liam@Simfluence.AI?subject=Gold%20Plan'" style="color:#FFD400">Gold — $7,500/mo</button>
-        <button class="footer-link" data-oc="window.location.href='mailto:Liam@Simfluence.AI?subject=Platinum%20Plan'" style="color:#E5E4E2">Platinum — $15,000/mo</button>
+        <button class="footer-link" data-oc="window.location.href='https://simfluence.ai/#pricing'" style="color:#CD7F32">Bronze — $1,500/mo</button>
+        <button class="footer-link" data-oc="window.location.href='https://simfluence.ai/#pricing'" style="color:#C0C0C0">Silver — $3,500/mo</button>
+        <button class="footer-link" data-oc="window.location.href='https://simfluence.ai/#pricing'" style="color:#FFD400">Gold — $7,500/mo</button>
+        <button class="footer-link" data-oc="window.location.href='https://simfluence.ai/#pricing'" style="color:#E5E4E2">Platinum — $15,000/mo</button>
         <button class="footer-link" data-oc="window.location.href='mailto:Liam@Simfluence.AI?subject=Diamond%20Plan'" style="color:#B9F2FF">Diamond — Talk to us</button>
       </div>
     </div>
@@ -10642,7 +10660,7 @@ document.addEventListener('DOMContentLoaded', () => {
   </div>
 
   <div class="footer-bottom">
-    <div class="footer-copy">© 2025 Simfluence Ltd · Dubai, United Arab Emirates · All rights reserved</div>
+    <div class="footer-copy">© 2026 Simfluence Ltd · Dubai, United Arab Emirates · All rights reserved</div>
     <div class="footer-legal-links">
       <button class="footer-legal-link" data-oc="openPageModal('about')">About</button>
       <button class="footer-legal-link" data-oc="openPageModal('terms')">Terms of Use</button>
