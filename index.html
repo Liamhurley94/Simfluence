@@ -263,7 +263,7 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
     <li><a href="#how">How it works</a></li>
     <li><a href="#features">Features</a></li>
     <li><a href="#pricing">Pricing</a></li>
-    <li><a href="#" onclick="openFreeSignup();return false;">See the platform</a></li>
+    <li><a href="#" id="navSeePlatformLink">See the platform</a></li>
   </ul>
   <div class="nav-right">
     <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn" title="Toggle mode">🌙</button>
@@ -1241,7 +1241,7 @@ function simShow(){
       <input id="sfEmail" type="email" class="sf-input" placeholder="you@company.com" autocomplete="email">
       <div id="sfE1" class="sf-err">Please fill in all fields with a valid email.</div>
       <button onclick="sfStep1()" class="sf-btn">Continue →</button>
-      <div class="sf-note">Already using Simfluence? <a href="#" onclick="openSignIn();return false;">Sign in</a></div>
+      <div class="sf-note">Already using Simfluence? <a href="#" id="sfModalSignInLink">Sign in</a></div>
     </div>
     <!-- Step 2 — Plan select -->
     <div id="sfS2" style="display:none">
@@ -1545,7 +1545,7 @@ function sfSignIn() {
   var email = document.getElementById('siEmail').value.trim();
   var pass  = document.getElementById('siPass').value;
   var errEl = document.getElementById('siErr');
-  var btn   = document.querySelector('#sfSignInModal button[onclick="sfSignIn()"]');
+  var btn   = document.getElementById('siSubmitBtn');
   if (!email || !pass) { errEl.style.display='block'; setTimeout(function(){errEl.style.display='none';},3000); return; }
   if (btn) { btn.textContent='SIGNING IN...'; btn.disabled=true; }
   fetch(IDX_URL + '/auth/v1/token?grant_type=password', {
@@ -1649,16 +1649,130 @@ document.addEventListener('click', function(e) {
 
 
 // Wire nav buttons — handles both before and after DOMContentLoaded
-function wireNavButtons() {
-  var signinBtn = document.getElementById('navSignInBtn');
-  if (signinBtn) signinBtn.addEventListener('click', function(e) { e.preventDefault(); openSignIn(); });
-  var freeBtn = document.getElementById('navTryFreeBtn');
-  if (freeBtn) freeBtn.addEventListener('click', function(e) { e.preventDefault(); openFreeSignup(); });
+
+// ── SUPABASE AUTH ─────────────────────────────────────────────────────
+var IDX_URL = 'https://iysjxslzlbojoivxjrce.supabase.co';
+var IDX_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5c2p4c2x6bGJvam9pdnhqcmNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM0MzA2MDIsImV4cCI6MjA1OTAwNjYwMn0.AqbQqRs3AiGYhRGZw1SG2TNqlQQ1rPbICbzNBE3Uvj4';
+
+function sfSignIn() {
+  var email = document.getElementById('siEmail') ? document.getElementById('siEmail').value.trim() : '';
+  var pass  = document.getElementById('siPass')  ? document.getElementById('siPass').value : '';
+  var errEl = document.getElementById('siErr');
+  var btn   = document.getElementById('siSubmitBtn');
+  if (!email || !pass) { if(errEl) errEl.style.display='block'; setTimeout(function(){if(errEl)errEl.style.display='none';},3000); return; }
+  if(btn){btn.textContent='SIGNING IN...';btn.disabled=true;}
+  fetch(IDX_URL+'/auth/v1/token?grant_type=password',{
+    method:'POST', headers:{'Content-Type':'application/json','apikey':IDX_KEY},
+    body:JSON.stringify({email:email,password:pass})
+  }).then(function(r){return r.json();}).then(function(data){
+    if(!data.access_token){
+      if(errEl)errEl.style.display='block';
+      setTimeout(function(){if(errEl)errEl.style.display='none';},3000);
+      if(btn){btn.textContent='SIGN IN →';btn.disabled=false;}
+      return;
+    }
+    try{
+      sessionStorage.setItem('sf_auth','1');
+      sessionStorage.setItem('sf_tier','free');
+      sessionStorage.setItem('sf_client','Free');
+      sessionStorage.setItem('sf_email',email);
+    }catch(e){}
+    window.location.href='app.html?authed=1';
+  }).catch(function(){
+    if(errEl)errEl.style.display='block';
+    setTimeout(function(){if(errEl)errEl.style.display='none';},3000);
+    if(btn){btn.textContent='SIGN IN →';btn.disabled=false;}
+  });
 }
+
+function sfFreeSignup() {
+  var email = document.getElementById('freeEmail') ? document.getElementById('freeEmail').value.trim() : '';
+  var pass  = document.getElementById('freePass')  ? document.getElementById('freePass').value : '';
+  var errEl = document.getElementById('freeErr');
+  var btn   = document.getElementById('freeBtn');
+  if(!email||email.indexOf('@')<0||email.indexOf('.')<0||pass.length<8){
+    if(errEl){errEl.style.display='block';}
+    setTimeout(function(){if(errEl)errEl.style.display='none';},3000);
+    return;
+  }
+  if(btn){btn.textContent='CREATING...';btn.disabled=true;}
+  fetch(IDX_URL+'/auth/v1/signup',{
+    method:'POST', headers:{'Content-Type':'application/json','apikey':IDX_KEY},
+    body:JSON.stringify({email:email,password:pass})
+  }).then(function(r){return r.json();}).then(function(data){
+    if(data.error){
+      var msg=(data.error&&data.error.message)||'Sign up failed.';
+      if(msg.toLowerCase().includes('already'))msg='Email already registered — sign in instead.';
+      if(errEl){errEl.textContent=msg;errEl.style.display='block';}
+      setTimeout(function(){if(errEl)errEl.style.display='none';},4000);
+      if(btn){btn.textContent='CREATE FREE ACCOUNT →';btn.disabled=false;}
+      return;
+    }
+    try{
+      sessionStorage.setItem('sf_auth','1');
+      sessionStorage.setItem('sf_tier','free');
+      sessionStorage.setItem('sf_client','Free');
+      sessionStorage.setItem('sf_email',email);
+    }catch(e){}
+    window.location.href='app.html?authed=1';
+  }).catch(function(){
+    if(errEl){errEl.textContent='Connection error.';errEl.style.display='block';}
+    setTimeout(function(){if(errEl)errEl.style.display='none';},3000);
+    if(btn){btn.textContent='CREATE FREE ACCOUNT →';btn.disabled=false;}
+  });
+}
+
+function sfForgotPassword() {
+  var email = document.getElementById('siEmail') ? document.getElementById('siEmail').value.trim() : '';
+  var okEl  = document.getElementById('siForgotOk');
+  var errEl = document.getElementById('siErr');
+  if(!email||email.indexOf('@')<0){
+    if(errEl){errEl.textContent='Enter your email above first.';errEl.style.display='block';}
+    setTimeout(function(){if(errEl){errEl.style.display='none';errEl.textContent='Incorrect email or password.';}},3000);
+    return;
+  }
+  fetch(IDX_URL+'/auth/v1/recover',{
+    method:'POST', headers:{'Content-Type':'application/json','apikey':IDX_KEY},
+    body:JSON.stringify({email:email})
+  }).then(function(){if(okEl){okEl.style.display='block';setTimeout(function(){okEl.style.display='none';},5000);}
+  }).catch(function(){if(okEl)okEl.style.display='block';});
+}
+
+// Wire ALL buttons via addEventListener — no onclick= (Cloudflare strips them)
+function sfWireAll() {
+  function on(id, fn) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('click', function(e) { e.preventDefault(); fn(); });
+  }
+  // Nav
+  on('navSignInBtn',    openSignIn);
+  on('navTryFreeBtn',   openFreeSignup);
+  on('navSeePlatformLink', openFreeSignup);
+  on('sfModalSignInLink',  openSignIn);
+  // Sign in modal
+  on('siSubmitBtn',  sfSignIn);
+  on('siToFreeBtn',  function(){ sfSignInClose(); openFreeSignup(); });
+  on('siCloseBtn',   sfSignInClose);
+  on('siForgotBtn',  sfForgotPassword);
+  // Free modal
+  on('freeBtn',       sfFreeSignup);
+  on('freeToSignInBtn', function(){ sfFreeClose(); openSignIn(); });
+  on('freeCloseBtn',  sfFreeClose);
+  // Enter key
+  function enterKey(inputId, fn) {
+    var el = document.getElementById(inputId);
+    if (el) el.addEventListener('keydown', function(e){ if(e.key==='Enter') fn(); });
+  }
+  enterKey('siPass',   sfSignIn);
+  enterKey('freePass', sfFreeSignup);
+  enterKey('siEmail',  function(){ var p=document.getElementById('siPass'); if(p) p.focus(); });
+  enterKey('freeEmail',function(){ var p=document.getElementById('freePass'); if(p) p.focus(); });
+}
+
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', wireNavButtons);
+  document.addEventListener('DOMContentLoaded', sfWireAll);
 } else {
-  wireNavButtons();
+  sfWireAll();
 }
 
 </script>
@@ -1713,17 +1827,17 @@ var MODALS = {
       style="width:100%;padding:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:#fff;font-size:14px;outline:none;box-sizing:border-box;margin-bottom:10px;font-family:sans-serif;">
     <input id="siPass" type="password" placeholder="Password" autocomplete="current-password"
       style="width:100%;padding:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:#fff;font-size:14px;outline:none;box-sizing:border-box;margin-bottom:16px;font-family:sans-serif;">
-    <button onclick="sfSignIn()" style="width:100%;padding:13px;background:#0050FF;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-weight:700;font-family:'DM Mono',monospace;letter-spacing:.06em;">SIGN IN →</button>
+    <button id="siSubmitBtn" style="width:100%;padding:13px;background:#0050FF;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-weight:700;font-family:'DM Mono',monospace;letter-spacing:.06em;">SIGN IN →</button>
     <div id="siErr" style="color:#ff5555;font-size:11px;margin-top:10px;display:none;">Incorrect email or password. Try again.</div>
     <div style="margin-top:12px;">
-      <button onclick="sfForgotPassword()" style="background:none;border:none;font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,255,255,0.4);cursor:pointer;padding:0;letter-spacing:.04em;">Forgot password?</button>
+      <button id="siForgotBtn" style="background:none;border:none;font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,255,255,0.4);cursor:pointer;padding:0;letter-spacing:.04em;">Forgot password?</button>
     </div>
     <div id="siForgotOk" style="display:none;font-family:'DM Mono',monospace;font-size:9px;color:#00C46A;margin-top:8px;">Reset email sent — check your inbox.</div>
     <div style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.08);">
       <span style="font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,255,255,0.3);">No account? </span>
-      <button onclick="sfSignInClose();openFreeSignup();" style="background:none;border:none;font-family:'DM Mono',monospace;font-size:9px;color:#6B9FFF;cursor:pointer;padding:0;">SIGN UP FREE →</button>
+      <button id="siToFreeBtn" style="background:none;border:none;font-family:'DM Mono',monospace;font-size:9px;color:#6B9FFF;cursor:pointer;padding:0;">SIGN UP FREE →</button>
     </div>
-    <button onclick="sfSignInClose()" style="margin-top:16px;background:none;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.3);border-radius:6px;padding:6px 16px;font-family:'DM Mono',monospace;font-size:9px;cursor:pointer;">CLOSE</button>
+    <button id="siCloseBtn" style="margin-top:16px;background:none;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.3);border-radius:6px;padding:6px 16px;font-family:'DM Mono',monospace;font-size:9px;cursor:pointer;">CLOSE</button>
   </div>
 </div>
 
@@ -1737,13 +1851,13 @@ var MODALS = {
       style="width:100%;padding:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:#fff;font-size:14px;outline:none;box-sizing:border-box;margin-bottom:10px;font-family:sans-serif;">
     <input id="freePass" type="password" placeholder="Create password (min 8 chars)" autocomplete="new-password"
       style="width:100%;padding:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:#fff;font-size:14px;outline:none;box-sizing:border-box;margin-bottom:16px;font-family:sans-serif;">
-    <button onclick="sfFreeSignup()" id="freeBtn" style="width:100%;padding:13px;background:#0050FF;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-weight:700;font-family:'DM Mono',monospace;letter-spacing:.06em;">CREATE FREE ACCOUNT →</button>
+    <button id="freeBtn" style="width:100%;padding:13px;background:#0050FF;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-weight:700;font-family:'DM Mono',monospace;letter-spacing:.06em;">CREATE FREE ACCOUNT →</button>
     <div id="freeErr" style="color:#ff5555;font-size:11px;margin-top:10px;display:none;">Please enter a valid email and password (8+ chars).</div>
     <div style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.08);">
       <span style="font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,255,255,0.3);">Already have an account? </span>
-      <button onclick="sfFreeClose();openSignIn();" style="background:none;border:none;font-family:'DM Mono',monospace;font-size:9px;color:#6B9FFF;cursor:pointer;padding:0;">SIGN IN →</button>
+      <button id="freeToSignInBtn" style="background:none;border:none;font-family:'DM Mono',monospace;font-size:9px;color:#6B9FFF;cursor:pointer;padding:0;">SIGN IN →</button>
     </div>
-    <button onclick="sfFreeClose()" style="margin-top:16px;background:none;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.3);border-radius:6px;padding:6px 16px;font-family:'DM Mono',monospace;font-size:9px;cursor:pointer;">CLOSE</button>
+    <button id="freeCloseBtn" style="margin-top:16px;background:none;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.3);border-radius:6px;padding:6px 16px;font-family:'DM Mono',monospace;font-size:9px;cursor:pointer;">CLOSE</button>
   </div>
 </div>
 
