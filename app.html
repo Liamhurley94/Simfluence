@@ -2603,14 +2603,16 @@ function applyAllTierGates() {
     campTabEl.style.opacity = t >= 2 ? '' : '0.4';
     campTabEl.title = t >= 2 ? '' : 'Campaigns workspace — Gold+ feature';
     var cBadge = document.getElementById('camp-tier-badge');
-    if (!cBadge) {
-      cBadge = document.createElement('span');
-      cBadge.id = 'camp-tier-badge';
-      cBadge.style.cssText = 'font-family:DM Mono,monospace;font-size:8px;padding:1px 5px;border-radius:2px;'
-        + 'background:rgba(201,166,0,0.15);border:1px solid rgba(201,166,0,0.3);color:#C9A600;'
-        + 'margin-left:4px;vertical-align:middle;letter-spacing:.04em';
-      cBadge.textContent = 'GOLD';
-      campTabEl.appendChild(cBadge);
+    if (t < 2) {
+      if (!cBadge) {
+        cBadge = document.createElement('span');
+        cBadge.id = 'camp-tier-badge';
+        cBadge.style.cssText = 'font-family:DM Mono,monospace;font-size:8px;padding:1px 5px;border-radius:2px;background:rgba(201,166,0,0.15);border:1px solid rgba(201,166,0,0.3);color:#C9A600;margin-left:4px;vertical-align:middle;letter-spacing:.04em';
+        cBadge.textContent = 'GOLD';
+        campTabEl.appendChild(cBadge);
+      }
+    } else {
+      if (cBadge) cBadge.remove();
     }
   }
 
