@@ -1855,7 +1855,7 @@ var CLIENTS = {
 
 // ── SUPABASE AUTH CONFIG ─────────────────────────────────────────────
 var SF_URL = 'https://iysjxslzlbojoivxjrce.supabase.co';
-var SF_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5c2p4c2x6bGJvam9pdnhqcmNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM0MzA2MDIsImV4cCI6MjA1OTAwNjYwMn0.AqbQqRs3AiGYhRGZw1SG2TNqlQQ1rPbICbzNBE3Uvj4';
+var SF_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5c2p4c2x6bGJvam9pdnhqcmNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0OTkyNjksImV4cCI6MjA5MTA3NTI2OX0.gGW_qclPJZT4x3eevXg6PFllq5CQWVifJUEaI3rqKnw';
 
 // ── GATE TAB SWITCHER ─────────────────────────────────────────────────
 function gSwitchTab(tab) {
@@ -1917,7 +1917,7 @@ function sfSignOut() {
   try { sessionStorage.clear(); } catch(e) {}
   // Sign out from Supabase Auth (fire and forget)
   try {
-    var key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5c2p4c2x6bGJvam9pdnhqcmNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM0MzA2MDIsImV4cCI6MjA1OTAwNjYwMn0.AqbQqRs3AiGYhRGZw1SG2TNqlQQ1rPbICbzNBE3Uvj4';
+    var key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5c2p4c2x6bGJvam9pdnhqcmNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0OTkyNjksImV4cCI6MjA5MTA3NTI2OX0.gGW_qclPJZT4x3eevXg6PFllq5CQWVifJUEaI3rqKnw';
     fetch('https://iysjxslzlbojoivxjrce.supabase.co/auth/v1/logout', {
       method: 'POST', headers: { 'apikey': key, 'Content-Type': 'application/json' }
     }).catch(function(){});
@@ -11233,7 +11233,7 @@ function handleFreeSignUp() {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5c2p4c2x6bGJvam9pdnhqcmNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM0MzA2MDIsImV4cCI6MjA1OTAwNjYwMn0.AqbQqRs3AiGYhRGZw1SG2TNqlQQ1rPbICbzNBE3Uvj4',
+      'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5c2p4c2x6bGJvam9pdnhqcmNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0OTkyNjksImV4cCI6MjA5MTA3NTI2OX0.gGW_qclPJZT4x3eevXg6PFllq5CQWVifJUEaI3rqKnw',
       'Prefer': 'return=minimal'
     },
     body: JSON.stringify({ email: email, source: 'modal', created_at: new Date().toISOString() })
