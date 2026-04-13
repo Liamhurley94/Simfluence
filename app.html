@@ -2713,15 +2713,18 @@ document.getElementById('GBtn').addEventListener('click', GC);
     if (el) el.addEventListener('click', showFreeTierPrompt);
   });
 
-  // Wire gate tabs
-  var gtFree = document.getElementById('G-tab-free');
-  if (gtFree) gtFree.addEventListener('click', function() { gSwitchTab('free'); });
-  var gtSignin = document.getElementById('G-tab-signin');
-  if (gtSignin) gtSignin.addEventListener('click', function() { gSwitchTab('signin'); });
-  var gtCode = document.getElementById('G-tab-code');
-  if (gtCode) gtCode.addEventListener('click', function() { gSwitchTab('code'); });
-  var gtInline = document.getElementById('G-inline-signin');
-  if (gtInline) gtInline.addEventListener('click', function() { gSwitchTab('signin'); });
+  // Wire gate tabs via delegation on parent
+  var gateEl = document.getElementById('G');
+  if (gateEl) {
+    gateEl.addEventListener('click', function(e) {
+      var btn = e.target.closest('button[id^="G-tab-"], #G-inline-signin');
+      if (!btn) return;
+      if (btn.id === 'G-tab-free') gSwitchTab('free');
+      else if (btn.id === 'G-tab-signin') gSwitchTab('signin');
+      else if (btn.id === 'G-tab-code') gSwitchTab('code');
+      else if (btn.id === 'G-inline-signin') gSwitchTab('signin');
+    });
+  }
 
   var gfb = document.getElementById('GForgotBtn');
   if (gfb) gfb.addEventListener('click', function() {
