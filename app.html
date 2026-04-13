@@ -1901,8 +1901,17 @@ function sfShowUserMenu(email, tier) {
   if (menu) menu.style.display = 'block';
   if (emailEl) emailEl.textContent = email || 'Account';
   if (tierLabel) {
-    var tierNames = { free:'Free Plan', bronze:'Bronze', silver:'Silver', gold:'Gold', platinum:'Platinum', diamond:'Diamond', admin:'Admin' };
-    tierLabel.textContent = (tierNames[tier] || tier || 'Free').toUpperCase();
+    var tierColors = {
+      free:'rgba(255,255,255,0.3)', bronze:'#CD7F32', silver:'#C0C0C0',
+      gold:'#FFD400', platinum:'#00BFFF', diamond:'#B9F2FF', admin:'#00C46A'
+    };
+    var tierDisplays = {
+      free:'FREE PLAN', bronze:'BRONZE', silver:'SILVER',
+      gold:'GOLD', platinum:'PLATINUM', diamond:'💎 DIAMOND', admin:'ADMIN'
+    };
+    var t = (tier || 'free').toLowerCase().trim();
+    tierLabel.textContent = tierDisplays[t] || t.toUpperCase();
+    tierLabel.style.color = tierColors[t] || '#FFD400';
   }
 }
 
@@ -2304,15 +2313,56 @@ function getDiscoveryCap() {
 }
 
 function applyTierBadge(tn) {
-  if (document.getElementById('sf-tier-badge')) return;
+  var existing = document.getElementById('sf-tier-badge');
+  if (existing) existing.remove();
   var nav = document.querySelector('.nav-tabs');
   if (!nav) return;
-  var colors = { bronze:'#CD7F32', silver:'#A8A9AD', gold:'#FFD400', platinum:'#00BFFF', diamond:'#B39DDB', admin:'#00C46A' };
-  var col = colors[tn] || '#FFD400';
+
+  // Remove old keyframes if any
+  var oldStyle = document.getElementById('sf-tier-badge-style');
+  if (oldStyle) oldStyle.remove();
+
   var badge = document.createElement('div');
   badge.id = 'sf-tier-badge';
-  badge.style.cssText = 'font-family:DM Mono,monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:3px 10px;border-radius:3px;border:1px solid ' + col + '44;color:' + col + ';background:' + col + '11;margin-left:12px;align-self:center;flex-shrink:0;cursor:default';
-  badge.textContent = tn.toUpperCase();
+
+  var baseStyle = 'font-family:DM Mono,monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:3px 12px;border-radius:4px;margin-left:12px;align-self:center;flex-shrink:0;cursor:default;';
+
+  if (tn === 'free') {
+    badge.style.cssText = baseStyle + 'color:rgba(255,255,255,0.35);background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);';
+    badge.textContent = 'FREE';
+  } else if (tn === 'bronze') {
+    badge.style.cssText = baseStyle + 'color:#CD7F32;background:rgba(205,127,50,0.1);border:1px solid rgba(205,127,50,0.35);';
+    badge.textContent = 'BRONZE';
+  } else if (tn === 'silver') {
+    badge.style.cssText = baseStyle + 'color:#C0C0C0;background:rgba(192,192,192,0.08);border:1px solid rgba(192,192,192,0.3);';
+    badge.textContent = 'SILVER';
+  } else if (tn === 'gold') {
+    badge.style.cssText = baseStyle + 'color:#FFD400;background:rgba(255,212,0,0.1);border:1px solid rgba(255,212,0,0.4);font-weight:700;';
+    badge.textContent = 'GOLD';
+  } else if (tn === 'platinum') {
+    // Animated shimmer for Platinum
+    var styleEl = document.createElement('style');
+    styleEl.id = 'sf-tier-badge-style';
+    styleEl.textContent = '@keyframes sf-plat-glow{0%,100%{box-shadow:0 0 6px rgba(0,191,255,0.4),0 0 12px rgba(0,191,255,0.2)}50%{box-shadow:0 0 12px rgba(0,191,255,0.8),0 0 24px rgba(0,191,255,0.4)}}';
+    document.head.appendChild(styleEl);
+    badge.style.cssText = baseStyle + 'color:#00BFFF;background:rgba(0,191,255,0.08);border:1px solid rgba(0,191,255,0.5);font-weight:700;animation:sf-plat-glow 2s ease-in-out infinite;';
+    badge.textContent = 'PLATINUM';
+  } else if (tn === 'diamond') {
+    // Animated gradient border + pulse for Diamond
+    var styleEl = document.createElement('style');
+    styleEl.id = 'sf-tier-badge-style';
+    styleEl.textContent = '@keyframes sf-diam-pulse{0%,100%{box-shadow:0 0 8px rgba(185,242,255,0.5),0 0 20px rgba(138,43,226,0.3)}50%{box-shadow:0 0 16px rgba(185,242,255,0.9),0 0 36px rgba(138,43,226,0.6)}}@keyframes sf-diam-shift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}';
+    document.head.appendChild(styleEl);
+    badge.style.cssText = baseStyle + 'color:#fff;background:linear-gradient(135deg,rgba(185,242,255,0.15),rgba(138,43,226,0.2),rgba(185,242,255,0.15));background-size:200% 200%;border:1px solid rgba(185,242,255,0.6);font-weight:700;animation:sf-diam-pulse 1.8s ease-in-out infinite,sf-diam-shift 4s ease infinite;letter-spacing:.14em;';
+    badge.textContent = '💎 DIAMOND';
+  } else if (tn === 'admin') {
+    badge.style.cssText = baseStyle + 'color:#00C46A;background:rgba(0,196,106,0.1);border:1px solid rgba(0,196,106,0.4);font-weight:700;';
+    badge.textContent = 'ADMIN';
+  } else {
+    badge.style.cssText = baseStyle + 'color:#FFD400;background:rgba(255,212,0,0.1);border:1px solid rgba(255,212,0,0.3);';
+    badge.textContent = tn.toUpperCase();
+  }
+
   nav.appendChild(badge);
 }
 
