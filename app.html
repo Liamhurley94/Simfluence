@@ -11088,10 +11088,14 @@ function renderBudgetAllocation() {
 
   // Normalize to 100%
   var sum = allocs.reduce(function(a,b){return a+b;},0);
-  allocs = allocs.map(function(a){return Math.round(a/sum*100);});
-  // Fix rounding
+  // Normalize: preserve 0% allocations, only scale non-zero ones
+  var nonZeroSum = allocs.reduce(function(a,b){return b > 0 ? a + b : a;}, 0) || 1;
+  allocs = allocs.map(function(a){ return a === 0 ? 0 : Math.round(a / nonZeroSum * 100); });
+  // Fix rounding — add remainder to largest non-zero
   var diff = 100 - allocs.reduce(function(a,b){return a+b;},0);
-  if (allocs.length) allocs[0] += diff;
+  var maxIdx = 0;
+  allocs.forEach(function(a, i){ if (a > allocs[maxIdx]) maxIdx = i; });
+  if (allocs[maxIdx] !== undefined) allocs[maxIdx] += diff;
 
   el.innerHTML = '<div style="margin-bottom:12px;font-size:11px;color:var(--text-muted)">Adjust each creator\'s share of the total <strong style="color:#FFD400">£' + (budget>=1000?(budget/1000).toFixed(0)+'K':budget) + '</strong> budget. Drag sliders to redistribute.</div>'
     + creators.map(function(cr, i) {
@@ -11109,11 +11113,9 @@ function renderBudgetAllocation() {
             + '<div style="font-family:\'DM Mono\',monospace;font-size:10px;color:var(--text-muted)">' + pct + '%</div>'
           + '</div>'
         + '</div>'
-        + '<input type="range" min="5" max="90" value="' + pct + '" '
+        + '<input type="range" min="0" max="100" step="1" value="' + pct + '" '
           + 'data-alloc-id="' + cr.id + '" '
-          + 'style="width:100%;accent-color:' + cr.color + ';cursor:pointer" '
           + 'style="width:100%;accent-color:' + cr.color + ';cursor:pointer">'
-          + '<div style="height:100%;width:' + pct + '%;background:' + cr.color + ';border-radius:2px;transition:width .2s"></div>'
         + '</div>'
       + '</div>';
     }).join('');
