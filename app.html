@@ -2702,10 +2702,18 @@ document.getElementById('GBtn').addEventListener('click', GC);
   var sib = document.getElementById('GSIBtn');
   if (sib) sib.addEventListener('click', GSignIn);
   // Wire user menu + sign out
-  var umt = document.getElementById('sfUserMenuToggle');
-  if (umt) umt.addEventListener('click', sfToggleUserMenu);
-  var sob = document.getElementById('sfSignOutBtn');
-  if (sob) sob.addEventListener('click', sfSignOut);
+  // Wire user menu via delegation (elements may be below this script)
+  document.addEventListener('click', function(e) {
+    var btn = e.target.closest('#sfUserMenuToggle');
+    if (btn) { e.stopPropagation(); sfToggleUserMenu(); return; }
+    var so = e.target.closest('#sfSignOutBtn');
+    if (so) { e.stopPropagation(); sfSignOut(); return; }
+    // Close dropdown if clicking outside
+    var dd = document.getElementById('sf-user-dropdown');
+    if (dd && dd.style.display !== 'none' && !e.target.closest('#sf-user-menu')) {
+      dd.style.display = 'none';
+    }
+  });
   // Wire forgot password (gate version)
   var gfpb = document.getElementById('GForgotPasswordBtn');
   if (gfpb) gfpb.addEventListener('click', gForgotPassword);
@@ -2857,7 +2865,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <button class="theme-toggle" data-oc="toggleTheme()" id="themeBtn" title="Toggle mode">🌙</button>
     <!-- User menu -->
     <div id="sf-user-menu" style="position:relative;display:none">
-      <button id="sf-user-btn" id="sfUserMenuToggle" style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:6px;padding:6px 10px;cursor:pointer;font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);letter-spacing:.04em">
+      <button id="sfUserMenuToggle" style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:6px;padding:6px 10px;cursor:pointer;font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);letter-spacing:.04em">
         <span id="sf-user-email" style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
         <span style="font-size:8px;opacity:0.5">▾</span>
       </button>
