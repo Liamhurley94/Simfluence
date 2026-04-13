@@ -279,7 +279,7 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
     <h1 class="hero-h1">Know<br>before you<br><span class="gold">spend.</span></h1>
     <p class="hero-sub">Predict your CTR, CPM, CVR and ROAS before a single penny is committed. Model your campaign. Know your outcome. Launch with certainty.</p>
     <div class="hero-actions">
-      <a href="/cdn-cgi/l/email-protection#d894b1b9b5988bb1b5beb4adbdb6bbbdf69991e7abadbab2bdbbace594b1aebdfdeae89cbdb5b7fdeae88abda9adbdabac" class="btn-xl">Book a live demo</a>
+      <a href="mailto:Liam@Simfluence.AI?subject=Book%20a%20Live%20Demo" class="btn-xl">Book a live demo</a>
     </div>
   </div></div>
 </section>
@@ -1170,7 +1170,7 @@ function simShow(){
   <h2 class="cta-h2">Your next campaign<br>already has<br>a <em>forecast.</em></h2>
   <p class="cta-sub">Run your brief. See your numbers. Launch knowing what to expect.</p>
   <div class="cta-btns">
-    <a href="/cdn-cgi/l/email-protection#430f2a222e03102a2e252f36262d20266d020a7c303621292620377e0f2a352666717307262e2c66717311263236263037" class="btn-xl">Book a live demo</a>
+    <a href="mailto:Liam@Simfluence.AI?subject=Book%20a%20Live%20Demo" class="btn-xl">Book a live demo</a>
   </div>
 </section>
 
@@ -1769,11 +1769,10 @@ function sfWireAll() {
   enterKey('freeEmail',function(){ var p=document.getElementById('freePass'); if(p) p.focus(); });
 }
 
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', sfWireAll);
-} else {
-  sfWireAll();
-}
+// Use window.onload so modal HTML below this script is fully parsed first
+window.addEventListener('load', sfWireAll);
+// Also try immediately in case load already fired
+if (document.readyState === 'complete') sfWireAll();
 
 </script>
 
