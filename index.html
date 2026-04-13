@@ -263,10 +263,10 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
     <li><a href="#how">How it works</a></li>
     <li><a href="#features">Features</a></li>
     <li><a href="#pricing">Pricing</a></li>
-    <li><a href="#" onclick="openFreeSignup();return false;">See the platform</a></li>
+    <li><a href="#" id="navSeePlatformLink">See the platform</a></li>
   </ul>
   <div class="nav-right">
-    <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn" title="Toggle mode">🌙</button>
+    <button class="theme-toggle" id="themeBtn" title="Toggle mode">🌙</button>
     <button id="navSignInBtn" class="nav-login" style="background:none;border:none;cursor:pointer;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.06em;color:var(--muted)">Sign in</button>
     <button id="navTryFreeBtn" class="nav-cta" style="border:none;cursor:pointer">Try Free</button>
   </div>
@@ -279,7 +279,7 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
     <h1 class="hero-h1">Know<br>before you<br><span class="gold">spend.</span></h1>
     <p class="hero-sub">Predict your CTR, CPM, CVR and ROAS before a single penny is committed. Model your campaign. Know your outcome. Launch with certainty.</p>
     <div class="hero-actions">
-      <a href="/cdn-cgi/l/email-protection#d894b1b9b5988bb1b5beb4adbdb6bbbdf69991e7abadbab2bdbbace594b1aebdfdeae89cbdb5b7fdeae88abda9adbdabac" class="btn-xl">Book a live demo</a>
+      <a href="mailto:Liam@Simfluence.AI?subject=Book%20a%20Live%20Demo" class="btn-xl">Book a live demo</a>
     </div>
   </div></div>
 </section>
@@ -1035,7 +1035,7 @@ function simShow(){
     </div>
 
     <!-- Monthly / Annual toggle -->
-    <button class="billing-toggle" onclick="toggleBilling()" style="cursor:pointer;background:none;border:none;padding:0;">
+    <button class="billing-toggle" id="billingToggleBtn" style="cursor:pointer;background:none;border:none;padding:0;">
       <span class="toggle-label active" id="labelMonthly">Monthly</span>
       <div class="toggle-track" id="billingToggle">
         <div class="toggle-thumb"></div>
@@ -1170,7 +1170,7 @@ function simShow(){
   <h2 class="cta-h2">Your next campaign<br>already has<br>a <em>forecast.</em></h2>
   <p class="cta-sub">Run your brief. See your numbers. Launch knowing what to expect.</p>
   <div class="cta-btns">
-    <a href="/cdn-cgi/l/email-protection#430f2a222e03102a2e252f36262d20266d020a7c303621292620377e0f2a352666717307262e2c66717311263236263037" class="btn-xl">Book a live demo</a>
+    <a href="mailto:Liam@Simfluence.AI?subject=Book%20a%20Live%20Demo" class="btn-xl">Book a live demo</a>
   </div>
 </section>
 
@@ -1221,7 +1221,7 @@ function simShow(){
 <!-- ══ SIGNUP MODAL ══════════════════════════════════════════════════ -->
 <div id="sfModal">
   <div class="sf-box">
-    <button onclick="sfClose()" style="position:absolute;top:14px;right:14px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:rgba(255,255,255,0.5);cursor:pointer;padding:5px 10px;font-size:13px;font-family:'DM Mono',monospace">✕</button>
+    <button id="sfCloseBtn" style="position:absolute;top:14px;right:14px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:rgba(255,255,255,0.5);cursor:pointer;padding:5px 10px;font-size:13px;font-family:'DM Mono',monospace">✕</button>
     <div class="sf-logo">Sim<em>fluence</em></div>
     <div class="sf-sub-label">Campaign Intelligence Platform</div>
     <div class="sf-progress">
@@ -1240,44 +1240,44 @@ function simShow(){
       <label class="sf-label">Work email</label>
       <input id="sfEmail" type="email" class="sf-input" placeholder="you@company.com" autocomplete="email">
       <div id="sfE1" class="sf-err">Please fill in all fields with a valid email.</div>
-      <button onclick="sfStep1()" class="sf-btn">Continue →</button>
-      <div class="sf-note">Already using Simfluence? <a href="#" onclick="openSignIn();return false;">Sign in</a></div>
+      <button id="sfStep1Btn" class="sf-btn">Continue →</button>
+      <div class="sf-note">Already using Simfluence? <a href="#" id="sfModalSignInLink">Sign in</a></div>
     </div>
     <!-- Step 2 — Plan select -->
     <div id="sfS2" style="display:none">
       <div class="sf-title">Choose your plan</div>
       <div class="sf-desc">All plans billed in USD. Annual billing saves up to 35%.</div>
       <div id="sfPlans">
-        <div onclick="sfPick(this,'bronze')" class="plan-opt" style="border-color:rgba(205,127,50,0.2)">
+        <div class="plan-opt" data-plan="bronze" style="border-color:rgba(205,127,50,0.2)">
           <div><div class="plan-name" style="color:#CD7F32">🥉 Bronze</div><div class="plan-desc">Creator discovery · CPI &amp; GFI scores</div></div>
           <div class="plan-price" style="color:#CD7F32">$1,500<span style="font-size:11px;font-weight:300">/mo</span></div>
         </div>
-        <div onclick="sfPick(this,'silver')" class="plan-opt" style="border-color:rgba(192,192,192,0.2)">
+        <div class="plan-opt" data-plan="silver" style="border-color:rgba(192,192,192,0.2)">
           <div><div class="plan-name" style="color:#C0C0C0">🥈 Silver</div><div class="plan-desc">Simulator · AI personas · Confidence bands</div></div>
           <div class="plan-price" style="color:#C0C0C0">$3,500<span style="font-size:11px;font-weight:300">/mo</span></div>
         </div>
-        <div onclick="sfPick(this,'gold')" class="plan-opt" style="border-color:rgba(255,212,0,0.3);background:rgba(255,212,0,0.03)">
+        <div class="plan-opt" data-plan="gold" style="border-color:rgba(255,212,0,0.3);background:rgba(255,212,0,0.03)">
           <div><div class="plan-name" style="color:#FFD400">🥇 Gold <span style="font-size:8px;background:rgba(255,212,0,0.15);padding:2px 6px;border-radius:3px;letter-spacing:0.05em">POPULAR</span></div><div class="plan-desc">Feedback loop · White-label reports</div></div>
           <div class="plan-price" style="color:#FFD400">$7,500<span style="font-size:11px;font-weight:300">/mo</span></div>
         </div>
-        <div onclick="sfPick(this,'platinum')" class="plan-opt" style="border-color:rgba(229,228,226,0.2)">
+        <div class="plan-opt" data-plan="platinum" style="border-color:rgba(229,228,226,0.2)">
           <div><div class="plan-name" style="color:#E5E4E2">💎 Platinum</div><div class="plan-desc">Unlimited campaigns · API · Multi-brand</div></div>
           <div class="plan-price" style="color:#E5E4E2">$15,000<span style="font-size:11px;font-weight:300">/mo</span></div>
         </div>
-        <div onclick="sfPick(this,'diamond')" class="plan-opt" style="border-color:rgba(185,242,255,0.18)">
+        <div class="plan-opt" data-plan="diamond" style="border-color:rgba(185,242,255,0.18)">
           <div><div class="plan-name" style="color:#B9F2FF">✨ Diamond</div><div class="plan-desc">Enterprise · Bespoke pricing &amp; terms</div></div>
           <div class="plan-price" style="color:#B9F2FF;font-size:13px;font-weight:400;margin-top:4px">Talk to us</div>
         </div>
       </div>
       <div id="sfE2" class="sf-err" style="margin-top:8px">Please select a plan.</div>
-      <button onclick="sfStep2()" class="sf-btn" style="margin-top:12px">Submit →</button>
+      <button id="sfStep2Btn" class="sf-btn" style="margin-top:12px">Submit →</button>
     </div>
     <!-- Step 3 — Success -->
     <div id="sfS3" style="display:none;text-align:center">
       <div class="success-icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M6 14L11.5 19.5L22 9" stroke="#00C46A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
       <div class="sf-title" style="margin-bottom:8px">You're in.</div>
       <div id="sfSuccessMsg" class="sf-desc"></div>
-      <button onclick="sfLaunch()" class="sf-btn" style="background:#00C46A">Launch Simfluence →</button>
+      <button id="sfLaunchBtn" class="sf-btn" style="background:#00C46A">Launch Simfluence →</button>
       <div class="sf-note" style="margin-top:12px">We'll be in touch at <span id="sfConfirmEmail" style="color:rgba(255,255,255,0.4)"></span></div>
     </div>
   </div>
@@ -1545,7 +1545,7 @@ function sfSignIn() {
   var email = document.getElementById('siEmail').value.trim();
   var pass  = document.getElementById('siPass').value;
   var errEl = document.getElementById('siErr');
-  var btn   = document.querySelector('#sfSignInModal button[onclick="sfSignIn()"]');
+  var btn   = document.getElementById('siSubmitBtn');
   if (!email || !pass) { errEl.style.display='block'; setTimeout(function(){errEl.style.display='none';},3000); return; }
   if (btn) { btn.textContent='SIGNING IN...'; btn.disabled=true; }
   fetch(IDX_URL + '/auth/v1/token?grant_type=password', {
@@ -1654,20 +1654,33 @@ function sfWireAll() {
     var el = document.getElementById(id);
     if (el) el.addEventListener('click', function(e) { e.preventDefault(); fn(); });
   }
-  // Nav buttons
+  // Nav
   on('navSignInBtn',       openSignIn);
   on('navTryFreeBtn',      openFreeSignup);
   on('navSeePlatformLink', openFreeSignup);
   on('sfModalSignInLink',  openSignIn);
-  // Sign in modal buttons
+  // Sign in modal
   on('siSubmitBtn',    sfSignIn);
   on('siForgotBtn',    sfForgotPassword);
   on('siToFreeBtn',    function(){ sfSignInClose(); openFreeSignup(); });
   on('siCloseBtn',     sfSignInClose);
-  // Free signup modal buttons
+  // Free modal
   on('freeBtn',        sfFreeSignup);
   on('freeToSignInBtn',function(){ sfFreeClose(); openSignIn(); });
   on('freeCloseBtn',   sfFreeClose);
+  // Paid signup modal (sfModal)
+  on('sfCloseBtn',  sfClose);
+  on('sfStep1Btn',  sfStep1);
+  on('sfStep2Btn',  sfStep2);
+  on('sfLaunchBtn', sfLaunch);
+  // Billing toggle
+  on('billingToggleBtn', toggleBilling);
+  // Theme toggle
+  on('themeBtn', toggleTheme);
+  // Plan options (data-plan attribute)
+  document.querySelectorAll('.plan-opt[data-plan]').forEach(function(el) {
+    el.addEventListener('click', function() { sfPick(el, el.getAttribute('data-plan')); });
+  });
   // Enter keys
   function ek(id, fn) {
     var el = document.getElementById(id);
@@ -1758,7 +1771,7 @@ var MODALS = {
       style="width:100%;padding:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:#fff;font-size:14px;outline:none;box-sizing:border-box;margin-bottom:10px;font-family:sans-serif;">
     <input id="freePass" type="password" placeholder="Create password (min 8 chars)" autocomplete="new-password"
       style="width:100%;padding:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:#fff;font-size:14px;outline:none;box-sizing:border-box;margin-bottom:16px;font-family:sans-serif;">
-    <button onclick="sfFreeSignup()" id="freeBtn" style="width:100%;padding:13px;background:#0050FF;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-weight:700;font-family:'DM Mono',monospace;letter-spacing:.06em;">CREATE FREE ACCOUNT →</button>
+    <button id="freeBtn" style="width:100%;padding:13px;background:#0050FF;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-weight:700;font-family:'DM Mono',monospace;letter-spacing:.06em;">CREATE FREE ACCOUNT →</button>
     <div id="freeErr" style="color:#ff5555;font-size:11px;margin-top:10px;display:none;">Please enter a valid email and password (8+ chars).</div>
     <div style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.08);">
       <span style="font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,255,255,0.3);">Already have an account? </span>
