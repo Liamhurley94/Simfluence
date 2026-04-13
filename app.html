@@ -2723,22 +2723,53 @@ document.getElementById('GBtn').addEventListener('click', GC);
     if (el) el.addEventListener('click', showFreeTierPrompt);
   });
 
-  // Wire platform filter buttons
-  var pfBtns = document.getElementById('platformFilterBtns');
-  if (pfBtns) {
-    pfBtns.addEventListener('click', function(e) {
-      var btn = e.target.closest('.plat-btn');
-      if (!btn) return;
-      activePlatform = btn.getAttribute('data-plat');
-      // Update active styles
-      pfBtns.querySelectorAll('.plat-btn').forEach(function(b) {
-        b.classList.remove('plat-active');
-        b.style.fontWeight = '400';
-        b.style.opacity = '0.7';
+  // Wire platform filter dropdown
+  var pdBtn  = document.getElementById('platformDropdownBtn');
+  var pdMenu = document.getElementById('platformDropdownMenu');
+  if (pdBtn && pdMenu) {
+    // Toggle open/close
+    pdBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      pdMenu.style.display = pdMenu.style.display === 'none' ? 'block' : 'none';
+    });
+    // Close when clicking outside
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('#platformDropdownWrap')) {
+        pdMenu.style.display = 'none';
+      }
+    });
+    // Handle option clicks
+    pdMenu.addEventListener('click', function(e) {
+      var opt = e.target.closest('.plat-opt');
+      var clr = e.target.closest('#platClearBtn');
+      if (clr) {
+        activePlatforms.clear();
+      } else if (opt) {
+        var plat = opt.getAttribute('data-plat');
+        if (activePlatforms.has(plat)) activePlatforms.delete(plat);
+        else activePlatforms.add(plat);
+      } else { return; }
+      // Update checkmarks
+      pdMenu.querySelectorAll('.plat-opt').forEach(function(o) {
+        var p = o.getAttribute('data-plat');
+        var chk = o.querySelector('.plat-check');
+        if (activePlatforms.has(p)) {
+          chk.textContent = '✓';
+          chk.style.background = 'rgba(255,255,255,0.15)';
+          o.style.opacity = '1';
+        } else {
+          chk.textContent = '';
+          chk.style.background = 'transparent';
+          o.style.opacity = '0.7';
+        }
       });
-      btn.classList.add('plat-active');
-      btn.style.fontWeight = '700';
-      btn.style.opacity = '1';
+      // Update button label
+      var lbl = document.getElementById('platformBtnLabel');
+      if (lbl) {
+        if (activePlatforms.size === 0) lbl.textContent = 'All Platforms';
+        else if (activePlatforms.size === 1) lbl.textContent = Array.from(activePlatforms)[0];
+        else lbl.textContent = activePlatforms.size + ' Platforms';
+      }
       currentPage = 1;
       renderCreatorGrid();
     });
@@ -3090,12 +3121,31 @@ document.addEventListener('DOMContentLoaded', function() {
             <option value="gfi">Sort: GFI Score</option>
             <option value="subs">Sort: Subscribers</option>
           </select>
-          <div id="platformFilterBtns" style="display:flex;gap:4px;align-items:center">
-            <button class="plat-btn plat-active" data-plat="all"    style="padding:6px 10px;border-radius:var(--radius);font-family:'DM Mono',monospace;font-size:9px;cursor:pointer;letter-spacing:.04em;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.1);color:#fff">ALL</button>
-            <button class="plat-btn" data-plat="YouTube"  style="padding:6px 10px;border-radius:var(--radius);font-family:'DM Mono',monospace;font-size:9px;cursor:pointer;letter-spacing:.04em;border:1px solid rgba(255,0,0,0.3);background:rgba(255,0,0,0.08);color:#ff6b6b">YT</button>
-            <button class="plat-btn" data-plat="Twitch"   style="padding:6px 10px;border-radius:var(--radius);font-family:'DM Mono',monospace;font-size:9px;cursor:pointer;letter-spacing:.04em;border:1px solid rgba(145,70,255,0.3);background:rgba(145,70,255,0.08);color:#9146FF">TW</button>
-            <button class="plat-btn" data-plat="Instagram" style="padding:6px 10px;border-radius:var(--radius);font-family:'DM Mono',monospace;font-size:9px;cursor:pointer;letter-spacing:.04em;border:1px solid rgba(225,48,108,0.3);background:rgba(225,48,108,0.08);color:#E1306C">IG</button>
-            <button class="plat-btn" data-plat="TikTok"   style="padding:6px 10px;border-radius:var(--radius);font-family:'DM Mono',monospace;font-size:9px;cursor:pointer;letter-spacing:.04em;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.5)">TT</button>
+          <div id="platformDropdownWrap" style="position:relative">
+            <button id="platformDropdownBtn" style="padding:6px 12px;font-family:'DM Mono',monospace;font-size:10px;background:var(--bg3);border:1px solid var(--border);color:var(--text-dim);border-radius:var(--radius);cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap">
+              <span id="platformBtnLabel">All Platforms</span>
+              <span style="font-size:8px;opacity:0.5">▼</span>
+            </button>
+            <div id="platformDropdownMenu" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:#0D0D18;border:1px solid var(--border);border-radius:8px;padding:6px;min-width:160px;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,0.4)">
+              <div class="plat-opt" data-plat="YouTube"   style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:5px;cursor:pointer;font-family:'DM Mono',monospace;font-size:10px;color:#ff6b6b">
+                <span class="plat-check" style="width:14px;height:14px;border:1px solid rgba(255,107,107,0.4);border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:9px;flex-shrink:0"></span>
+                YouTube
+              </div>
+              <div class="plat-opt" data-plat="Twitch"    style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:5px;cursor:pointer;font-family:'DM Mono',monospace;font-size:10px;color:#9146FF">
+                <span class="plat-check" style="width:14px;height:14px;border:1px solid rgba(145,70,255,0.4);border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:9px;flex-shrink:0"></span>
+                Twitch
+              </div>
+              <div class="plat-opt" data-plat="Instagram" style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:5px;cursor:pointer;font-family:'DM Mono',monospace;font-size:10px;color:#E1306C">
+                <span class="plat-check" style="width:14px;height:14px;border:1px solid rgba(225,48,108,0.4);border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:9px;flex-shrink:0"></span>
+                Instagram
+              </div>
+              <div class="plat-opt" data-plat="TikTok"    style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:5px;cursor:pointer;font-family:'DM Mono',monospace;font-size:10px;color:rgba(255,255,255,0.6)">
+                <span class="plat-check" style="width:14px;height:14px;border:1px solid rgba(255,255,255,0.2);border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:9px;flex-shrink:0"></span>
+                TikTok
+              </div>
+              <div style="border-top:1px solid rgba(255,255,255,0.06);margin:6px 0 2px"></div>
+              <div id="platClearBtn" style="padding:7px 10px;border-radius:5px;cursor:pointer;font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,255,255,0.3);letter-spacing:.06em">CLEAR ALL</div>
+            </div>
           </div>
           <button id="exportShortlistBtn" style="padding:8px 14px;background:rgba(255,212,0,0.1);border:1px solid rgba(255,212,0,0.3);color:#FFD400;border-radius:var(--radius);font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;letter-spacing:.05em">⬇ EXPORT LIST</button>
   <button id="scoreSelectedBtn" style="padding:8px 16px;background:#0050FF;color:#fff;border:none;border-radius:var(--radius);font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;letter-spacing:0.05em">SCORE SELECTED →</button>
@@ -9807,7 +9857,7 @@ function getSortedCreators() {
 let sortMode = 'cpi';
 var currentPage = 1;
 var pageSize = 25;
-var activePlatform = 'all'; // all | YouTube | Twitch | Instagram | TikTok
+var activePlatforms = new Set(); // empty = show all
 
 function sfRenderPagination(elId, totalPages) {
   var el = document.getElementById(elId);
@@ -10133,9 +10183,9 @@ function renderCreatorGrid(keepPage) {
         var hay = (cr.name + ' ' + cr.handle + ' ' + cr.genre + ' ' + cr.platform + ' ' + (cr.bio||'')).toLowerCase();
         if (hay.indexOf(sq) === -1) return false;
         // Also apply platform filter during search
-        if (activePlatform !== 'all') {
+        if (activePlatforms.size > 0) {
           var plats = cr.allPlatforms || [cr.platform];
-          if (plats.indexOf(activePlatform) === -1) return false;
+          if (!plats.some(function(p) { return activePlatforms.has(p); })) return false;
         }
         return true;
       })
@@ -10222,9 +10272,9 @@ function renderCreatorGrid(keepPage) {
 
   // Platform filter
   function platformMatch(cr) {
-    if (activePlatform === 'all') return true;
+    if (activePlatforms.size === 0) return true;
     var plats = cr.allPlatforms || [cr.platform];
-    return plats.indexOf(activePlatform) !== -1;
+    return plats.some(function(p) { return activePlatforms.has(p); });
   }
 
   const display = scored.length >= 3 ? scored.filter(s => platformMatch(s.cr)) : CREATORS
