@@ -267,8 +267,8 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
   </ul>
   <div class="nav-right">
     <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn" title="Toggle mode">🌙</button>
-    <button onclick="openSignIn()" class="nav-login" style="background:none;border:none;cursor:pointer;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.06em;color:var(--muted)">Sign in</button>
-    <button onclick="openFreeSignup()" class="nav-cta" style="border:none;cursor:pointer">Try Free</button>
+    <button id="navSignInBtn" class="nav-login" style="background:none;border:none;cursor:pointer;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.06em;color:var(--muted)">Sign in</button>
+    <button id="navTryFreeBtn" class="nav-cta" style="border:none;cursor:pointer">Try Free</button>
   </div>
 </nav>
 
@@ -1517,21 +1517,27 @@ var IDX_URL = 'https://iysjxslzlbojoivxjrce.supabase.co';
 var IDX_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5c2p4c2x6bGJvam9pdnhqcmNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM0MzA2MDIsImV4cCI6MjA1OTAwNjYwMn0.AqbQqRs3AiGYhRGZw1SG2TNqlQQ1rPbICbzNBE3Uvj4';
 
 function openSignIn() {
-  document.getElementById('sfSignInModal').style.display = 'block';
+  var m = document.getElementById('sfSignInModal');
+  if (!m) return;
+  m.style.display = 'block';
   document.body.style.overflow = 'hidden';
   setTimeout(function(){ var e=document.getElementById('siEmail'); if(e) e.focus(); }, 150);
 }
 function sfSignInClose() {
-  document.getElementById('sfSignInModal').style.display = 'none';
+  var m = document.getElementById('sfSignInModal');
+  if (m) m.style.display = 'none';
   document.body.style.overflow = '';
 }
 function openFreeSignup() {
-  document.getElementById('sfFreeModal').style.display = 'block';
+  var m = document.getElementById('sfFreeModal');
+  if (!m) return;
+  m.style.display = 'block';
   document.body.style.overflow = 'hidden';
   setTimeout(function(){ var e=document.getElementById('freeEmail'); if(e) e.focus(); }, 150);
 }
 function sfFreeClose() {
-  document.getElementById('sfFreeModal').style.display = 'none';
+  var m = document.getElementById('sfFreeModal');
+  if (m) m.style.display = 'none';
   document.body.style.overflow = '';
 }
 
@@ -1639,6 +1645,15 @@ function sfFreeSignup() {
 document.addEventListener('click', function(e) {
   if (e.target && e.target.id === 'sfSignInModal') sfSignInClose();
   if (e.target && e.target.id === 'sfFreeModal')   sfFreeClose();
+});
+
+
+// Wire nav buttons via addEventListener (Cloudflare strips onclick=)
+document.addEventListener('DOMContentLoaded', function() {
+  var signinBtn = document.getElementById('navSignInBtn');
+  if (signinBtn) signinBtn.addEventListener('click', openSignIn);
+  var freeBtn = document.getElementById('navTryFreeBtn');
+  if (freeBtn) freeBtn.addEventListener('click', openFreeSignup);
 });
 
 </script>
