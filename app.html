@@ -10486,7 +10486,8 @@ function openProfileOverlay(id) {
                 var links = '';
                 // YouTube — use stored URL if available, else build from handle
                 if (plats.some(function(p){return p.toLowerCase().includes('youtube');})) {
-                  var ytHref = c.ytUrl || ('https://www.youtube.com/@' + handle);
+                  var ytHandle = c.youtubeHandle ? c.youtubeHandle.replace('@','') : handle;
+                  var ytHref = c.ytUrl || ('https://www.youtube.com/@' + ytHandle);
                   links += '<a href="' + ytHref + '" target="_blank" style="font-family:DM Mono,monospace;font-size:9px;padding:3px 10px;background:rgba(255,0,0,0.12);border:1px solid rgba(255,0,0,0.3);color:#FF4444;border-radius:3px;text-decoration:none;letter-spacing:.04em">▶ YouTube →</a>';
                 }
                 // Twitch — use stored URL if available, else build from handle
