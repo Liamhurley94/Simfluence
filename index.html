@@ -1648,13 +1648,18 @@ document.addEventListener('click', function(e) {
 });
 
 
-// Wire nav buttons via addEventListener (Cloudflare strips onclick=)
-document.addEventListener('DOMContentLoaded', function() {
+// Wire nav buttons — handles both before and after DOMContentLoaded
+function wireNavButtons() {
   var signinBtn = document.getElementById('navSignInBtn');
-  if (signinBtn) signinBtn.addEventListener('click', openSignIn);
+  if (signinBtn) signinBtn.addEventListener('click', function(e) { e.preventDefault(); openSignIn(); });
   var freeBtn = document.getElementById('navTryFreeBtn');
-  if (freeBtn) freeBtn.addEventListener('click', openFreeSignup);
-});
+  if (freeBtn) freeBtn.addEventListener('click', function(e) { e.preventDefault(); openFreeSignup(); });
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', wireNavButtons);
+} else {
+  wireNavButtons();
+}
 
 </script>
 
