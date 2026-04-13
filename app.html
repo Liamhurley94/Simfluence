@@ -1888,11 +1888,10 @@ function gActivateSession(email, tier, client) {
   } catch(e) {}
   // Show user menu in nav
   sfShowUserMenu(email, tier);
+  // Reload the page to apply tier gates cleanly
   setTimeout(function() {
-    if (typeof patchSimRunCounter === 'function') patchSimRunCounter();
-    if (typeof applyAllTierGates  === 'function') applyAllTierGates();
-    if (typeof renderCreatorGrid  === 'function') renderCreatorGrid();
-  }, 50);
+    window.location.reload();
+  }, 300);
 }
 
 function sfShowUserMenu(email, tier) {
