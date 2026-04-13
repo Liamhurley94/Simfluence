@@ -2668,7 +2668,7 @@ document.addEventListener('DOMContentLoaded', function() {
       // Clean the URL without reloading
       history.replaceState({}, '', window.location.pathname);
     }
-    if (sessionStorage.getItem('sf_auth') === '1') {
+    if (localStorage.getItem('sf_auth') === '1' || sessionStorage.getItem('sf_auth') === '1') {
       var gEl = document.getElementById('G');
       if (gEl) { gEl.style.display='none'; gEl.style.pointerEvents='none'; gEl.style.visibility='hidden'; gEl.style.zIndex='-1'; }
       var obEl = document.getElementById('sfOnboard');
