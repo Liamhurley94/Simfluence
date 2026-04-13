@@ -2009,17 +2009,18 @@ function GSignIn() {
       return;
     }
     // Fetch their profile to get tier
-    fetch(SF_URL + '/rest/v1/profiles?id=eq.' + data.user.id + '&select=tier,client', {
+    fetch(SF_URL + '/rest/v1/profiles?email=eq.' + encodeURIComponent(email) + '&select=tier,client', {
       headers: { 'apikey': SF_KEY, 'Authorization': 'Bearer ' + data.access_token }
     })
     .then(function(r) { return r.json(); })
     .then(function(profile) {
+      console.log('[Simfluence] Profile fetch result:', JSON.stringify(profile));
       var tier   = (profile && profile[0] && profile[0].tier)   || 'free';
       var client = (profile && profile[0] && profile[0].client) || 'Free';
       gActivateSession(email, tier, client);
     })
-    .catch(function() {
-      // Profile fetch failed — still let them in as free
+    .catch(function(err) {
+      console.log('[Simfluence] Profile fetch failed:', err);
       gActivateSession(email, 'free', 'Free');
     });
   })
@@ -2103,12 +2104,12 @@ function getTierLevel() {
   try {
     var t = sessionStorage.getItem('sf_tier');
     if (!t) return -1;
-    var level = TIER_LEVELS[t];
+    var level = TIER_LEVELS[t.toLowerCase()];
     return (level !== undefined) ? level : -1;
   } catch(e) { return -1; }
 }
 function getTierName() {
-  try { return sessionStorage.getItem('sf_tier') || 'free'; } catch(e) { return 'free'; }
+  try { return (sessionStorage.getItem('sf_tier') || 'free').toLowerCase(); } catch(e) { return 'free'; }
 }
 
 function tierCan(feature) {
