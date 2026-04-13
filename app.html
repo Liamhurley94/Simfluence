@@ -2100,10 +2100,15 @@ function GC(){
 var TIER_LEVELS = { free:-1, bronze:0, silver:1, gold:2, platinum:3, diamond:4, admin:5 };
 
 function getTierLevel() {
-  try { return TIER_LEVELS[sessionStorage.getItem('sf_tier')] || 0; } catch(e) { return 0; }
+  try {
+    var t = sessionStorage.getItem('sf_tier');
+    if (!t) return -1;
+    var level = TIER_LEVELS[t];
+    return (level !== undefined) ? level : -1;
+  } catch(e) { return -1; }
 }
 function getTierName() {
-  try { return sessionStorage.getItem('sf_tier') || 'bronze'; } catch(e) { return 'bronze'; }
+  try { return sessionStorage.getItem('sf_tier') || 'free'; } catch(e) { return 'free'; }
 }
 
 function tierCan(feature) {
@@ -2114,7 +2119,7 @@ function tierCan(feature) {
     'cpi_breakdown': t>=2, 'audience_intelligence': t>=2, 'audience_blur': t>=1,
     'export_unlimited': t>=3, 'export_10': t>=2,
     'cpi_gfi_visible': t>=1, 'gfi_methodology': t>=2,
-    'compare_4': t>=3, 'compare_2': t>=2,
+    'compare_unlimited': t>=3, 'compare_75': t>=2, 'compare_20': t>=1, 'compare_10': t>=-1,
     'personas_all': t>=3, 'personas_3': t>=2, 'personas_1': t>=1,
     'persona_creators_3': t>=3, 'persona_creators_1': t>=2,
     'sim_unlimited': t>=2, 'sim_10': t>=1,
@@ -2161,8 +2166,8 @@ function showUpgradePrompt(feature, targetTier) {
     'export_10':              'Export your creator shortlist as a CSV to share with clients.',
     'export_unlimited':       'Export unlimited creators with full rate data.',
     'gfi_methodology':        'See the full GFI input breakdown — genre affinity, sub-mode alignment and content match.',
-    'compare_2':              'Run side-by-side creator comparisons to make faster shortlist decisions.',
-    'compare_4':              'Compare up to 4 creators simultaneously.',
+    'compare_10':             'Run side-by-side creator comparisons to make faster shortlist decisions.',
+    'compare_75':             'Compare up to 75 creators simultaneously.',
     'personas_all':           'Unlock all matched audience personas for your campaign genre and objectives.',
     'personas_1':             'Unlock AI Persona Matching — available from Silver tier.',
     'personas_3':             'See the top 3 matched audience personas for your campaign.',
@@ -2506,7 +2511,7 @@ function applyAllTierGates() {
   if (!tierCan('compare_2')) {
     document.querySelectorAll('[data-oc^="toggleCompare"]').forEach(function(btn){
       btn.style.opacity = '0.4';
-      btn.setAttribute('data-oc', 'showUpgradePrompt("compare_2","Gold")');
+      btn.setAttribute('data-oc', 'showUpgradePrompt("compare_10","Silver")');
     });
   }
 
@@ -7766,7 +7771,7 @@ function toggleCreator(id) {
       var tierName = t >= 3 ? 'Platinum' : 'Platinum';
       var msg = t >= 3
         ? 'Maximum 4 creators in your brief. Remove one to add another.'
-        : 'Gold allows up to 2 creators in your brief. Upgrade to Platinum to compare up to 4.';
+        : 'Gold allows up to 75 creators in your brief. Upgrade to Platinum for unlimited comparisons.';
       if (t < 3 && typeof showUpgradePrompt === 'function') {
         showUpgradePrompt('compare_4', 'Platinum');
       } else {
@@ -11115,11 +11120,11 @@ function loadCampaign(id) {
 var compareSet = new Set();
 
 function toggleCompare(id) {
-  var _cMax = (function(){ var t=typeof getTierLevel==='function'?getTierLevel():0; return t>=3?4:t>=2?2:0; })();
-  if (_cMax===0) { showUpgradePrompt('compare_2','Gold'); return; }
+  var _cMax = (function(){ var t=typeof getTierLevel==='function'?getTierLevel():-1; return t>=3?Infinity:t>=2?75:t>=1?20:t>=-1?10:0; })();
+  if (_cMax===0) { showUpgradePrompt('compare_10','Bronze'); return; }
   if (compareSet.has(id)) { compareSet.delete(id); }
   else if (compareSet.size < _cMax) { compareSet.add(id); }
-  else { if(_cMax===2) showUpgradePrompt('compare_4','Platinum'); return; }
+  else { var nextTier=_cMax===10?'Silver':_cMax===20?'Gold':_cMax===75?'Platinum':'Platinum'; showUpgradePrompt('compare_next',nextTier); return; }
   renderCompareBar();
   // Re-render scoring to show compare state
   if (typeof renderScoringScreen === 'function') renderScoringScreen();
