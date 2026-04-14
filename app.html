@@ -12135,8 +12135,8 @@ var SUPABASE_ANON_YT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmF
 
 async function fetchCreatorYouTubeData(creator) {
   try {
-    // Prefer ytHandle if available (cross-platform creators like sodapoppin)
-    var handle = creator.ytHandle || creator.handle || '';
+    // Prefer ytHandle/youtubeHandle for cross-platform creators
+    var handle = creator.ytHandle || creator.youtubeHandle || creator.handle || '';
     var res = await fetch(SUPABASE_URL_YT + '/functions/v1/youtube-creator-data', {
       method: 'POST',
       headers: {
@@ -12169,7 +12169,7 @@ function fmtLive(n) {
 
 async function fetchCreatorAvatar(creator) {
   var handle    = (creator.handle || '').replace('@', '').toLowerCase();
-  var ytHandle  = (creator.ytHandle || '').replace('@', '').toLowerCase();
+  var ytHandle  = (creator.ytHandle || creator.youtubeHandle || '').replace('@', '').toLowerCase();
   var platforms = creator.allPlatforms || [creator.platform || 'YouTube'];
   var platRaw   = (creator.platform || '').toLowerCase();
 
