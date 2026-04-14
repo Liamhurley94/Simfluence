@@ -2152,41 +2152,79 @@ function getTierName() {
 function tierCan(feature) {
   var t = getTierLevel();
   var rules = {
-    'discovery_unlimited': t>=2, 'discovery_100': t>=1,
-    'profile_full': t>=2, 'profile_basic': t>=1,
+    // ── DISCOVERY ─────────────────────────────────────────────────
+    'discovery_unlimited': t>=2, 'discovery_100': t>=1, 'discovery_25': t>=0,
+    'profile_full': t>=1, 'profile_basic': t>=0,  // Bronze gets basic profiles
     'cpi_breakdown': t>=2, 'audience_intelligence': t>=2, 'audience_blur': t>=1,
-    'export_unlimited': t>=3, 'export_10': t>=2,
+
+    // ── EXPORT ────────────────────────────────────────────────────
+    'export_unlimited': t>=3, 'export_10': t>=2, 'export_5': t>=1,  // Silver: 5 creators
+
+    // ── SCORING ───────────────────────────────────────────────────
     'cpi_gfi_visible': t>=1, 'gfi_methodology': t>=2,
+
+    // ── COMPARE ───────────────────────────────────────────────────
     'compare_unlimited': t>=3, 'compare_75': t>=2, 'compare_20': t>=1, 'compare_10': t>=-1,
+
+    // ── PERSONAS ──────────────────────────────────────────────────
     'personas_all': t>=3, 'personas_3': t>=2, 'personas_1': t>=1,
     'persona_creators_3': t>=3, 'persona_creators_1': t>=2,
+
+    // ── SIMULATOR ─────────────────────────────────────────────────
     'sim_unlimited': t>=2, 'sim_10': t>=1,
-    'sim_free': t>=-1,      // Free can run simulator (results blurred)
+    'sim_free': t>=-1,
     'duration_slider': t>=2,
-    'budget_allocation_edit': t>=3, 'budget_allocation_view': t>=2,
+
+    // ── BUDGET ALLOCATION ─────────────────────────────────────────
+    // Gold now gets edit (moved from Platinum)
+    'budget_allocation_edit': t>=2, 'budget_allocation_view': t>=1,
+
+    // ── CONFIDENCE BANDS ──────────────────────────────────────────
     'bands_all': t>=2, 'band_p50_only': t>=1,
-    'bands_free_blurred': t>=-1,  // Free sees blurred bands
-    'pdf_full': t>=3, 'pdf_summary': t>=2,
+    'bands_free_blurred': t>=-1,
+
+    // ── PDF EXPORT ────────────────────────────────────────────────
+    // Silver: 1 PDF summary/month, Gold+: unlimited summary, Platinum+: full
+    'pdf_full': t>=3, 'pdf_summary': t>=1, 'pdf_unlimited': t>=2,
+
+    // ── SAVED CAMPAIGNS ───────────────────────────────────────────
     'saved_unlimited': t>=3, 'saved_10': t>=2, 'saved_3': t>=1,
+
+    // ── LIVE DATA ─────────────────────────────────────────────────
     'live_full': t>=2, 'live_genre': t>=1,
-    // Live panel channel caps
     'live_cap_unlimited': t>=3, 'live_cap_50': t>=2,
     'live_cap_20': t>=1, 'live_cap_10': true,
-    // Outreach CRM tiers
+
+    // ── OUTREACH CRM ──────────────────────────────────────────────
     'outreach_unlimited': t>=3, 'outreach_15': t>=2,
     'outreach_5': t>=1, 'outreach_3': t>=0, 'outreach_1': true,
-    // Outreach data visibility
     'outreach_rate': t>=3, 'outreach_cpi': t>=2,
     'outreach_subs': t>=1, 'outreach_email': t>=1, 'outreach_notes': t>=0,
-    // Campaigns
+
+    // ── CAMPAIGNS ─────────────────────────────────────────────────
     'campaigns_unlimited': t>=3, 'campaigns_1': t>=2,
-    // Audience overlap
+
+    // ── AUDIENCE OVERLAP ──────────────────────────────────────────
     'audience_overlap': t>=3,
-    // Free tier specific
-    'free_discovery':   t>=-1,   // Free: 10 creators visible
-    'free_sim_blur':    t===-1,  // Free: simulator results blurred
-    'free_persona_blur':t===-1,  // Free: personas non-clickable, creators hidden
-    'free_score_blur':  t===-1,  // Free: CPI/GFI blurred
+
+    // ── PLATINUM: AGENCY FEATURES ─────────────────────────────────
+    'team_seats_3': t>=3,          // Platinum: 3 team seats
+    'white_label_pdf': t>=3,       // Platinum: white-label PDF exports
+    'campaign_sharing': t>=3,      // Platinum: share campaigns with team
+
+    // ── DIAMOND: ENTERPRISE FEATURES ──────────────────────────────
+    'api_access': t>=4,            // Diamond: API access to creator data
+    'team_unlimited': t>=4,        // Diamond: unlimited team seats
+    'priority_support': t>=4,      // Diamond: priority support SLA
+    'custom_benchmarks': t>=4,     // Diamond: custom benchmarking reports
+    'dedicated_manager': t>=4,     // Diamond: dedicated account manager
+    'white_label_full': t>=4,      // Diamond: full white-label platform
+
+    // ── FREE TIER ─────────────────────────────────────────────────
+    'free_discovery':   t>=-1,
+    'free_sim_blur':    t===-1,
+    'free_persona_blur':t===-1,
+    'free_score_blur':  t===-1,
     'admin': t>=5,
   };
   return rules[feature] || false;
@@ -2199,27 +2237,49 @@ function showUpgradePrompt(feature, targetTier) {
   }
   targetTier = targetTier || 'Gold';
   var msgs = {
+    // Discovery & Scoring
     'cpi_breakdown':          'See exactly why each creator scored what they did.',
     'audience_intelligence':  'Unlock geography, demographic and behavioural data for every creator audience.',
+    'gfi_methodology':        'See the full GFI input breakdown — genre affinity, sub-mode alignment and content match.',
+    'discovery_unlimited':    'Access all 5,600+ creators in the full database.',
+    // Export
+    'export_5':               'Export up to 5 creators as a CSV — available from Silver tier.',
     'export_10':              'Export your creator shortlist as a CSV to share with clients.',
     'export_unlimited':       'Export unlimited creators with full rate data.',
-    'gfi_methodology':        'See the full GFI input breakdown — genre affinity, sub-mode alignment and content match.',
+    // Compare
     'compare_10':             'Run side-by-side creator comparisons to make faster shortlist decisions.',
     'compare_75':             'Compare up to 75 creators simultaneously.',
-    'personas_all':           'Unlock all matched audience personas for your campaign genre and objectives.',
+    // Personas
     'personas_1':             'Unlock AI Persona Matching — available from Silver tier.',
     'personas_3':             'See the top 3 matched audience personas for your campaign.',
+    'personas_all':           'Unlock all matched audience personas for your campaign genre and objectives.',
+    // Simulator
     'duration_slider':        'Model campaigns across 1-12 week windows for realistic reach forecasts.',
-    'budget_allocation_edit': 'Drag to adjust each creator budget share and see the impact in real time.',
+    'sim_unlimited':          'Remove the monthly simulation limit and run unlimited campaigns.',
+    // Budget allocation
     'budget_allocation_view': 'See exactly how your budget is split across selected creators.',
+    'budget_allocation_edit': 'Drag to adjust each creator budget share and see the impact in real time — available from Gold.',
+    // Bands
     'bands_all':              'Unlock all three confidence bands — P10, P50 and P90 — for full risk modelling.',
-    'pdf_summary':            'Export a campaign summary PDF to share with stakeholders.',
+    // PDF
+    'pdf_summary':            'Export a campaign summary PDF — 1 per month on Silver, unlimited on Gold+.',
     'pdf_full':               'Export the full simulator report including per-creator P10/P50/P90 breakdown.',
+    // Campaigns
     'saved_3':                'Save up to 3 recent campaigns for quick reference.',
     'saved_10':               'Save up to 10 campaigns and recall them instantly.',
-    'sim_unlimited':          'Remove the monthly simulation limit and run unlimited campaigns.',
-    'discovery_unlimited':    'Access all 3,600+ creators in the full database.',
+    // Live data
     'live_full':              'See live Twitch data — who is streaming now and at what viewer count.',
+    // Platinum agency features
+    'team_seats_3':           'Add up to 3 team members to your Simfluence workspace — available from Platinum.',
+    'white_label_pdf':        'Export campaign PDFs with your agency branding and client logo.',
+    'campaign_sharing':       'Share campaigns and creator shortlists directly with your team.',
+    // Diamond enterprise features
+    'api_access':             'Access the full Simfluence creator database via API — build your own integrations.',
+    'team_unlimited':         'Unlimited team seats — full enterprise access for your entire organisation.',
+    'priority_support':       'Dedicated support SLA with guaranteed response times.',
+    'custom_benchmarks':      'Commission custom benchmarking reports tailored to your industry and competitors.',
+    'dedicated_manager':      'A dedicated account manager to help optimise every campaign.',
+    'white_label_full':       'Full white-label platform — your brand, your domain, powered by Simfluence.',
   };
   var msg = msgs[feature] || 'This feature requires a higher tier.';
 
@@ -2418,7 +2478,7 @@ function applyFreeTierGates() {
         var cta = document.createElement('div');
     cta.id = 'free-discovery-cta';
     cta.style.cssText = 'display:flex;align-items:center;justify-content:space-between;background:rgba(0,80,255,0.08);border:1px solid rgba(0,80,255,0.2);border-radius:8px;padding:10px 20px;margin-bottom:20px;gap:16px;';
-    cta.innerHTML = '<div style="font-family:Manrope,sans-serif;font-size:12px;font-weight:500;color:rgba(255,255,255,0.6);letter-spacing:.04em">FREE PLAN · <span style="color:#6B9FFF">10 OF 3,600+ CREATORS</span> · Upgrade to unlock the full database, simulator, outreach CRM and more.</div>'
+    cta.innerHTML = '<div style="font-family:Manrope,sans-serif;font-size:12px;font-weight:500;color:rgba(255,255,255,0.6);letter-spacing:.04em">FREE PLAN · <span style="color:#6B9FFF">10 OF 5,600+ CREATORS</span> · Upgrade to unlock the full database, simulator, outreach CRM and more.</div>'
       + '<div style="display:flex;gap:8px;flex-shrink:0">'
       + '<button id="sfFreePlanBtn3" style="padding:6px 14px;background:#0050FF;color:#fff;border:none;border-radius:5px;font-family:Manrope,sans-serif;font-size:11px;font-weight:600;cursor:pointer;font-weight:700;letter-spacing:.06em">SEE PLANS</button>'
       + '<a href="mailto:Liam@Simfluence.AI?subject=Book%20a%20Live%20Demo" style="padding:6px 14px;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.5);border:1px solid rgba(255,255,255,0.1);border-radius:5px;font-family:Manrope,sans-serif;font-size:11px;font-weight:600;cursor:pointer;text-decoration:none;letter-spacing:.06em">BOOK DEMO</a>'
@@ -2513,52 +2573,85 @@ function applyAllTierGates() {
 
   // P10/P90 confidence bands
   if (!tierCan('bands_all')) {
-    if (t < 1) {
-      // Bronze: blur all three
-      ['bandWorst','bandBase','bandBest'].forEach(function(id){ applyTierBlur(id,'bands_all','Silver'); });
+    if (t < 0) {
+      // Free: blur all three — handled by applyFreeTierGates
+    } else if (t < 1) {
+      // Bronze: show all three but blur P10 and P90 — P50 preview with locked sides
+      ['bandWorst','bandBest'].forEach(function(id){ applyTierBlur(id,'band_p50_only','Silver'); });
     } else {
-      // Silver: blur P10 and P90 only
+      // Silver: has P50 only — blur P10 and P90 with Gold upgrade prompt
       ['bandWorst','bandBest'].forEach(function(id){ applyTierBlur(id,'bands_all','Gold'); });
     }
   }
 
-  // Budget allocation
+  // Budget allocation — Bronze: hidden, Silver: view-only, Gold+: full edit
   var budgetPanel = document.getElementById('budgetAllocationPanel');
   if (budgetPanel) {
     if (!tierCan('budget_allocation_view')) {
+      // Bronze: dim and lock the whole panel
       budgetPanel.style.opacity = '0.4';
       budgetPanel.style.pointerEvents = 'none';
+      // Add upgrade nudge inside panel
+      var bac0 = document.getElementById('budgetAllocationContent');
+      if (bac0 && !bac0.querySelector('.budget-upgrade-note')) {
+        var bronzeNote = document.createElement('div');
+        bronzeNote.className = 'budget-upgrade-note';
+        bronzeNote.style.cssText = 'font-family:Manrope,sans-serif;font-size:12px;font-weight:600;color:var(--text-muted);padding:16px;text-align:center;border:1px dashed rgba(255,255,255,0.1);border-radius:6px;cursor:pointer';
+        bronzeNote.innerHTML = '🔒 Budget allocation visible on Silver+. <span style="color:#FFD400;text-decoration:underline">Upgrade →</span>';
+        bronzeNote.addEventListener('click', function(){ showUpgradePrompt('budget_allocation_view','Silver'); });
+        bac0.appendChild(bronzeNote);
+      }
     } else if (!tierCan('budget_allocation_edit')) {
+      // Silver: view-only — sliders disabled
       var sliders = budgetPanel.querySelectorAll('input[type="range"]');
       sliders.forEach(function(s){
         s.disabled = true;
         s.style.opacity = '0.35';
         s.style.cursor = 'not-allowed';
-        s.title = 'Editable on Platinum+';
-        s.addEventListener('click', function(){ showUpgradePrompt('budget_allocation_edit','Platinum'); });
+        s.title = 'Upgrade to Gold to adjust budget split';
+        s.addEventListener('click', function(){ showUpgradePrompt('budget_allocation_edit','Gold'); });
       });
       var budgetNote = document.createElement('div');
+      budgetNote.className = 'budget-upgrade-note';
       budgetNote.style.cssText = 'font-family:Manrope,sans-serif;font-size:11px;font-weight:600;color:var(--text-muted);margin-top:12px;padding:8px 12px;background:rgba(255,212,0,0.06);border-radius:5px;border:1px solid rgba(255,212,0,0.2);cursor:pointer';
-      budgetNote.textContent = 'Gold tier: view-only. Upgrade to Platinum to adjust the budget split.';
-      budgetNote.addEventListener('click', function(){ showUpgradePrompt('budget_allocation_edit','Platinum'); });
+      budgetNote.textContent = 'Silver tier: view-only. Upgrade to Gold to adjust the budget split.';
+      budgetNote.addEventListener('click', function(){ showUpgradePrompt('budget_allocation_edit','Gold'); });
       var bac = document.getElementById('budgetAllocationContent');
       if (bac) bac.appendChild(budgetNote);
     }
+    // Gold+: full edit, no restrictions
   }
 
-  // PDF export — gold+
+  // PDF export — Bronze: locked, Silver: 1/month, Gold: unlimited summary, Platinum+: full
   var pdfBtn = document.getElementById('saveCampaignBtn');
   if (pdfBtn) {
     if (!tierCan('pdf_summary')) {
+      // Bronze: locked with upgrade nudge
       pdfBtn.style.opacity = '0.4';
       pdfBtn.style.cursor = 'not-allowed';
-      pdfBtn.title = 'PDF export: Gold+ feature';
+      pdfBtn.title = 'PDF export: Silver+ feature';
       pdfBtn.setAttribute('data-tier-blocked', '1');
+    } else if (!tierCan('pdf_unlimited')) {
+      // Silver: show button but with "1/month" label
+      pdfBtn.style.opacity = '';
+      pdfBtn.style.cursor = '';
+      pdfBtn.removeAttribute('data-tier-blocked');
+      pdfBtn.title = 'Silver: 1 PDF export per month';
+      // Add a small note next to button if not already there
+      if (!document.getElementById('pdfMonthlyNote')) {
+        var pdfNote = document.createElement('span');
+        pdfNote.id = 'pdfMonthlyNote';
+        pdfNote.style.cssText = 'font-family:Manrope,sans-serif;font-size:10px;font-weight:600;color:var(--text-muted);margin-left:8px';
+        pdfNote.textContent = '1/month';
+        pdfBtn.parentNode && pdfBtn.parentNode.insertBefore(pdfNote, pdfBtn.nextSibling);
+      }
     } else {
       pdfBtn.removeAttribute('data-tier-blocked');
       pdfBtn.style.opacity = '';
       pdfBtn.style.cursor = '';
       pdfBtn.title = '';
+      var noteEl = document.getElementById('pdfMonthlyNote');
+      if (noteEl) noteEl.remove();
     }
   }
 
@@ -2568,19 +2661,70 @@ function applyAllTierGates() {
     if (sp) sp.style.display = 'none';
   }
 
+  // ── BRONZE TASTE PANEL — show locked features as upgrade hooks ──────
+  if (t === 0) {
+    // Add a teaser panel below the simulator bands showing locked features
+    var simEl = document.getElementById('simResults');
+    if (simEl && !document.getElementById('bronzeTastePanel')) {
+      var tastePanel = document.createElement('div');
+      tastePanel.id = 'bronzeTastePanel';
+      tastePanel.style.cssText = 'margin-top:16px;padding:16px 20px;background:rgba(255,212,0,0.04);border:1px dashed rgba(255,212,0,0.2);border-radius:8px;';
+      tastePanel.innerHTML = '<div style="font-family:Manrope,sans-serif;font-size:11px;font-weight:700;letter-spacing:.1em;color:#FFD400;margin-bottom:10px">UNLOCK ON SILVER+</div>'
+        + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px">'
+          + '<div onclick="showUpgradePrompt(\'budget_allocation_view\',\'Silver\')" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:6px;padding:10px 12px;cursor:pointer;filter:blur(1px);pointer-events:all;position:relative">'
+            + '<div style="font-size:10px;font-family:Manrope,sans-serif;font-weight:700;color:var(--text-muted);margin-bottom:4px">BUDGET ALLOCATION</div>'
+            + '<div style="font-size:18px;font-weight:700;color:#FFD400">$42K / $18K</div>'
+            + '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(10,10,20,0.6);border-radius:6px;font-family:Manrope,sans-serif;font-size:10px;font-weight:700;color:#FFD400;letter-spacing:.06em">🔒 SILVER+</div>'
+          + '</div>'
+          + '<div onclick="showUpgradePrompt(\'pdf_summary\',\'Silver\')" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:6px;padding:10px 12px;cursor:pointer;position:relative">'
+            + '<div style="font-size:10px;font-family:Manrope,sans-serif;font-weight:700;color:var(--text-muted);margin-bottom:4px">PDF EXPORT</div>'
+            + '<div style="font-size:18px;font-weight:700;color:#0050FF">Campaign Report</div>'
+            + '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(10,10,20,0.6);border-radius:6px;font-family:Manrope,sans-serif;font-size:10px;font-weight:700;color:#FFD400;letter-spacing:.06em">🔒 SILVER+</div>'
+          + '</div>'
+          + '<div onclick="showUpgradePrompt(\'export_5\',\'Silver\')" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:6px;padding:10px 12px;cursor:pointer;position:relative">'
+            + '<div style="font-size:10px;font-family:Manrope,sans-serif;font-weight:700;color:var(--text-muted);margin-bottom:4px">CSV EXPORT</div>'
+            + '<div style="font-size:18px;font-weight:700;color:#00C46A">5 Creators</div>'
+            + '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(10,10,20,0.6);border-radius:6px;font-family:Manrope,sans-serif;font-size:10px;font-weight:700;color:#FFD400;letter-spacing:.06em">🔒 SILVER+</div>'
+          + '</div>'
+          + '<div onclick="showUpgradePrompt(\'budget_allocation_edit\',\'Gold\')" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:6px;padding:10px 12px;cursor:pointer;position:relative">'
+            + '<div style="font-size:10px;font-family:Manrope,sans-serif;font-weight:700;color:var(--text-muted);margin-bottom:4px">BUDGET SPLIT EDITOR</div>'
+            + '<div style="font-size:18px;font-weight:700;color:#FF7A00">Drag & Adjust</div>'
+            + '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(10,10,20,0.6);border-radius:6px;font-family:Manrope,sans-serif;font-size:10px;font-weight:700;color:#FFD400;letter-spacing:.06em">🔒 GOLD+</div>'
+          + '</div>'
+        + '</div>';
+      simEl.parentNode && simEl.parentNode.insertBefore(tastePanel, simEl.nextSibling);
+    }
+  }
+
   // Export shortlist — gold+
   var expBtn = document.getElementById('exportShortlistBtn');
   if (expBtn) {
-    if (!tierCan('export_10')) {
+    if (!tierCan('export_5')) {
+      // Bronze: locked
       expBtn.style.opacity = '0.4';
       expBtn.style.cursor = 'not-allowed';
-      expBtn.title = 'CSV export: Gold+ feature';
+      expBtn.title = 'CSV export: Silver+ feature';
       expBtn.setAttribute('data-tier-blocked', '1');
+    } else if (!tierCan('export_10')) {
+      // Silver: 5 creator max
+      expBtn.removeAttribute('data-tier-blocked');
+      expBtn.style.opacity = '';
+      expBtn.style.cursor = '';
+      expBtn.title = 'Silver: export up to 5 creators';
+      if (!document.getElementById('exportCapNote')) {
+        var expNote = document.createElement('span');
+        expNote.id = 'exportCapNote';
+        expNote.style.cssText = 'font-family:Manrope,sans-serif;font-size:10px;font-weight:600;color:var(--text-muted);margin-left:8px';
+        expNote.textContent = '5 max';
+        if (expBtn.parentNode) expBtn.parentNode.insertBefore(expNote, expBtn.nextSibling);
+      }
     } else {
       expBtn.removeAttribute('data-tier-blocked');
       expBtn.style.opacity = '';
       expBtn.style.cursor = '';
       expBtn.title = '';
+      var expNoteEl = document.getElementById('exportCapNote');
+      if (expNoteEl) expNoteEl.remove();
     }
   }
 
@@ -2619,6 +2763,19 @@ function applyAllTierGates() {
       }
     } else {
       if (cBadge) cBadge.remove();
+    }
+  }
+
+  // ── Diamond nudge for Platinum users ─────────────────────────────
+  if (t === 3) {
+    var simScreen2 = document.getElementById('screen-simulator');
+    if (simScreen2 && !document.getElementById('diamondNudge')) {
+      var nudge = document.createElement('div');
+      nudge.id = 'diamondNudge';
+      nudge.style.cssText = 'margin:16px 0;padding:10px 16px;background:rgba(185,242,255,0.03);border:1px dashed rgba(185,242,255,0.15);border-radius:8px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap';
+      nudge.innerHTML = '<div style="font-size:12px;color:var(--text-muted)">Unlock <strong style="color:#B9F2FF">💎 Diamond</strong>: API access · Unlimited team seats · Dedicated account manager · Full white-label</div>'
+        + '<button data-oc="showUpgradePrompt(\'api_access\',\'Diamond\')" style="padding:5px 12px;background:rgba(185,242,255,0.08);border:1px solid rgba(185,242,255,0.2);color:#B9F2FF;border-radius:5px;font-family:Manrope,sans-serif;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0">SEE DIAMOND →</button>';
+      simScreen2.appendChild(nudge);
     }
   }
 
@@ -3412,6 +3569,9 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
         <button id="newCampaignBtn" style="padding:10px 20px;background:#0050FF;color:#fff;border:none;border-radius:var(--radius);font-family:Manrope,sans-serif;font-size:13px;font-weight:500;cursor:pointer;letter-spacing:.05em;font-weight:700">+ NEW CAMPAIGN</button>
       </div>
+      <!-- PLATINUM/DIAMOND AGENCY PANEL -->
+      <div id="agencyFeaturesPanel" style="display:none;margin-bottom:24px"></div>
+
       <div id="campaigns-list" style="display:flex;flex-direction:column;gap:12px;"></div>
       <div id="campaigns-empty" style="display:none;padding:80px 40px;text-align:center">
         <div style="font-size:48px;margin-bottom:16px">📋</div>
@@ -13353,13 +13513,14 @@ document.addEventListener('DOMContentLoaded', function() {
 // 3. EXPORT CREATOR SHORTLIST as CSV
 function exportShortlist() {
   var genre = (typeof getSelectedGenre === 'function') ? getSelectedGenre() : 'All';
-  var _expLimit = (function(){ var t=typeof getTierLevel==='function'?getTierLevel():0; return t>=3?Infinity:t>=2?10:0; })();
-  if (_expLimit === 0) { showUpgradePrompt('export_10','Gold'); return; }
+  var _expLimit = (function(){ var t=typeof getTierLevel==='function'?getTierLevel():0; return t>=3?Infinity:t>=2?10:t>=1?5:0; })();
+  if (_expLimit === 0) { showUpgradePrompt('export_5','Silver'); return; }
   var sel = (typeof selectedCreators!=='undefined'&&selectedCreators.size>0)
     ? CREATORS.filter(function(cr){return selectedCreators.has(cr.id);}).slice(0,_expLimit===Infinity?99999:_expLimit)
     : CREATORS.filter(function(cr){return cr.genre===genre;}).slice(0,Math.min(50,_expLimit===Infinity?50:_expLimit));
   if (_expLimit!==Infinity&&sel.length>=_expLimit) {
-    if(!confirm('Gold export limited to '+_expLimit+' creators. Continue?')) return;
+    var _tierForExp = typeof getTierLevel==='function'?getTierLevel():0; var _tierNameExp = _tierForExp>=2?'Gold':'Silver';
+    if(!confirm(_tierNameExp+' export limited to '+_expLimit+' creators. Continue?')) return;
   }
 
   if (!sel.length) { alert('No creators to export. Select some creators or set a genre.'); return; }
@@ -13913,11 +14074,69 @@ function editCampaign(id) {
   document.getElementById('campaign-modal').style.display = 'flex';
 }
 
+function renderAgencyPanel() {
+  var agencyPanel = document.getElementById('agencyFeaturesPanel');
+  if (!agencyPanel) return;
+  var t  = typeof getTierLevel === 'function' ? getTierLevel() : 0;
+  var tn = typeof getTierName  === 'function' ? getTierName()  : 'bronze';
+
+  if (t >= 4) {
+    // Diamond — enterprise panel
+    agencyPanel.style.display = 'block';
+    agencyPanel.innerHTML = '<div style="background:rgba(185,242,255,0.04);border:1px solid rgba(185,242,255,0.2);border-radius:10px;padding:14px 20px;margin-bottom:16px">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">'
+        + '<div>'
+          + '<div style="font-family:Manrope,sans-serif;font-size:11px;font-weight:700;letter-spacing:.1em;color:#B9F2FF;margin-bottom:3px">💎 DIAMOND ENTERPRISE</div>'
+          + '<div style="font-size:12px;color:var(--text-muted)">API access · Unlimited seats · Dedicated manager · Full white-label</div>'
+        + '</div>'
+        + '<div style="display:flex;gap:6px;flex-wrap:wrap">'
+          + '<span style="background:rgba(185,242,255,0.08);border:1px solid rgba(185,242,255,0.15);border-radius:5px;padding:4px 10px;font-family:Manrope,sans-serif;font-size:11px;font-weight:600;color:#B9F2FF">⚡ API Access</span>'
+          + '<span style="background:rgba(185,242,255,0.08);border:1px solid rgba(185,242,255,0.15);border-radius:5px;padding:4px 10px;font-family:Manrope,sans-serif;font-size:11px;font-weight:600;color:#B9F2FF">👥 Unlimited Seats</span>'
+          + '<span style="background:rgba(185,242,255,0.08);border:1px solid rgba(185,242,255,0.15);border-radius:5px;padding:4px 10px;font-family:Manrope,sans-serif;font-size:11px;font-weight:600;color:#B9F2FF">🎯 Dedicated Manager</span>'
+          + '<span style="background:rgba(185,242,255,0.08);border:1px solid rgba(185,242,255,0.15);border-radius:5px;padding:4px 10px;font-family:Manrope,sans-serif;font-size:11px;font-weight:600;color:#B9F2FF">🏷 White-label</span>'
+          + '<a href="mailto:liam@simfluence.ai?subject=Diamond%20Enterprise%20Setup" style="padding:4px 12px;background:#B9F2FF;color:#000;border:none;border-radius:5px;font-family:Manrope,sans-serif;font-size:11px;font-weight:700;cursor:pointer;text-decoration:none">CONTACT →</a>'
+        + '</div>'
+      + '</div>'
+    + '</div>';
+  } else if (t >= 3) {
+    // Platinum — agency panel
+    agencyPanel.style.display = 'block';
+    agencyPanel.innerHTML = '<div style="background:rgba(0,191,255,0.05);border:1px solid rgba(0,191,255,0.2);border-radius:10px;padding:14px 20px;margin-bottom:16px">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">'
+        + '<div>'
+          + '<div style="font-family:Manrope,sans-serif;font-size:11px;font-weight:700;letter-spacing:.1em;color:#00BFFF;margin-bottom:3px">PLATINUM AGENCY FEATURES</div>'
+          + '<div style="font-size:12px;color:var(--text-muted)">Team collaboration · White-label PDF exports · Campaign sharing</div>'
+        + '</div>'
+        + '<div style="display:flex;gap:6px;flex-wrap:wrap">'
+          + '<span style="background:rgba(0,191,255,0.08);border:1px solid rgba(0,191,255,0.15);border-radius:5px;padding:4px 10px;font-family:Manrope,sans-serif;font-size:11px;font-weight:600;color:#00BFFF">👥 3 Team Seats</span>'
+          + '<span style="background:rgba(0,191,255,0.08);border:1px solid rgba(0,191,255,0.15);border-radius:5px;padding:4px 10px;font-family:Manrope,sans-serif;font-size:11px;font-weight:600;color:#00BFFF">📄 White-label PDF</span>'
+          + '<span style="background:rgba(0,191,255,0.08);border:1px solid rgba(0,191,255,0.15);border-radius:5px;padding:4px 10px;font-family:Manrope,sans-serif;font-size:11px;font-weight:600;color:#00BFFF">🔗 Campaign Sharing</span>'
+          + '<a href="mailto:liam@simfluence.ai?subject=Platinum%20Agency%20Setup" style="padding:4px 12px;background:#00BFFF;color:#000;border:none;border-radius:5px;font-family:Manrope,sans-serif;font-size:11px;font-weight:700;cursor:pointer;text-decoration:none">ACTIVATE →</a>'
+        + '</div>'
+      + '</div>'
+    + '</div>';
+  } else {
+    // Bronze/Silver/Gold — show upgrade teaser
+    var nextTier  = t >= 2 ? 'Platinum' : t >= 1 ? 'Gold' : 'Silver';
+    var nextColor = t >= 2 ? '#00BFFF'  : t >= 1 ? '#FFD400' : '#C0C0C0';
+    agencyPanel.style.display = 'block';
+    agencyPanel.innerHTML = '<div style="background:rgba(255,255,255,0.02);border:1px dashed rgba(255,255,255,0.08);border-radius:10px;padding:12px 20px;margin-bottom:16px">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">'
+        + '<div style="font-size:12px;color:var(--text-muted)">Unlock team seats, white-label PDF exports and campaign sharing on <strong style="color:' + nextColor + '">' + nextTier + '</strong>.</div>'
+        + '<button data-oc="showUpgradePrompt(\'team_seats_3\',\'Platinum\')" style="padding:5px 12px;background:rgba(0,191,255,0.1);border:1px solid rgba(0,191,255,0.25);color:#00BFFF;border-radius:5px;font-family:Manrope,sans-serif;font-size:11px;font-weight:700;cursor:pointer">UPGRADE →</button>'
+      + '</div>'
+    + '</div>';
+  }
+}
+
 function renderCampaignsScreen() {
   var list  = document.getElementById('campaigns-list');
   var empty = document.getElementById('campaigns-empty');
   var meta  = document.getElementById('campaigns-meta');
   if (!list) return;
+
+  renderAgencyPanel();
+
   if (_campaigns.length === 0) {
     list.innerHTML  = '';
     list.style.display = 'none';
@@ -15159,7 +15378,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // Export shortlist — respects tier gate
   wire('exportShortlistBtn', function() {
     var btn = document.getElementById('exportShortlistBtn');
-    if (btn && btn.getAttribute('data-tier-blocked')) { showUpgradePrompt('export_10','Gold'); return; }
+    if (btn && btn.getAttribute('data-tier-blocked')) { showUpgradePrompt('export_5','Silver'); return; }
     if (typeof exportShortlist==='function') exportShortlist();
   });
 
