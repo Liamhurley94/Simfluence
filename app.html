@@ -2041,7 +2041,7 @@ function GSignIn() {
       return;
     }
     // Fetch their profile to get tier
-    fetch(SF_URL + '/rest/v1/profiles?email=eq.' + encodeURIComponent(email) + '&select=tier,client', {
+    fetch(SF_URL + '/rest/v1/profiles?email=eq.' + encodeURIComponent(email.toLowerCase()) + '&select=tier,client', {
       headers: { 'apikey': SF_KEY, 'Authorization': 'Bearer ' + data.access_token }
     })
     .then(function(r) { return r.json(); })
@@ -13108,7 +13108,51 @@ function exportShortlist() {
 }
 
 // 4. BUDGET ALLOCATION — render and update
-var customAllocations = {}; // creatorId → percentage override
+var customAllocations = {}; // creatorId → percentage (locked to 100% total)
+
+// ── BUDGET ALLOCATION HELPERS ─────────────────────────────────────────
+
+function getAllocations(creators) {
+  // Get current allocations, defaulting proportionally to CPI score
+  var totalCPI = creators.reduce(function(a, cr) { return a + (cr.cpi || 50); }, 0) || 1;
+  var allocs = creators.map(function(cr) {
+    if (customAllocations[cr.id] !== undefined) return customAllocations[cr.id];
+    return Math.round((cr.cpi || 50) / totalCPI * 100);
+  });
+  // Normalize to exactly 100%
+  var nonZeroSum = allocs.reduce(function(a,b){ return b > 0 ? a + b : a; }, 0) || 1;
+  allocs = allocs.map(function(a){ return a === 0 ? 0 : Math.round(a / nonZeroSum * 100); });
+  var diff = 100 - allocs.reduce(function(a,b){return a+b;},0);
+  var maxIdx = 0;
+  allocs.forEach(function(a, i){ if (a > allocs[maxIdx]) maxIdx = i; });
+  if (allocs[maxIdx] !== undefined) allocs[maxIdx] += diff;
+  return allocs;
+}
+
+function computeCreatorForecast(cr, allocBudget, genre) {
+  // Per-creator forecast based on their allocated budget slice
+  var bench = (typeof GENRE_BENCHMARKS !== 'undefined' && GENRE_BENCHMARKS[genre]) || { ctrBase:2.4, cpmBase:8, cvrBase:1.8, roasBase:2.8 };
+  var niche  = (typeof NICHE_SPONSOR_CPM !== 'undefined' && NICHE_SPONSOR_CPM[genre]) || { med:8, dedMult:1.6 };
+  var cpiW   = (cr.cpi || 50) / 100;
+  var gfi    = (typeof computeGFI === 'function') ? computeGFI(cr) : cr.gfi || 60;
+  var gfiW   = gfi / 100;
+  var cpmActual = Math.max(niche.med * Math.max(0.6, cpiW), 1);
+  var impressions = Math.round((allocBudget / cpmActual) * 1000);
+  var ctr = Math.min(bench.ctrBase * cpiW * gfiW * 1.4, 15);
+  var cvr = Math.min(bench.cvrBase * cpiW * 1.1, 20);
+  var clicks = Math.round(impressions * ctr / 100);
+  var conversions = Math.round(clicks * cvr / 100);
+  var revenue = conversions * 30;
+  var roas = allocBudget > 0 ? revenue / allocBudget : 0;
+  return {
+    impressions: impressions,
+    ctr: Math.round(ctr * 10) / 10,
+    clicks: clicks,
+    conversions: conversions,
+    roas: Math.round(roas * 10) / 10,
+    gfi: gfi,
+  };
+}
 
 function renderBudgetAllocation() {
   var el = document.getElementById('budgetAllocationContent');
@@ -13116,6 +13160,7 @@ function renderBudgetAllocation() {
   if (!el || !panel) return;
 
   var budget = parseInt((document.getElementById('budget') || {value:'85000'}).value) || 85000;
+  var genre  = (typeof getSelectedGenre === 'function') ? getSelectedGenre() : 'Gaming & Esports';
   var creators = [];
   if (typeof selectedCreators !== 'undefined' && selectedCreators.size > 0 && typeof CREATORS !== 'undefined') {
     selectedCreators.forEach(function(id) {
@@ -13124,65 +13169,128 @@ function renderBudgetAllocation() {
     });
   }
 
-  if (creators.length === 0) {
-    panel.style.display = 'none';
-    return;
-  }
+  if (creators.length === 0) { panel.style.display = 'none'; return; }
   panel.style.display = 'block';
 
-  // Default: proportional to avg views
-  var totalViews = creators.reduce(function(a, cr) {
-    return a + (typeof parseViews === 'function' ? (parseViews(cr.avgViews) || 1) : 1);
-  }, 0) || 1;
+  var allocs = getAllocations(creators);
+  var fmtBudget = '£' + (budget >= 1000 ? (budget/1000).toFixed(0) + 'K' : budget);
 
-  var allocs = creators.map(function(cr) {
-    if (customAllocations[cr.id] !== undefined) return customAllocations[cr.id];
-    return Math.round((typeof parseViews === 'function' ? (parseViews(cr.avgViews) || 1) : 1) / totalViews * 100);
-  });
+  // Total allocated check
+  var totalAlloc = allocs.reduce(function(a,b){return a+b;},0);
 
-  // Normalize to 100%
-  var sum = allocs.reduce(function(a,b){return a+b;},0);
-  // Normalize: preserve 0% allocations, only scale non-zero ones
-  var nonZeroSum = allocs.reduce(function(a,b){return b > 0 ? a + b : a;}, 0) || 1;
-  allocs = allocs.map(function(a){ return a === 0 ? 0 : Math.round(a / nonZeroSum * 100); });
-  // Fix rounding — add remainder to largest non-zero
-  var diff = 100 - allocs.reduce(function(a,b){return a+b;},0);
-  var maxIdx = 0;
-  allocs.forEach(function(a, i){ if (a > allocs[maxIdx]) maxIdx = i; });
-  if (allocs[maxIdx] !== undefined) allocs[maxIdx] += diff;
+  var html = '<div style="margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">'
+    + '<div style="font-size:11px;color:var(--text-muted)">Adjusting each creator\'s share of the total <strong style="color:#FFD400">' + fmtBudget + '</strong> budget.</div>'
+    + '<div style="font-family:DM Mono,monospace;font-size:9px;padding:3px 8px;border-radius:3px;background:' + (totalAlloc===100?'rgba(0,196,106,0.1)':'rgba(255,50,50,0.1)') + ';color:' + (totalAlloc===100?'#00C46A':'#FF3355') + ';border:1px solid ' + (totalAlloc===100?'rgba(0,196,106,0.3)':'rgba(255,50,50,0.3)') + '">' + totalAlloc + '% ALLOCATED</div>'
+  + '</div>';
 
-  el.innerHTML = '<div style="margin-bottom:12px;font-size:11px;color:var(--text-muted)">Adjust each creator\'s share of the total <strong style="color:#FFD400">£' + (budget>=1000?(budget/1000).toFixed(0)+'K':budget) + '</strong> budget. Drag sliders to redistribute.</div>'
-    + creators.map(function(cr, i) {
-      var pct  = allocs[i];
-      var amt  = Math.round(budget * pct / 100);
-      var fmtAmt = '£' + (amt >= 1000 ? (amt/1000).toFixed(0)+'K' : amt);
-      return '<div style="margin-bottom:16px">'
-        + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
-          + '<div style="display:flex;align-items:center;gap:10px">'
-            + '<div style="width:28px;height:28px;border-radius:50%;background:' + cr.color + '22;color:' + cr.color + ';display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0">' + cr.name.charAt(0) + '</div>'
-            + '<div><div style="font-size:13px;font-weight:600">' + cr.name + '</div><div style="font-size:10px;color:var(--text-muted)">' + cr.handle + ' · ' + cr.subs + ' subs</div></div>'
-          + '</div>'
-          + '<div style="text-align:right">'
-            + '<div style="font-size:18px;font-weight:700;color:#FFD400">' + fmtAmt + '</div>'
-            + '<div style="font-family:\'DM Mono\',monospace;font-size:10px;color:var(--text-muted)">' + pct + '%</div>'
+  html += creators.map(function(cr, i) {
+    var pct  = allocs[i];
+    var amt  = Math.round(budget * pct / 100);
+    var fmtAmt = '£' + (amt >= 1000 ? (amt/1000).toFixed(0) + 'K' : amt);
+    var forecast = computeCreatorForecast(cr, amt, genre);
+    var gfi = forecast.gfi;
+
+    // Efficiency flag: low GFI but high allocation = inefficient
+    var isInefficient = gfi < 55 && pct > 25;
+    var isStrong = gfi >= 80 && pct >= 15;
+
+    var effBadge = isInefficient
+      ? '<span style="font-family:DM Mono,monospace;font-size:8px;padding:2px 6px;background:rgba(255,50,50,0.12);border:1px solid rgba(255,50,50,0.3);color:#FF5555;border-radius:3px;margin-left:6px">⚠ LOW GFI</span>'
+      : isStrong
+        ? '<span style="font-family:DM Mono,monospace;font-size:8px;padding:2px 6px;background:rgba(0,196,106,0.12);border:1px solid rgba(0,196,106,0.3);color:#00C46A;border-radius:3px;margin-left:6px">✓ EFFICIENT</span>'
+        : '';
+
+    return '<div style="margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,0.05)">'
+      // Row 1: creator info + amount
+      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
+        + '<div style="display:flex;align-items:center;gap:10px">'
+          + '<div style="width:28px;height:28px;border-radius:50%;background:' + cr.color + '22;color:' + cr.color + ';display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0">' + cr.name.charAt(0) + '</div>'
+          + '<div>'
+            + '<div style="font-size:13px;font-weight:600">' + cr.name + effBadge + '</div>'
+            + '<div style="font-size:10px;color:var(--text-muted)">' + cr.handle + ' · GFI <span style="color:' + (gfi>=80?'#00C46A':gfi>=60?'#FF9500':'#FF3355') + '">' + gfi + '%</span></div>'
           + '</div>'
         + '</div>'
-        + '<input type="range" min="0" max="100" step="1" value="' + pct + '" '
-          + 'data-alloc-id="' + cr.id + '" '
-          + 'style="width:100%;accent-color:' + cr.color + ';cursor:pointer">'
+        + '<div style="text-align:right">'
+          + '<div style="font-size:20px;font-weight:700;color:#FFD400">' + fmtAmt + '</div>'
+          + '<div style="font-family:DM Mono,monospace;font-size:10px;color:var(--text-muted)">' + pct + '%</div>'
         + '</div>'
-      + '</div>';
-    }).join('');
+      + '</div>'
+      // Row 2: slider (locked to remaining when others are at max)
+      + '<input type="range" min="0" max="100" step="1" value="' + pct + '" '
+        + 'data-alloc-id="' + cr.id + '" '
+        + 'style="width:100%;accent-color:' + cr.color + ';cursor:pointer;margin-bottom:10px">'
+      // Row 3: per-creator forecast metrics
+      + '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">'
+        + '<div style="background:rgba(255,255,255,0.03);border-radius:4px;padding:6px 8px;text-align:center">'
+          + '<div style="font-family:DM Mono,monospace;font-size:11px;font-weight:700;color:#0050FF">' + (forecast.impressions >= 1000000 ? (forecast.impressions/1000000).toFixed(1)+'M' : forecast.impressions >= 1000 ? Math.round(forecast.impressions/1000)+'K' : forecast.impressions) + '</div>'
+          + '<div style="font-size:9px;color:var(--text-muted);margin-top:2px">IMPRESSIONS</div>'
+        + '</div>'
+        + '<div style="background:rgba(255,255,255,0.03);border-radius:4px;padding:6px 8px;text-align:center">'
+          + '<div style="font-family:DM Mono,monospace;font-size:11px;font-weight:700;color:#00C46A">' + forecast.ctr + '%</div>'
+          + '<div style="font-size:9px;color:var(--text-muted);margin-top:2px">CTR</div>'
+        + '</div>'
+        + '<div style="background:rgba(255,255,255,0.03);border-radius:4px;padding:6px 8px;text-align:center">'
+          + '<div style="font-family:DM Mono,monospace;font-size:11px;font-weight:700;color:#FF9500">' + (forecast.clicks >= 1000 ? Math.round(forecast.clicks/1000)+'K' : forecast.clicks) + '</div>'
+          + '<div style="font-size:9px;color:var(--text-muted);margin-top:2px">CLICKS</div>'
+        + '</div>'
+        + '<div style="background:rgba(255,255,255,0.03);border-radius:4px;padding:6px 8px;text-align:center">'
+          + '<div style="font-family:DM Mono,monospace;font-size:11px;font-weight:700;color:' + (forecast.roas >= 3 ? '#00C46A' : forecast.roas >= 1.5 ? '#FFD400' : '#FF3355') + '">' + forecast.roas + '×</div>'
+          + '<div style="font-size:9px;color:var(--text-muted);margin-top:2px">ROAS</div>'
+        + '</div>'
+      + '</div>'
+    + '</div>';
+  }).join('');
+
+  // Reset button
+  html += '<div style="text-align:center;margin-top:4px">'
+    + '<button id="resetAllocBtn" style="font-family:DM Mono,monospace;font-size:9px;padding:5px 14px;background:transparent;border:1px solid rgba(255,255,255,0.1);color:var(--text-muted);border-radius:4px;cursor:pointer;letter-spacing:.06em">RESET TO OPTIMAL</button>'
+  + '</div>';
+
+  el.innerHTML = html;
 }
 
-function onAllocationChange(creatorId, newPct) {
-  customAllocations[creatorId] = newPct;
-  renderBudgetAllocation();
-  // Trigger sim recompute if results exist
-  if (typeof simResults !== 'undefined' && simResults) {
-    simResults = null;
-    if (typeof updateSimDisplay === 'function') updateSimDisplay();
+function onAllocationChange(changedId, newPct) {
+  // 1. Set the changed creator
+  customAllocations[changedId] = newPct;
+
+  // 2. Get all selected creators
+  var creators = [];
+  if (typeof selectedCreators !== 'undefined' && selectedCreators.size > 0 && typeof CREATORS !== 'undefined') {
+    selectedCreators.forEach(function(id) {
+      var cr = CREATORS.find(function(c) { return c.id === id; });
+      if (cr) creators.push(cr);
+    });
   }
+  if (creators.length <= 1) { renderBudgetAllocation(); return; }
+
+  // 3. Lock to 100% — redistribute remainder proportionally among others
+  var remaining = 100 - newPct;
+  var others = creators.filter(function(cr){ return cr.id !== changedId; });
+
+  // Get current values for others (use their existing alloc or CPI default)
+  var otherAllocs = others.map(function(cr){
+    return customAllocations[cr.id] !== undefined ? customAllocations[cr.id] : (cr.cpi || 50);
+  });
+  var otherSum = otherAllocs.reduce(function(a,b){return a+b;},0) || 1;
+
+  // Redistribute proportionally
+  others.forEach(function(cr, i) {
+    customAllocations[cr.id] = Math.max(0, Math.round(remaining * otherAllocs[i] / otherSum));
+  });
+
+  // Fix rounding so total is exactly 100
+  var total = newPct + others.reduce(function(a, cr){ return a + customAllocations[cr.id]; }, 0);
+  var roundDiff = 100 - total;
+  if (roundDiff !== 0 && others.length > 0) {
+    // Add rounding remainder to the other creator with highest allocation
+    var maxOther = others.reduce(function(a, b){ return customAllocations[a.id] >= customAllocations[b.id] ? a : b; });
+    customAllocations[maxOther.id] = Math.max(0, customAllocations[maxOther.id] + roundDiff);
+  }
+
+  // 4. Re-render and rerun sim
+  renderBudgetAllocation();
+  simResults = null;
+  if (typeof updateSimDisplay === 'function') updateSimDisplay();
 }
 
 // Hook into updateSimDisplay to also render allocation
@@ -13193,6 +13301,16 @@ if (_origUpdateSimDisplay) {
     renderBudgetAllocation();
   };
 }
+
+// Reset allocations to CPI-optimal
+document.addEventListener('click', function(e) {
+  if (e.target && e.target.id === 'resetAllocBtn') {
+    customAllocations = {};
+    renderBudgetAllocation();
+    simResults = null;
+    if (typeof updateSimDisplay === 'function') updateSimDisplay();
+  }
+});
 
 // 5. SAVED CAMPAIGNS — localStorage
 var SAVE_KEY = 'sf_campaigns_v1';
