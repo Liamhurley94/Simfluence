@@ -3356,6 +3356,9 @@ document.addEventListener('DOMContentLoaded', function() {
         <div id="bandDetailContent"></div>
       </div>
 
+      <!-- BUDGET WARNING BANNER -->
+      <div id="sfBudgetWarning" style="display:none;align-items:flex-start;gap:12px;background:rgba(255,51,85,0.08);border:1px solid rgba(255,51,85,0.3);border-radius:8px;padding:14px 18px;margin-bottom:16px;color:#FF3355"></div>
+
       <!-- CORE METRICS -->
       <div id="simResults" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px"></div>
 
@@ -3710,6 +3713,52 @@ function computeCostEstimate(creator) {
     verifiedNote: (creator.verifiedDeals || 0) >= 2 ? '✓ Verified deal history · ' + genre : '~ ' + genre + ' market estimate (€0.085/view · 2025)',
     disclaimer: 'Dedicated video · Excludes usage rights, exclusivity & production costs'
   };
+}
+
+// ── BUDGET-AWARE CREATOR FILTER ──────────────────────────────────────
+function creatorFitsFormat(cr, budget, format) {
+  // Returns true if creator's minimum rate for this format fits within budget
+  var e = computeCostEstimate(cr);
+  var fmtKey = format === 'Dedicated' ? 'ded' : format === 'Mixed' ? 'mix' : 'int';
+  var minRate = e.ranges[fmtKey][0];
+  return minRate <= budget;
+}
+
+function creatorMinRate(cr, format) {
+  var e = computeCostEstimate(cr);
+  var fmtKey = format === 'Dedicated' ? 'ded' : format === 'Mixed' ? 'mix' : 'int';
+  return e.ranges[fmtKey][0];
+}
+
+function totalSelectedCost(format) {
+  // Returns total minimum cost of all selected creators for current format
+  if (typeof selectedCreators === 'undefined' || !selectedCreators.size) return 0;
+  var total = 0;
+  selectedCreators.forEach(function(id) {
+    var cr = CREATORS.find(function(c){ return c.id === id; });
+    if (cr) total += creatorMinRate(cr, format);
+  });
+  return total;
+}
+
+function renderBudgetWarning() {
+  var warningEl = document.getElementById('sfBudgetWarning');
+  if (!warningEl) return;
+  var budget = parseInt((document.getElementById('budget')||{value:'85000'}).value)||85000;
+  var format = (document.getElementById('format')||{value:'Integrated'}).value;
+  var total  = totalSelectedCost(format);
+  if (total > budget) {
+    var over = total - budget;
+    var fmt  = function(n){ return '$' + (n>=1000?(n/1000).toFixed(0)+'K':n); };
+    warningEl.style.display = 'flex';
+    warningEl.innerHTML = '<span style="font-size:16px">⚠</span>'
+      + '<div>'
+      + '<div style="font-family:Manrope,sans-serif;font-size:13px;font-weight:700;color:#FF3355">Budget exceeded by ' + fmt(over) + '</div>'
+      + '<div style="font-family:Manrope,sans-serif;font-size:12px;color:rgba(255,51,85,0.7);margin-top:2px">Selected creators require a minimum of ' + fmt(total) + ' · Your budget is ' + fmt(budget) + '. Remove a creator or increase your budget.</div>'
+      + '</div>';
+  } else {
+    warningEl.style.display = 'none';
+  }
 }
 
 function renderCostPanel(creator) {
@@ -11071,7 +11120,8 @@ function computeSimResults() {
   const toSim = selectedCreators.size > 0
     ? CREATORS.filter(cr => selectedCreators.has(cr.id))
     : [...CREATORS]
-        .filter(cr => cr.genre === genre || ((GENRE_AFFINITY[cr.genre]||{})[genre]||0) >= 0.6)
+        .filter(cr => (cr.genre === genre || ((GENRE_AFFINITY[cr.genre]||{})[genre]||0) >= 0.6)
+          && creatorFitsFormat(cr, budget, format))  // exclude creators whose min rate exceeds total budget
         .sort((a,b) => (b.cpi + computeGFI(b)) - (a.cpi + computeGFI(a)))
         .slice(0, (function(){
       var _t = typeof getTierLevel === 'function' ? getTierLevel() : 0;
@@ -11806,7 +11856,9 @@ function personaAutoSelect() {
 
   // Filter to genre-relevant creators only, then rank by CPI + GFI
   const top = [...CREATORS]
-    .filter(cr => cr.genre === genre || ((GENRE_AFFINITY[cr.genre]||{})[genre]||0) >= 0.6)
+    .filter(cr => (cr.genre === genre || ((GENRE_AFFINITY[cr.genre]||{})[genre]||0) >= 0.6)
+      && creatorFitsFormat(cr, parseInt((document.getElementById('budget')||{value:'85000'}).value)||85000,
+         (document.getElementById('format')||{value:'Integrated'}).value))
     .sort((a,b) => (b.cpi + computeGFI(b)) - (a.cpi + computeGFI(a)))
     .slice(0, (function(){
       var _t = typeof getTierLevel === 'function' ? getTierLevel() : 0;
@@ -13392,6 +13444,7 @@ if (_origUpdateSimDisplay) {
   updateSimDisplay = function() {
     _origUpdateSimDisplay();
     renderBudgetAllocation();
+    renderBudgetWarning();
   };
 }
 
@@ -15075,6 +15128,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // Budget slider
   var budgetSlider = document.getElementById('budget');
   if (budgetSlider) {
+    budgetSlider.addEventListener('input', function() { renderBudgetWarning(); });
     budgetSlider.addEventListener('input', function() {
       if (typeof updateTierLabel === 'function') updateTierLabel(budgetSlider.value);
     });
