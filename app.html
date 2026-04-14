@@ -13348,11 +13348,11 @@ function renderBudgetAllocation() {
     return '<div style="margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,0.05)">'
       // Row 1: creator info + amount
       + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
-        + '<div style="display:flex;align-items:center;gap:10px">'
+        + '<div style="display:flex;align-items:center;gap:10px;cursor:pointer" onclick="if(typeof openProfileOverlay===\'function\') openProfileOverlay(' + cr.id + ')" title="View full profile">'
           + '<div style="width:28px;height:28px;border-radius:50%;background:' + cr.color + '22;color:' + cr.color + ';display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0">' + cr.name.charAt(0) + '</div>'
           + '<div>'
-            + '<div style="font-size:13px;font-weight:600">' + cr.name + effBadge + '</div>'
-            + '<div style="font-size:10px;color:var(--text-muted)">' + cr.handle + ' · GFI <span style="color:' + (gfi>=80?'#00C46A':gfi>=60?'#FF9500':'#FF3355') + '">' + gfi + '%</span></div>'
+            + '<div style="font-size:13px;font-weight:600;text-decoration:underline;text-underline-offset:3px;text-decoration-color:rgba(255,255,255,0.25)">' + cr.name + effBadge + '</div>'
+            + '<div style="font-size:11px;color:var(--text-muted)">' + cr.handle + ' · GFI <span style="color:' + (gfi>=80?'#00C46A':gfi>=60?'#FF9500':'#FF3355') + '">' + gfi + '%</span> · <span style="color:rgba(255,255,255,0.35);font-size:10px">view profile →</span></div>'
           + '</div>'
         + '</div>'
         + '<div style="text-align:right">'
@@ -15003,6 +15003,8 @@ document.addEventListener('input', function(e) {
       badge.style.color = totalAlloc===100?'#00C46A':'#FF3355';
       badge.style.borderColor = totalAlloc===100?'rgba(0,196,106,0.3)':'rgba(255,50,50,0.3)';
     }
+    // Update budget warning
+    if (typeof renderBudgetWarning === 'function') renderBudgetWarning();
   }
 });
 
