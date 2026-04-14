@@ -12255,15 +12255,20 @@ async function injectLiveDataIntoProfile(creator) {
   var imgUrl = await fetchCreatorAvatar(creator);
   if (imgUrl) injectAvatarImage(creator, imgUrl);
 
-  // For non-YouTube creators — show platform-appropriate message and return
+  // Check if creator has YouTube (primary or secondary platform)
   var platRaw = (creator.platform || '').toLowerCase();
-  var allPlats = creator.allPlatforms || [];
+  var allPlats = creator.allPlatforms || [creator.platform];
   var hasYouTube = platRaw.includes('youtube') || allPlats.includes('YouTube');
+
+  // No YouTube at all — show platform message and return
   if (!hasYouTube) {
     var platLabel = platRaw.includes('twitch') ? 'Twitch' : platRaw.includes('instagram') ? 'Instagram' : 'this platform';
     liveEl.innerHTML = '<span style="color:var(--text-muted);font-size:11px">Live ' + platLabel + ' data coming soon.</span>';
     return;
   }
+
+  // Has YouTube — update loading message
+  liveEl.innerHTML = '<span style="color:var(--text-muted);font-size:11px">Fetching YouTube data...</span>';
 
   var data = await fetchCreatorYouTubeData(creator);
 
