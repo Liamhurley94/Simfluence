@@ -2761,6 +2761,15 @@ document.getElementById('GBtn').addEventListener('click', GC);
     });
   })();
 
+  // Wire budget allocation profile clicks
+  document.addEventListener('click', function(e) {
+    var el = e.target.closest('[data-alloc-profile]');
+    if (el) {
+      var id = parseInt(el.getAttribute('data-alloc-profile'));
+      if (id && typeof openProfileOverlay === 'function') openProfileOverlay(id);
+    }
+  });
+
   // Wire P10/P50/P90 band clicks
   ['bandWorst','bandBase','bandBest'].forEach(function(id) {
     document.addEventListener('click', function(e) {
@@ -13322,6 +13331,11 @@ function renderBudgetAllocation() {
 
   // Total allocated check
   var totalAlloc = allocs.reduce(function(a,b){return a+b;},0);
+  // Recalculate based on actual customAllocations where set
+  var realTotal = creators.reduce(function(sum, cr, i) {
+    return sum + (customAllocations[cr.id] !== undefined ? customAllocations[cr.id] : allocs[i]);
+  }, 0);
+  totalAlloc = realTotal;
 
   var html = '<div style="margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">'
     + '<div style="font-size:11px;color:var(--text-muted)">Adjusting each creator\'s share of the total <strong style="color:#FFD400">' + fmtBudget + '</strong> budget.</div>'
@@ -13348,7 +13362,7 @@ function renderBudgetAllocation() {
     return '<div style="margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,0.05)">'
       // Row 1: creator info + amount
       + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
-        + '<div style="display:flex;align-items:center;gap:10px;cursor:pointer" onclick="if(typeof openProfileOverlay===\'function\') openProfileOverlay(' + cr.id + ')" title="View full profile">'
+        + '<div style="display:flex;align-items:center;gap:10px;cursor:pointer" data-alloc-profile="' + cr.id + '" title="View full profile">'
           + '<div style="width:28px;height:28px;border-radius:50%;background:' + cr.color + '22;color:' + cr.color + ';display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0">' + cr.name.charAt(0) + '</div>'
           + '<div>'
             + '<div style="font-size:13px;font-weight:600;text-decoration:underline;text-underline-offset:3px;text-decoration-color:rgba(255,255,255,0.25)">' + cr.name + effBadge + '</div>'
@@ -14994,8 +15008,10 @@ document.addEventListener('input', function(e) {
       }
     });
 
-    // Update total allocated badge
-    var totalAlloc = Object.values(customAllocations).reduce(function(a,b){return a+b;},0);
+    // Update total allocated badge — use actual alloc values not just customAllocations
+    var _allocCreators = creators;
+    var _allocs = getAllocations(_allocCreators);
+    var totalAlloc = _allocs.reduce(function(a,b){return a+b;},0);
     var badge = panel ? panel.querySelector('[data-alloc-total]') : null;
     if (badge) {
       badge.textContent = totalAlloc + '% ALLOCATED';
