@@ -10936,11 +10936,11 @@ function openProfileOverlay(id) {
       <!-- LIVE CONTENT ANALYSIS -->
       <div style="padding:20px 24px;border-top:1px solid var(--border)">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-          <div style="font-family:Manrope,sans-serif;font-size:12px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:#0050FF">Live Content Analysis</div>
+          <div style="font-family:Manrope,sans-serif;font-size:12px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:#0050FF">${(c.allPlatforms||[c.platform]).includes('YouTube') ? 'Live YouTube Data' : c.platform === 'Twitch' ? 'Live Twitch Data' : c.platform === 'Instagram' ? 'Live Instagram Data' : 'Live Platform Data'}</div>
           <div id="profile-ts-${c.id}" style="font-family:Manrope,sans-serif;font-size:11px;font-weight:600;color:var(--text-muted)"></div>
         </div>
         <div id="profile-live-${c.id}" style="font-size:12px;color:var(--text-muted);font-family:Manrope,sans-serif;font-weight:500;letter-spacing:.04em">
-          ${c.platform && c.platform.toLowerCase().includes('youtube') ? 'Fetching live data...' : 'Live data available for YouTube channels only'}
+          ${(c.allPlatforms||[c.platform]).includes('YouTube') ? 'Fetching live data...' : 'Live data coming soon for ' + c.platform + ' creators.'}
         </div>
       </div>
 
@@ -12167,19 +12167,83 @@ function fmtLive(n) {
   return String(n);
 }
 
-async function fetchTwitchProfileImage(creator) {
-  // Use Twitch's undocumented but stable avatar URL pattern
-  // Falls back to initial if not found
-  try {
-    var handle = (creator.handle || '').replace('@', '').toLowerCase();
-    if (!handle) return null;
-    // Use a CORS-friendly proxy via our Supabase function if available,
-    // otherwise use the known Twitch avatar CDN pattern
-    // Twitch profile images are available via their API but require auth
-    // Best client-side approach: use unavatar.io which proxies Twitch avatars
+async function fetchCreatorAvatar(creator) {
+  // Returns the best avatar URL for any platform using unavatar.io
+  var handle = (creator.handle || '').replace('@', '').toLowerCase();
+  if (!handle) return null;
+
+  var platforms = creator.allPlatforms || [creator.platform || 'YouTube'];
+  var platRaw   = (creator.platform || '').toLowerCase();
+
+  // Try platforms in order of reliability for avatar lookup
+  // For Twitch-primary creators, try Twitch first
+  if (platRaw.includes('twitch')) {
     return 'https://unavatar.io/twitch/' + handle;
-  } catch(e) {
-    return null;
+  }
+  // For Instagram creators
+  if (platRaw.includes('instagram')) {
+    return 'https://unavatar.io/instagram/' + handle;
+  }
+  // For YouTube creators (including cross-platform)
+  if (platRaw.includes('youtube')) {
+    return 'https://unavatar.io/youtube/' + handle;
+  }
+  // Fallback — try Twitch then YouTube
+  if (platforms.includes('Twitch')) {
+    return 'https://unavatar.io/twitch/' + handle;
+  }
+  return 'https://unavatar.io/youtube/' + handle;
+}
+
+function injectAvatarImage(creator, imgUrl) {
+  // Injects avatar image into both profile overlay and creator card
+  var avatarEl = document.getElementById('profile-avatar-' + creator.id);
+  if (avatarEl) {
+    var img1 = document.createElement('img');
+    img1.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%';
+    img1.onerror = function() {
+      // Try fallback platform on error
+      var platRaw = (creator.platform || '').toLowerCase();
+      if (!this._triedFallback && platforms) {
+        this._triedFallback = true;
+        var handle = (creator.handle || '').replace('@', '').toLowerCase();
+        if (platRaw.includes('twitch') && (creator.allPlatforms||[]).includes('YouTube')) {
+          this.src = 'https://unavatar.io/youtube/' + handle;
+        } else if (platRaw.includes('youtube') && (creator.allPlatforms||[]).includes('Twitch')) {
+          this.src = 'https://unavatar.io/twitch/' + handle;
+        } else {
+          avatarEl.textContent = creator.name.charAt(0);
+        }
+      } else {
+        avatarEl.textContent = creator.name.charAt(0);
+      }
+    };
+    img1.src = imgUrl;
+    avatarEl.innerHTML = '';
+    avatarEl.appendChild(img1);
+  }
+  var cardAvatarEl = document.getElementById('card-avatar-' + creator.id);
+  if (cardAvatarEl) {
+    var img2 = document.createElement('img');
+    img2.style.cssText = 'width:100%;height:100%;object-fit:cover';
+    img2.onerror = function() {
+      var handle = (creator.handle || '').replace('@', '').toLowerCase();
+      if (!this._triedFallback) {
+        this._triedFallback = true;
+        var platRaw = (creator.platform || '').toLowerCase();
+        if (platRaw.includes('twitch')) {
+          this.src = 'https://unavatar.io/youtube/' + handle;
+        } else {
+          this.src = 'https://unavatar.io/twitch/' + handle;
+        }
+      } else {
+        cardAvatarEl.textContent = creator.name.charAt(0);
+      }
+    };
+    img2.src = imgUrl;
+    cardAvatarEl.innerHTML = '';
+    cardAvatarEl.style.padding = '0';
+    cardAvatarEl.appendChild(img2);
   }
 }
 
@@ -12187,32 +12251,17 @@ async function injectLiveDataIntoProfile(creator) {
   var liveEl = document.getElementById('profile-live-' + creator.id);
   if (!liveEl) return;
 
-  // For Twitch/Kick creators — fetch profile image via unavatar proxy
+  // Fetch avatar for ALL platforms via unavatar
+  var imgUrl = await fetchCreatorAvatar(creator);
+  if (imgUrl) injectAvatarImage(creator, imgUrl);
+
+  // For non-YouTube creators — show platform-appropriate message and return
   var platRaw = (creator.platform || '').toLowerCase();
-  if (platRaw.includes('twitch') || platRaw.includes('kick') || platRaw.includes('instagram')) {
-    var imgUrl = await fetchTwitchProfileImage(creator);
-    if (imgUrl) {
-      var avatarEl = document.getElementById('profile-avatar-' + creator.id);
-      if (avatarEl) {
-        var img1 = document.createElement('img');
-        img1.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%';
-        img1.onerror = function() { avatarEl.textContent = creator.name.charAt(0); };
-        img1.src = imgUrl;
-        avatarEl.innerHTML = '';
-        avatarEl.appendChild(img1);
-      }
-      var cardAvatarEl = document.getElementById('card-avatar-' + creator.id);
-      if (cardAvatarEl) {
-        var img2 = document.createElement('img');
-        img2.style.cssText = 'width:100%;height:100%;object-fit:cover';
-        img2.onerror = function() { cardAvatarEl.textContent = creator.name.charAt(0); };
-        img2.src = imgUrl;
-        cardAvatarEl.innerHTML = '';
-        cardAvatarEl.style.padding = '0';
-        cardAvatarEl.appendChild(img2);
-      }
-    }
-    liveEl.innerHTML = '<span style="color:var(--text-muted);font-size:11px">Live stats coming soon for this platform.</span>';
+  var allPlats = creator.allPlatforms || [];
+  var hasYouTube = platRaw.includes('youtube') || allPlats.includes('YouTube');
+  if (!hasYouTube) {
+    var platLabel = platRaw.includes('twitch') ? 'Twitch' : platRaw.includes('instagram') ? 'Instagram' : 'this platform';
+    liveEl.innerHTML = '<span style="color:var(--text-muted);font-size:11px">Live ' + platLabel + ' data coming soon.</span>';
     return;
   }
 
