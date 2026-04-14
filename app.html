@@ -3272,6 +3272,7 @@ document.addEventListener('DOMContentLoaded', function() {
           <span id="durationLabel" style="font-family:'DM Mono',monospace;font-size:11px;font-weight:700;color:#FFD400;min-width:56px">4 weeks</span>
         </div>
         <button id="reRunSimBtn" style="padding:10px 20px;background:#FF7A00;color:#fff;border:none;border-radius:var(--radius);font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;letter-spacing:.05em;font-weight:700">▶ RE-RUN</button>
+        <button id="saveToCampaignsBtn" style="padding:10px 20px;background:#00C46A;color:#fff;border:none;border-radius:var(--radius);font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;letter-spacing:.05em;font-weight:700">＋ SAVE TO CAMPAIGNS</button>
         <button id="saveCampaignBtn" style="padding:10px 20px;background:#0050FF;color:#fff;border:none;border-radius:var(--radius);font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;letter-spacing:.05em;font-weight:700">⬇ SAVE AS PDF</button>
       </div>
 
@@ -14927,6 +14928,30 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Save as PDF / campaign history
   // Save as PDF — real browser print-to-PDF, respects tier gate
+  wire('saveToCampaignsBtn', function() {
+    if (typeof simResults === 'undefined' || !simResults) {
+      alert('Run a simulation first before saving.');
+      return;
+    }
+    saveCampaignToHistory();
+    // Flash button
+    var btn = document.getElementById('saveToCampaignsBtn');
+    if (btn) {
+      btn.textContent = '✓ SAVED';
+      btn.style.background = '#00A855';
+      setTimeout(function() {
+        btn.textContent = '＋ SAVE TO CAMPAIGNS';
+        btn.style.background = '#00C46A';
+        // Navigate to campaigns tab
+        if (typeof switchTab === 'function') switchTab('campaigns');
+        else {
+          var campTab = document.querySelector('[data-tab="campaigns"], #nav-campaigns');
+          if (campTab) campTab.click();
+        }
+      }, 800);
+    }
+  });
+
   wire('saveCampaignBtn', function() {
     var btn = document.getElementById('saveCampaignBtn');
     if (btn && btn.getAttribute('data-tier-blocked')) { showUpgradePrompt('pdf_summary','Gold'); return; }
