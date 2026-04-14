@@ -13308,149 +13308,124 @@ function renderBudgetAllocation() {
   var genre  = (typeof getSelectedGenre === 'function') ? getSelectedGenre() : 'Gaming & Esports';
   var creators = [];
 
-  // Use manually selected creators if any, otherwise use sim creators
   if (typeof selectedCreators !== 'undefined' && selectedCreators.size > 0 && typeof CREATORS !== 'undefined') {
     selectedCreators.forEach(function(id) {
       var cr = CREATORS.find(function(c) { return c.id === id; });
       if (cr) creators.push(cr);
     });
   }
-
-  // Fall back to simResults creators if no manual selection
   if (creators.length === 0 && typeof simResults !== 'undefined' && simResults && simResults.crData) {
     creators = simResults.crData.map(function(d) { return d.cr; });
   }
-
   if (creators.length === 0) { panel.style.display = 'none'; return; }
   panel.style.display = 'block';
   panel.style.opacity = '';
   panel.style.pointerEvents = '';
 
-  var allocs = getAllocations(creators);
-  var fmtBudget = '$' + (budget >= 1000 ? (budget/1000).toFixed(0) + 'K' : budget);
+  // Dollar-based allocations — default proportional to CPI
+  function getDefaultDollarAllocs(creators, budget) {
+    var totalCPI = creators.reduce(function(a, cr){ return a + (cr.cpi || 50); }, 0) || 1;
+    return creators.map(function(cr) {
+      if (customAllocations[cr.id] !== undefined) return customAllocations[cr.id];
+      return Math.round((cr.cpi || 50) / totalCPI * budget / 100) * 100; // round to nearest $100
+    });
+  }
 
-  // Total allocated check
-  var totalAlloc = allocs.reduce(function(a,b){return a+b;},0);
-  // Recalculate based on actual customAllocations where set
-  var realTotal = creators.reduce(function(sum, cr, i) {
-    return sum + (customAllocations[cr.id] !== undefined ? customAllocations[cr.id] : allocs[i]);
-  }, 0);
-  totalAlloc = realTotal;
+  var dollarAllocs = getDefaultDollarAllocs(creators, budget);
+  var totalAllocated = dollarAllocs.reduce(function(a,b){return a+b;},0);
+  var remaining = budget - totalAllocated;
+  var pctAllocated = Math.round(totalAllocated / budget * 100);
 
-  var html = '<div style="margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">'
-    + '<div style="font-size:11px;color:var(--text-muted)">Adjusting each creator\'s share of the total <strong style="color:#FFD400">' + fmtBudget + '</strong> budget.</div>'
-    + '<div data-alloc-total style="font-family:Manrope,sans-serif;font-size:11px;font-weight:600;padding:3px 8px;border-radius:3px;background:' + (totalAlloc===100?'rgba(0,196,106,0.1)':'rgba(255,50,50,0.1)') + ';color:' + (totalAlloc===100?'#00C46A':'#FF3355') + ';border:1px solid ' + (totalAlloc===100?'rgba(0,196,106,0.3)':'rgba(255,50,50,0.3)') + '">' + totalAlloc + '% ALLOCATED</div>'
+  function fmtD(n) { return '$' + (n >= 1000 ? (n/1000).toFixed(n >= 10000 ? 0 : 1) + 'K' : n); }
+
+  // Header with progress bar
+  var overBudget = totalAllocated > budget;
+  var statusColor = overBudget ? '#FF3355' : remaining === 0 ? '#00C46A' : '#FFD400';
+  var html = '<div style="margin-bottom:20px">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">'
+      + '<div style="font-size:13px;color:var(--text-muted)">Total budget: <strong style="color:#FFD400">' + fmtD(budget) + '</strong></div>'
+      + '<div style="display:flex;gap:16px;align-items:center">'
+        + '<div style="text-align:right"><div style="font-size:11px;color:var(--text-muted)">ALLOCATED</div><div data-alloc-total-amt style="font-size:18px;font-weight:700;color:' + statusColor + '">' + fmtD(totalAllocated) + '</div></div>'
+        + '<div style="text-align:right"><div style="font-size:11px;color:var(--text-muted)">' + (overBudget ? 'OVER BUDGET' : 'UNALLOCATED') + '</div><div data-alloc-remaining style="font-size:18px;font-weight:700;color:' + (overBudget ? '#FF3355' : 'rgba(255,255,255,0.35)') + '">' + (overBudget ? '+' : '') + fmtD(Math.abs(remaining)) + '</div></div>'
+      + '</div>'
+    + '</div>'
+    // Progress bar
+    + '<div style="height:4px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden">'
+      + '<div data-alloc-bar style="height:100%;width:' + Math.min(100, pctAllocated) + '%;background:' + statusColor + ';border-radius:2px;transition:width .2s"></div>'
+    + '</div>'
+    + '<div data-alloc-pct style="font-size:11px;color:' + statusColor + ';margin-top:4px;font-weight:600">' + pctAllocated + '% allocated</div>'
   + '</div>';
 
+  // Creator rows
   html += creators.map(function(cr, i) {
-    var pct  = allocs[i];
-    var amt  = Math.round(budget * pct / 100);
-    var fmtAmt = '$' + (amt >= 1000 ? (amt/1000).toFixed(0) + 'K' : amt);
+    var amt = dollarAllocs[i];
+    var pct = Math.round(amt / budget * 100);
     var forecast = computeCreatorForecast(cr, amt, genre);
     var gfi = forecast.gfi;
-
-    // Efficiency flag: low GFI but high allocation = inefficient
-    var isInefficient = gfi < 55 && pct > 25;
-    var isStrong = gfi >= 80 && pct >= 15;
-
+    var isInefficient = gfi < 55 && pct > 20;
+    var isStrong = gfi >= 80 && amt > 0;
     var effBadge = isInefficient
-      ? '<span style="font-family:Manrope,sans-serif;font-weight:500;font-size:8px;padding:2px 6px;background:rgba(255,50,50,0.12);border:1px solid rgba(255,50,50,0.3);color:#FF5555;border-radius:3px;margin-left:6px">⚠ LOW GFI</span>'
+      ? '<span style="font-size:9px;padding:2px 6px;background:rgba(255,50,50,0.12);border:1px solid rgba(255,50,50,0.3);color:#FF5555;border-radius:3px;margin-left:6px">⚠ LOW GFI</span>'
       : isStrong
-        ? '<span style="font-family:Manrope,sans-serif;font-weight:500;font-size:8px;padding:2px 6px;background:rgba(0,196,106,0.12);border:1px solid rgba(0,196,106,0.3);color:#00C46A;border-radius:3px;margin-left:6px">✓ EFFICIENT</span>'
+        ? '<span style="font-size:9px;padding:2px 6px;background:rgba(0,196,106,0.12);border:1px solid rgba(0,196,106,0.3);color:#00C46A;border-radius:3px;margin-left:6px">✓ EFFICIENT</span>'
         : '';
 
     return '<div style="margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,0.05)">'
-      // Row 1: creator info + amount
-      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
         + '<div style="display:flex;align-items:center;gap:10px;cursor:pointer" data-alloc-profile="' + cr.id + '" title="View full profile">'
-          + '<div style="width:28px;height:28px;border-radius:50%;background:' + cr.color + '22;color:' + cr.color + ';display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0">' + cr.name.charAt(0) + '</div>'
+          + '<div style="width:30px;height:30px;border-radius:50%;background:' + cr.color + '22;color:' + cr.color + ';display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0">' + cr.name.charAt(0) + '</div>'
           + '<div>'
-            + '<div style="font-size:13px;font-weight:600;text-decoration:underline;text-underline-offset:3px;text-decoration-color:rgba(255,255,255,0.25)">' + cr.name + effBadge + '</div>'
-            + '<div style="font-size:11px;color:var(--text-muted)">' + cr.handle + ' · GFI <span style="color:' + (gfi>=80?'#00C46A':gfi>=60?'#FF9500':'#FF3355') + '">' + gfi + '%</span> · <span style="color:rgba(255,255,255,0.35);font-size:10px">view profile →</span></div>'
+            + '<div style="font-size:14px;font-weight:600;text-decoration:underline;text-underline-offset:3px;text-decoration-color:rgba(255,255,255,0.2)">' + cr.name + effBadge + '</div>'
+            + '<div style="font-size:11px;color:var(--text-muted);margin-top:2px">' + cr.handle + ' · GFI <span style="color:' + (gfi>=80?'#00C46A':gfi>=60?'#FF9500':'#FF3355') + '">' + gfi + '%</span> · <span style="opacity:.4">view profile →</span></div>'
           + '</div>'
         + '</div>'
         + '<div style="text-align:right">'
-          + '<div data-amt-id="' + cr.id + '" style="font-size:20px;font-weight:700;color:#FFD400">' + fmtAmt + '</div>'
-          + '<div data-pct-id="' + cr.id + '" style="font-family:Manrope,sans-serif;font-size:12px;font-weight:500;color:var(--text-muted)">' + pct + '%</div>'
+          + '<div data-amt-id="' + cr.id + '" style="font-size:22px;font-weight:700;color:#FFD400">' + fmtD(amt) + '</div>'
+          + '<div data-pct-id="' + cr.id + '" style="font-size:12px;color:var(--text-muted)">' + pct + '% of budget</div>'
         + '</div>'
       + '</div>'
-      // Row 2: slider (locked to remaining when others are at max)
-      + '<input type="range" min="0" max="100" step="1" value="' + pct + '" '
+      // Slider: 0 to total budget in $500 steps
+      + '<input type="range" min="0" max="' + budget + '" step="500" value="' + amt + '" '
         + 'data-alloc-id="' + cr.id + '" '
         + 'style="width:100%;accent-color:' + cr.color + ';cursor:pointer;margin-bottom:10px">'
-      // Row 3: per-creator forecast metrics
+      // Forecast metrics
       + '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">'
         + '<div style="background:rgba(255,255,255,0.03);border-radius:4px;padding:6px 8px;text-align:center">'
-          + '<div data-impr-id="' + cr.id + '" style="font-family:Manrope,sans-serif;font-size:13px;font-weight:500;font-weight:700;color:#0050FF">' + (forecast.impressions >= 1000000 ? (forecast.impressions/1000000).toFixed(1)+'M' : forecast.impressions >= 1000 ? Math.round(forecast.impressions/1000)+'K' : forecast.impressions) + '</div>'
+          + '<div data-impr-id="' + cr.id + '" style="font-size:13px;font-weight:700;color:#0050FF">' + (forecast.impressions>=1000000?(forecast.impressions/1000000).toFixed(1)+'M':forecast.impressions>=1000?Math.round(forecast.impressions/1000)+'K':forecast.impressions) + '</div>'
           + '<div style="font-size:9px;color:var(--text-muted);margin-top:2px">IMPRESSIONS</div>'
         + '</div>'
         + '<div style="background:rgba(255,255,255,0.03);border-radius:4px;padding:6px 8px;text-align:center">'
-          + '<div data-ctr-id="' + cr.id + '" style="font-family:Manrope,sans-serif;font-size:13px;font-weight:500;font-weight:700;color:#00C46A">' + forecast.ctr + '%</div>'
+          + '<div data-ctr-id="' + cr.id + '" style="font-size:13px;font-weight:700;color:#00C46A">' + forecast.ctr + '%</div>'
           + '<div style="font-size:9px;color:var(--text-muted);margin-top:2px">CTR</div>'
         + '</div>'
         + '<div style="background:rgba(255,255,255,0.03);border-radius:4px;padding:6px 8px;text-align:center">'
-          + '<div data-clk-id="' + cr.id + '" style="font-family:Manrope,sans-serif;font-size:13px;font-weight:500;font-weight:700;color:#FF9500">' + (forecast.clicks >= 1000 ? Math.round(forecast.clicks/1000)+'K' : forecast.clicks) + '</div>'
+          + '<div data-clk-id="' + cr.id + '" style="font-size:13px;font-weight:700;color:#FF9500">' + (forecast.clicks>=1000?Math.round(forecast.clicks/1000)+'K':forecast.clicks) + '</div>'
           + '<div style="font-size:9px;color:var(--text-muted);margin-top:2px">CLICKS</div>'
         + '</div>'
         + '<div style="background:rgba(255,255,255,0.03);border-radius:4px;padding:6px 8px;text-align:center">'
-          + '<div data-roa-id="' + cr.id + '" style="font-family:Manrope,sans-serif;font-size:13px;font-weight:500;font-weight:700;color:' + (forecast.roas >= 3 ? '#00C46A' : forecast.roas >= 1.5 ? '#FFD400' : '#FF3355') + '">' + forecast.roas + '×</div>'
+          + '<div data-roa-id="' + cr.id + '" style="font-size:13px;font-weight:700;color:' + (forecast.roas>=3?'#00C46A':forecast.roas>=1.5?'#FFD400':'#FF3355') + '">' + forecast.roas + '×</div>'
           + '<div style="font-size:9px;color:var(--text-muted);margin-top:2px">ROAS</div>'
         + '</div>'
       + '</div>'
     + '</div>';
   }).join('');
 
-  // Reset button
   html += '<div style="text-align:center;margin-top:4px">'
-    + '<button id="resetAllocBtn" style="font-family:Manrope,sans-serif;font-size:11px;font-weight:600;padding:5px 14px;background:transparent;border:1px solid rgba(255,255,255,0.1);color:var(--text-muted);border-radius:4px;cursor:pointer;letter-spacing:.06em">RESET TO OPTIMAL</button>'
+    + '<button id="resetAllocBtn" style="font-size:11px;font-weight:600;padding:6px 16px;background:transparent;border:1px solid rgba(255,255,255,0.1);color:var(--text-muted);border-radius:4px;cursor:pointer;letter-spacing:.04em">RESET TO OPTIMAL</button>'
   + '</div>';
 
   el.innerHTML = html;
 }
 
-function onAllocationChange(changedId, newPct) {
-  // 1. Set the changed creator
-  customAllocations[changedId] = newPct;
 
-  // 2. Get all selected creators
-  var creators = [];
-  if (typeof selectedCreators !== 'undefined' && selectedCreators.size > 0 && typeof CREATORS !== 'undefined') {
-    selectedCreators.forEach(function(id) {
-      var cr = CREATORS.find(function(c) { return c.id === id; });
-      if (cr) creators.push(cr);
-    });
-  }
-  if (creators.length <= 1) { renderBudgetAllocation(); return; }
-
-  // 3. Lock to 100% — redistribute remainder proportionally among others
-  var remaining = 100 - newPct;
-  var others = creators.filter(function(cr){ return cr.id !== changedId; });
-
-  // Get current values for others (use their existing alloc or CPI default)
-  var otherAllocs = others.map(function(cr){
-    return customAllocations[cr.id] !== undefined ? customAllocations[cr.id] : (cr.cpi || 50);
-  });
-  var otherSum = otherAllocs.reduce(function(a,b){return a+b;},0) || 1;
-
-  // Redistribute proportionally
-  others.forEach(function(cr, i) {
-    customAllocations[cr.id] = Math.max(0, Math.round(remaining * otherAllocs[i] / otherSum));
-  });
-
-  // Fix rounding so total is exactly 100
-  var total = newPct + others.reduce(function(a, cr){ return a + customAllocations[cr.id]; }, 0);
-  var roundDiff = 100 - total;
-  if (roundDiff !== 0 && others.length > 0) {
-    // Add rounding remainder to the other creator with highest allocation
-    var maxOther = others.reduce(function(a, b){ return customAllocations[a.id] >= customAllocations[b.id] ? a : b; });
-    customAllocations[maxOther.id] = Math.max(0, customAllocations[maxOther.id] + roundDiff);
-  }
-
-  // 4. Re-render and rerun sim
+function onAllocationChange(changedId, newAmt) {
+  // Store dollar amount directly — no percentage forcing
+  customAllocations[changedId] = newAmt;
   renderBudgetAllocation();
   simResults = null;
   if (typeof updateSimDisplay === 'function') updateSimDisplay();
 }
+
 
 // Hook into updateSimDisplay to also render allocation
 var _origUpdateSimDisplay = typeof updateSimDisplay !== 'undefined' ? updateSimDisplay : null;
@@ -14929,16 +14904,13 @@ document.addEventListener('click', function(e) {
   }
 }, true);
 
-// Budget allocation sliders — update in-place to avoid destroying active slider
+// Budget allocation sliders — dollar-based, update in-place
 document.addEventListener('input', function(e) {
   if (e.target && e.target.type === 'range' && e.target.getAttribute('data-alloc-id')) {
     var changedId = parseInt(e.target.getAttribute('data-alloc-id'));
-    var newPct    = parseInt(e.target.value);
+    var newAmt    = parseInt(e.target.value);
+    customAllocations[changedId] = newAmt;
 
-    // 1. Store the changed value
-    customAllocations[changedId] = newPct;
-
-    // 2. Redistribute remainder proportionally among other creators
     var creators = [];
     if (typeof selectedCreators !== 'undefined' && selectedCreators.size > 0 && typeof CREATORS !== 'undefined') {
       selectedCreators.forEach(function(id) {
@@ -14950,77 +14922,54 @@ document.addEventListener('input', function(e) {
       creators = simResults.crData.map(function(d){ return d.cr; });
     }
 
-    var others = creators.filter(function(cr){ return cr.id !== changedId; });
-    if (others.length > 0) {
-      var remaining = Math.max(0, 100 - newPct);
-      var otherAllocs = others.map(function(cr){
-        return customAllocations[cr.id] !== undefined ? customAllocations[cr.id] : (cr.cpi || 50);
-      });
-      var otherSum = otherAllocs.reduce(function(a,b){return a+b;},0) || 1;
-      others.forEach(function(cr, i){
-        customAllocations[cr.id] = Math.max(0, Math.round(remaining * otherAllocs[i] / otherSum));
-      });
-      // Fix rounding
-      var total = newPct + others.reduce(function(a,cr){ return a + customAllocations[cr.id]; },0);
-      var diff  = 100 - total;
-      if (diff !== 0) {
-        var maxOther = others.reduce(function(a,b){ return customAllocations[a.id]>=customAllocations[b.id]?a:b; });
-        customAllocations[maxOther.id] = Math.max(0, customAllocations[maxOther.id] + diff);
-      }
-    }
-
-    // 3. Update other sliders and labels IN-PLACE (don't rebuild DOM)
     var budget = parseInt((document.getElementById('budget')||{value:'85000'}).value)||85000;
     var genre  = (typeof getSelectedGenre==='function') ? getSelectedGenre() : 'Gaming & Esports';
     var panel  = document.getElementById('budgetAllocationContent');
 
-    creators.forEach(function(cr) {
-      var pct = customAllocations[cr.id] !== undefined ? customAllocations[cr.id] : (cr.cpi||50);
-      var amt = Math.round(budget * pct / 100);
-      var fmtAmt = '$' + (amt >= 1000 ? (amt/1000).toFixed(0)+'K' : amt);
+    function fmtD(n){ return '$'+(n>=1000?(n/1000).toFixed(n>=10000?0:1)+'K':n); }
+    function fmtN(n){ return n>=1000000?(n/1000000).toFixed(1)+'M':n>=1000?Math.round(n/1000)+'K':String(n); }
 
-      // Update slider value (skip the one being dragged)
-      if (cr.id !== changedId) {
-        var sl = panel ? panel.querySelector('input[data-alloc-id="'+cr.id+'"]') : null;
-        if (sl) sl.value = pct;
-      }
+    var totalCPI = creators.reduce(function(a,c){return a+(c.cpi||50);},0)||1;
+    var totalAllocated = creators.reduce(function(sum,cr){
+      return sum + (customAllocations[cr.id]!==undefined ? customAllocations[cr.id]
+        : Math.round((cr.cpi||50)/totalCPI*budget/100)*100);
+    },0);
+    var remaining = budget - totalAllocated;
+    var pctAllocated = Math.round(totalAllocated/budget*100);
+    var overBudget = totalAllocated > budget;
+    var statusColor = overBudget?'#FF3355':remaining===0?'#00C46A':'#FFD400';
 
-      // Update amount label
-      if (panel) {
-        var amtEls = panel.querySelectorAll('[data-amt-id="'+cr.id+'"]');
-        amtEls.forEach(function(el){ el.textContent = fmtAmt; });
-        var pctEls = panel.querySelectorAll('[data-pct-id="'+cr.id+'"]');
-        pctEls.forEach(function(el){ el.textContent = pct+'%'; });
+    var amtEl = panel?panel.querySelector('[data-alloc-total-amt]'):null;
+    var remEl = panel?panel.querySelector('[data-alloc-remaining]'):null;
+    var barEl = panel?panel.querySelector('[data-alloc-bar]'):null;
+    var pctEl = panel?panel.querySelector('[data-alloc-pct]'):null;
+    if (amtEl){amtEl.textContent=fmtD(totalAllocated);amtEl.style.color=statusColor;}
+    if (remEl){remEl.textContent=(overBudget?'+':'')+fmtD(Math.abs(remaining));remEl.style.color=overBudget?'#FF3355':'rgba(255,255,255,0.35)';}
+    if (barEl){barEl.style.width=Math.min(100,pctAllocated)+'%';barEl.style.background=statusColor;}
+    if (pctEl){pctEl.textContent=pctAllocated+'% allocated';pctEl.style.color=statusColor;}
 
-        // Update forecast metrics
-        if (typeof computeCreatorForecast === 'function') {
-          var fc = computeCreatorForecast(cr, amt, genre);
-          var fmtN = function(n){ return n>=1000000?(n/1000000).toFixed(1)+'M':n>=1000?Math.round(n/1000)+'K':String(n); };
-          var impEl = panel.querySelector('[data-impr-id="'+cr.id+'"]');
-          var ctrEl = panel.querySelector('[data-ctr-id="'+cr.id+'"]');
-          var clkEl = panel.querySelector('[data-clk-id="'+cr.id+'"]');
-          var roaEl = panel.querySelector('[data-roa-id="'+cr.id+'"]');
-          if (impEl) impEl.textContent = fmtN(fc.impressions);
-          if (ctrEl) ctrEl.textContent = fc.ctr+'%';
-          if (clkEl) clkEl.textContent = fmtN(fc.clicks);
-          if (roaEl) { roaEl.textContent = fc.roas+'×'; roaEl.style.color = fc.roas>=3?'#00C46A':fc.roas>=1.5?'#FFD400':'#FF3355'; }
+    creators.forEach(function(cr){
+      var amt=customAllocations[cr.id]!==undefined?customAllocations[cr.id]:Math.round((cr.cpi||50)/totalCPI*budget/100)*100;
+      var pct=Math.round(amt/budget*100);
+      if(panel){
+        var a2=panel.querySelector('[data-amt-id="'+cr.id+'"]');
+        var p2=panel.querySelector('[data-pct-id="'+cr.id+'"]');
+        if(a2)a2.textContent=fmtD(amt);
+        if(p2)p2.textContent=pct+'% of budget';
+        if(typeof computeCreatorForecast==='function'){
+          var fc=computeCreatorForecast(cr,amt,genre);
+          var ie=panel.querySelector('[data-impr-id="'+cr.id+'"]');
+          var ce=panel.querySelector('[data-ctr-id="'+cr.id+'"]');
+          var ke=panel.querySelector('[data-clk-id="'+cr.id+'"]');
+          var re=panel.querySelector('[data-roa-id="'+cr.id+'"]');
+          if(ie)ie.textContent=fmtN(fc.impressions);
+          if(ce)ce.textContent=fc.ctr+'%';
+          if(ke)ke.textContent=fmtN(fc.clicks);
+          if(re){re.textContent=fc.roas+'×';re.style.color=fc.roas>=3?'#00C46A':fc.roas>=1.5?'#FFD400':'#FF3355';}
         }
       }
     });
-
-    // Update total allocated badge — use actual alloc values not just customAllocations
-    var _allocCreators = creators;
-    var _allocs = getAllocations(_allocCreators);
-    var totalAlloc = _allocs.reduce(function(a,b){return a+b;},0);
-    var badge = panel ? panel.querySelector('[data-alloc-total]') : null;
-    if (badge) {
-      badge.textContent = totalAlloc + '% ALLOCATED';
-      badge.style.background = totalAlloc===100?'rgba(0,196,106,0.1)':'rgba(255,50,50,0.1)';
-      badge.style.color = totalAlloc===100?'#00C46A':'#FF3355';
-      badge.style.borderColor = totalAlloc===100?'rgba(0,196,106,0.3)':'rgba(255,50,50,0.3)';
-    }
-    // Update budget warning
-    if (typeof renderBudgetWarning === 'function') renderBudgetWarning();
+    if(typeof renderBudgetWarning==='function')renderBudgetWarning();
   }
 });
 
