@@ -12167,9 +12167,54 @@ function fmtLive(n) {
   return String(n);
 }
 
+async function fetchTwitchProfileImage(creator) {
+  // Use Twitch's undocumented but stable avatar URL pattern
+  // Falls back to initial if not found
+  try {
+    var handle = (creator.handle || '').replace('@', '').toLowerCase();
+    if (!handle) return null;
+    // Use a CORS-friendly proxy via our Supabase function if available,
+    // otherwise use the known Twitch avatar CDN pattern
+    // Twitch profile images are available via their API but require auth
+    // Best client-side approach: use unavatar.io which proxies Twitch avatars
+    return 'https://unavatar.io/twitch/' + handle;
+  } catch(e) {
+    return null;
+  }
+}
+
 async function injectLiveDataIntoProfile(creator) {
   var liveEl = document.getElementById('profile-live-' + creator.id);
   if (!liveEl) return;
+
+  // For Twitch/Kick creators — fetch profile image via unavatar proxy
+  var platRaw = (creator.platform || '').toLowerCase();
+  if (platRaw.includes('twitch') || platRaw.includes('kick') || platRaw.includes('instagram')) {
+    var imgUrl = await fetchTwitchProfileImage(creator);
+    if (imgUrl) {
+      var avatarEl = document.getElementById('profile-avatar-' + creator.id);
+      if (avatarEl) {
+        var img1 = document.createElement('img');
+        img1.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%';
+        img1.onerror = function() { avatarEl.textContent = creator.name.charAt(0); };
+        img1.src = imgUrl;
+        avatarEl.innerHTML = '';
+        avatarEl.appendChild(img1);
+      }
+      var cardAvatarEl = document.getElementById('card-avatar-' + creator.id);
+      if (cardAvatarEl) {
+        var img2 = document.createElement('img');
+        img2.style.cssText = 'width:100%;height:100%;object-fit:cover';
+        img2.onerror = function() { cardAvatarEl.textContent = creator.name.charAt(0); };
+        img2.src = imgUrl;
+        cardAvatarEl.innerHTML = '';
+        cardAvatarEl.style.padding = '0';
+        cardAvatarEl.appendChild(img2);
+      }
+    }
+    liveEl.innerHTML = '<span style="color:var(--text-muted);font-size:11px">Live stats coming soon for this platform.</span>';
+    return;
+  }
 
   var data = await fetchCreatorYouTubeData(creator);
 
