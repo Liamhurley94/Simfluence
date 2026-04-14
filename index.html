@@ -263,10 +263,10 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
     <li><a href="#how">How it works</a></li>
     <li><a href="#features">Features</a></li>
     <li><a href="#pricing">Pricing</a></li>
-    <li><a href="#" id="navSeePlatformLink">See the platform</a></li>
+    <li><a href="#" onclick="openFreeSignup();return false;">See the platform</a></li>
   </ul>
   <div class="nav-right">
-    <button class="theme-toggle" id="themeBtn" title="Toggle mode">🌙</button>
+    <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn" title="Toggle mode">🌙</button>
     <button id="navSignInBtn" class="nav-login" style="background:none;border:none;cursor:pointer;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.06em;color:var(--muted)">Sign in</button>
     <button id="navTryFreeBtn" class="nav-cta" style="border:none;cursor:pointer">Try Free</button>
   </div>
@@ -279,7 +279,7 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
     <h1 class="hero-h1">Know<br>before you<br><span class="gold">spend.</span></h1>
     <p class="hero-sub">Predict your CTR, CPM, CVR and ROAS before a single penny is committed. Model your campaign. Know your outcome. Launch with certainty.</p>
     <div class="hero-actions">
-      <a href="mailto:Liam@Simfluence.AI?subject=Book%20a%20Live%20Demo" class="btn-xl">Book a live demo</a>
+      <a href="/cdn-cgi/l/email-protection#d894b1b9b5988bb1b5beb4adbdb6bbbdf69991e7abadbab2bdbbace594b1aebdfdeae89cbdb5b7fdeae88abda9adbdabac" class="btn-xl">Book a live demo</a>
     </div>
   </div></div>
 </section>
@@ -1035,7 +1035,7 @@ function simShow(){
     </div>
 
     <!-- Monthly / Annual toggle -->
-    <button class="billing-toggle" id="billingToggleBtn" style="cursor:pointer;background:none;border:none;padding:0;">
+    <button class="billing-toggle" onclick="toggleBilling()" style="cursor:pointer;background:none;border:none;padding:0;">
       <span class="toggle-label active" id="labelMonthly">Monthly</span>
       <div class="toggle-track" id="billingToggle">
         <div class="toggle-thumb"></div>
@@ -1060,8 +1060,8 @@ function simShow(){
         <div class="p-divider"></div>
         <div class="p-features">
           <div class="p-feat"><span class="p-feat-dash">—</span>25 creator results per search · genre, platform &amp; tier filters</div>
-          <div class="p-feat"><span class="p-feat-dash">—</span>CPI &amp; GFI scores on every creator card</div>
-          <div class="p-feat"><span class="p-feat-dash">—</span>3 campaign simulations per month · confidence bands available at Silver</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>CPI &amp; GFI scores on every creator card · basic creator profiles</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>3 campaign simulations per month · P50 base case forecast</div>
           <div class="p-feat"><span class="p-feat-dash">—</span>Live Twitch panel — see who is streaming right now (10 channels)</div>
           <div class="p-feat"><span class="p-feat-dash">—</span>Creator outreach tracker — log up to 3 creators with status &amp; notes</div>
           <div class="p-feat"><span class="p-feat-dash">—</span>Email support</div>
@@ -1082,9 +1082,9 @@ function simShow(){
         <div class="p-divider"></div>
         <div class="p-features">
           <div class="p-feat"><span class="p-feat-dash">—</span>100 creator results · language &amp; sub-genre filters · live Twitch CPI scoring</div>
-          <div class="p-feat"><span class="p-feat-dash">—</span>Full CPI &amp; GFI scores · 1 AI audience persona per campaign</div>
-          <div class="p-feat"><span class="p-feat-dash">—</span>10 simulations per month · base case forecast · P10/P90 range at Gold</div>
-          <div class="p-feat"><span class="p-feat-dash">—</span>Live Twitch panel — 20 channels · real-time viewer data &amp; genre fit</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Full CPI &amp; GFI scores · full creator profiles · 1 AI audience persona</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>10 simulations per month · P50 forecast · budget allocation view</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Export up to 5 creators as CSV · 1 PDF campaign summary per month</div>
           <div class="p-feat"><span class="p-feat-dash">—</span>Outreach tracker — 5 creators · subscriber count &amp; contact email included</div>
           <div class="p-feat"><span class="p-feat-dash">—</span>3 saved campaign briefs · priority support</div>
         </div>
@@ -1103,12 +1103,12 @@ function simShow(){
         <div class="p-saving-line" id="goldSaving" style="color:#00C46A">&nbsp;</div>
         <div class="p-divider"></div>
         <div class="p-features">
-          <div class="p-feat"><span class="p-feat-dash">—</span>Unlimited creator database · full profiles · CPI breakdown · audience intelligence</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Unlimited creator database (5,600+) · full profiles · CPI breakdown · audience intelligence</div>
           <div class="p-feat"><span class="p-feat-dash">—</span>GFI methodology · all region &amp; sub-genre targeting · unlimited simulations · P10/P50/P90</div>
           <div class="p-feat"><span class="p-feat-dash">—</span>3 AI audience personas · top creator match per persona · 1–12 week campaign duration</div>
-          <div class="p-feat"><span class="p-feat-dash">—</span>Campaigns workspace — manage 1 active brief · live Twitch panel (50 channels)</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Full budget split editor — drag to adjust per-creator allocation in real time</div>
           <div class="p-feat"><span class="p-feat-dash">—</span>Outreach tracker — 15 creators · CPI score included · estimated rates at Platinum</div>
-          <div class="p-feat"><span class="p-feat-dash">—</span>Budget split view · PDF summary · 10 saved briefs · CSV shortlist · compare 2 creators</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Unlimited PDF summaries · 10 saved briefs · CSV shortlist (10 creators) · compare creators</div>
           <div class="p-feat"><span class="p-feat-dash">—</span>Direct line to Simfluence founder</div>
         </div>
         <a href="preview.html?plan=gold#request-access" class="p-btn p-btn-gold">Get started</a>
@@ -1126,12 +1126,12 @@ function simShow(){
         <div class="p-saving-line" id="platinumSaving" style="color:#00C46A">&nbsp;</div>
         <div class="p-divider"></div>
         <div class="p-features">
-          <div class="p-feat"><span class="p-feat-dash">—</span>Unlimited creator database · full profiles · CPI &amp; GFI breakdown · audience intelligence</div>
-          <div class="p-feat"><span class="p-feat-dash">—</span>All AI persona archetypes · top 3 creator matches · sub-genre targeting</div>
-          <div class="p-feat"><span class="p-feat-dash">—</span>Unlimited campaign briefs · outreach CRM for your full roster · estimated rates included</div>
-          <div class="p-feat"><span class="p-feat-dash">—</span>Audience overlap engine — know exactly how much of your budget reaches new eyes</div>
-          <div class="p-feat"><span class="p-feat-dash">—</span>Live Twitch panel — unlimited channels · editable budget split · compare creators</div>
-          <div class="p-feat"><span class="p-feat-dash">—</span>Full P10/P50/P90 PDF report · unlimited CSV export · unlimited saved briefs · API access</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Everything in Gold · all AI persona archetypes · top 3 creator matches per persona</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Unlimited campaigns · full outreach CRM · estimated rates · audience overlap engine</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Full P10/P50/P90 PDF report · unlimited CSV export · unlimited saved briefs</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>3 team seats — collaborate with your team on campaigns and shortlists</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>White-label PDF exports — your agency branding on every report</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Campaign sharing — send live briefs directly to clients or colleagues</div>
           <div class="p-feat"><span class="p-feat-dash">—</span>Direct line to Simfluence founder</div>
         </div>
         <a href="preview.html?plan=platinum#request-access" class="p-btn p-btn-platinum">Get started</a>
@@ -1149,15 +1149,15 @@ function simShow(){
         <div class="p-saving-line">&nbsp;</div>
         <div class="p-divider"></div>
         <div class="p-features">
-          <div class="p-feat"><span class="p-feat-dash">—</span>Weekly 1-to-1 &amp; daily WhatsApp with Simfluence founder — your campaign, your call</div>
-          <div class="p-feat"><span class="p-feat-dash">—</span>Custom audience personas built around your specific brand, category &amp; objectives</div>
-          <div class="p-feat"><span class="p-feat-dash">—</span>White-label PDF reports — your branding, ready to send straight to clients</div>
-          <div class="p-feat"><span class="p-feat-dash">—</span>Top 3 creator picks per persona, packaged as a ready-to-brief shortlist</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Everything in Platinum · unlimited team seats for your entire organisation</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Full API access — integrate Simfluence creator data into your own tools</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Dedicated account manager · priority support SLA · weekly strategy calls</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Custom benchmarking reports — tailored to your industry and competitors</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Full white-label platform — your brand, your domain, powered by Simfluence</div>
           <div class="p-feat"><span class="p-feat-dash">—</span>SSO, role-based access &amp; enterprise-grade security</div>
-          <div class="p-feat"><span class="p-feat-dash">—</span>Input on the product roadmap — help shape what gets built next</div>
-          <div class="p-feat"><span class="p-feat-dash">—</span>Bespoke contract, dedicated onboarding &amp; a named SLA</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Bespoke contract, dedicated onboarding &amp; input on product roadmap</div>
         </div>
-        <a href="mailto:Liam@Simfluence.AI" class="p-btn p-btn-diamond">Contact us</a>
+        <a href="/cdn-cgi/l/email-protection#89c5e0e8e4c9dae0e4efe5fcece7eaeca7c8c0b6fafcebe3eceafdb4cde0e8e4e6e7edacbbb9d9e5e8e7acbbb9cce7f8fce0fbf0" class="p-btn p-btn-diamond">Contact us</a>
       </div>
 
     </div><!-- /pricing-cards -->
@@ -1170,7 +1170,7 @@ function simShow(){
   <h2 class="cta-h2">Your next campaign<br>already has<br>a <em>forecast.</em></h2>
   <p class="cta-sub">Run your brief. See your numbers. Launch knowing what to expect.</p>
   <div class="cta-btns">
-    <a href="mailto:Liam@Simfluence.AI?subject=Book%20a%20Live%20Demo" class="btn-xl">Book a live demo</a>
+    <a href="/cdn-cgi/l/email-protection#430f2a222e03102a2e252f36262d20266d020a7c303621292620377e0f2a352666717307262e2c66717311263236263037" class="btn-xl">Book a live demo</a>
   </div>
 </section>
 
@@ -1178,7 +1178,7 @@ function simShow(){
   <div>
     <a href="index.html" class="f-logo">Sim<em>fluence</em></a>
     <p class="f-tag">AI-powered campaign intelligence. Know your CTR, CPM, CVR and ROAS before a single dollar is spent.</p>
-    <p class="f-email">Contact: <a href="mailto:Liam@Simfluence.AI">Liam@Simfluence.AI</a></p>
+    <p class="f-email">Contact: <a href="/cdn-cgi/l/email-protection#93dffaf2fed3c0fafef5ffe6f6fdf0f6bdd2da"><span class="__cf_email__" data-cfemail="317d58505c7162585c575d44545f52541f7078">[email&#160;protected]</span></a></p>
   </div>
   <div>
     <div class="f-col-title">Platform</div>
@@ -1193,7 +1193,7 @@ function simShow(){
     <div class="f-col-title">Company</div>
     <div class="f-links">
       <a href="preview.html" class="f-link">About Simfluence</a>
-      <a href="mailto:Liam@Simfluence.AI" class="f-link">Contact Us</a>
+      <a href="/cdn-cgi/l/email-protection#1a56737b775a4973777c766f7f74797f345b53" class="f-link">Contact Us</a>
       <a href="#" class="f-link" data-modal="terms">Terms of Use</a>
       <a href="#" class="f-link" data-modal="legal">Legal Notice</a>
     </div>
@@ -1205,15 +1205,15 @@ function simShow(){
       <a href="#pricing" class="f-link" style="color:#C0C0C0" data-scrollplan="silver">Silver — $3,500/mo</a>
       <a href="#pricing" class="f-link" style="color:#FFD400" data-scrollplan="gold">Gold — $7,500/mo</a>
       <a href="#pricing" class="f-link" style="color:#E5E4E2" data-scrollplan="platinum">Platinum — $15,000/mo</a>
-      <a href="mailto:Liam@Simfluence.AI" class="f-link" style="color:#B9F2FF">Diamond — Talk to us</a>
+      <a href="/cdn-cgi/l/email-protection#4905202824091a20242f253c2c272a2c670800763a3c2b232c2a3d740d20282426272d6c7b79192528276c7b790c27383c203b30" class="f-link" style="color:#B9F2FF">Diamond — Talk to us</a>
     </div>
   </div>
   <div class="f-bottom">
-    <span class="f-copy">© 2026 Simfluence Ltd · Dubai, UAE · All rights reserved</span>
+    <span class="f-copy">© 2025 Simfluence Ltd · Dubai, UAE · All rights reserved</span>
     <div class="f-legal">
       <a href="#" data-modal="terms">Terms</a>
       <a href="#" data-modal="legal">Legal</a>
-      <a href="mailto:Liam@Simfluence.AI">Contact</a>
+      <a href="/cdn-cgi/l/email-protection#b6fadfd7dbf6e5dfdbd0dac3d3d8d5d398f7ff">Contact</a>
     </div>
   </div>
 </footer>
@@ -1221,7 +1221,7 @@ function simShow(){
 <!-- ══ SIGNUP MODAL ══════════════════════════════════════════════════ -->
 <div id="sfModal">
   <div class="sf-box">
-    <button id="sfCloseBtn" style="position:absolute;top:14px;right:14px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:rgba(255,255,255,0.5);cursor:pointer;padding:5px 10px;font-size:13px;font-family:'DM Mono',monospace">✕</button>
+    <button onclick="sfClose()" style="position:absolute;top:14px;right:14px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:rgba(255,255,255,0.5);cursor:pointer;padding:5px 10px;font-size:13px;font-family:'DM Mono',monospace">✕</button>
     <div class="sf-logo">Sim<em>fluence</em></div>
     <div class="sf-sub-label">Campaign Intelligence Platform</div>
     <div class="sf-progress">
@@ -1240,44 +1240,44 @@ function simShow(){
       <label class="sf-label">Work email</label>
       <input id="sfEmail" type="email" class="sf-input" placeholder="you@company.com" autocomplete="email">
       <div id="sfE1" class="sf-err">Please fill in all fields with a valid email.</div>
-      <button id="sfStep1Btn" class="sf-btn">Continue →</button>
-      <div class="sf-note">Already using Simfluence? <a href="#" id="sfModalSignInLink">Sign in</a></div>
+      <button onclick="sfStep1()" class="sf-btn">Continue →</button>
+      <div class="sf-note">Already using Simfluence? <a href="#" onclick="openSignIn();return false;">Sign in</a></div>
     </div>
     <!-- Step 2 — Plan select -->
     <div id="sfS2" style="display:none">
       <div class="sf-title">Choose your plan</div>
       <div class="sf-desc">All plans billed in USD. Annual billing saves up to 35%.</div>
       <div id="sfPlans">
-        <div class="plan-opt" data-plan="bronze" style="border-color:rgba(205,127,50,0.2)">
+        <div onclick="sfPick(this,'bronze')" class="plan-opt" style="border-color:rgba(205,127,50,0.2)">
           <div><div class="plan-name" style="color:#CD7F32">🥉 Bronze</div><div class="plan-desc">Creator discovery · CPI &amp; GFI scores</div></div>
           <div class="plan-price" style="color:#CD7F32">$1,500<span style="font-size:11px;font-weight:300">/mo</span></div>
         </div>
-        <div class="plan-opt" data-plan="silver" style="border-color:rgba(192,192,192,0.2)">
+        <div onclick="sfPick(this,'silver')" class="plan-opt" style="border-color:rgba(192,192,192,0.2)">
           <div><div class="plan-name" style="color:#C0C0C0">🥈 Silver</div><div class="plan-desc">Simulator · AI personas · Confidence bands</div></div>
           <div class="plan-price" style="color:#C0C0C0">$3,500<span style="font-size:11px;font-weight:300">/mo</span></div>
         </div>
-        <div class="plan-opt" data-plan="gold" style="border-color:rgba(255,212,0,0.3);background:rgba(255,212,0,0.03)">
+        <div onclick="sfPick(this,'gold')" class="plan-opt" style="border-color:rgba(255,212,0,0.3);background:rgba(255,212,0,0.03)">
           <div><div class="plan-name" style="color:#FFD400">🥇 Gold <span style="font-size:8px;background:rgba(255,212,0,0.15);padding:2px 6px;border-radius:3px;letter-spacing:0.05em">POPULAR</span></div><div class="plan-desc">Feedback loop · White-label reports</div></div>
           <div class="plan-price" style="color:#FFD400">$7,500<span style="font-size:11px;font-weight:300">/mo</span></div>
         </div>
-        <div class="plan-opt" data-plan="platinum" style="border-color:rgba(229,228,226,0.2)">
+        <div onclick="sfPick(this,'platinum')" class="plan-opt" style="border-color:rgba(229,228,226,0.2)">
           <div><div class="plan-name" style="color:#E5E4E2">💎 Platinum</div><div class="plan-desc">Unlimited campaigns · API · Multi-brand</div></div>
           <div class="plan-price" style="color:#E5E4E2">$15,000<span style="font-size:11px;font-weight:300">/mo</span></div>
         </div>
-        <div class="plan-opt" data-plan="diamond" style="border-color:rgba(185,242,255,0.18)">
+        <div onclick="sfPick(this,'diamond')" class="plan-opt" style="border-color:rgba(185,242,255,0.18)">
           <div><div class="plan-name" style="color:#B9F2FF">✨ Diamond</div><div class="plan-desc">Enterprise · Bespoke pricing &amp; terms</div></div>
           <div class="plan-price" style="color:#B9F2FF;font-size:13px;font-weight:400;margin-top:4px">Talk to us</div>
         </div>
       </div>
       <div id="sfE2" class="sf-err" style="margin-top:8px">Please select a plan.</div>
-      <button id="sfStep2Btn" class="sf-btn" style="margin-top:12px">Submit →</button>
+      <button onclick="sfStep2()" class="sf-btn" style="margin-top:12px">Submit →</button>
     </div>
     <!-- Step 3 — Success -->
     <div id="sfS3" style="display:none;text-align:center">
       <div class="success-icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M6 14L11.5 19.5L22 9" stroke="#00C46A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
       <div class="sf-title" style="margin-bottom:8px">You're in.</div>
       <div id="sfSuccessMsg" class="sf-desc"></div>
-      <button id="sfLaunchBtn" class="sf-btn" style="background:#00C46A">Launch Simfluence →</button>
+      <button onclick="sfLaunch()" class="sf-btn" style="background:#00C46A">Launch Simfluence →</button>
       <div class="sf-note" style="margin-top:12px">We'll be in touch at <span id="sfConfirmEmail" style="color:rgba(255,255,255,0.4)"></span></div>
     </div>
   </div>
@@ -1514,7 +1514,7 @@ document.addEventListener('click', function(e) {
 
 /* ── Supabase Auth ───────────────────────────────────────── */
 var IDX_URL = 'https://iysjxslzlbojoivxjrce.supabase.co';
-var IDX_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5c2p4c2x6bGJvam9pdnhqcmNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0OTkyNjksImV4cCI6MjA5MTA3NTI2OX0.gGW_qclPJZT4x3eevXg6PFllq5CQWVifJUEaI3rqKnw';
+var IDX_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5c2p4c2x6bGJvam9pdnhqcmNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM0MzA2MDIsImV4cCI6MjA1OTAwNjYwMn0.AqbQqRs3AiGYhRGZw1SG2TNqlQQ1rPbICbzNBE3Uvj4';
 
 function openSignIn() {
   var m = document.getElementById('sfSignInModal');
@@ -1545,7 +1545,7 @@ function sfSignIn() {
   var email = document.getElementById('siEmail').value.trim();
   var pass  = document.getElementById('siPass').value;
   var errEl = document.getElementById('siErr');
-  var btn   = document.getElementById('siSubmitBtn');
+  var btn   = document.querySelector('#sfSignInModal button[onclick="sfSignIn()"]');
   if (!email || !pass) { errEl.style.display='block'; setTimeout(function(){errEl.style.display='none';},3000); return; }
   if (btn) { btn.textContent='SIGNING IN...'; btn.disabled=true; }
   fetch(IDX_URL + '/auth/v1/token?grant_type=password', {
@@ -1648,52 +1648,18 @@ document.addEventListener('click', function(e) {
 });
 
 
-// Wire ALL interactive elements via addEventListener (Cloudflare strips onclick=)
-function sfWireAll() {
-  function on(id, fn) {
-    var el = document.getElementById(id);
-    if (el) el.addEventListener('click', function(e) { e.preventDefault(); fn(); });
-  }
-  // Nav
-  on('navSignInBtn',       openSignIn);
-  on('navTryFreeBtn',      openFreeSignup);
-  on('navSeePlatformLink', openFreeSignup);
-  on('sfModalSignInLink',  openSignIn);
-  // Sign in modal
-  on('siSubmitBtn',    sfSignIn);
-  on('siForgotBtn',    sfForgotPassword);
-  on('siToFreeBtn',    function(){ sfSignInClose(); openFreeSignup(); });
-  on('siCloseBtn',     sfSignInClose);
-  // Free modal
-  on('freeBtn',        sfFreeSignup);
-  on('freeToSignInBtn',function(){ sfFreeClose(); openSignIn(); });
-  on('freeCloseBtn',   sfFreeClose);
-  // Paid signup modal (sfModal)
-  on('sfCloseBtn',  sfClose);
-  on('sfStep1Btn',  sfStep1);
-  on('sfStep2Btn',  sfStep2);
-  on('sfLaunchBtn', sfLaunch);
-  // Billing toggle
-  on('billingToggleBtn', toggleBilling);
-  // Theme toggle
-  on('themeBtn', toggleTheme);
-  // Plan options (data-plan attribute)
-  document.querySelectorAll('.plan-opt[data-plan]').forEach(function(el) {
-    el.addEventListener('click', function() { sfPick(el, el.getAttribute('data-plan')); });
-  });
-  // Enter keys
-  function ek(id, fn) {
-    var el = document.getElementById(id);
-    if (el) el.addEventListener('keydown', function(e){ if(e.key==='Enter') fn(); });
-  }
-  ek('siEmail',  function(){ var p=document.getElementById('siPass'); if(p) p.focus(); });
-  ek('siPass',   sfSignIn);
-  ek('freeEmail',function(){ var p=document.getElementById('freePass'); if(p) p.focus(); });
-  ek('freePass', sfFreeSignup);
+// Wire nav buttons — handles both before and after DOMContentLoaded
+function wireNavButtons() {
+  var signinBtn = document.getElementById('navSignInBtn');
+  if (signinBtn) signinBtn.addEventListener('click', function(e) { e.preventDefault(); openSignIn(); });
+  var freeBtn = document.getElementById('navTryFreeBtn');
+  if (freeBtn) freeBtn.addEventListener('click', function(e) { e.preventDefault(); openFreeSignup(); });
 }
-// Fire after full page load so modal HTML at bottom of file is parsed
-window.addEventListener('load', sfWireAll);
-if (document.readyState === 'complete') sfWireAll();
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', wireNavButtons);
+} else {
+  wireNavButtons();
+}
 
 </script>
 
@@ -1734,14 +1700,9 @@ if (document.readyState === 'complete') sfWireAll();
 </div>
 
 <script>
-var MODALS = {};
-function openFeatureModal(key) {}
-function closeFeatureModal() {
-  var m = document.getElementById('featureModal');
-  if (m) m.style.display = 'none';
-  document.body.style.overflow = '';
-}
-</script>
+var MODALS = {
+  terms:{c:'#6B9FFF',e:'Legal · Terms of Use',t:'Terms of Use',d:'By accessing or using the Simfluence platform, you agree to be bound by these Terms of Use. Simfluence is a subscription-based creator intelligence platform providing forecasting, scoring and campaign simulation tools to brands and marketing professionals.',s:[{n:'2025',l:'Effective date'},{n:'Dubai',l:'Jurisdiction'},{n:'30 days',l:'Notice period'},{n:'UAE',l:'Entity'}],p:['Access and Subscription: Access to Simfluence is granted on a subscription basis. Your subscription is personal to your organisation and may not be shared, resold or transferred to any third party.','Billing and Cancellation: Subscriptions are billed monthly or annually as agreed. All fees are non-refundable except where required by applicable law. Pricing may be updated with 30 days written notice.','Platform Data: All creator data, scoring methodologies, forecasting models and platform outputs are proprietary to Simfluence Ltd. You may not extract, reproduce or redistribute any platform data without written consent.','Forecasting Disclaimer: All campaign simulations are probabilistic models based on historical data. They are not guarantees of campaign performance. Simfluence accepts no liability for campaign outcomes based on platform outputs.','Acceptable Use: You agree to use the platform solely for lawful internal business purposes. You must not attempt to reverse-engineer, scrape or circumvent any aspect of the platform.','Governing Law: These terms are governed by the laws of the United Arab Emirates. Disputes shall be subject to the exclusive jurisdiction of the courts of Dubai, UAE.','Contact: For all legal queries contact Liam@Simfluence.AI']},
+  legal:{c:'#9B8FDD',e:'Legal · Legal Notice',t:'Legal Notice',d:'Simfluence Ltd is a technology company incorporated in Dubai, United Arab Emirates. This legal notice governs your use of the Simfluence platform and all associated intellectual property.',s:[{n:'LLC',l:'Entity type'},{n:'Dubai',l:'Registered office'},{n:'UAE',l:'Jurisdiction'},{n:'2025',l:'Incorporated'}],p:['Entity: Simfluence Ltd is registered as a Limited Liability Company in Dubai, UAE. All platform operations and commercial agreements are conducted under this entity.','Intellectual Property: The Simfluence name, logo, platform design, CPI, GFI, scoring algorithms and forecasting models are the exclusive intellectual property of Simfluence Ltd. Unauthorised use or reproduction is strictly prohibited.','Data and Privacy: Simfluence processes creator data from publicly available platforms including YouTube and Twitch. User data is handled in accordance with UAE data protection regulations. We do not sell or share user data with third parties.','Liability Limitation: Simfluence Ltd provides its platform on an as-is basis. To the fullest extent permitted by law, Simfluence excludes all liability for indirect or consequential losses arising from platform use.','Third Party Services: The platform integrates with YouTube Data API, Twitch API and Supabase. Simflu
 
 <!-- ── Sign In Modal ─────────────────────────────────────── -->
 <div id="sfSignInModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.9);z-index:9999;overflow-y:auto;">
@@ -1752,17 +1713,17 @@ function closeFeatureModal() {
       style="width:100%;padding:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:#fff;font-size:14px;outline:none;box-sizing:border-box;margin-bottom:10px;font-family:sans-serif;">
     <input id="siPass" type="password" placeholder="Password" autocomplete="current-password"
       style="width:100%;padding:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:#fff;font-size:14px;outline:none;box-sizing:border-box;margin-bottom:16px;font-family:sans-serif;">
-    <button id="siSubmitBtn" style="width:100%;padding:13px;background:#0050FF;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-weight:700;font-family:'DM Mono',monospace;letter-spacing:.06em;">SIGN IN →</button>
+    <button onclick="sfSignIn()" style="width:100%;padding:13px;background:#0050FF;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-weight:700;font-family:'DM Mono',monospace;letter-spacing:.06em;">SIGN IN →</button>
     <div id="siErr" style="color:#ff5555;font-size:11px;margin-top:10px;display:none;">Incorrect email or password. Try again.</div>
     <div style="margin-top:12px;">
-      <button id="siForgotBtn" style="background:none;border:none;font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,255,255,0.4);cursor:pointer;padding:0;letter-spacing:.04em;">Forgot password?</button>
+      <button onclick="sfForgotPassword()" style="background:none;border:none;font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,255,255,0.4);cursor:pointer;padding:0;letter-spacing:.04em;">Forgot password?</button>
     </div>
     <div id="siForgotOk" style="display:none;font-family:'DM Mono',monospace;font-size:9px;color:#00C46A;margin-top:8px;">Reset email sent — check your inbox.</div>
     <div style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.08);">
       <span style="font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,255,255,0.3);">No account? </span>
-      <button id="siToFreeBtn" style="background:none;border:none;font-family:'DM Mono',monospace;font-size:9px;color:#6B9FFF;cursor:pointer;padding:0;">SIGN UP FREE →</button>
+      <button onclick="sfSignInClose();openFreeSignup();" style="background:none;border:none;font-family:'DM Mono',monospace;font-size:9px;color:#6B9FFF;cursor:pointer;padding:0;">SIGN UP FREE →</button>
     </div>
-    <button id="siCloseBtn" style="margin-top:16px;background:none;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.3);border-radius:6px;padding:6px 16px;font-family:'DM Mono',monospace;font-size:9px;cursor:pointer;">CLOSE</button>
+    <button onclick="sfSignInClose()" style="margin-top:16px;background:none;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.3);border-radius:6px;padding:6px 16px;font-family:'DM Mono',monospace;font-size:9px;cursor:pointer;">CLOSE</button>
   </div>
 </div>
 
@@ -1776,13 +1737,13 @@ function closeFeatureModal() {
       style="width:100%;padding:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:#fff;font-size:14px;outline:none;box-sizing:border-box;margin-bottom:10px;font-family:sans-serif;">
     <input id="freePass" type="password" placeholder="Create password (min 8 chars)" autocomplete="new-password"
       style="width:100%;padding:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:#fff;font-size:14px;outline:none;box-sizing:border-box;margin-bottom:16px;font-family:sans-serif;">
-    <button id="freeBtn" style="width:100%;padding:13px;background:#0050FF;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-weight:700;font-family:'DM Mono',monospace;letter-spacing:.06em;">CREATE FREE ACCOUNT →</button>
+    <button onclick="sfFreeSignup()" id="freeBtn" style="width:100%;padding:13px;background:#0050FF;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-weight:700;font-family:'DM Mono',monospace;letter-spacing:.06em;">CREATE FREE ACCOUNT →</button>
     <div id="freeErr" style="color:#ff5555;font-size:11px;margin-top:10px;display:none;">Please enter a valid email and password (8+ chars).</div>
     <div style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.08);">
       <span style="font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,255,255,0.3);">Already have an account? </span>
-      <button id="freeToSignInBtn" style="background:none;border:none;font-family:'DM Mono',monospace;font-size:9px;color:#6B9FFF;cursor:pointer;padding:0;">SIGN IN →</button>
+      <button onclick="sfFreeClose();openSignIn();" style="background:none;border:none;font-family:'DM Mono',monospace;font-size:9px;color:#6B9FFF;cursor:pointer;padding:0;">SIGN IN →</button>
     </div>
-    <button id="freeCloseBtn" style="margin-top:16px;background:none;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.3);border-radius:6px;padding:6px 16px;font-family:'DM Mono',monospace;font-size:9px;cursor:pointer;">CLOSE</button>
+    <button onclick="sfFreeClose()" style="margin-top:16px;background:none;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.3);border-radius:6px;padding:6px 16px;font-family:'DM Mono',monospace;font-size:9px;cursor:pointer;">CLOSE</button>
   </div>
 </div>
 
