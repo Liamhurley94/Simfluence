@@ -3324,7 +3324,7 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
         <div style="display:flex;align-items:center;gap:16px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 16px">
           <div style="font-family:Manrope,sans-serif;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--text-muted)">DURATION</div>
-          <input type="range" id="campaignDuration" min="1" max="12" value="4" step="1" style="width:100px;accent-color:#0050FF;cursor:pointer" id="campaignDuration">
+          <input type="range" id="campaignDuration" min="1" max="12" value="4" step="1" style="width:100px;accent-color:#0050FF;cursor:pointer">
           <span id="durationLabel" style="font-family:Manrope,sans-serif;font-weight:500;font-size:11px;font-weight:700;color:#FFD400;min-width:56px">4 weeks</span>
         </div>
         <button id="reRunSimBtn" style="padding:10px 20px;background:#FF7A00;color:#fff;border:none;border-radius:var(--radius);font-family:Manrope,sans-serif;font-weight:600;font-size:13px;cursor:pointer;letter-spacing:.05em;font-weight:700">▶ RE-RUN</button>
@@ -14605,18 +14605,18 @@ function openOverlapModal(campaignId) {
     '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">' +
       '<div>' +
         '<div style="font-family:Manrope,sans-serif;font-size:11px;font-weight:600;letter-spacing:.1em;color:#A78BFA;margin-bottom:4px">&#9670; AUDIENCE OVERLAP ENGINE</div>' +
-        '<div id="overlap-title" style="font-family:Archivo Black,sans-serif;font-size:18px;font-weight:700;color:#fff">' + titleText + '</div>' +
+        '<div id="overlap-title-2" style="font-family:Archivo Black,sans-serif;font-size:18px;font-weight:700;color:#fff">' + titleText + '</div>' +
       '</div>' +
       '<button id="overlap-close-btn" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.6);border-radius:6px;padding:6px 14px;cursor:pointer;font-family:Manrope,sans-serif;font-size:12px;font-weight:500;letter-spacing:.05em">&#x2715; CLOSE</button>' +
     '</div>' +
     '<div style="margin-bottom:20px">' +
       '<div style="font-family:Manrope,sans-serif;font-weight:500;font-size:8px;letter-spacing:.08em;color:rgba(255,255,255,0.35);margin-bottom:8px">ADD CREATORS TO ANALYSE</div>' +
       '<div style="display:flex;gap:8px;margin-bottom:12px">' +
-        '<input id="overlap-search" type="text" placeholder="Search by name or handle..." style="flex:1;font-family:Manrope,sans-serif;font-weight:500;font-size:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:#fff;outline:none">' +
+        '<input id="overlap-search-2" type="text" placeholder="Search by name or handle..." style="flex:1;font-family:Manrope,sans-serif;font-weight:500;font-size:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 12px;color:#fff;outline:none">' +
         '<button id="overlap-add-btn" style="padding:8px 16px;background:rgba(109,40,217,0.15);border:1px solid rgba(109,40,217,0.4);color:#A78BFA;border-radius:6px;font-family:Manrope,sans-serif;font-size:12px;font-weight:500;cursor:pointer;letter-spacing:.04em">+ ADD</button>' +
       '</div>' +
-      '<div id="overlap-creator-chips" style="display:flex;flex-wrap:wrap;gap:8px;min-height:32px"></div>' +
-      '<div id="overlap-count-warn" style="display:none;font-family:Manrope,sans-serif;font-size:11px;font-weight:600;color:#FF7A00;margin-top:6px">Maximum 10 creators for analysis</div>' +
+      '<div id="overlap-creator-chips-2" style="display:flex;flex-wrap:wrap;gap:8px;min-height:32px"></div>' +
+      '<div id="overlap-count-warn-2" style="display:none;font-family:Manrope,sans-serif;font-size:11px;font-weight:600;color:#FF7A00;margin-top:6px">Maximum 10 creators for analysis</div>' +
     '</div>' +
     '<div id="overlap-results"></div>';
   overlay.appendChild(box);
