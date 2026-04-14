@@ -13610,16 +13610,18 @@ function saveCampaignWorkspace() {
   var client = document.getElementById('cm-client').value.trim();
   if (!name) { document.getElementById('cm-name').style.border = '1px solid #E60023'; return; }
   var entry = {
-    id:      _editingCampaignId || ('cws_' + Date.now()),
-    name:    name,
-    client:  client,
-    genre:   document.getElementById('cm-genre').value.trim(),
-    budget:  document.getElementById('cm-budget').value.trim(),
-    date:    document.getElementById('cm-date').value,
-    notes:   document.getElementById('cm-notes').value.trim(),
-    created: _editingCampaignId ? null : new Date().toISOString(),
-    status:  'active',
+    id:       _editingCampaignId || ('cws_' + Date.now()),
+    name:     name,
+    client:   client,
+    genre:    document.getElementById('cm-genre').value.trim(),
+    budget:   document.getElementById('cm-budget').value.trim(),
+    date:     document.getElementById('cm-date').value,
+    notes:    document.getElementById('cm-notes').value.trim(),
+    created:  _editingCampaignId ? null : new Date().toISOString(),
+    status:   'active',
+    creators: window._pendingCampaignCreators || [],
   };
+  window._pendingCampaignCreators = null;
   if (_editingCampaignId) {
     var idx = _campaigns.findIndex(function(c) { return c.id === _editingCampaignId; });
     if (idx > -1) { entry.created = _campaigns[idx].created; _campaigns[idx] = entry; }
@@ -14933,23 +14935,37 @@ document.addEventListener('DOMContentLoaded', function() {
       alert('Run a simulation first before saving.');
       return;
     }
-    saveCampaignToHistory();
-    // Flash button
-    var btn = document.getElementById('saveToCampaignsBtn');
-    if (btn) {
-      btn.textContent = '✓ SAVED';
-      btn.style.background = '#00A855';
-      setTimeout(function() {
-        btn.textContent = '＋ SAVE TO CAMPAIGNS';
-        btn.style.background = '#00C46A';
-        // Navigate to campaigns tab
-        if (typeof switchTab === 'function') switchTab('campaigns');
-        else {
-          var campTab = document.querySelector('[data-tab="campaigns"], #nav-campaigns');
-          if (campTab) campTab.click();
-        }
-      }, 800);
+    // Build a campaign workspace entry from sim results
+    var genre  = (typeof getSelectedGenre === 'function') ? getSelectedGenre() : 'Gaming & Esports';
+    var budget = simResults.budget || 85000;
+    var crNames = [];
+    var crIds = [];
+    if (simResults.crData) {
+      simResults.crData.forEach(function(d) {
+        crNames.push(d.cr.name);
+        crIds.push(d.cr.id);
+      });
     }
+    // Pre-fill the campaign modal and open it
+    var nameEl   = document.getElementById('cm-name');
+    var clientEl = document.getElementById('cm-client');
+    var genreEl  = document.getElementById('cm-genre');
+    var budgetEl = document.getElementById('cm-budget');
+    var notesEl  = document.getElementById('cm-notes');
+    var dateEl   = document.getElementById('cm-date');
+    if (nameEl)   nameEl.value   = genre + ' Campaign — ' + new Date().toLocaleDateString('en-GB');
+    if (clientEl) clientEl.value = '';
+    if (genreEl)  genreEl.value  = genre;
+    if (budgetEl) budgetEl.value = budget;
+    if (notesEl)  notesEl.value  = 'Auto-saved from Simulator. Creators: ' + crNames.join(', ') + ' | P50 Impressions: ' + simResults.p50.impressions + ' | CTR: ' + simResults.ctr + '% | ROAS: ' + simResults.roas + 'x';
+    if (dateEl)   dateEl.value   = new Date().toISOString().slice(0,10);
+    // Store creator IDs so they show on the campaign card
+    window._pendingCampaignCreators = crIds;
+    // Open the modal
+    var modal = document.getElementById('campaign-modal');
+    var title = document.getElementById('campaign-modal-title');
+    if (title) title.textContent = 'SAVE TO CAMPAIGNS';
+    if (modal) modal.style.display = 'flex';
   });
 
   wire('saveCampaignBtn', function() {
