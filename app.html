@@ -13648,7 +13648,8 @@ function renderCampaignsScreen() {
   }
   empty.style.display = 'none';
   list.style.display  = 'flex';
-  meta.textContent = _campaigns.length + ' CAMPAIGN' + (_campaigns.length !== 1 ? 'S' : '') + ' · PLATINUM WORKSPACE';
+  var _wsTier = (typeof getTierName === 'function' ? getTierName().toUpperCase() : 'PLATINUM');
+  meta.textContent = _campaigns.length + ' CAMPAIGN' + (_campaigns.length !== 1 ? 'S' : '') + ' · ' + _wsTier + ' WORKSPACE';
 
   list.innerHTML = _campaigns.map(function(cmp) {
     var linked = _outreach.filter(function(o) { return o.campaign === cmp.id; });
