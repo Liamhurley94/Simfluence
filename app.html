@@ -13162,11 +13162,18 @@ function renderBudgetAllocation() {
   var budget = parseInt((document.getElementById('budget') || {value:'85000'}).value) || 85000;
   var genre  = (typeof getSelectedGenre === 'function') ? getSelectedGenre() : 'Gaming & Esports';
   var creators = [];
+
+  // Use manually selected creators if any, otherwise use sim creators
   if (typeof selectedCreators !== 'undefined' && selectedCreators.size > 0 && typeof CREATORS !== 'undefined') {
     selectedCreators.forEach(function(id) {
       var cr = CREATORS.find(function(c) { return c.id === id; });
       if (cr) creators.push(cr);
     });
+  }
+
+  // Fall back to simResults creators if no manual selection
+  if (creators.length === 0 && typeof simResults !== 'undefined' && simResults && simResults.crData) {
+    creators = simResults.crData.map(function(d) { return d.cr; });
   }
 
   if (creators.length === 0) { panel.style.display = 'none'; return; }
