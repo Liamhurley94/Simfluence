@@ -2521,7 +2521,8 @@ function applyAllTierGates() {
   var budgetPanel = document.getElementById('budgetAllocationPanel');
   if (budgetPanel) {
     if (!tierCan('budget_allocation_view')) {
-      budgetPanel.style.display = 'none';
+      budgetPanel.style.opacity = '0.4';
+      budgetPanel.style.pointerEvents = 'none';
     } else if (!tierCan('budget_allocation_edit')) {
       var sliders = budgetPanel.querySelectorAll('input[type="range"]');
       sliders.forEach(function(s){
@@ -2721,6 +2722,14 @@ document.getElementById('GBtn').addEventListener('click', GC);
   ['sfFreePlanBtn1','sfFreePlanBtn2','sfFreePlanBtn3'].forEach(function(id) {
     var el = document.getElementById(id);
     if (el) el.addEventListener('click', showFreeTierPrompt);
+  });
+
+  // Wire P10/P50/P90 band clicks
+  ['bandWorst','bandBase','bandBest'].forEach(function(id) {
+    document.addEventListener('click', function(e) {
+      var el = e.target.closest('#' + id);
+      if (el) { if (typeof expandBand === 'function') expandBand(id.replace('band','').toLowerCase()); }
+    });
   });
 
   // Wire platform filter dropdown — delegated from document so timing doesn't matter
@@ -13178,6 +13187,8 @@ function renderBudgetAllocation() {
 
   if (creators.length === 0) { panel.style.display = 'none'; return; }
   panel.style.display = 'block';
+  panel.style.opacity = '';
+  panel.style.pointerEvents = '';
 
   var allocs = getAllocations(creators);
   var fmtBudget = '£' + (budget >= 1000 ? (budget/1000).toFixed(0) + 'K' : budget);
