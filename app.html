@@ -10956,10 +10956,10 @@ function openProfileOverlay(id) {
   document.getElementById('profileOverlay').style.display = 'block';
   document.getElementById('profileOverlay').scrollTop = 0;
 
-  // Fire live YouTube data fetch asynchronously
-  if (c.platform && c.platform.toLowerCase().indexOf('youtube') !== -1) {
-    injectLiveDataIntoProfile(c);
-  }
+  // Fire live data fetch — for any creator with YouTube in allPlatforms
+  var _allPlats = c.allPlatforms || [c.platform || ''];
+  var _hasYT = _allPlats.includes('YouTube') || (c.platform||'').toLowerCase().includes('youtube');
+  injectLiveDataIntoProfile(c);
 }
 
 function closeProfileOverlay() {
