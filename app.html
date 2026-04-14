@@ -2724,6 +2724,38 @@ document.getElementById('GBtn').addEventListener('click', GC);
     if (el) el.addEventListener('click', showFreeTierPrompt);
   });
 
+  // Apply tier limits to auto-select dropdown
+  (function() {
+    var sel = document.getElementById('autoSelectCount');
+    if (!sel) return;
+    var t = typeof getTierLevel === 'function' ? getTierLevel() : 0;
+    // Remove options beyond tier limit
+    Array.from(sel.options).forEach(function(opt) {
+      var v = parseInt(opt.value);
+      if (t >= 3) return;              // Platinum/Diamond: all options
+      if (t === 2 && v > 50) { opt.disabled = true; opt.text += ' (Platinum+)'; }
+      if (t === 1 && v > 15) { opt.disabled = true; opt.text += ' (Gold+)'; }
+      if (t <= 0 && v > 5)  { opt.disabled = true; opt.text += ' (Silver+)'; }
+    });
+    // Set default to highest allowed
+    var maxAllowed = t >= 3 ? 250 : t === 2 ? 50 : t === 1 ? 15 : 5;
+    Array.from(sel.options).reverse().forEach(function(opt) {
+      if (!opt.disabled && parseInt(opt.value) <= maxAllowed && !sel._defaultSet) {
+        sel.value = opt.value;
+        sel._defaultSet = true;
+      }
+    });
+    // Re-run sim when changed
+    sel.addEventListener('change', function() {
+      if (typeof simResults !== 'undefined') {
+        simResults = null;
+        if (typeof computeSimResults === 'function') computeSimResults();
+        if (typeof updateSimDisplay === 'function') updateSimDisplay();
+        if (typeof renderBudgetAllocation === 'function') renderBudgetAllocation();
+      }
+    });
+  })();
+
   // Wire P10/P50/P90 band clicks
   ['bandWorst','bandBase','bandBest'].forEach(function(id) {
     document.addEventListener('click', function(e) {
@@ -3270,6 +3302,17 @@ document.addEventListener('DOMContentLoaded', function() {
           <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted)">DURATION</div>
           <input type="range" id="campaignDuration" min="1" max="12" value="4" step="1" style="width:100px;accent-color:#0050FF;cursor:pointer" id="campaignDuration">
           <span id="durationLabel" style="font-family:'DM Mono',monospace;font-size:11px;font-weight:700;color:#FFD400;min-width:56px">4 weeks</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 16px">
+          <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted)">AUTO-SELECT</div>
+          <select id="autoSelectCount" style="font-family:'DM Mono',monospace;font-size:10px;background:transparent;border:none;color:#FFD400;cursor:pointer;outline:none">
+            <option value="5">5 creators</option>
+            <option value="10">10 creators</option>
+            <option value="25">25 creators</option>
+            <option value="50">50 creators</option>
+            <option value="100">100 creators</option>
+            <option value="250">250 creators</option>
+          </select>
         </div>
         <button id="reRunSimBtn" style="padding:10px 20px;background:#FF7A00;color:#fff;border:none;border-radius:var(--radius);font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;letter-spacing:.05em;font-weight:700">▶ RE-RUN</button>
         <button id="saveToCampaignsBtn" style="padding:10px 20px;background:#00C46A;color:#fff;border:none;border-radius:var(--radius);font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;letter-spacing:.05em;font-weight:700">＋ SAVE TO CAMPAIGNS</button>
@@ -11026,7 +11069,16 @@ function computeSimResults() {
     : [...CREATORS]
         .filter(cr => cr.genre === genre || ((GENRE_AFFINITY[cr.genre]||{})[genre]||0) >= 0.6)
         .sort((a,b) => (b.cpi + computeGFI(b)) - (a.cpi + computeGFI(a)))
-        .slice(0, 5);
+        .slice(0, (function(){
+      var _t = typeof getTierLevel === 'function' ? getTierLevel() : 0;
+      var _sel = document.getElementById('autoSelectCount');
+      var _chosen = _sel ? parseInt(_sel.value) : 5;
+      // Tier limits: Bronze=5, Silver=15, Gold=50, Platinum/Diamond=dropdown
+      if (_t >= 3) return _chosen;          // Platinum/Diamond: full dropdown
+      if (_t === 2) return Math.min(_chosen, 50);  // Gold: max 50
+      if (_t === 1) return Math.min(_chosen, 15);  // Silver: max 15
+      return 5;                              // Bronze/Free: always 5
+    })());
 
   if (toSim.length === 0) {
     simResults = null;
@@ -11126,7 +11178,16 @@ function updateSimDisplay() {
         return cr.genre === genre || ((GENRE_AFFINITY[cr.genre]||{})[genre]||0) >= 0.6;
       }).sort(function(a,b) {
         return (b.cpi + computeGFI(b)) - (a.cpi + computeGFI(a));
-      }).slice(0, 5);
+      }).slice(0, (function(){
+      var _t = typeof getTierLevel === 'function' ? getTierLevel() : 0;
+      var _sel = document.getElementById('autoSelectCount');
+      var _chosen = _sel ? parseInt(_sel.value) : 5;
+      // Tier limits: Bronze=5, Silver=15, Gold=50, Platinum/Diamond=dropdown
+      if (_t >= 3) return _chosen;          // Platinum/Diamond: full dropdown
+      if (_t === 2) return Math.min(_chosen, 50);  // Gold: max 50
+      if (_t === 1) return Math.min(_chosen, 15);  // Silver: max 15
+      return 5;                              // Bronze/Free: always 5
+    })());
 
   const creatorBreakdownEl = document.getElementById('creatorBreakdown');
   if (creatorBreakdownEl && toShowSim.length > 0) {
@@ -11743,7 +11804,16 @@ function personaAutoSelect() {
   const top = [...CREATORS]
     .filter(cr => cr.genre === genre || ((GENRE_AFFINITY[cr.genre]||{})[genre]||0) >= 0.6)
     .sort((a,b) => (b.cpi + computeGFI(b)) - (a.cpi + computeGFI(a)))
-    .slice(0, 5);
+    .slice(0, (function(){
+      var _t = typeof getTierLevel === 'function' ? getTierLevel() : 0;
+      var _sel = document.getElementById('autoSelectCount');
+      var _chosen = _sel ? parseInt(_sel.value) : 5;
+      // Tier limits: Bronze=5, Silver=15, Gold=50, Platinum/Diamond=dropdown
+      if (_t >= 3) return _chosen;          // Platinum/Diamond: full dropdown
+      if (_t === 2) return Math.min(_chosen, 50);  // Gold: max 50
+      if (_t === 1) return Math.min(_chosen, 15);  // Silver: max 15
+      return 5;                              // Bronze/Free: always 5
+    })());
 
   // Select them
   selectedCreators.clear();
