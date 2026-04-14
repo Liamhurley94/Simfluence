@@ -12135,8 +12135,8 @@ var SUPABASE_ANON_YT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmF
 
 async function fetchCreatorYouTubeData(creator) {
   try {
-    // Try with handle first, then with @ stripped
-    var handle = creator.handle || '';
+    // Prefer ytHandle if available (cross-platform creators like sodapoppin)
+    var handle = creator.ytHandle || creator.handle || '';
     var res = await fetch(SUPABASE_URL_YT + '/functions/v1/youtube-creator-data', {
       method: 'POST',
       headers: {
@@ -12146,7 +12146,7 @@ async function fetchCreatorYouTubeData(creator) {
       body: JSON.stringify({
         creator_id:     creator.id,
         channel_handle: handle,
-        channel_id:     creator.channelId || null,
+        channel_id:     creator.channelId || creator.ytChannelId || null,
       }),
     });
     // Read body regardless of status to get error details
@@ -12168,31 +12168,30 @@ function fmtLive(n) {
 }
 
 async function fetchCreatorAvatar(creator) {
-  // Returns the best avatar URL for any platform using unavatar.io
-  var handle = (creator.handle || '').replace('@', '').toLowerCase();
-  if (!handle) return null;
-
+  var handle    = (creator.handle || '').replace('@', '').toLowerCase();
+  var ytHandle  = (creator.ytHandle || '').replace('@', '').toLowerCase();
   var platforms = creator.allPlatforms || [creator.platform || 'YouTube'];
   var platRaw   = (creator.platform || '').toLowerCase();
 
-  // Try platforms in order of reliability for avatar lookup
-  // For Twitch-primary creators, try Twitch first
+  if (!handle) return null;
+
+  // Twitch-primary: use Twitch handle for avatar
   if (platRaw.includes('twitch')) {
     return 'https://unavatar.io/twitch/' + handle;
   }
-  // For Instagram creators
+  // Instagram
   if (platRaw.includes('instagram')) {
     return 'https://unavatar.io/instagram/' + handle;
   }
-  // For YouTube creators (including cross-platform)
+  // YouTube: prefer ytHandle if different
   if (platRaw.includes('youtube')) {
-    return 'https://unavatar.io/youtube/' + handle;
+    return 'https://unavatar.io/youtube/' + (ytHandle || handle);
   }
-  // Fallback — try Twitch then YouTube
+  // Cross-platform fallback
   if (platforms.includes('Twitch')) {
     return 'https://unavatar.io/twitch/' + handle;
   }
-  return 'https://unavatar.io/youtube/' + handle;
+  return 'https://unavatar.io/youtube/' + (ytHandle || handle);
 }
 
 function injectAvatarImage(creator, imgUrl) {
