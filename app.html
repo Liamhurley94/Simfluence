@@ -3702,6 +3702,48 @@ function computeCostEstimate(creator) {
     };
   }
 
+  // ── INSTAGRAM ─────────────────────────────────────────────────────
+  if (platRaw.includes('instagram')) {
+    // Instagram pricing based on follower tiers (UK market 2024-2025)
+    // Sources: IZEA, Influencer Marketing Hub, real deal data
+    var igFollowers = subsN;
+    var igEngRate   = parseFloat((creator.eng || '0%').replace('%','')) || 0.5;
+
+    // Base post rate by follower tier
+    var igPostBase;
+    if      (igFollowers >= 10e6)  igPostBase = 50000;   // Mega: £50K+
+    else if (igFollowers >= 1e6)   igPostBase = 15000;   // Macro: £15K
+    else if (igFollowers >= 500e3) igPostBase = 7000;    // Mid-macro: £7K
+    else if (igFollowers >= 100e3) igPostBase = 3000;    // Mid-tier: £3K
+    else if (igFollowers >= 50e3)  igPostBase = 1500;    // Micro: £1.5K
+    else                           igPostBase = 500;     // Nano: £500
+
+    // Engagement rate multiplier — high engagement = higher rates
+    var igEngMult = igEngRate >= 3.0 ? 1.4 : igEngRate >= 1.5 ? 1.15 : igEngRate >= 0.5 ? 1.0 : 0.85;
+
+    // Niche multiplier
+    var igNicheMult = Math.max(1.0, (cpms.dedMult || 1.6) / 1.6);
+
+    var igBase = igPostBase * igEngMult * igNicheMult;
+
+    // int = single post, ded = reel/video, mix = campaign with usage rights
+    var intLo = Math.round(igBase * 0.7  / 100) * 100;   // single post low
+    var intHi = Math.round(igBase * 1.3  / 100) * 100;   // single post high
+    var dedLo = Math.round(igBase * 1.5  / 100) * 100;   // reel/video low
+    var dedHi = Math.round(igBase * 3.0  / 100) * 100;   // reel/video high
+    var mixLo = Math.round(igBase * 3.0  / 100) * 100;   // campaign low
+    var mixHi = Math.round(igBase * 6.0  / 100) * 100;   // campaign + exclusivity high
+
+    var igFmt = v => v >= 1000 ? '$' + (v / 1000).toFixed(v >= 10000 ? 0 : 1) + 'K' : '$' + v;
+    var igTierLabel = igFollowers >= 1e6 ? 'Macro' : igFollowers >= 100e3 ? 'Mid-tier' : 'Micro';
+    return {
+      ranges: { ded: [dedLo, dedHi], int: [intLo, intHi], mix: [mixLo, mixHi] },
+      fmt: igFmt, isInstagram: true, tierLabel: igTierLabel,
+      verifiedNote: (creator.verifiedDeals || 0) >= 1 ? '✓ Verified brand partnerships' : '~ Based on UK Instagram market rates 2025',
+      disclaimer: 'Single post · Reel/video · Campaign with usage rights & exclusivity'
+    };
+  }
+
   // ── YOUTUBE / OTHER ───────────────────────────────────────────────
   var avgV = parseViews(creator.avgViews) || parseSubs(creator.subs) * 0.08;
   var baseCPV = lang === 'german' ? 0.085 : lang === 'french' ? 0.072 : 0.085;
