@@ -10864,6 +10864,23 @@ function renderCreatorGrid(keepPage) {
   }
 
   function passedContentFilter(cr) {
+    // ── UNTAPPED MODE ──────────────────────────────────────────────
+    // Untapped = show creators in the right genre who haven't covered the title yet
+    // Genre gate is already strict (genreScore returns -999 for off-genre)
+    // Here: creator must NOT match any of the include terms (they haven't covered it)
+    if (sfContentUntapped) {
+      if (sfContentMustInclude.length === 0) return true; // no title set — show all genre creators
+      for (var k = 0; k < sfContentMustInclude.length; k++) {
+        if (contentKeywordMatch(cr, sfContentMustInclude[k])) return false; // already covered — exclude
+      }
+      // Must exclude still applies (e.g. untapped RE creators who haven't done CoD either)
+      for (var j2 = 0; j2 < sfContentMustExclude.length; j2++) {
+        if (contentKeywordMatch(cr, sfContentMustExclude[j2])) return false;
+      }
+      return true; // in correct genre, hasn't covered title — this is an untapped creator
+    }
+
+    // ── NORMAL MODE ────────────────────────────────────────────────
     // Must include: creator must match ALL include terms
     if (sfContentMustInclude.length > 0) {
       for (var i = 0; i < sfContentMustInclude.length; i++) {
@@ -10874,13 +10891,6 @@ function renderCreatorGrid(keepPage) {
     if (sfContentMustExclude.length > 0) {
       for (var j = 0; j < sfContentMustExclude.length; j++) {
         if (contentKeywordMatch(cr, sfContentMustExclude[j])) return false;
-      }
-    }
-    // Untapped: if enabled, creator must NOT match any include terms in their bio
-    // (they have the right audience via genre/submode but haven't covered the title)
-    if (sfContentUntapped && sfContentMustInclude.length > 0) {
-      for (var k = 0; k < sfContentMustInclude.length; k++) {
-        if (contentKeywordMatch(cr, sfContentMustInclude[k])) return false; // already covered it
       }
     }
     return true;
@@ -10907,9 +10917,17 @@ function renderCreatorGrid(keepPage) {
     const affinityRaw2 = (GENRE_AFFINITY[cr.genre]||{})[genre];
     const affinity = (affinityRaw2 !== undefined && affinityRaw2 !== null) ? affinityRaw2 : 0;
     if (affinity >= 0.6) return 10;
-    // If content targeting is active, relax genre gate — let content match drive relevance
-    if (sfContentMustInclude.length > 0 || sfContentMustExclude.length > 0) return 0;
-    return -999; // exclude
+
+    // Content targeting genre gate logic:
+    // - Must Include active (not untapped): relax genre — content match drives relevance
+    //   e.g. find ALL creators who've covered Resident Evil, even variety creators
+    // - Untapped mode: keep genre STRICT — we want the right genre pool
+    //   who just haven't covered this title yet. MrBeast Gaming ≠ RE audience.
+    // - Must Exclude only: relax gate — exclude is a refinement, not a population change
+    if (sfContentUntapped) return -999; // strict: untapped must stay within genre
+    if (sfContentMustInclude.length > 0) return 0; // relax: find anyone who covered it
+    if (sfContentMustExclude.length > 0) return 0; // relax: exclusion is a refinement
+    return -999; // exclude by default
   }
 
   // ── Build filtered + scored list ──────────────────────────────────
