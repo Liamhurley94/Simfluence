@@ -1500,6 +1500,36 @@ function scrollToPlan(planClass) {
   resize();init();draw();
 })();
 
+/* ── Feature modal open/close ────────────────────────────── */
+function openFeatureModal(key) {
+  var m = MODALS[key]; if (!m) return;
+  var modal = document.getElementById('featureModal'); if (!modal) return;
+  document.getElementById('fmBar').style.background = m.c;
+  document.getElementById('fmEye').textContent = m.e || '';
+  document.getElementById('fmTtl').textContent = m.t || '';
+  document.getElementById('fmDsc').textContent = m.d || '';
+  var g = document.getElementById('fmG');
+  g.innerHTML = (m.s||[]).map(function(s){ return '<div class="fm-g-item"><div class="fm-g-n">'+s.n+'</div><div class="fm-g-l">'+s.l+'</div></div>'; }).join('');
+  var pts = document.getElementById('fmPts');
+  pts.innerHTML = (m.p||[]).map(function(p){ return '<div class="fm-pt"><div class="fm-dot" style="background:'+m.c+'"></div><div>'+p+'</div></div>'; }).join('');
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+function closeFeatureModal() {
+  var modal = document.getElementById('featureModal'); if (!modal) return;
+  modal.style.display = 'none';
+  document.body.style.overflow = '';
+}
+// Close on backdrop click
+document.addEventListener('click', function(e) {
+  var modal = document.getElementById('featureModal');
+  if (modal && e.target === modal) closeFeatureModal();
+});
+// Close on ESC
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeFeatureModal();
+});
+
 /* ── Modal + link delegation ─────────────────────────────── */
 document.addEventListener('click', function(e) {
   var el = e.target.closest('[data-modal]');
