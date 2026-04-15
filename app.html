@@ -2154,6 +2154,8 @@ function tierCan(feature) {
   var rules = {
     // ── DISCOVERY ─────────────────────────────────────────────────
     'discovery_unlimited': t>=2, 'discovery_100': t>=1, 'discovery_25': t>=0,
+    'content_targeting': t>=1,           // Silver+: single include term
+    'content_targeting_boolean': t>=2,   // Gold+: boolean + crossover + untapped
     'profile_full': t>=1, 'profile_basic': t>=0,  // Bronze gets basic profiles
     'cpi_breakdown': t>=2, 'audience_intelligence': t>=2, 'audience_blur': t>=1,
 
@@ -2242,6 +2244,8 @@ function showUpgradePrompt(feature, targetTier) {
     'audience_intelligence':  'Unlock geography, demographic and behavioural data for every creator audience.',
     'gfi_methodology':        'See the full GFI input breakdown — genre affinity, sub-mode alignment and content match.',
     'discovery_unlimited':    'Access all 5,600+ creators in the full database.',
+    'content_targeting':       'Filter creators by content history — find who has covered specific titles, brands or topics.',
+    'content_targeting_boolean': 'Full boolean content targeting: Must Include + Must Exclude + Untapped mode + crossover audience clusters.',
     // Export
     'export_5':               'Export up to 5 creators as a CSV — available from Silver tier.',
     'export_10':              'Export your creator shortlist as a CSV to share with clients.',
@@ -2796,6 +2800,235 @@ function applyAllTierGates() {
     oBadge.textContent = (cap2 === Infinity ? '∞' : _outreach.length + '/' + cap2);
   }
 }
+
+// ── CONTENT TARGETING ENGINE ─────────────────────────────────────────────
+(function() {
+
+  function ctCanUse() {
+    var t = typeof getTierLevel === 'function' ? getTierLevel() : 0;
+    return t >= 1; // Silver+
+  }
+  function ctCanUseBoolean() {
+    var t = typeof getTierLevel === 'function' ? getTierLevel() : 0;
+    return t >= 2; // Gold+: boolean logic + crossover
+  }
+
+  function ctInit() {
+    var openBtn  = document.getElementById('ctOpenBtn');
+    var closeBtn = document.getElementById('ctCloseBtn');
+    var panel    = document.getElementById('contentTargetPanel');
+    var lockedMsg= document.getElementById('ctLockedMsg');
+    var triggerWrap = document.getElementById('ctTriggerWrap');
+    if (!openBtn || !panel) return;
+
+    // Show/hide based on tier
+    if (!ctCanUse()) {
+      openBtn.style.display = 'none';
+      lockedMsg.style.display = 'flex';
+      return;
+    }
+    openBtn.style.display = '';
+    lockedMsg.style.display = 'none';
+
+    openBtn.addEventListener('click', function() {
+      panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+    });
+    closeBtn.addEventListener('click', function() {
+      panel.style.display = 'none';
+    });
+
+    // Search input + autocomplete
+    var input = document.getElementById('ctSearchInput');
+    var sugg  = document.getElementById('ctSuggestions');
+    var allTitles = Object.keys(typeof CONTENT_CLUSTERS !== 'undefined' ? CONTENT_CLUSTERS : {});
+
+    input.addEventListener('input', function() {
+      var q = this.value.trim().toLowerCase();
+      if (!q) { sugg.style.display = 'none'; return; }
+      var matches = allTitles.filter(function(t) { return t.toLowerCase().indexOf(q) !== -1; }).slice(0, 8);
+      if (!matches.length) { sugg.style.display = 'none'; return; }
+      sugg.innerHTML = matches.map(function(m) {
+        var c = CONTENT_CLUSTERS[m];
+        return '<div class="ct-sugg-item" data-title="' + m + '" style="padding:8px 12px;cursor:pointer;font-family:Manrope,sans-serif;font-size:12px;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:space-between">'
+          + '<span>' + m + '</span>'
+          + '<span style="font-size:10px;color:var(--text-muted);background:rgba(255,255,255,0.05);padding:2px 6px;border-radius:3px">' + (c.cluster||'') + '</span>'
+          + '</div>';
+      }).join('');
+      sugg.style.display = 'block';
+      sugg.querySelectorAll('.ct-sugg-item').forEach(function(el) {
+        el.addEventListener('mouseenter', function(){ this.style.background='rgba(107,159,255,0.1)'; });
+        el.addEventListener('mouseleave', function(){ this.style.background=''; });
+        el.addEventListener('click', function() {
+          input.value = this.dataset.title;
+          sugg.style.display = 'none';
+        });
+      });
+    });
+
+    document.addEventListener('click', function(e) {
+      if (!sugg.contains(e.target) && e.target !== input) sugg.style.display = 'none';
+    });
+
+    // Add include/exclude
+    document.getElementById('ctAddInclude').addEventListener('click', function() {
+      ctAddTag('include');
+    });
+    document.getElementById('ctAddExclude').addEventListener('click', function() {
+      if (!ctCanUseBoolean()) { showUpgradePrompt('content_targeting_boolean', 'Gold'); return; }
+      ctAddTag('exclude');
+    });
+
+    // Untapped toggle
+    var toggle = document.getElementById('ctUntappedToggle');
+    var thumb  = document.getElementById('ctUntappedThumb');
+    toggle.addEventListener('click', function() {
+      if (!ctCanUseBoolean()) { showUpgradePrompt('content_targeting_boolean', 'Gold'); return; }
+      sfContentUntapped = !sfContentUntapped;
+      toggle.style.background = sfContentUntapped ? '#6B9FFF' : 'rgba(255,255,255,0.1)';
+      thumb.style.transform    = sfContentUntapped ? 'translateX(14px)' : 'translateX(0)';
+      thumb.style.opacity      = sfContentUntapped ? '1' : '0.4';
+      ctRefresh();
+    });
+  }
+
+  function ctAddTag(type) {
+    var input = document.getElementById('ctSearchInput');
+    var val = (input.value || '').trim();
+    if (!val) return;
+
+    // Look up in clusters
+    var cluster = typeof CONTENT_CLUSTERS !== 'undefined' ? CONTENT_CLUSTERS[val] : null;
+    var keywords = cluster ? cluster.keywords : [val.toLowerCase()];
+    var tag = { label: val, keywords: keywords, type: type };
+
+    if (type === 'include') {
+      // Silver: only 1 include term; Gold+: unlimited
+      if (!ctCanUseBoolean() && sfContentMustInclude.length >= 1) {
+        showUpgradePrompt('content_targeting_boolean', 'Gold');
+        return;
+      }
+      sfContentMustInclude.push(tag);
+    } else {
+      sfContentMustExclude.push(tag);
+    }
+
+    input.value = '';
+    ctRenderTags();
+    ctRenderCrossover();
+    ctRefresh();
+  }
+
+  function ctRenderTags() {
+    var row = document.getElementById('ctTagsRow');
+    if (!row) return;
+    var html = '';
+    sfContentMustInclude.forEach(function(t, i) {
+      html += '<div style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:rgba(0,196,106,0.12);border:1px solid rgba(0,196,106,0.3);border-radius:20px">'
+        + '<span style="width:7px;height:7px;border-radius:50%;background:#00C46A;flex-shrink:0"></span>'
+        + '<span style="font-family:Manrope,sans-serif;font-size:11px;font-weight:600;color:#00C46A">' + t.label + '</span>'
+        + '<span data-ct-remove="include:' + i + '" style="cursor:pointer;color:rgba(0,196,106,0.5);font-size:13px;line-height:1">×</span>'
+        + '</div>';
+    });
+    sfContentMustExclude.forEach(function(t, i) {
+      html += '<div style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:rgba(255,80,80,0.1);border:1px solid rgba(255,80,80,0.25);border-radius:20px">'
+        + '<span style="width:7px;height:7px;border-radius:50%;background:#FF5050;flex-shrink:0"></span>'
+        + '<span style="font-family:Manrope,sans-serif;font-size:11px;font-weight:600;color:#FF5050">' + t.label + '</span>'
+        + '<span data-ct-remove="exclude:' + i + '" style="cursor:pointer;color:rgba(255,80,80,0.4);font-size:13px;line-height:1">×</span>'
+        + '</div>';
+    });
+    row.innerHTML = html || '<span style="font-family:Manrope,sans-serif;font-size:11px;color:var(--text-muted)">No filters active — add a title or topic above</span>';
+
+    row.querySelectorAll('[data-ct-remove]').forEach(function(el) {
+      el.addEventListener('click', function() {
+        var parts = this.dataset.ctRemove.split(':');
+        var type  = parts[0], idx = parseInt(parts[1]);
+        if (type === 'include') sfContentMustInclude.splice(idx, 1);
+        else sfContentMustExclude.splice(idx, 1);
+        ctRenderTags();
+        ctRenderCrossover();
+        ctRefresh();
+      });
+    });
+
+    // Update active badge
+    var badge = document.getElementById('ctActiveBadge');
+    var total = sfContentMustInclude.length + sfContentMustExclude.length;
+    if (badge) badge.style.display = (total > 0 || sfContentUntapped) ? '' : 'none';
+  }
+
+  function ctRenderCrossover() {
+    var row   = document.getElementById('ctCrossoverRow');
+    var chips = document.getElementById('ctCrossoverChips');
+    if (!row || !chips || !ctCanUseBoolean()) return;
+    if (sfContentMustInclude.length === 0) { row.style.display = 'none'; return; }
+
+    var crossover = [];
+    sfContentMustInclude.forEach(function(t) {
+      var c = typeof CONTENT_CLUSTERS !== 'undefined' ? CONTENT_CLUSTERS[t.label] : null;
+      if (c && c.crossover) crossover = crossover.concat(c.crossover);
+    });
+    // Dedupe + remove already-added titles
+    var added = sfContentMustInclude.map(function(t){ return t.label; });
+    crossover = crossover.filter(function(x, i, a){ return a.indexOf(x) === i && added.indexOf(x) === -1; }).slice(0, 10);
+
+    if (!crossover.length) { row.style.display = 'none'; return; }
+    row.style.display = 'block';
+
+    chips.innerHTML = crossover.map(function(title) {
+      var c = typeof CONTENT_CLUSTERS !== 'undefined' ? CONTENT_CLUSTERS[title] : null;
+      var cluster = c ? c.cluster : '';
+      var color = (typeof CLUSTER_COLORS !== 'undefined' && CLUSTER_COLORS[cluster]) || '#6B9FFF';
+      return '<div data-ct-crossover="' + title + '" style="cursor:pointer;display:inline-flex;align-items:center;gap:5px;padding:4px 10px;background:rgba(107,159,255,0.07);border:1px solid rgba(107,159,255,0.2);border-radius:20px;transition:background .15s">'
+        + '<span style="width:6px;height:6px;border-radius:50%;background:' + color + ';flex-shrink:0"></span>'
+        + '<span style="font-family:Manrope,sans-serif;font-size:11px;font-weight:600;color:#6B9FFF">' + title + '</span>'
+        + '</div>';
+    }).join('');
+
+    chips.querySelectorAll('[data-ct-crossover]').forEach(function(el) {
+      el.addEventListener('mouseenter', function(){ this.style.background='rgba(107,159,255,0.14)'; });
+      el.addEventListener('mouseleave', function(){ this.style.background='rgba(107,159,255,0.07)'; });
+      el.addEventListener('click', function() {
+        var title = this.dataset.ctCrossover;
+        var c = typeof CONTENT_CLUSTERS !== 'undefined' ? CONTENT_CLUSTERS[title] : null;
+        sfContentMustInclude.push({ label: title, keywords: c ? c.keywords : [title.toLowerCase()], type:'include' });
+        ctRenderTags();
+        ctRenderCrossover();
+        ctRefresh();
+      });
+    });
+  }
+
+  function ctRefresh() {
+    if (typeof renderCreatorGrid === 'function') renderCreatorGrid();
+    // Update result summary
+    var summary = document.getElementById('ctResultSummary');
+    if (summary) {
+      var total = sfContentMustInclude.length + sfContentMustExclude.length;
+      if (total === 0 && !sfContentUntapped) { summary.textContent = ''; return; }
+      var filtered = (typeof CREATORS !== 'undefined') ? CREATORS.filter(function(cr){
+        return (typeof passedContentFilter === 'function') ? true : true; // refreshed via renderCreatorGrid
+      }).length : 0;
+      summary.textContent = total + ' filter' + (total !== 1 ? 's' : '') + ' active' + (sfContentUntapped ? ' · UNTAPPED MODE' : '');
+    }
+  }
+
+  // Initialise when DOM ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', ctInit);
+  } else {
+    ctInit();
+  }
+
+  // Re-init after login (tier gates)
+  document.addEventListener('sf:login', ctInit);
+  document.addEventListener('sf:logout', function() {
+    sfContentMustInclude = [];
+    sfContentMustExclude = [];
+    sfContentUntapped = false;
+    ctInit();
+  });
+
+})();
 
 // Patch runSimulation with monthly counter
 function patchSimRunCounter() {
@@ -3371,6 +3604,57 @@ document.addEventListener('DOMContentLoaded', function() {
         <span id="selectedCount">0 creators selected</span>
         <button data-oc="clearSelection()" style="font-family:Manrope,sans-serif;font-weight:500;font-size:9px;padding:4px 10px;background:transparent;border:1px solid var(--border);border-radius:3px;color:var(--text-muted);cursor:pointer">CLEAR</button>
       </div>
+      <!-- ── CONTENT TARGETING PANEL ───────────────────────────────── -->
+      <div id="contentTargetPanel" style="display:none;background:var(--bg2);border:1px solid rgba(0,80,255,0.25);border-radius:10px;padding:16px 20px;margin-bottom:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="font-family:Manrope,sans-serif;font-size:11px;font-weight:700;letter-spacing:.08em;color:#6B9FFF">🎯 CONTENT TARGETING</div>
+            <div id="ctTierBadge" style="font-family:Manrope,sans-serif;font-size:9px;font-weight:700;letter-spacing:.06em;padding:2px 8px;border-radius:3px;background:rgba(255,212,0,0.1);border:1px solid rgba(255,212,0,0.25);color:#FFD400">GOLD+</div>
+          </div>
+          <button id="ctCloseBtn" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;padding:0 4px">×</button>
+        </div>
+
+        <!-- Search input -->
+        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+          <div style="flex:1;min-width:200px;position:relative">
+            <input id="ctSearchInput" type="text" placeholder="Search title or topic — e.g. Resident Evil, Charlotte Tilbury, Bali..."
+              style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:Manrope,sans-serif;font-size:12px;font-weight:500;outline:none;box-sizing:border-box">
+            <div id="ctSuggestions" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:#0D0D18;border:1px solid var(--border);border-radius:7px;z-index:9999;max-height:220px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.5)"></div>
+          </div>
+          <button id="ctAddInclude" style="padding:9px 14px;background:rgba(0,196,106,0.12);border:1px solid rgba(0,196,106,0.3);color:#00C46A;border-radius:7px;font-family:Manrope,sans-serif;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">+ MUST INCLUDE</button>
+          <button id="ctAddExclude" style="padding:9px 14px;background:rgba(255,80,80,0.1);border:1px solid rgba(255,80,80,0.25);color:#FF5050;border-radius:7px;font-family:Manrope,sans-serif;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">− MUST EXCLUDE</button>
+        </div>
+
+        <!-- Active tags -->
+        <div id="ctTagsRow" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px"></div>
+
+        <!-- Crossover suggestions -->
+        <div id="ctCrossoverRow" style="display:none;margin-bottom:12px">
+          <div style="font-family:Manrope,sans-serif;font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--text-muted);margin-bottom:6px">AUDIENCE CROSSOVER — creators in these clusters share similar audiences:</div>
+          <div id="ctCrossoverChips" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+        </div>
+
+        <!-- Untapped toggle + results summary -->
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <div id="ctUntappedToggle" style="width:32px;height:18px;background:rgba(255,255,255,0.1);border-radius:9px;position:relative;cursor:pointer;transition:background .2s;border:1px solid rgba(255,255,255,0.15)">
+              <div id="ctUntappedThumb" style="width:14px;height:14px;background:#fff;border-radius:50%;position:absolute;top:1px;left:1px;transition:transform .2s;opacity:0.4"></div>
+            </div>
+            <span style="font-family:Manrope,sans-serif;font-size:11px;font-weight:600;color:var(--text-muted)">UNTAPPED ONLY — show creators whose audience matches but haven't covered this title yet</span>
+          </label>
+          <div id="ctResultSummary" style="font-family:Manrope,sans-serif;font-size:11px;font-weight:600;color:var(--text-muted)"></div>
+        </div>
+      </div>
+
+      <!-- Content targeting trigger button (shown in filter bar) -->
+      <div id="ctTriggerWrap" style="margin-bottom:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <button id="ctOpenBtn" style="padding:7px 14px;background:rgba(107,159,255,0.08);border:1px solid rgba(107,159,255,0.25);color:#6B9FFF;border-radius:7px;font-family:Manrope,sans-serif;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;letter-spacing:.04em">
+          🎯 <span>CONTENT TARGETING</span>
+          <span id="ctActiveBadge" style="display:none;background:#6B9FFF;color:#000;border-radius:3px;padding:1px 6px;font-size:9px;font-weight:700">ACTIVE</span>
+        </button>
+        <div id="ctLockedMsg" style="display:none;font-family:Manrope,sans-serif;font-size:11px;color:var(--text-muted)">🔒 Content targeting — <span style="color:#FFD400;cursor:pointer" data-oc="showUpgradePrompt('content_targeting','Silver')">Silver+</span></div>
+      </div>
+
       <div id="creatorGrid" class="creator-grid"></div>
       <div id="sfPageControls" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:24px 0;flex-wrap:wrap;"></div>
     </div>
@@ -4011,6 +4295,84 @@ const GENRE_BENCHMARKS = {
 };
 
 // ── GENRE SUB-MODES ───────────────────────────────────────────────────
+// ── CONTENT TARGETING CLUSTERS ───────────────────────────────────────────
+// Maps title/keyword → related keywords for bio/subMode matching
+// Also maps crossover clusters: which topics share audiences
+const CONTENT_CLUSTERS = {
+  // ── GAMING ────────────────────────────────────────────────────────
+  "Resident Evil":    { keywords:["resident evil","re village","re4","biohazard","capcom horror"], cluster:"Survival Horror", crossover:["Dead Space","Silent Hill","The Forest","Alien Isolation","Soma","Outlast","Amnesia"] },
+  "Subnautica":       { keywords:["subnautica","below zero","unknown worlds","ocean survival"], cluster:"Survival Exploration", crossover:["The Forest","Green Hell","Raft","Stranded Deep","Outer Wilds","No Mans Sky"] },
+  "Elden Ring":       { keywords:["elden ring","fromsoft","soulslike","fromsoftware","souls"], cluster:"Action RPG / Souls", crossover:["Dark Souls","Bloodborne","Sekiro","Lords of the Fallen","Lies of P","Hollow Knight"] },
+  "Minecraft":        { keywords:["minecraft","mojang","creeper","bedrock","java edition"], cluster:"Sandbox / Survival", crossover:["Terraria","Valheim","Raft","Palworld","The Forest","Hytale"] },
+  "Hollow Knight":    { keywords:["hollow knight","team cherry","metroidvania","silksong"], cluster:"Metroidvania / Indie", crossover:["Ori","Celeste","Blasphemous","Salt and Sanctuary","Dead Cells","Shovel Knight"] },
+  "Call of Duty":     { keywords:["call of duty","cod","warzone","modern warfare","black ops"], cluster:"FPS / Shooter", crossover:["Battlefield","Apex Legends","Valorant","Rainbow Six","Counter-Strike","PUBG"] },
+  "Fortnite":         { keywords:["fortnite","epic games","battle royale","fortnite chapter"], cluster:"Battle Royale", crossover:["Apex Legends","PUBG","Warzone","Fall Guys","Multiversus"] },
+  "League of Legends":{ keywords:["league of legends","lol","riot games","moba","champion"], cluster:"MOBA", crossover:["Dota 2","Heroes of the Storm","Smite","Wild Rift","Pokemon Unite"] },
+  "Grand Theft Auto": { keywords:["gta","grand theft auto","rockstar","gta5","gta online"], cluster:"Open World / Crime", crossover:["Red Dead Redemption","Saints Row","Cyberpunk 2077","Watch Dogs","Sleeping Dogs"] },
+  "FIFA / EA FC":     { keywords:["fifa","ea fc","ultimate team","fut","ea sports football"], cluster:"Sports Games", crossover:["Pro Evolution Soccer","NBA 2K","Madden","NHL","eFootball"] },
+  "Valorant":         { keywords:["valorant","riot fps","agent","spike","valorant rank"], cluster:"FPS / Tactical", crossover:["Counter-Strike","Overwatch","Rainbow Six","Apex Legends","Call of Duty"] },
+  "World of Warcraft":{ keywords:["world of warcraft","wow","blizzard","mmorpg","azeroth"], cluster:"MMORPG", crossover:["Final Fantasy XIV","Elder Scrolls Online","Guild Wars 2","New World","Lost Ark"] },
+  "Stardew Valley":   { keywords:["stardew","stardew valley","cozy game","farming sim","concernedape"], cluster:"Cozy / Farming", crossover:["Animal Crossing","Coral Island","Sun Haven","Witchbrook","Farming Simulator"] },
+  "The Witcher":      { keywords:["witcher","witcher 3","geralt","cd projekt","ciri"], cluster:"Story RPG", crossover:["Cyberpunk 2077","Dragon Age","Mass Effect","Baldurs Gate","Divinity"] },
+  "Dead by Daylight": { keywords:["dead by daylight","dbd","killer","survivor","behaviour"], cluster:"Asymmetric Horror", crossover:["Friday the 13th","Evil Dead","Texas Chain Saw Massacre","Ghostface"] },
+  "Apex Legends":     { keywords:["apex legends","apex","respawn","legend","battle royale"], cluster:"Battle Royale", crossover:["Fortnite","Warzone","PUBG","Titanfall","Overwatch"] },
+  "Cyberpunk 2077":   { keywords:["cyberpunk","night city","cd projekt","v character","keanu"], cluster:"Open World RPG", crossover:["The Witcher","GTA","Deus Ex","Watch Dogs","Blade Runner"] },
+  "Dark Souls":       { keywords:["dark souls","soulslike","fromsoftware","bonfires","estus"], cluster:"Action RPG / Souls", crossover:["Elden Ring","Sekiro","Bloodborne","Nioh","Code Vein"] },
+  "Animal Crossing":  { keywords:["animal crossing","acnh","nintendo","isabelle","nook"], cluster:"Cozy / Life Sim", crossover:["Stardew Valley","Spiritfarer","Cozy Grove","Garden Story","Witchbrook"] },
+  "Hogwarts Legacy":  { keywords:["hogwarts legacy","harry potter","wizarding world","hogwarts"], cluster:"Open World RPG", crossover:["Elden Ring","Witcher","Spiders","Immortals Fenyx"] },
+
+  // ── BEAUTY ────────────────────────────────────────────────────────
+  "Charlotte Tilbury":{ keywords:["charlotte tilbury","tilbury","pillow talk","flawless filter"], cluster:"Luxury Makeup", crossover:["Dior Beauty","Armani Beauty","Chanel Beauty","Laura Mercier","NARS"] },
+  "Rare Beauty":      { keywords:["rare beauty","selena gomez","soft pinch","rare"], cluster:"Celebrity Beauty", crossover:["Rhode","rem beauty","Fenty Beauty","Westman Atelier","Jones Road"] },
+  "The Ordinary":     { keywords:["the ordinary","deciem","niacinamide","retinol","hyaluronic"], cluster:"Skincare / Ingredient-led", crossover:["CeraVe","La Roche-Posay","Paulas Choice","Inkey List","Minimalist"] },
+  "Fenty Beauty":     { keywords:["fenty","fenty beauty","rihanna","shade range","pro filtr"], cluster:"Inclusive Makeup", crossover:["NYX","MAC","Morphe","ColourPop","elf Cosmetics"] },
+  "elf Cosmetics":    { keywords:["elf cosmetics","e.l.f","dupe makeup","budget makeup"], cluster:"Budget / Dupe Beauty", crossover:["Catrice","Essence","Wet n Wild","NYX","Colourpop"] },
+  "CeraVe":           { keywords:["cerave","moisturiser","cleanser","dermatologist","skincare routine"], cluster:"Skincare / Ingredient-led", crossover:["The Ordinary","Neutrogena","La Roche-Posay","Vanicream","Paulas Choice"] },
+  "Huda Beauty":      { keywords:["huda beauty","huda kattan","glam makeup","eyeshadow palette"], cluster:"Luxury / Glam Makeup", crossover:["Charlotte Tilbury","Anastasia Beverly Hills","Morphe","Pat McGrath"] },
+  "Glossier":         { keywords:["glossier","you perfume","boy brow","cloud paint","dewy"], cluster:"Clean / Minimal Beauty", crossover:["Rare Beauty","Tower 28","Ilia","Kosas","Merit"] },
+
+  // ── TRAVEL ────────────────────────────────────────────────────────
+  "Bali":             { keywords:["bali","ubud","seminyak","kuta","bali vlog","indonesia travel"], cluster:"Southeast Asia Travel", crossover:["Thailand","Vietnam","Philippines","Cambodia","Sri Lanka"] },
+  "Japan":            { keywords:["japan","tokyo","kyoto","osaka","japanese food","japan vlog"], cluster:"East Asia Travel", crossover:["South Korea","Taiwan","Hong Kong","China travel","Singapore"] },
+  "Dubai":            { keywords:["dubai","uae","abu dhabi","burj khalifa","dubai vlog"], cluster:"Luxury / Middle East Travel", crossover:["Qatar","Saudi Arabia","Maldives","Luxury resort","Abu Dhabi"] },
+  "Van Life":         { keywords:["van life","nomadic","van build","living in van","road trip"], cluster:"Nomadic / Budget Travel", crossover:["Digital nomad","Solo travel","Backpacking","Budget travel","Overlanding"] },
+  "Maldives":         { keywords:["maldives","overwater bungalow","maldives resort","indian ocean"], cluster:"Luxury Travel", crossover:["Dubai","Bora Bora","Seychelles","Fiji","Mauritius"] },
+  "New York":         { keywords:["new york","nyc","manhattan","brooklyn","new york city vlog"], cluster:"City Travel", crossover:["Los Angeles","Chicago","Miami","London","Paris"] },
+
+  // ── FITNESS ────────────────────────────────────────────────────────
+  "CrossFit":         { keywords:["crossfit","wod","box jump","deadlift","crossfit games"], cluster:"Functional Fitness", crossover:["HIIT","Olympic lifting","Calisthenics","Bootcamp","F45"] },
+  "Marathon Running": { keywords:["marathon","half marathon","running training","5k run","10k run"], cluster:"Endurance / Running", crossover:["Trail running","Triathlon","Cycling","Swimming","Ultra marathon"] },
+  "Bodybuilding":     { keywords:["bodybuilding","bulk","cut","ifbb","natty","physique"], cluster:"Strength / Physique", crossover:["Powerlifting","Strongman","Classic physique","Mens physique","Fitness model"] },
+
+  // ── FOOD ──────────────────────────────────────────────────────────
+  "Gordon Ramsay":    { keywords:["gordon ramsay","hells kitchen","masterchef","ramsay recipe"], cluster:"Fine Dining / Cooking", crossover:["Jamie Oliver","Nigella","Salt Bae","Thomas Keller","French cooking"] },
+  "ASMR Cooking":     { keywords:["asmr cooking","asmr food","mukbang","asmr eating","silent cooking"], cluster:"ASMR / Food Content", crossover:["Mukbang","Cooking ASMR","Food sounds","Whisper cooking"] },
+  "Street Food":      { keywords:["street food","food market","local food","night market","food tour"], cluster:"Food Travel", crossover:["Food vlog","Local cuisine","Night market","Asian street food","Food market"] },
+  "Ramen":            { keywords:["ramen","tonkotsu","ramen shop","japanese noodles","ramen review"], cluster:"Japanese / Noodle Food", crossover:["Sushi","Japanese food","Pho","Noodles","Asian cuisine"] },
+
+  // ── TECH ──────────────────────────────────────────────────────────
+  "iPhone":           { keywords:["iphone","apple","ios","apple review","iphone review","ios camera"], cluster:"Apple Ecosystem", crossover:["iPad","MacBook","Apple Watch","AirPods","iOS apps"] },
+  "AI Tools":         { keywords:["ai tools","chatgpt","claude ai","midjourney","ai productivity","llm"], cluster:"AI / Productivity Tech", crossover:["Notion","Automation","No-code","Zapier","Obsidian","Productivity apps"] },
+  "PC Building":      { keywords:["pc build","gaming pc","ryzen","nvidia","gpu","rtx","motherboard"], cluster:"PC Hardware", crossover:["Gaming setup","Peripherals","Overclocking","PC gaming","Streaming setup"] },
+  "Tesla":            { keywords:["tesla","elon musk","ev","electric car","model 3","model y"], cluster:"EV / Future Tech", crossover:["Rivian","Lucid","EV review","Electric vehicle","Clean energy"] }
+};
+
+
+// Cluster → colour mapping for UI
+const CLUSTER_COLORS = {
+  'Survival Horror':'#8B0000','Survival Exploration':'#006994','Action RPG / Souls':'#8B4513',
+  'Sandbox / Survival':'#228B22','Metroidvania / Indie':'#4B0082','FPS / Shooter':'#B22222',
+  'Battle Royale':'#FF6B35','MOBA':'#9B59B6','Open World / Crime':'#2C3E50',
+  'Sports Games':'#27AE60','FPS / Tactical':'#E74C3C','MMORPG':'#8E44AD',
+  'Cozy / Farming':'#F39C12','Story RPG':'#1ABC9C','Asymmetric Horror':'#922B21',
+  'Luxury Makeup':'#8B008B','Celebrity Beauty / Clean':'#FF69B4','Skincare / Ingredient-led':'#20B2AA',
+  'Inclusive Makeup':'#DC143C','Budget / Dupe Beauty':'#FF8C00',
+  'Southeast Asia Travel':'#27AE60','East Asia Travel':'#E74C3C','Middle East / Luxury Travel':'#F39C12',
+  'Nomadic / Budget Travel':'#2ECC71','Functional Fitness':'#E67E22','Endurance / Running':'#3498DB',
+  'Strength / Physique':'#E74C3C','Fine Dining / Cooking':'#8B4513','ASMR / Food Content':'#98D8C8',
+  'Food Travel':'#FF8C00','Apple Ecosystem':'#95A5A6','AI / Productivity Tech':'#00BFFF',
+};
+
 const GENRE_SUBMODES = {
   'Gaming & Esports':           ['RPG / Open World','FPS / Tactical','Battle Royale','MOBA','Horror','Sports Games','Indie','Retro / Classics'],
   'Health & Fitness':           ['Gym / Strength','Running & Cardio','Wellness & Mindfulness','Nutrition & Diet','Sports Performance','Weight Loss'],
@@ -10487,16 +10849,73 @@ function renderCreatorGrid(keepPage) {
     return signals.some(function(s) { return hay.indexOf(s) !== -1; });
   }
 
+  // ── Content targeting filter ─────────────────────────────────────────
+  function getCreatorContentHay(cr) {
+    return ((cr.bio||'') + ' ' + cr.name + ' ' + (cr.subMode||'') + ' ' + cr.genre + ' ' + (cr.handle||'')).toLowerCase();
+  }
+
+  function contentKeywordMatch(cr, termObj) {
+    var hay = getCreatorContentHay(cr);
+    // Check primary keywords
+    if (termObj.keywords && termObj.keywords.some(function(k){ return hay.indexOf(k.toLowerCase()) !== -1; })) return true;
+    // Also check if the label itself matches (direct title search)
+    if (hay.indexOf(termObj.label.toLowerCase()) !== -1) return true;
+    return false;
+  }
+
+  function passedContentFilter(cr) {
+    // Must include: creator must match ALL include terms
+    if (sfContentMustInclude.length > 0) {
+      for (var i = 0; i < sfContentMustInclude.length; i++) {
+        if (!contentKeywordMatch(cr, sfContentMustInclude[i])) return false;
+      }
+    }
+    // Must exclude: creator must match NONE of the exclude terms
+    if (sfContentMustExclude.length > 0) {
+      for (var j = 0; j < sfContentMustExclude.length; j++) {
+        if (contentKeywordMatch(cr, sfContentMustExclude[j])) return false;
+      }
+    }
+    // Untapped: if enabled, creator must NOT match any include terms in their bio
+    // (they have the right audience via genre/submode but haven't covered the title)
+    if (sfContentUntapped && sfContentMustInclude.length > 0) {
+      for (var k = 0; k < sfContentMustInclude.length; k++) {
+        if (contentKeywordMatch(cr, sfContentMustInclude[k])) return false; // already covered it
+      }
+    }
+    return true;
+  }
+
+  // Content targeting score bonus — reward closer matches
+  function contentTargetScore(cr) {
+    if (sfContentMustInclude.length === 0) return 0;
+    var hay = getCreatorContentHay(cr);
+    var score = 0;
+    sfContentMustInclude.forEach(function(term) {
+      if (term.keywords) {
+        term.keywords.forEach(function(k) {
+          if (hay.indexOf(k.toLowerCase()) !== -1) score += 12;
+        });
+      }
+    });
+    return Math.min(score, 40);
+  }
+
   // ── Genre filter ──────────────────────────────────────────────────
   function genreScore(cr) {
     if (cr.genre === genre) return 30;
     const affinityRaw2 = (GENRE_AFFINITY[cr.genre]||{})[genre];
     const affinity = (affinityRaw2 !== undefined && affinityRaw2 !== null) ? affinityRaw2 : 0;
     if (affinity >= 0.6) return 10;
+    // If content targeting is active, relax genre gate — let content match drive relevance
+    if (sfContentMustInclude.length > 0 || sfContentMustExclude.length > 0) return 0;
     return -999; // exclude
   }
 
   // ── Build filtered + scored list ──────────────────────────────────
+  // Check if content targeting is active
+  var _contentFilterActive = sfContentMustInclude.length > 0 || sfContentMustExclude.length > 0 || sfContentUntapped;
+
   // ── SEARCH MODE: pure lookup, zero restrictions ──────────────────
   if (window.__sfSearch) {
     const sq = window.__sfSearch;
@@ -10571,10 +10990,11 @@ function renderCreatorGrid(keepPage) {
     .filter(cr => {
       if (!passedBudgetFilter(cr)) return false;
       // When filtering by a specific language, bypass tier/budget limits
-      // so brands can see all creators in that language
       var langOnly = selectedLang && selectedLang !== 'all' && selectedLang !== 'English';
       if (!langOnly && !passedTierFilter(cr)) return false;
       if (!passedLangFilter(cr)) return false;
+      // Content targeting filter — applied before genre when active
+      if (_contentFilterActive && !passedContentFilter(cr)) return false;
       if (genreScore(cr) < 0) return false;
       return true;
     })
@@ -10582,13 +11002,13 @@ function renderCreatorGrid(keepPage) {
       const gScore  = genreScore(cr);
       const oScore  = objectiveScore(cr);
       const smScore = subModeScore(cr);
+      const ctScore = contentTargetScore(cr); // content targeting bonus
       const base = sortMode==='gfi'  ? (computeGFI(cr)) :
                    sortMode==='subs' ? parseSubs(cr.subs) / 1e6 :
                    cr.cpi;
       const regionMatch = creatorRegionMatch(cr);
-      // regionBoost: region-matched creators get hard-partitioned to top
       const regionBoost = regionMatch ? 10000 : 0;
-      return { cr, total: base + gScore + oScore + smScore + regionBoost, regionMatch };
+      return { cr, total: base + gScore + oScore + smScore + ctScore + regionBoost, regionMatch };
     })
     .sort((a,b) => b.total - a.total);
 
@@ -11647,6 +12067,10 @@ function renderEfficiencyCurve() {
 
 // ── SUB-MODES ─────────────────────────────────────────────────────────
 let activeSubMode = '';
+// ── Content targeting engine state ──────────────────────────────────────
+var sfContentMustInclude  = []; // [{label, keywords}]
+var sfContentMustExclude  = []; // [{label, keywords}]
+var sfContentUntapped     = false;
 
 function onGenreChange() {
   const genre = getSelectedGenre();
