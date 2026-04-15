@@ -3461,13 +3461,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
         <div class="field">
           <label>Budget</label>
-          <div class="range-wrap">
-            <div class="range-row">
-              <span style="font-size:11px;color:var(--text-dim)">$5,000</span>
-              <span class="range-val" id="budgetLabel">£85,000</span>
-              <span style="font-size:11px;color:var(--text-dim)">$500,000</span>
-            </div>
-            <input type="range" id="budget" min="5000" max="500000" step="5000" value="85000" >
+          <div style="margin-bottom:6px">
+            <span class="range-val" id="budgetLabel" style="font-size:14px">$85,000</span>
+          </div>
+          <!-- Hidden range input kept for compatibility with all budget reads -->
+          <input type="range" id="budget" min="10000" max="5000000" step="10000" value="85000" style="display:none">
+          <!-- Segmented budget picker -->
+          <div id="budgetSegments" style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:4px">
+            <button class="budget-seg" data-val="10000"  style="padding:5px 2px;font-family:Manrope,sans-serif;font-size:10px;font-weight:600;border:1px solid var(--border);border-radius:4px;background:var(--bg3);color:var(--text-muted);cursor:pointer;transition:all .15s">$10K</button>
+            <button class="budget-seg" data-val="50000"  style="padding:5px 2px;font-family:Manrope,sans-serif;font-size:10px;font-weight:600;border:1px solid var(--border);border-radius:4px;background:var(--bg3);color:var(--text-muted);cursor:pointer;transition:all .15s">$50K</button>
+            <button class="budget-seg" data-val="250000" style="padding:5px 2px;font-family:Manrope,sans-serif;font-size:10px;font-weight:600;border:1px solid var(--border);border-radius:4px;background:var(--bg3);color:var(--text-muted);cursor:pointer;transition:all .15s">$250K</button>
+            <button class="budget-seg" data-val="500000" style="padding:5px 2px;font-family:Manrope,sans-serif;font-size:10px;font-weight:600;border:1px solid rgba(255,212,0,0.4);border-radius:4px;background:rgba(255,212,0,0.12);color:#FFD400;cursor:pointer;transition:all .15s">$500K</button>
+            <button class="budget-seg" data-val="1000000" style="padding:5px 2px;font-family:Manrope,sans-serif;font-size:10px;font-weight:600;border:1px solid var(--border);border-radius:4px;background:var(--bg3);color:var(--text-muted);cursor:pointer;transition:all .15s">$1M</button>
+            <button class="budget-seg" data-val="2000000" style="padding:5px 2px;font-family:Manrope,sans-serif;font-size:10px;font-weight:600;border:1px solid var(--border);border-radius:4px;background:var(--bg3);color:var(--text-muted);cursor:pointer;transition:all .15s">$2M</button>
+            <button class="budget-seg" data-val="5000000" style="padding:5px 2px;font-family:Manrope,sans-serif;font-size:10px;font-weight:600;border:1px solid var(--border);border-radius:4px;background:var(--bg3);color:var(--text-muted);cursor:pointer;transition:all .15s">$5M</button>
+            <button class="budget-seg" data-val="custom"  id="budgetCustomBtn" style="padding:5px 2px;font-family:Manrope,sans-serif;font-size:10px;font-weight:600;border:1px solid var(--border);border-radius:4px;background:var(--bg3);color:var(--text-muted);cursor:pointer;transition:all .15s">✏ Custom</button>
+          </div>
+          <!-- Custom input (shown when Custom is selected) -->
+          <div id="budgetCustomWrap" style="display:none;margin-top:4px">
+            <input id="budgetCustomInput" type="number" placeholder="Enter amount e.g. 750000"
+              style="width:100%;padding:7px 10px;background:var(--bg3);border:1px solid rgba(255,212,0,0.3);border-radius:5px;color:#FFD400;font-family:Manrope,sans-serif;font-size:12px;font-weight:600;outline:none;box-sizing:border-box">
           </div>
         </div>
 
@@ -4239,7 +4252,7 @@ function totalSelectedCost(format) {
 function renderBudgetWarning() {
   var warningEl = document.getElementById('sfBudgetWarning');
   if (!warningEl) return;
-  var budget = parseInt((document.getElementById('budget')||{value:'85000'}).value)||85000;
+  var budget = parseInt((document.getElementById('budget')||{value:'500000'}).value)||500000;
   var format = (document.getElementById('format')||{value:'Integrated'}).value;
   var total  = totalSelectedCost(format);
   if (total > budget) {
@@ -10698,7 +10711,7 @@ function avgViewsLabel(cr) {
 function renderCreatorGrid(keepPage) {
   if (!keepPage) currentPage = 1;
   const genre   = getSelectedGenre();
-  const budget  = parseInt((document.getElementById('budget')||{value:'85000'}).value)||85000;
+  const budget  = parseInt((document.getElementById('budget')||{value:'500000'}).value)||500000;
   const tierMix = parseInt((document.getElementById('tierMix')||{value:'4'}).value);
   const format  = (document.getElementById('format')||{value:'Integrated'}).value;
   const fmtKey  = format==='Dedicated'?'ded':format==='Mixed'?'mix':'int';
@@ -12375,7 +12388,7 @@ function renderPersonaScreen() {
   }
 
   // Budget tier context
-  var budgetLabel = budget >= 250000 ? 'Tier 1 (£250K+)' : budget >= 100000 ? 'Tier 2 (£100K+)' : budget >= 40000 ? 'Tier 3 (£40K+)' : 'Tier 4 (<£40K)';
+  var budgetLabel = budget >= 1000000 ? 'Tier 1 ($1M+)' : budget >= 250000 ? 'Tier 2 ($250K+)' : budget >= 50000 ? 'Tier 3 ($50K+)' : 'Tier 4 (<$50K)';
   var fmtBudget   = '$' + (budget >= 1000 ? (budget/1000).toFixed(0) + 'K' : budget);
 
   // Tier cap on personas
@@ -12604,7 +12617,7 @@ function updateBriefPanel() {
   panel.classList.add('open');
 
   const selected  = CREATORS.filter(cr => selectedCreators.has(cr.id));
-  const budget    = parseInt((document.getElementById('budget')||{value:'85000'}).value)||85000;
+  const budget    = parseInt((document.getElementById('budget')||{value:'500000'}).value)||500000;
   const format    = (document.getElementById('format')||{value:'Integrated'}).value;
   const formatKey = format==='Dedicated'?'ded':format==='Mixed'?'mix':'int';
   const genre     = getSelectedGenre();
@@ -13521,7 +13534,7 @@ document.addEventListener('DOMContentLoaded', () => {
   onGenreChange();
   renderCreatorGrid();
   updateObjCount();
-  updateTierLabel(85000);
+  updateTierLabel(500000);
   // Pre-compute simulation so bands show immediately when simulator is opened
   computeSimResults();
   // Start Twitch live polling
@@ -15743,7 +15756,7 @@ document.addEventListener('input', function(e) {
       creators = simResults.crData.map(function(d){ return d.cr; });
     }
 
-    var budget = parseInt((document.getElementById('budget')||{value:'85000'}).value)||85000;
+    var budget = parseInt((document.getElementById('budget')||{value:'500000'}).value)||500000;
     var genre  = (typeof getSelectedGenre==='function') ? getSelectedGenre() : 'Gaming & Esports';
     var panel  = document.getElementById('budgetAllocationContent');
 
@@ -15913,14 +15926,57 @@ document.addEventListener('DOMContentLoaded', function() {
       if (typeof runCreatorSearch === 'function') runCreatorSearch(searchInput.value);
     });
   }
-  // Budget slider
-  var budgetSlider = document.getElementById('budget');
-  if (budgetSlider) {
-    budgetSlider.addEventListener('input', function() { renderBudgetWarning(); });
-    budgetSlider.addEventListener('input', function() {
-      if (typeof updateTierLabel === 'function') updateTierLabel(budgetSlider.value);
+  // ── Budget segmented picker ────────────────────────────────────────
+  (function() {
+    var hiddenSlider = document.getElementById('budget');
+    var segs         = document.querySelectorAll('.budget-seg');
+    var customWrap   = document.getElementById('budgetCustomWrap');
+    var customInput  = document.getElementById('budgetCustomInput');
+
+    function setActiveSeg(val) {
+      segs.forEach(function(btn) {
+        var isActive = btn.dataset.val === val;
+        btn.style.background    = isActive ? 'rgba(255,212,0,0.12)' : 'var(--bg3)';
+        btn.style.borderColor   = isActive ? 'rgba(255,212,0,0.4)'  : 'var(--border)';
+        btn.style.color         = isActive ? '#FFD400'               : 'var(--text-muted)';
+      });
+    }
+
+    function applyBudget(numVal) {
+      if (!hiddenSlider) return;
+      hiddenSlider.value = numVal;
+      // Fire input event so all listeners pick it up
+      hiddenSlider.dispatchEvent(new Event('input', { bubbles: true }));
+      renderBudgetWarning();
+      if (typeof updateTierLabel === 'function') updateTierLabel(numVal);
+    }
+
+    segs.forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var val = this.dataset.val;
+        if (val === 'custom') {
+          setActiveSeg('custom');
+          customWrap.style.display = 'block';
+          if (customInput) customInput.focus();
+          return;
+        }
+        customWrap.style.display = 'none';
+        setActiveSeg(val);
+        applyBudget(parseInt(val));
+      });
     });
-  }
+
+    if (customInput) {
+      customInput.addEventListener('input', function() {
+        var v = parseInt(this.value.replace(/[^0-9]/g,''));
+        if (v && v >= 1000) applyBudget(v);
+      });
+    }
+
+    // Init: mark $500K as default active
+    setActiveSeg('500000');
+    applyBudget(500000);
+  })();
   // Duration slider
   var durSlider = document.getElementById('campaignDuration');
   var durLabel  = document.getElementById('durationLabel');
