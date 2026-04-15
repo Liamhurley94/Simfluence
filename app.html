@@ -12146,6 +12146,9 @@ function setSubMode(m, btn) {
   if(btn) btn.classList.add('active');
   if (window.__livePanelOpen) renderLivePanel();
   renderCreatorGrid();
+  // Update scoring screen — top creator, avg CPI/GFI, and table all depend on sub-mode
+  if (typeof renderScoringScreen === 'function') renderScoringScreen();
+  if (typeof renderFullScoreTable === 'function') renderFullScoreTable();
   // Update personas immediately on sub-mode change — no simulation needed
   if (typeof renderPersonaScreen === 'function') renderPersonaScreen();
 }
@@ -12160,12 +12163,39 @@ function renderScoringScreen() {
 
   // What are we scoring?
   // If brief has creators — score those specifically
-  // If not — score all genre-matched creators sorted by GFI
+  // If not — score genre-matched creators, filtered by sub-mode when active
   const toShow = hasBrief
     ? CREATORS.filter(cr => selectedCreators.has(cr.id))
     : CREATORS
-        .filter(cr => cr.genre === genre || ((GENRE_AFFINITY[cr.genre]||{})[genre]||0) >= 0.6)
-        .sort((a,b) => computeGFI(b) - computeGFI(a))
+        .filter(cr => {
+          // Genre match
+          const genreMatch = cr.genre === genre || ((GENRE_AFFINITY[cr.genre]||{})[genre]||0) >= 0.6;
+          if (!genreMatch) return false;
+          // Sub-mode match — when a sub-mode is selected, filter to creators
+          // whose subMode or bio aligns with it
+          if (subMode) {
+            const crSub = (cr.subMode || '').toLowerCase();
+            const crBio = (cr.bio || '').toLowerCase();
+            const sel   = subMode.toLowerCase();
+            // Direct subMode match
+            if (crSub && (crSub === sel || crSub.indexOf(sel.split(' ')[0]) !== -1)) return true;
+            // Bio keyword match — split sub-mode into words and check
+            const words = sel.replace(/[\/\-&]/g,' ').split(' ').filter(w => w.length > 2);
+            if (words.some(w => crBio.indexOf(w) !== -1 || crSub.indexOf(w) !== -1)) return true;
+            // computeSubModeAlignment as fallback — include if at least partial fit
+            if (typeof computeSubModeAlignment === 'function') {
+              return computeSubModeAlignment(cr, subMode) >= 25;
+            }
+            return false;
+          }
+          return true;
+        })
+        .sort((a,b) => {
+          // When sub-mode active: rank by GFI (genre fit is the primary signal)
+          // When no sub-mode: rank by CPI + GFI combined
+          if (subMode) return computeGFI(b) - computeGFI(a);
+          return (b.cpi + computeGFI(b)) - (a.cpi + computeGFI(a));
+        })
         .slice(0, 30);
 
   if (toShow.length === 0) return;
@@ -12174,7 +12204,12 @@ function renderScoringScreen() {
   const withGFI = toShow.map(cr => ({ cr, gfi: computeGFI(cr) }));
   const avgCPI  = Math.round(withGFI.reduce((a,x)=>a+x.cr.cpi,0)/withGFI.length);
   const avgGFI  = Math.round(withGFI.reduce((a,x)=>a+x.gfi,0)/withGFI.length);
-  const top     = withGFI.sort((a,b)=>(b.cr.cpi+b.gfi)-(a.cr.cpi+a.gfi))[0];
+  // Top creator: when sub-mode active, GFI is the primary signal (genre fit matters most)
+  // When no sub-mode: combined CPI+GFI
+  const top = withGFI.slice().sort((a,b) => subMode
+    ? b.gfi - a.gfi
+    : (b.cr.cpi + b.gfi) - (a.cr.cpi + a.gfi)
+  )[0];
   const conf    = avgGFI >= 70 ? 'HIGH' : avgGFI >= 50 ? 'MED' : 'LOW';
   const confCol = avgGFI >= 70 ? '#00C46A' : avgGFI >= 50 ? '#FF7A00' : '#E60023';
 
