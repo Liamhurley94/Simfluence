@@ -3448,6 +3448,13 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="field" id="subModeField">
           <label>Campaign Sub-mode</label>
           <div class="platform-chips" id="subModeChips"></div>
+          <!-- Sub-genre dropdown — shown when sub-mode has sub-genres -->
+          <div id="subGenreWrap" style="display:none;margin-top:8px">
+            <select id="subGenreSelect"
+              style="width:100%;font-family:Manrope,sans-serif;font-weight:600;font-size:11px;background:var(--bg3);border:1px solid rgba(107,159,255,0.3);border-radius:6px;padding:7px 10px;color:#6B9FFF;cursor:pointer;outline:none">
+              <option value="">All sub-genres</option>
+            </select>
+          </div>
         </div>
 
         <div class="field">
@@ -4384,6 +4391,117 @@ const CLUSTER_COLORS = {
   'Nomadic / Budget Travel':'#2ECC71','Functional Fitness':'#E67E22','Endurance / Running':'#3498DB',
   'Strength / Physique':'#E74C3C','Fine Dining / Cooking':'#8B4513','ASMR / Food Content':'#98D8C8',
   'Food Travel':'#FF8C00','Apple Ecosystem':'#95A5A6','AI / Productivity Tech':'#00BFFF',
+};
+
+// ── SUB-GENRE MAP (Level 3 specificity) ──────────────────────────────────
+// Keys match GENRE_SUBMODES entries exactly
+const SUBMODE_SUBGENRES = {
+  // ── GAMING ─────────────────────────────────────────────────────────────
+  'RPG / Open World': [
+    'Action RPG','Action-Adventure RPG','Tactical RPG','Turn-Based RPG',
+    'Open-World RPG','Sandbox RPG','MMORPG','Dungeon Crawler RPG',
+    'Roguelike RPG','Roguelite RPG','Party-Based RPG','Isometric RPG',
+    'Story-Driven RPG','Soulslike RPG','CRPG','JRPG',
+    'Strategy RPG','Monster-Collecting RPG','Loot-Based ARPG','Hybrid RPG'
+  ],
+  'FPS / Tactical': [
+    'First-Person Shooter','Third-Person Shooter','Tactical Shooter',
+    'Hero Shooter','Looter Shooter','Battle Royale Shooter','Arena Shooter',
+    'Cover Shooter','Extraction Shooter','Military Shooter','Sniper Shooter',
+    'PvE Shooter','Co-op Shooter','Top-Down Shooter','Twin-Stick Shooter',
+    'Bullet Hell Shooter','Tactical Extraction','Hardcore Extraction Shooter'
+  ],
+  'Battle Royale': [
+    'Solo Battle Royale','Squad Battle Royale','Duo Battle Royale',
+    'Mobile Battle Royale','Tactical Battle Royale','Fantasy Battle Royale',
+    'Sci-Fi Battle Royale','Building Battle Royale','Survival Battle Royale'
+  ],
+  'MOBA': [
+    'Classic MOBA','Hero Brawler','Strategy MOBA','Mobile MOBA',
+    'Top-Down MOBA','Shooter MOBA','Fantasy MOBA','Sci-Fi MOBA'
+  ],
+  'Horror': [
+    'Survival Horror','Psychological Horror','Action Horror','Atmospheric Horror',
+    'Asymmetric Horror','Co-op Horror','Walking Simulator Horror','Body Horror',
+    'Paranormal Horror','Cosmic Horror','Jump Scare Horror','Puzzle Horror'
+  ],
+  'Sports Games': [
+    'Football / Soccer','Basketball','American Football','Baseball','Ice Hockey',
+    'Tennis','Golf','Racing','Combat Sports','Extreme Sports Sim',
+    'Management / Career Mode','Fantasy Sports'
+  ],
+  'Indie': [
+    'Indie Platformer','Indie Puzzle','Indie Adventure','Indie RPG',
+    'Cozy Indie','Pixel Art Indie','Narrative Indie','Indie Horror',
+    'Indie Roguelike','Indie Simulation','Metroidvania','Auto Battler'
+  ],
+  'Retro / Classics': [
+    'Retro FPS','Retro RPG','Retro Platformer','Retro Strategy',
+    'Classic Adventure','Retro Shooter','Arcade Classic','Retro Simulation',
+    'DOS-Era Games','16-Bit Era','32-Bit Era','Remaster / Remake'
+  ],
+
+  // ── EXTRACTION ─────────────────────────────────────────────────────────
+  'Extraction Shooter': [
+    'Tactical Extraction','Hardcore Extraction Shooter','Squad-Based Extraction',
+    'PvPvE Extraction','Survival Extraction','Stealth Extraction',
+    'Objective-Based Extraction','Raid Extraction'
+  ],
+
+  // ── BEAUTY ─────────────────────────────────────────────────────────────
+  'Skincare & Routine': [
+    'Morning Routine','Evening Routine','Anti-Aging','Acne & Blemish',
+    'Ingredient Deep-Dive','Clean Beauty Routine','Korean Skincare (K-Beauty)',
+    'Minimalist Skincare','Mens Skincare','Budget Skincare'
+  ],
+  'Makeup & Glam': [
+    'Full Glam','Editorial Makeup','Everyday Natural','Cut Crease',
+    'Bridal Makeup','Special FX / SFX','Drugstore Makeup','Colour Correction',
+    'Contouring & Highlighting','Lip Focus','Eye Focus'
+  ],
+
+  // ── TRAVEL ─────────────────────────────────────────────────────────────
+  'Luxury Travel': [
+    'First Class Flying','5-Star Hotels','Private Villas','Yacht Travel',
+    'Luxury Safari','Fine Dining Travel','Members Club Travel','Ski Resorts'
+  ],
+  'Adventure & Outdoor': [
+    'Hiking & Trekking','Rock Climbing','Surfing','Snowboarding / Skiing',
+    'Mountain Biking','Wild Camping','Scuba Diving','Skydiving','Off-Road'
+  ],
+
+  // ── FITNESS ────────────────────────────────────────────────────────────
+  'Gym / Strength': [
+    'Powerlifting','Olympic Weightlifting','Bodybuilding','Strength & Conditioning',
+    'Calisthenics','Home Workouts','Functional Fitness','CrossFit',
+    'Push Pull Legs','Full Body Training'
+  ],
+  'Running & Cardio': [
+    '5K Training','Half Marathon','Marathon','Ultra Marathon','Trail Running',
+    'Track Athletics','Cycling','Rowing','Swimming','HIIT Cardio'
+  ],
+
+  // ── FOOD ────────────────────────────────────────────────────────────────
+  'International Cuisine': [
+    'Japanese Cuisine','Italian Cuisine','Mexican Cuisine','Korean Cuisine',
+    'Indian Cuisine','French Cuisine','Chinese Cuisine','Middle Eastern Cuisine',
+    'Thai Cuisine','American BBQ','Fusion Cuisine'
+  ],
+  'Street Food': [
+    'Asian Street Food','Latin Street Food','Middle Eastern Street Food',
+    'European Street Food','Food Markets','Night Markets','Pop-Up Dining'
+  ],
+
+  // ── TECH ────────────────────────────────────────────────────────────────
+  'AI & Software': [
+    'AI Productivity','Generative AI','Machine Learning','No-Code Tools',
+    'Developer Tools','SaaS Reviews','AI Art & Design','AI Writing',
+    'Automation & Zapier','AI for Business'
+  ],
+  'PC & Laptops': [
+    'Gaming PC Builds','Laptop Reviews','Budget Builds','Workstation Builds',
+    'Overclocking','PC Modding','Benchmarking','Cooling Systems'
+  ],
 };
 
 const GENRE_SUBMODES = {
@@ -10798,14 +10916,30 @@ function renderCreatorGrid(keepPage) {
     }) || false;
   }
 
-  // ── Sub-mode keyword scoring ───────────────────────────────────────
-  const subMode = activeSubMode ? activeSubMode.toLowerCase() : '';
+  // ── Sub-mode + sub-genre keyword scoring ─────────────────────────
+  const subMode    = activeSubMode  ? activeSubMode.toLowerCase()  : '';
+  const subGenre   = activeSubGenre ? activeSubGenre.toLowerCase() : '';
   function subModeScore(cr) {
-    if (!subMode) return 0;
-    const bio = (cr.bio || '').toLowerCase();
+    if (!subMode && !subGenre) return 0;
+    const bio    = (cr.bio    || '').toLowerCase();
     const handle = (cr.handle || '').toLowerCase();
-    const words = subMode.split(/[\s\/\-&]+/);
-    return words.filter(w => w.length > 2 && (bio.includes(w) || handle.includes(w))).length * 8;
+    const crSub  = (cr.subMode || '').toLowerCase();
+    var score = 0;
+    if (subMode) {
+      const words = subMode.split(/[\s\/\-&]+/);
+      score += words.filter(w => w.length > 2 && (bio.includes(w) || handle.includes(w) || crSub.includes(w))).length * 8;
+    }
+    if (subGenre) {
+      // Sub-genre is highly specific — reward direct matches strongly
+      if (bio.includes(subGenre) || crSub.includes(subGenre)) {
+        score += 25;
+      } else {
+        // Partial keyword match
+        const sgWords = subGenre.split(/[\s\-]+/);
+        score += sgWords.filter(w => w.length > 3 && (bio.includes(w) || crSub.includes(w))).length * 10;
+      }
+    }
+    return score;
   }
 
   // ── Tier filter ───────────────────────────────────────────────────
@@ -11255,9 +11389,10 @@ function renderCreatorGrid(keepPage) {
     var _cg = document.getElementById('creatorGrid');
     if (_cg && _cg.parentElement) _cg.parentElement.insertBefore(_nb, _cg.nextSibling);
   }
+  var _sgLabel = activeSubGenre ? ' · ' + activeSubGenre.toUpperCase() : '';
   document.getElementById('discoveryMeta').textContent =
     _display.length + ' CREATORS · ' + genre.toUpperCase() + ' · ' + tierLabel.toUpperCase() +
-    langLabel + (totalHidden > 0 ? ' · ' + totalHidden + ' FILTERED OUT' : '') + objLabel.toUpperCase();
+    _sgLabel + langLabel + (totalHidden > 0 ? ' · ' + totalHidden + ' FILTERED OUT' : '') + objLabel.toUpperCase();
 }
 
 
@@ -12117,6 +12252,9 @@ function renderEfficiencyCurve() {
 
 // ── SUB-MODES ─────────────────────────────────────────────────────────
 let activeSubMode = '';
+// ── Sub-genre (level 3) state ────────────────────────────────────────────
+var activeSubGenre = ''; // e.g. 'Action RPG', 'Tactical Shooter'
+
 // ── Content targeting engine state ──────────────────────────────────────
 var sfContentMustInclude  = []; // [{label, keywords}]
 var sfContentMustExclude  = []; // [{label, keywords}]
@@ -12129,10 +12267,12 @@ function onGenreChange() {
   const field     = document.getElementById('subModeField');
   if(!container) return;
   if (field) field.style.display = modes.length ? 'block' : 'none';
-  activeSubMode = modes[0] || '';
+  activeSubMode  = modes[0] || '';
+  activeSubGenre = ''; // reset sub-genre on genre change
   container.innerHTML = modes.map((m,i) =>
     `<button class="chip ${i===0?'active':''}" data-oc="setSubMode('${m.replace(/'/g,"\'")}',currentTarget)">${m}</button>`
   ).join('');
+  renderSubGenreDropdown(activeSubMode);
   renderCreatorGrid();
   updateBriefPanel();
   if (window.__livePanelOpen) renderLivePanel();
@@ -12140,10 +12280,34 @@ function onGenreChange() {
   if (typeof renderPersonaScreen === 'function') renderPersonaScreen();
 }
 
+function renderSubGenreDropdown(subMode) {
+  var wrap   = document.getElementById('subGenreWrap');
+  var select = document.getElementById('subGenreSelect');
+  if (!wrap || !select) return;
+
+  var subs = (typeof SUBMODE_SUBGENRES !== 'undefined') ? (SUBMODE_SUBGENRES[subMode] || []) : [];
+
+  if (subs.length === 0) {
+    wrap.style.display = 'none';
+    activeSubGenre = '';
+    return;
+  }
+
+  // Populate options
+  select.innerHTML = '<option value="">All sub-genres</option>'
+    + subs.map(function(s) {
+        return '<option value="' + s + '"' + (s === activeSubGenre ? ' selected' : '') + '>' + s + '</option>';
+      }).join('');
+
+  wrap.style.display = 'block';
+}
+
 function setSubMode(m, btn) {
   activeSubMode = m;
+  activeSubGenre = ''; // reset sub-genre when sub-mode changes
   document.querySelectorAll('#subModeChips .chip').forEach(c=>c.classList.remove('active'));
   if(btn) btn.classList.add('active');
+  renderSubGenreDropdown(m);
   if (window.__livePanelOpen) renderLivePanel();
   renderCreatorGrid();
   // Update scoring screen — top creator, avg CPI/GFI, and table all depend on sub-mode
@@ -12218,7 +12382,7 @@ function renderScoringScreen() {
   if (metaEl) {
     metaEl.textContent = hasBrief
       ? selectedCreators.size + ' CREATORS IN YOUR BRIEF · ' + genre.toUpperCase() + (subMode ? ' · ' + subMode.toUpperCase() : '')
-      : 'TOP ' + toShow.length + ' CREATORS · ' + genre.toUpperCase() + (subMode ? ' · ' + subMode.toUpperCase() : '') + ' · NO BRIEF SELECTED';
+      : 'TOP ' + toShow.length + ' CREATORS · ' + genre.toUpperCase() + (subMode ? ' · ' + subMode.toUpperCase() : '') + (activeSubGenre ? ' · ' + activeSubGenre.toUpperCase() : '') + ' · NO BRIEF SELECTED';
   }
 
   // Stat cards
@@ -15961,6 +16125,21 @@ document.addEventListener('DOMContentLoaded', function() {
       if (typeof runCreatorSearch === 'function') runCreatorSearch(searchInput.value);
     });
   }
+  // ── Sub-genre dropdown ──────────────────────────────────────────────
+  (function() {
+    var sgSelect = document.getElementById('subGenreSelect');
+    if (!sgSelect) return;
+    sgSelect.addEventListener('change', function() {
+      activeSubGenre = this.value;
+      renderCreatorGrid();
+      if (typeof renderScoringScreen === 'function') renderScoringScreen();
+      if (typeof renderFullScoreTable === 'function') renderFullScoreTable();
+      if (typeof renderPersonaScreen === 'function') renderPersonaScreen();
+      // Update brief panel meta
+      if (typeof updateBriefPanel === 'function') updateBriefPanel();
+    });
+  })();
+
   // ── Budget segmented picker ────────────────────────────────────────
   (function() {
     var hiddenSlider = document.getElementById('budget');
