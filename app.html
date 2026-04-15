@@ -3463,9 +3463,9 @@ document.addEventListener('DOMContentLoaded', function() {
           <label>Budget</label>
           <div class="range-wrap">
             <div class="range-row">
-              <span style="font-size:11px;color:var(--text-dim)">£5K</span>
+              <span style="font-size:11px;color:var(--text-dim)">$5,000</span>
               <span class="range-val" id="budgetLabel">£85,000</span>
-              <span style="font-size:11px;color:var(--text-dim)">£500K</span>
+              <span style="font-size:11px;color:var(--text-dim)">$500,000</span>
             </div>
             <input type="range" id="budget" min="5000" max="500000" step="5000" value="85000" >
           </div>
@@ -4111,7 +4111,7 @@ function parseSubs(s) {
 function parseViews(s) { return parseSubs(s); }
 function clamp(v,lo,hi) { return Math.min(hi,Math.max(lo,v)); }
 function fmtNum(n) { return n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(0)+'K':n.toString(); }
-function formatBudget(n) { return '$'+(n>=1000?(n/1000).toFixed(0)+'K':n); }
+function formatBudget(n) { return '$' + Math.round(n).toLocaleString('en-US'); }
 
 function computeCostEstimate(creator) {
   // ── Rate model rebuilt from 80+ real creator deals (2024-2025) ──────
@@ -10913,18 +10913,37 @@ function renderCreatorGrid(keepPage) {
 
   // ── Genre filter ──────────────────────────────────────────────────
   function genreScore(cr) {
+    // ── UNTAPPED MODE: enforce genre AND subMode match ────────────────
+    // We want creators in the right genre pool, not just the same top-level genre.
+    // MrBeast Gaming is Gaming & Esports but covers everything — not a valid
+    // "untapped Resident Evil" candidate. Require subMode alignment too.
+    if (sfContentUntapped && sfContentMustInclude.length > 0) {
+      if (cr.genre !== genre) return -999;
+      // If a subMode is active, enforce it
+      if (activeSubMode) {
+        var crSub = (cr.subMode || '').toLowerCase();
+        var selSub = activeSubMode.toLowerCase();
+        if (crSub && crSub !== selSub && crSub.indexOf(selSub) === -1 && selSub.indexOf(crSub) === -1) {
+          // Check cluster crossover — if the content target has a cluster, use it
+          var clusterMatch = false;
+          sfContentMustInclude.forEach(function(term) {
+            var c = typeof CONTENT_CLUSTERS !== 'undefined' ? CONTENT_CLUSTERS[term.label] : null;
+            if (c && c.cluster) {
+              var cl = c.cluster.toLowerCase();
+              if (crSub.indexOf(cl.split('/')[0].trim()) !== -1 || cl.indexOf(crSub) !== -1) clusterMatch = true;
+            }
+          });
+          if (!clusterMatch) return -999;
+        }
+      }
+      return cr.genre === genre ? 30 : 10;
+    }
+
+    // ── NORMAL MODE ───────────────────────────────────────────────────
     if (cr.genre === genre) return 30;
     const affinityRaw2 = (GENRE_AFFINITY[cr.genre]||{})[genre];
     const affinity = (affinityRaw2 !== undefined && affinityRaw2 !== null) ? affinityRaw2 : 0;
     if (affinity >= 0.6) return 10;
-
-    // Content targeting genre gate logic:
-    // - Must Include active (not untapped): relax genre — content match drives relevance
-    //   e.g. find ALL creators who've covered Resident Evil, even variety creators
-    // - Untapped mode: keep genre STRICT — we want the right genre pool
-    //   who just haven't covered this title yet. MrBeast Gaming ≠ RE audience.
-    // - Must Exclude only: relax gate — exclude is a refinement, not a population change
-    if (sfContentUntapped) return -999; // strict: untapped must stay within genre
     if (sfContentMustInclude.length > 0) return 0; // relax: find anyone who covered it
     if (sfContentMustExclude.length > 0) return 0; // relax: exclusion is a refinement
     return -999; // exclude by default
@@ -14080,7 +14099,7 @@ function renderBudgetAllocation() {
   var remaining = budget - totalAllocated;
   var pctAllocated = Math.round(totalAllocated / budget * 100);
 
-  function fmtD(n) { return '$' + (n >= 1000 ? (n/1000).toFixed(n >= 10000 ? 0 : 1) + 'K' : n); }
+  function fmtD(n) { return '$' + Math.round(n).toLocaleString('en-US'); }
 
   // Header with progress bar
   var overBudget = totalAllocated > budget;
@@ -15728,7 +15747,7 @@ document.addEventListener('input', function(e) {
     var genre  = (typeof getSelectedGenre==='function') ? getSelectedGenre() : 'Gaming & Esports';
     var panel  = document.getElementById('budgetAllocationContent');
 
-    function fmtD(n){ return '$'+(n>=1000?(n/1000).toFixed(n>=10000?0:1)+'K':n); }
+    function fmtD(n){ return '$' + Math.round(n).toLocaleString('en-US'); }
     function fmtN(n){ return n>=1000000?(n/1000000).toFixed(1)+'M':n>=1000?Math.round(n/1000)+'K':String(n); }
 
     var totalCPI = creators.reduce(function(a,c){return a+(c.cpi||50);},0)||1;
