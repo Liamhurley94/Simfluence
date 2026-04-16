@@ -14948,8 +14948,10 @@ function handleFreeSignUp() {
 // ══════════════════════════════════════════════════════════════════════
 // PLATINUM FEATURES: CAMPAIGN WORKSPACE + CREATOR OUTREACH CRM
 // ══════════════════════════════════════════════════════════════════════
-var _campaigns = JSON.parse(localStorage.getItem('sf_campaigns_ws') || '[]');
-var _outreach  = JSON.parse(localStorage.getItem('sf_outreach') || '[]');
+function _lsGet(key) { try { return localStorage.getItem(key); } catch(e) { return null; } }
+function _lsSet(key, val) { try { localStorage.setItem(key, val); } catch(e) {} }
+var _campaigns = JSON.parse(_lsGet('sf_campaigns_ws') || '[]');
+var _outreach  = JSON.parse(_lsGet('sf_outreach') || '[]');
 var _editingCampaignId = null;
 var _editingOutreachId = null;
 
@@ -15012,7 +15014,7 @@ function saveCampaignWorkspace() {
   } else {
     _campaigns.unshift(entry);
   }
-  localStorage.setItem('sf_campaigns_ws', JSON.stringify(_campaigns));
+  _lsSet('sf_campaigns_ws', JSON.stringify(_campaigns));
   closeCampaignModal();
   renderCampaignsScreen();
   syncOutreachCampaignFilter();
@@ -15021,7 +15023,7 @@ function saveCampaignWorkspace() {
 function deleteCampaign(id) {
   if (!confirm('Delete this campaign? Outreach entries linked to it will remain.')) return;
   _campaigns = _campaigns.filter(function(c) { return c.id !== id; });
-  localStorage.setItem('sf_campaigns_ws', JSON.stringify(_campaigns));
+  _lsSet('sf_campaigns_ws', JSON.stringify(_campaigns));
   renderCampaignsScreen();
   syncOutreachCampaignFilter();
 }
@@ -15457,7 +15459,7 @@ function saveOutreachEntry() {
         status:  'active',
       };
       _campaigns.unshift(newCmp);
-      localStorage.setItem('sf_campaigns_ws', JSON.stringify(_campaigns));
+      _lsSet('sf_campaigns_ws', JSON.stringify(_campaigns));
       syncOutreachCampaignFilter();
       return newCmp.id;
     })(),
@@ -15483,7 +15485,7 @@ function saveOutreachEntry() {
     var idx = _outreach.findIndex(function(o){ return o.id===_editingOutreachId; });
     if (idx>-1) { entry.added=_outreach[idx].added; _outreach[idx]=entry; }
   } else { _outreach.push(entry); }
-  localStorage.setItem('sf_outreach', JSON.stringify(_outreach));
+  _lsSet('sf_outreach', JSON.stringify(_outreach));
   closeOutreachModal();
   renderOutreachScreen();
   renderCampaignsScreen();
@@ -15492,14 +15494,14 @@ function saveOutreachEntry() {
 function updateOutreachStatus(id, newStatus) {
   var entry = _outreach.find(function(o){ return o.id===id; });
   if (entry) { entry.status=newStatus; entry.updated=new Date().toISOString(); }
-  localStorage.setItem('sf_outreach', JSON.stringify(_outreach));
+  _lsSet('sf_outreach', JSON.stringify(_outreach));
   renderOutreachScreen();
   renderCampaignsScreen();
 }
 
 function deleteOutreachEntry(id) {
   _outreach = _outreach.filter(function(o){ return o.id!==id; });
-  localStorage.setItem('sf_outreach', JSON.stringify(_outreach));
+  _lsSet('sf_outreach', JSON.stringify(_outreach));
   renderOutreachScreen();
   renderCampaignsScreen();
 }
@@ -15667,7 +15669,7 @@ function promptEmail(id) {
   var em = prompt('Enter business email for this creator:');
   if (!em) return;
   var entry = _outreach.find(function(o){ return o.id===id; });
-  if (entry) { entry.email=em.trim(); localStorage.setItem('sf_outreach',JSON.stringify(_outreach)); renderOutreachScreen(); }
+  if (entry) { entry.email=em.trim(); _lsSet('sf_outreach', JSON.stringify(_outreach)); renderOutreachScreen(); }
 }
 
 // ── Wire buttons + init ───────────────────────────────────────────────
