@@ -1887,12 +1887,19 @@ function gActivateSession(email, tier, client) {
   var obEl = document.getElementById('sfOnboard');
   if (obEl) { obEl.style.display='none'; obEl.style.pointerEvents='none'; }
   document.body.style.overflow = '';
-  try {
-    localStorage.setItem('sf_auth',   '1');
-    localStorage.setItem('sf_tier',   tier   || 'free');
-    localStorage.setItem('sf_client', client || 'Free');
-    localStorage.setItem('sf_email',  email  || '');
-  } catch(e) {}
+  try { localStorage.setItem('sf_auth',   '1');
+         localStorage.setItem('sf_tier',   tier   || 'free');
+         localStorage.setItem('sf_client', client || 'Free');
+         localStorage.setItem('sf_email',  email  || ''); } catch(e) {}
+  try { sessionStorage.setItem('sf_auth',   '1');
+        sessionStorage.setItem('sf_tier',   tier   || 'free');
+        sessionStorage.setItem('sf_client', client || 'Free');
+        sessionStorage.setItem('sf_email',  email  || ''); } catch(e) {}
+  // In-memory fallback for environments where both storage APIs are blocked
+  window._sf_auth_mem  = '1';
+  window._sf_tier_mem  = tier   || 'free';
+  window._sf_client_mem= client || 'Free';
+  window._sf_email_mem = email  || '';
   // Hide gate immediately
   var gEl = document.getElementById('G');
   if (gEl) { gEl.style.display='none'; }
@@ -2139,11 +2146,17 @@ var TIER_LEVELS = { free:-1, bronze:0, silver:1, gold:2, platinum:3, diamond:4, 
 
 function getTierLevel() {
   try {
-    var t = localStorage.getItem('sf_tier') || sessionStorage.getItem('sf_tier');
+    var t = localStorage.getItem('sf_tier') || sessionStorage.getItem('sf_tier') || window._sf_tier_mem || '';
     if (!t) return -1;
     var level = TIER_LEVELS[t.toLowerCase().trim()];
     return (level !== undefined) ? level : -1;
-  } catch(e) { return -1; }
+  } catch(e) {
+    // localStorage blocked (Cloudflare) — fall back to in-memory store
+    var t2 = window._sf_tier_mem || '';
+    if (!t2) return -1;
+    var level2 = (typeof TIER_LEVELS !== 'undefined') ? TIER_LEVELS[t2.toLowerCase().trim()] : undefined;
+    return (level2 !== undefined) ? level2 : -1;
+  }
 }
 function getTierName() {
   try { return (localStorage.getItem('sf_tier') || sessionStorage.getItem('sf_tier') || 'free').toLowerCase().trim(); } catch(e) { return 'free'; }
@@ -3075,6 +3088,10 @@ document.addEventListener('DOMContentLoaded', function() {
       // Restore user menu
       var restoredEmail = localStorage.getItem('sf_email') || sessionStorage.getItem('sf_email') || '';
       var restoredTier  = (localStorage.getItem('sf_tier') || sessionStorage.getItem('sf_tier') || 'free');
+      // Mirror into window memory so tier works even if storage is blocked later
+      window._sf_auth_mem   = '1';
+      window._sf_tier_mem   = restoredTier;
+      window._sf_email_mem  = restoredEmail;
       setTimeout(function() { if (typeof sfShowUserMenu === 'function') sfShowUserMenu(restoredEmail, restoredTier); }, 100);
     }
   } catch(e) {}
@@ -14948,8 +14965,18 @@ function handleFreeSignUp() {
 // ══════════════════════════════════════════════════════════════════════
 // PLATINUM FEATURES: CAMPAIGN WORKSPACE + CREATOR OUTREACH CRM
 // ══════════════════════════════════════════════════════════════════════
-function _lsGet(key) { try { return localStorage.getItem(key); } catch(e) { return null; } }
-function _lsSet(key, val) { try { localStorage.setItem(key, val); } catch(e) {} }
+// Storage helpers — localStorage → sessionStorage → window memory fallback
+if (!window._sf_mem) window._sf_mem = {};
+function _lsGet(key) {
+  try { var v = localStorage.getItem(key); if (v !== null) return v; } catch(e) {}
+  try { var v2 = sessionStorage.getItem(key); if (v2 !== null) return v2; } catch(e) {}
+  return window._sf_mem[key] !== undefined ? window._sf_mem[key] : null;
+}
+function _lsSet(key, val) {
+  window._sf_mem[key] = val;  // always write to memory first — guaranteed to work
+  try { localStorage.setItem(key, val); } catch(e) {}
+  try { sessionStorage.setItem(key, val); } catch(e) {}
+}
 var _campaigns = JSON.parse(_lsGet('sf_campaigns_ws') || '[]');
 var _outreach  = JSON.parse(_lsGet('sf_outreach') || '[]');
 var _editingCampaignId = null;
