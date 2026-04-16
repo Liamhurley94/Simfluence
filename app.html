@@ -1885,7 +1885,7 @@ function gActivateSession(email, tier, client) {
   var gEl = document.getElementById('G');
   if (gEl) { gEl.style.display='none'; gEl.style.pointerEvents='none'; gEl.style.visibility='hidden'; gEl.style.zIndex='-1'; }
   var obEl = document.getElementById('sfOnboard');
-  if (obEl) { obEl.style.display='none'; obEl.style.pointerEvents='none'; }
+  if (obEl) { obEl.style.display='none'; obEl.style.pointerEvents='none'; obEl.style.visibility='hidden'; obEl.style.zIndex='-1'; }
   document.body.style.overflow = '';
   try { localStorage.setItem('sf_auth',   '1');
          localStorage.setItem('sf_tier',   tier   || 'free');
@@ -3773,7 +3773,7 @@ document.addEventListener('DOMContentLoaded', function() {
               <option value="250">250 creators</option>
             </select>
           </div>
-          <button data-oc="personaAutoSelect()" style="padding:10px 18px;background:rgba(255,212,0,0.12);border:1px solid rgba(255,212,0,0.3);color:#FFD400;border-radius:var(--radius);font-family:Manrope,sans-serif;font-weight:600;font-size:12px;cursor:pointer;letter-spacing:.05em" title="Auto-select top creators matching this persona">⚡ AUTO-SELECT CREATORS</button>
+          <button id="personaAutoSelectBtn" style="padding:10px 18px;background:rgba(255,212,0,0.12);border:1px solid rgba(255,212,0,0.3);color:#FFD400;border-radius:var(--radius);font-family:Manrope,sans-serif;font-weight:600;font-size:12px;cursor:pointer;letter-spacing:.05em" title="Auto-select top creators matching this persona">⚡ AUTO-SELECT CREATORS</button>
           <button id="runSimFromPersonasBtn" style="padding:10px 18px;background:#0050FF;color:#fff;border:none;border-radius:var(--radius);font-family:Manrope,sans-serif;font-weight:600;font-size:13px;cursor:pointer;letter-spacing:.05em">RUN SIMULATION →</button>
         </div>
       </div>
@@ -3952,7 +3952,7 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 
     <!-- CAMPAIGN MODAL -->
-    <div id="campaign-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:600;align-items:center;justify-content:center;padding:24px">
+    <div id="campaign-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:1000;align-items:center;justify-content:center;padding:24px">
       <div style="background:var(--bg2);border:1px solid var(--border-bright);border-radius:14px;padding:32px;max-width:500px;width:100%">
         <div style="font-family:Manrope,sans-serif;font-size:12px;font-weight:500;letter-spacing:.1em;color:var(--text-muted);margin-bottom:16px" id="campaign-modal-title">NEW CAMPAIGN</div>
         <div style="display:flex;flex-direction:column;gap:12px">
@@ -3979,7 +3979,7 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 
     <!-- OUTREACH ADD MODAL -->
-    <div id="outreach-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:600;align-items:flex-start;justify-content:center;padding:32px 16px;overflow-y:auto">
+    <div id="outreach-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:1000;align-items:flex-start;justify-content:center;padding:32px 16px;overflow-y:auto">
       <div style="background:var(--bg2);border:1px solid var(--border-bright);border-radius:14px;padding:28px;max-width:560px;width:100%;margin:0 auto">
 
         <div style="font-family:Manrope,sans-serif;font-size:12px;font-weight:500;letter-spacing:.1em;color:var(--text-muted);margin-bottom:20px">ADD CREATOR TO OUTREACH</div>
@@ -12906,8 +12906,8 @@ function renderPersonaScreen() {
 
   // Tier cap on personas
   var _personaCap = (function(){
-    var t = typeof getTierLevel==='function'?getTierLevel():0;
-    if(t>=3) return Infinity; if(t>=2) return 3; if(t>=1) return 1; return 0;
+    var t = typeof getTierLevel==='function'?getTierLevel():4;
+    if(t>=4) return Infinity; if(t>=3) return Infinity; if(t>=2) return 3; if(t>=1) return 1; return 0;
   })();
   if (_personaCap === 0) {
     var _pGrid = document.getElementById('personaGrid');
@@ -16458,6 +16458,9 @@ document.addEventListener('DOMContentLoaded', function() {
   // ADD TO TRACKER — direct wire, bypasses all delegation
   wire('addToTrackerBtn', function() { if(typeof saveOutreachEntry==='function') saveOutreachEntry(); });
 
+  // AUTO-SELECT CREATORS (Personas screen) — direct wire
+  wire('personaAutoSelectBtn', function() { if(typeof personaAutoSelect==='function') personaAutoSelect(); });
+
   // CANCEL in outreach modal
   wire('cancelOutreachBtn', function() { if(typeof closeOutreachModal==='function') closeOutreachModal(); });
 
@@ -16619,6 +16622,35 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 });
+
+// ── DEFINITIVE ADD TO TRACKER FIX ────────────────────────────────────
+// Direct event listener on document in capture phase — fires before everything else
+document.addEventListener('click', function(e) {
+  var btn = e.target;
+  // Walk up in case user clicked a child element
+  while (btn && btn !== document) {
+    if (btn.id === 'addToTrackerBtn') {
+      e.stopImmediatePropagation();
+      e.preventDefault();
+      if (typeof saveOutreachEntry === 'function') saveOutreachEntry();
+      return;
+    }
+    if (btn.id === 'cancelOutreachBtn') {
+      e.stopImmediatePropagation();
+      e.preventDefault();
+      if (typeof closeOutreachModal === 'function') closeOutreachModal();
+      return;
+    }
+    if (btn.id === 'personaAutoSelectBtn') {
+      e.stopImmediatePropagation();
+      e.preventDefault();
+      if (typeof personaAutoSelect === 'function') personaAutoSelect();
+      return;
+    }
+    btn = btn.parentElement;
+  }
+}, true); // capture phase = fires first, before any other handler
+
 </script>
 
   <!-- AUDIENCE OVERLAP MODAL -->
