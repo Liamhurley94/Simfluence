@@ -4141,7 +4141,8 @@ const DEFAULT_CPM = { lo:5, hi:14, med:8, dedMult:1.6 };
 const PLATFORM_MULT = { youtube:1.00, instagram:0.75, tiktok:0.50, twitch:null, kick:0.40, x:0.45 };
 
 function parseSubs(s) {
-  const r = (s||'0').replace(/[^0-9.KMkm]/g,'');
+  if (typeof s === 'number') return s;
+  const r = (s||'0').toString().replace(/[^0-9.KMkm]/g,'');
   if(/[Mm]/i.test(r)) return parseFloat(r)*1e6;
   if(/[Kk]/i.test(r)) return parseFloat(r)*1e3;
   return parseFloat(r)||0;
@@ -10315,7 +10316,7 @@ const CREATORS = [
   { id:5077, name:'DawidSSonek', handle:'@dawidssonek', platform:'Twitch', allPlatforms:['Twitch'], subs:'31K', avgViews:'103', eng:'0.3%', genre:'Gaming & Esports', subMode:'MOBA', cpi:55, gfi:55, color:'#00C46A', language:'Polish', verifiedDeals:0, sponsorHistory:[], bio:'Gaming & Esports · League of Legends · MOBA · Polish · 31K followers · avg 103 viewers' },
   { id:5078, name:'DannyGaminGnC', handle:'@dannygamingnc', platform:'Twitch', allPlatforms:['Twitch'], subs:'60K', avgViews:'102', eng:'0.2%', genre:'Gaming & Esports', subMode:'MMORPG', cpi:57, gfi:57, color:'#00C46A', language:'English', verifiedDeals:0, sponsorHistory:[], bio:'Gaming & Esports · World of Warcraft · MMORPG · English · 60K followers · avg 102 viewers' },
   { id:5079, name:'Jimmy Bullard', handle:'@1jimmybullard', platform:'Instagram', allPlatforms:['Instagram'], subs:'589K', avgViews:'2K', eng:'0.39%', genre:'Sports & Athletics', subMode:'Golf', cpi:60, gfi:63, color:'#54A0FF', language:'English', verifiedDeals:1, sponsorHistory:[], bio:'Former professional footballer turned golfer and content creator. Adidas Golf ambassador. 589K followers · 0.39% eng rate.' },,
-  { id: 9000, name: "04AM", handle: "@04AMofficial", platform: 'YouTube', subs: 'unknown', eng: '3.0%', avgViews: 16250, cpi: 62, gfi: 88, genre: 'Gaming & Esports', subMode: 'RPG / Open World', language: 'English', bio: 'Gaming content creator. Enshrouded campaign creator. 16,250 avg views across dedicated videos. youtube.com/@04AMofficial', color: '#FF7A00', rates: { int: [2800, 3750], ded: [3750, 5900], mix: [3300, 4700] } },
+  { id: 9000, name: "04AM", handle: "@04AMofficial", platform: 'YouTube', subs: 'unknown', eng: '3.0%', avgViews: '16K', cpi: 62, gfi: 88, genre: 'Gaming & Esports', subMode: 'RPG / Open World', language: 'English', bio: 'Gaming content creator. Enshrouded campaign creator. 16,250 avg views across dedicated videos. youtube.com/@04AMofficial', color: '#FF7A00', rates: { int: [2800, 3750], ded: [3750, 5900], mix: [3300, 4700] } },
   { id: 9001, name: "ESO", handle: "@ESODANNY", platform: 'YouTube', subs: '2.4M', eng: '4.6%', cpi: 75, gfi: 88, genre: 'Gaming & Esports', subMode: 'RPG / Open World', language: 'English', bio: 'Enshrouded content creator. Survival open world RPG. Enshrouded Update 8 campaign.', color: '#00C46A', rates: { int: [14100, 18800], ded: [22350, 35300], mix: [17650, 25850] } },
   { id: 9002, name: "Boomstickgaming", handle: "@boomstickgaming", platform: 'YouTube', subs: '406K', eng: '15.0%', cpi: 68, gfi: 88, genre: 'Gaming & Esports', subMode: 'RPG / Open World', language: 'English', bio: 'Enshrouded content creator. Survival open world RPG. Enshrouded Update 8 campaign.', color: '#6B9FFF', rates: { int: [1500, 4000], ded: [2400, 6400], mix: [1950, 5200] } },
   { id: 9003, name: "Glock9", handle: "@glock9", platform: 'YouTube', subs: '554K', eng: '6.3%', cpi: 70, gfi: 88, genre: 'Gaming & Esports', subMode: 'RPG / Open World', language: 'English', bio: 'Enshrouded content creator. Survival open world RPG. Enshrouded Update 8 campaign.', color: '#FF3355', rates: { int: [1400, 2000], ded: [2000, 3400], mix: [1650, 2600] } },
