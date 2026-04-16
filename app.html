@@ -12273,8 +12273,9 @@ function computeSimResults() {
 
   // When creators are manually selected, validate GFI — warn but include
   // When auto-selecting defaults, only use creators that genuinely fit the genre
-  const toSim = selectedCreators.size > 0
-    ? CREATORS.filter(cr => cr && selectedCreators.has(cr.id))
+  const _snapSim = new Set(selectedCreators);
+  const toSim = _snapSim.size > 0
+    ? CREATORS.filter(cr => cr && _snapSim.has(cr.id))
     : [...CREATORS].filter(cr => cr)
         .filter(cr => (cr.genre === genre || ((GENRE_AFFINITY[cr.genre]||{})[genre]||0) >= 0.6)
           && creatorFitsFormat(cr, budget, format))  // exclude creators whose min rate exceeds total budget
@@ -12383,8 +12384,10 @@ function updateSimDisplay() {
   }).join('');
 
   // Per-creator forecast
-  const toShowSim = selectedCreators.size > 0
-    ? CREATORS.filter(function(cr) { return cr && selectedCreators.has(cr.id); })
+  // Snapshot selected IDs at render time — prevents async clears from affecting display
+  const _snapSelected = new Set(selectedCreators);
+  const toShowSim = _snapSelected.size > 0
+    ? CREATORS.filter(function(cr) { return cr && _snapSelected.has(cr.id); })
     : CREATORS.filter(function(cr) {
         return cr.genre === genre || ((GENRE_AFFINITY[cr.genre]||{})[genre]||0) >= 0.6;
       }).sort(function(a,b) {
@@ -12430,7 +12433,8 @@ function updateSimDisplay() {
         ['CTR', crCtr+'%', '#00C46A'],
         ['EST. CLICKS', fmtNum(crClicks), '#FF7A00'],
         ['EST. CONVERSIONS', fmtNum(crConv), '#9C27B0'],
-        ['INTEGRATED RATE', crEst.fmt(crRate[0])+'–'+crEst.fmt(crRate[1]), '#FFD400']
+        ['INTEGRATED RATE', crEst.fmt(crRate[0])+'–'+crEst.fmt(crRate[1]), '#FFD400'],
+        ['DEDICATED RATE', crEst.fmt(crEst.ranges['ded'][0])+'–'+crEst.fmt(crEst.ranges['ded'][1]), '#FF7A00']
       ];
 
       var metricBoxes = metrics.map(function(m) {
@@ -12472,7 +12476,7 @@ function updateSimDisplay() {
         + '</div>'
 
         // 5 metric boxes
-        + '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:14px">' + metricBoxes + '</div>'
+        + '<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:14px">' + metricBoxes + '</div>'
 
         // P10 / P50 / P90 clickable bands — use class + data attrs, handled by delegated listener
         + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px">'
