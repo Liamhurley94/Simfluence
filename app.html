@@ -15079,6 +15079,62 @@ function saveCampaignWorkspace() {
   syncOutreachCampaignFilter();
 }
 
+function simulateCampaign(cid) {
+  // Find campaign
+  var cmp = _campaigns.find(function(c) { return c.id === cid; });
+  if (!cmp) return;
+
+  // Get all outreach entries for this campaign
+  var linked = _outreach.filter(function(o) { return o.campaign === cid; });
+  if (!linked.length) {
+    alert('No creators added to this campaign yet. Add creators via the tracker first.');
+    return;
+  }
+
+  // Match outreach entries to CREATORS by name or handle
+  var crIds = [];
+  linked.forEach(function(o) {
+    var cr = CREATORS.find(function(x) {
+      return x && x.name && (
+        x.name.toLowerCase() === (o.name||'').toLowerCase() ||
+        (o.handle && x.handle && x.handle.toLowerCase() === o.handle.toLowerCase())
+      );
+    });
+    if (cr) crIds.push(cr.id);
+  });
+
+  if (!crIds.length) {
+    alert('Could not match any campaign creators to the database. Check creator names in the tracker.');
+    return;
+  }
+
+  // Load into selectedCreators
+  selectedCreators.clear();
+  crIds.forEach(function(id) { selectedCreators.add(id); });
+
+  // Set budget from campaign if available
+  var budgetEl = document.getElementById('budget');
+  if (budgetEl && cmp.budget) {
+    var budgetNum = parseInt((cmp.budget||'').replace(/[^0-9]/g,''));
+    if (budgetNum > 0) budgetEl.value = budgetNum;
+  }
+
+  // Set genre from campaign if available
+  if (cmp.genre && typeof setSelectedGenre === 'function') {
+    setSelectedGenre(cmp.genre);
+  }
+
+  // Navigate to simulator and run
+  simResults = null;
+  showScreen('simulator', document.querySelector('.nav-tab[data-screen="simulator"]'));
+  setTimeout(function() {
+    computeSimResults();
+    updateSimDisplay();
+    if (typeof updateBandDisplays === 'function') updateBandDisplays();
+    if (typeof renderEfficiencyCurve === 'function') renderEfficiencyCurve();
+  }, 100);
+}
+
 function deleteCampaign(id) {
   if (!confirm('Delete this campaign? Outreach entries linked to it will remain.')) return;
   _campaigns = _campaigns.filter(function(c) { return c.id !== id; });
@@ -15214,6 +15270,7 @@ function renderCampaignsScreen() {
         + '<div style=\"display:flex;gap:8px;flex-shrink:0\">'
           + '<button data-cid=\"' + cmp.id + '\" data-action=\"edit-campaign\" style=\"padding:6px 12px;background:transparent;border:1px solid var(--border);color:var(--text-dim);border-radius:5px;font-family:Manrope,sans-serif;font-size:11px;font-weight:600;cursor:pointer;letter-spacing:.05em\">EDIT</button>'
           + '<button data-cid=\"' + cmp.id + '\" data-action=\"add-outreach-campaign\" style=\"padding:6px 12px;background:rgba(0,196,106,0.12);border:1px solid rgba(0,196,106,0.3);color:#00C46A;border-radius:5px;font-family:Manrope,sans-serif;font-size:11px;font-weight:600;cursor:pointer;letter-spacing:.05em\">+ ADD CREATOR</button>'
+          + '<button data-cid=\"' + cmp.id + '\" data-action=\"simulate-campaign\" style=\"padding:6px 12px;background:rgba(0,80,255,0.12);border:1px solid rgba(0,80,255,0.35);color:#6B9FFF;border-radius:5px;font-family:Manrope,sans-serif;font-size:11px;font-weight:600;cursor:pointer;letter-spacing:.05em\">▶ SIMULATE</button>'
           + '<button data-cid=\"' + cmp.id + '\" data-action=\"delete-campaign\" style=\"padding:6px 10px;background:rgba(230,0,35,0.08);border:1px solid rgba(230,0,35,0.2);color:#E60023;border-radius:5px;font-family:Manrope,sans-serif;font-size:11px;font-weight:600;cursor:pointer\">✕</button>'
         + '</div>'
       + '</div>'
@@ -16290,6 +16347,7 @@ document.addEventListener('click', function(e) {
       else if (action==='edit-campaign' && cid) editCampaign(cid);
       else if (action==='add-outreach-campaign' && cid) addOutreachToCampaign(cid);
       else if (action==='delete-campaign' && cid) deleteCampaign(cid);
+      else if (action==='simulate-campaign' && cid) simulateCampaign(cid);
       else if (action==='view-outreach-campaign' && cid) { showScreen('outreach',null); setTimeout(function(){ filterOutreachByCampaign(cid); },50); }
       else if (action==='delete-outreach' && oid) deleteOutreachEntry(oid);
       else if (action==='open-overlap') { var cid2=el.getAttribute('data-cid'); console.log('[Overlap] delegation: open-overlap fired, cid=', cid2); openOverlapModal(cid2); }
