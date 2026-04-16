@@ -1900,6 +1900,11 @@ function gActivateSession(email, tier, client) {
   window._sf_tier_mem  = tier   || 'free';
   window._sf_client_mem= client || 'Free';
   window._sf_email_mem = email  || '';
+  // Apply tier-dependent UI gates now that tier is known
+  setTimeout(function() {
+    if (typeof applyAutoSelectTierGates === 'function') applyAutoSelectTierGates();
+    if (typeof applyAllTierGates === 'function') applyAllTierGates();
+  }, 100);
   // Hide gate immediately
   var gEl = document.getElementById('G');
   if (gEl) { gEl.style.display='none'; }
@@ -3092,7 +3097,11 @@ document.addEventListener('DOMContentLoaded', function() {
       window._sf_auth_mem   = '1';
       window._sf_tier_mem   = restoredTier;
       window._sf_email_mem  = restoredEmail;
-      setTimeout(function() { if (typeof sfShowUserMenu === 'function') sfShowUserMenu(restoredEmail, restoredTier); }, 100);
+      setTimeout(function() {
+        if (typeof sfShowUserMenu === 'function') sfShowUserMenu(restoredEmail, restoredTier);
+        if (typeof applyAutoSelectTierGates === 'function') applyAutoSelectTierGates();
+        if (typeof applyAllTierGates === 'function') applyAllTierGates();
+      }, 150);
     }
   } catch(e) {}
   setTimeout(function() {
@@ -3136,27 +3145,12 @@ document.getElementById('GBtn').addEventListener('click', GC);
     if (el) el.addEventListener('click', showFreeTierPrompt);
   });
 
-  // Apply tier limits to auto-select dropdown
+  // Apply tier limits to auto-select dropdown — runs at login too via applyAutoSelectTierGates()
   (function() {
     var sel = document.getElementById('autoSelectCount');
     if (!sel) return;
-    var t = typeof getTierLevel === 'function' ? getTierLevel() : 0;
-    // Remove options beyond tier limit
-    Array.from(sel.options).forEach(function(opt) {
-      var v = parseInt(opt.value);
-      if (t >= 3) return;              // Platinum/Diamond: all options
-      if (t === 2 && v > 50) { opt.disabled = true; opt.text += ' (Platinum+)'; }
-      if (t === 1 && v > 15) { opt.disabled = true; opt.text += ' (Gold+)'; }
-      if (t <= 0 && v > 5)  { opt.disabled = true; opt.text += ' (Silver+)'; }
-    });
-    // Set default to highest allowed
-    var maxAllowed = t >= 3 ? 250 : t === 2 ? 50 : t === 1 ? 15 : 5;
-    Array.from(sel.options).reverse().forEach(function(opt) {
-      if (!opt.disabled && parseInt(opt.value) <= maxAllowed && !sel._defaultSet) {
-        sel.value = opt.value;
-        sel._defaultSet = true;
-      }
-    });
+    // Don't gate at page load — tier unknown. Just wire the change handler.
+    // applyAutoSelectTierGates() is called after login.
     // Re-run sim when changed
     sel.addEventListener('change', function() {
       if (typeof simResults !== 'undefined') {
@@ -4088,8 +4082,8 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
 
         <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">
-          <button data-oc="closeOutreachModal()" style="padding:8px 18px;background:transparent;border:1px solid var(--border);color:var(--text-dim);border-radius:6px;font-family:Manrope,sans-serif;font-size:12px;font-weight:500;cursor:pointer">CANCEL</button>
-          <button data-oc="saveOutreachEntry()" style="padding:8px 18px;background:#00C46A;color:#000;border:none;border-radius:6px;font-family:Manrope,sans-serif;font-size:12px;font-weight:500;cursor:pointer;font-weight:700">ADD TO TRACKER</button>
+          <button id="cancelOutreachBtn" style="padding:8px 18px;background:transparent;border:1px solid var(--border);color:var(--text-dim);border-radius:6px;font-family:Manrope,sans-serif;font-size:12px;font-weight:500;cursor:pointer">CANCEL</button>
+          <button id="addToTrackerBtn" style="padding:8px 18px;background:#00C46A;color:#000;border:none;border-radius:6px;font-family:Manrope,sans-serif;font-size:12px;font-weight:500;cursor:pointer;font-weight:700">ADD TO TRACKER</button>
         </div>
       </div>
     </div>
@@ -12251,14 +12245,15 @@ function computeSimResults() {
           && creatorFitsFormat(cr, budget, format))  // exclude creators whose min rate exceeds total budget
         .sort((a,b) => (b.cpi + computeGFI(b)) - (a.cpi + computeGFI(a)))
         .slice(0, (function(){
-      var _t = typeof getTierLevel === 'function' ? getTierLevel() : 0;
+      var _t = typeof getTierLevel === 'function' ? getTierLevel() : -1;
       var _sel = document.getElementById('autoSelectCount');
-      var _chosen = _sel ? parseInt(_sel.value) : 5;
-      // Tier limits: Bronze=5, Silver=15, Gold=50, Platinum/Diamond=dropdown
-      if (_t >= 3) return _chosen;          // Platinum/Diamond: full dropdown
-      if (_t === 2) return Math.min(_chosen, 50);  // Gold: max 50
-      if (_t === 1) return Math.min(_chosen, 15);  // Silver: max 15
-      return 5;                              // Bronze/Free: always 5
+      var _chosen = _sel ? parseInt(_sel.value) : 25;
+      // If tier unknown (-1), default to open — user is authenticated (gate handles non-auth)
+      if (_t < 0) return _chosen;
+      if (_t >= 3) return _chosen;
+      if (_t === 2) return Math.min(_chosen, 50);
+      if (_t === 1) return Math.min(_chosen, 15);
+      return 5;
     })());
 
   if (toSim.length === 0) {
@@ -12360,14 +12355,15 @@ function updateSimDisplay() {
       }).sort(function(a,b) {
         return (b.cpi + computeGFI(b)) - (a.cpi + computeGFI(a));
       }).slice(0, (function(){
-      var _t = typeof getTierLevel === 'function' ? getTierLevel() : 0;
+      var _t = typeof getTierLevel === 'function' ? getTierLevel() : -1;
       var _sel = document.getElementById('autoSelectCount');
-      var _chosen = _sel ? parseInt(_sel.value) : 5;
-      // Tier limits: Bronze=5, Silver=15, Gold=50, Platinum/Diamond=dropdown
-      if (_t >= 3) return _chosen;          // Platinum/Diamond: full dropdown
-      if (_t === 2) return Math.min(_chosen, 50);  // Gold: max 50
-      if (_t === 1) return Math.min(_chosen, 15);  // Silver: max 15
-      return 5;                              // Bronze/Free: always 5
+      var _chosen = _sel ? parseInt(_sel.value) : 25;
+      // If tier unknown (-1), default to open — user is authenticated (gate handles non-auth)
+      if (_t < 0) return _chosen;
+      if (_t >= 3) return _chosen;
+      if (_t === 2) return Math.min(_chosen, 50);
+      if (_t === 1) return Math.min(_chosen, 15);
+      return 5;
     })());
 
   const creatorBreakdownEl = document.getElementById('creatorBreakdown');
@@ -12492,7 +12488,8 @@ function runSimulation() {
   // Tier sim counter
   if (typeof getTierLevel === 'function') {
     var _t = getTierLevel();
-    if (_t < 2) {
+    // Only gate if tier is definitively low — unknown (-1) means localStorage blocked, let through
+    if (_t >= 0 && _t < 2) {
       var _limit = _t >= 1 ? 10 : 3;
       var _key = 'sf_sim_runs_' + new Date().toISOString().slice(0,7);
       try {
@@ -13056,14 +13053,15 @@ function personaAutoSelect() {
          (document.getElementById('format')||{value:'Integrated'}).value))
     .sort((a,b) => (b.cpi + computeGFI(b)) - (a.cpi + computeGFI(a)))
     .slice(0, (function(){
-      var _t = typeof getTierLevel === 'function' ? getTierLevel() : 0;
+      var _t = typeof getTierLevel === 'function' ? getTierLevel() : -1;
       var _sel = document.getElementById('autoSelectCount');
-      var _chosen = _sel ? parseInt(_sel.value) : 5;
-      // Tier limits: Bronze=5, Silver=15, Gold=50, Platinum/Diamond=dropdown
-      if (_t >= 3) return _chosen;          // Platinum/Diamond: full dropdown
-      if (_t === 2) return Math.min(_chosen, 50);  // Gold: max 50
-      if (_t === 1) return Math.min(_chosen, 15);  // Silver: max 15
-      return 5;                              // Bronze/Free: always 5
+      var _chosen = _sel ? parseInt(_sel.value) : 25;
+      // If tier unknown (-1), default to open — user is authenticated (gate handles non-auth)
+      if (_t < 0) return _chosen;
+      if (_t >= 3) return _chosen;
+      if (_t === 2) return Math.min(_chosen, 50);
+      if (_t === 1) return Math.min(_chosen, 15);
+      return 5;
     })());
 
   // Select them
@@ -16388,6 +16386,35 @@ document.addEventListener('change', function(e) {
   }
 });
 
+// Apply auto-select dropdown tier gates — called after login so tier is known
+function applyAutoSelectTierGates() {
+  var sel = document.getElementById('autoSelectCount');
+  if (!sel) return;
+  var t = typeof getTierLevel === 'function' ? getTierLevel() : -1;
+  // Re-enable all first (in case called multiple times)
+  Array.from(sel.options).forEach(function(opt) {
+    opt.disabled = false;
+    opt.text = opt.text.replace(/ \((Platinum|Gold|Silver)\+\)/, '');
+  });
+  if (t >= 3) {
+    // Diamond/Platinum — all options unlocked, default to 25
+    sel.value = '25';
+    return;
+  }
+  Array.from(sel.options).forEach(function(opt) {
+    var v = parseInt(opt.value);
+    if (t === 2 && v > 50)  { opt.disabled = true; opt.text += ' (Platinum+)'; }
+    if (t === 1 && v > 15)  { opt.disabled = true; opt.text += ' (Gold+)'; }
+    if (t <= 0 && v > 5)    { opt.disabled = true; opt.text += ' (Silver+)'; }
+  });
+  var maxAllowed = t === 2 ? 50 : t === 1 ? 15 : 5;
+  Array.from(sel.options).reverse().some(function(opt) {
+    if (!opt.disabled && parseInt(opt.value) <= maxAllowed) {
+      sel.value = opt.value; return true;
+    }
+  });
+}
+
 // ── DIRECT BUTTON WIRING (Cloudflare + capture-phase safe) ───────────
 // All buttons wired with direct addEventListener — no delegation dependency.
 // e.stopPropagation() prevents the capture-phase delegation from interfering.
@@ -16420,6 +16447,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Outreach add button
   wire('addOutreachBtn', function() { if(typeof openOutreachModal==='function') openOutreachModal(null); });
+
+  // ADD TO TRACKER — direct wire, bypasses all delegation
+  wire('addToTrackerBtn', function() { if(typeof saveOutreachEntry==='function') saveOutreachEntry(); });
+
+  // CANCEL in outreach modal
+  wire('cancelOutreachBtn', function() { if(typeof closeOutreachModal==='function') closeOutreachModal(); });
 
   // Export shortlist — respects tier gate
   wire('exportShortlistBtn', function() {
