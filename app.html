@@ -15217,15 +15217,28 @@ function openOutreachModal(campaignId) {
   var _gex=document.getElementById('or-genre-extras'); if(_gex)_gex.innerHTML='';
   var _gh=document.getElementById('or-genre-hint'); if(_gh)_gh.textContent='';
   syncOutreachCampaignSelect();
-  // Pre-select campaign if provided
+  // Pre-select campaign if provided — synchronous, no race condition
   if (campaignId) {
-    setTimeout(function(){
-      var sel = document.getElementById('or-campaign');
-      if (sel) { sel.value = campaignId; orOnCampaignChange(); }
-    }, 20);
+    var sel = document.getElementById('or-campaign');
+    if (sel) {
+      // Ensure the option exists (syncOutreachCampaignSelect was already called above)
+      var optExists = Array.from(sel.options).some(function(o){ return o.value === campaignId; });
+      if (!optExists) {
+        // Add it directly if not present
+        var cmp2 = _campaigns.find(function(c){ return c.id === campaignId; });
+        if (cmp2) {
+          var opt = document.createElement('option');
+          opt.value = cmp2.id; opt.textContent = cmp2.name;
+          sel.appendChild(opt);
+        }
+      }
+      sel.value = campaignId;
+      if (typeof orOnCampaignChange === 'function') orOnCampaignChange();
+    }
   } else {
-    document.getElementById('or-genre-primary').value = '';
-    orRefreshCreatorCount();
+    var gpEl = document.getElementById('or-genre-primary');
+    if (gpEl) gpEl.value = '';
+    if (typeof orRefreshCreatorCount === 'function') orRefreshCreatorCount();
   }
   document.getElementById('outreach-modal').style.display = 'flex';
 }
@@ -15420,75 +15433,113 @@ function closeOutreachModal() {
 }
 
 function saveOutreachEntry() {
+  // ── Gather creator ────────────────────────────────────────────────
   var cr = _orSelectedCreator;
-  var searchVal = (document.getElementById('or-creator-search').value || '').trim();
-  // Require a creator to be selected from the dropdown
-  if (!cr && !searchVal) {
-    var srch = document.getElementById('or-creator-search');
-    if(srch) srch.style.border='1px solid #E60023';
-    return;
-  }
-  // If no creator picked but text entered, try fuzzy match
-  if (!cr && searchVal && typeof CREATORS!=='undefined') {
+  var searchEl  = document.getElementById('or-creator-search');
+  var searchVal = searchEl ? (searchEl.value || '').trim() : '';
+
+  // Fuzzy-match if user typed but didn't pick from dropdown
+  if (!cr && searchVal && typeof CREATORS !== 'undefined') {
     var q = searchVal.toLowerCase().replace('@','');
-    cr = CREATORS.find(function(c){
-      return c.name.toLowerCase().includes(q) || c.handle.toLowerCase().replace('@','').includes(q);
+    cr = CREATORS.find(function(c) {
+      return (c.name||'').toLowerCase().indexOf(q) !== -1 ||
+             (c.handle||'').toLowerCase().replace('@','').indexOf(q) !== -1;
     });
   }
+
+  // Must have at least a name
   var name = cr ? cr.name : searchVal;
+  if (!name) {
+    if (searchEl) { searchEl.style.border = '1px solid #E60023'; searchEl.focus(); }
+    return;
+  }
+
+  // ── Resolve campaign ──────────────────────────────────────────────
+  var campaignId = '';
+  try {
+    var campSel = document.getElementById('or-campaign');
+    if (campSel && campSel.value) {
+      campaignId = campSel.value;
+    } else {
+      var newNameEl = document.getElementById('or-new-campaign');
+      var newName   = newNameEl ? (newNameEl.value || '').trim() : '';
+      if (newName) {
+        var genres = (typeof orGetActiveGenres === 'function') ? orGetActiveGenres() : [];
+        var newCmp = {
+          id:      'cws_' + Date.now(),
+          name:    newName,
+          client:  '',
+          genre:   genres[0] || '',
+          budget:  '',
+          date:    '',
+          notes:   '',
+          created: new Date().toISOString(),
+          status:  'active',
+        };
+        _campaigns.unshift(newCmp);
+        _lsSet('sf_campaigns_ws', JSON.stringify(_campaigns));
+        if (typeof syncOutreachCampaignFilter === 'function') syncOutreachCampaignFilter();
+        campaignId = newCmp.id;
+      }
+    }
+  } catch(campErr) { console.warn('campaign resolve error:', campErr); }
+
+  // ── Collect remaining fields safely ───────────────────────────────
+  function safeVal(id) { try { var el=document.getElementById(id); return el?(el.value||'').trim():''; } catch(e){return '';} }
+  var genres  = (typeof orGetActiveGenres === 'function') ? orGetActiveGenres() : [];
+  var email   = safeVal('or-email');
+  var status  = safeVal('or-status') || 'shortlisted';
+  var notes   = safeVal('or-notes');
+
+  // ── Build entry ───────────────────────────────────────────────────
   var entry = {
-    id:       _editingOutreachId || ('or_'+Date.now()),
+    id:       _editingOutreachId || ('or_' + Date.now()),
     name:     name,
-    handle:   cr ? cr.handle : null,
-    campaign: (function(){
-      var existingId = document.getElementById('or-campaign').value;
-      if (existingId) return existingId;
-      // Create new campaign inline from the text field
-      var newName = (document.getElementById('or-new-campaign').value || '').trim();
-      if (!newName) return '';
-      var genres = orGetActiveGenres();
-      var newCmp = {
-        id:      'cws_' + Date.now(),
-        name:    newName,
-        client:  '',
-        genre:   genres[0] || '',
-        budget:  '',
-        date:    '',
-        notes:   '',
-        created: new Date().toISOString(),
-        status:  'active',
-      };
-      _campaigns.unshift(newCmp);
-      _lsSet('sf_campaigns_ws', JSON.stringify(_campaigns));
-      syncOutreachCampaignFilter();
-      return newCmp.id;
-    })(),
-    genres:   orGetActiveGenres(),
-    email:    document.getElementById('or-email').value.trim(),
-    status:   document.getElementById('or-status').value,
-    notes:    document.getElementById('or-notes').value.trim(),
+    handle:   cr ? (cr.handle || null) : null,
+    campaign: campaignId,
+    genres:   genres,
+    email:    email,
+    status:   status,
+    notes:    notes,
     added:    _editingOutreachId ? null : new Date().toISOString(),
     updated:  new Date().toISOString(),
-    cpi:      cr ? cr.cpi  : null,
-    subs:     cr ? cr.subs : null,
+    cpi:      cr ? (cr.cpi  || null) : null,
+    subs:     cr ? (cr.subs || null) : null,
     rate:     null,
-    crId:     cr ? cr.id   : null,
+    crId:     cr ? (cr.id   || null) : null,
   };
-  if (cr) {
-    if (!entry.email && cr.bio) {
-      var em = cr.bio.match(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/);
-      if (em) entry.email = em[0];
-    }
-    try { var e = computeCostEstimate(cr); entry.rate = e.fmt(e.ranges.int[0])+'–'+e.fmt(e.ranges.int[1]); } catch(err){}
+
+  // Auto-fill email from bio
+  if (!entry.email && cr && cr.bio) {
+    var em = cr.bio.match(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/);
+    if (em) entry.email = em[0];
   }
+
+  // Rate estimate
+  if (cr) {
+    try {
+      var est = computeCostEstimate(cr);
+      entry.rate = est.fmt(est.ranges.int[0]) + '–' + est.fmt(est.ranges.int[1]);
+    } catch(rateErr) {}
+  }
+
+  // ── Upsert into _outreach ─────────────────────────────────────────
   if (_editingOutreachId) {
-    var idx = _outreach.findIndex(function(o){ return o.id===_editingOutreachId; });
-    if (idx>-1) { entry.added=_outreach[idx].added; _outreach[idx]=entry; }
-  } else { _outreach.push(entry); }
+    var idx = _outreach.findIndex(function(o) { return o.id === _editingOutreachId; });
+    if (idx > -1) { entry.added = _outreach[idx].added; _outreach[idx] = entry; }
+    else { _outreach.push(entry); }
+  } else {
+    _outreach.push(entry);
+  }
+
+  // ── Persist & render ──────────────────────────────────────────────
   _lsSet('sf_outreach', JSON.stringify(_outreach));
-  closeOutreachModal();
-  renderOutreachScreen();
-  renderCampaignsScreen();
+  _editingOutreachId = null;
+  _orSelectedCreator = null;
+
+  try { closeOutreachModal(); }    catch(e1) {}
+  try { renderOutreachScreen(); }  catch(e2) {}
+  try { renderCampaignsScreen(); } catch(e3) {}
 }
 
 function updateOutreachStatus(id, newStatus) {
