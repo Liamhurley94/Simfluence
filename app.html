@@ -15080,59 +15080,57 @@ function saveCampaignWorkspace() {
 }
 
 function simulateCampaign(cid) {
-  // Find campaign
   var cmp = _campaigns.find(function(c) { return c.id === cid; });
-  if (!cmp) return;
+  if (!cmp) { console.warn('[Sim] Campaign not found:', cid); return; }
 
-  // Get all outreach entries for this campaign
   var linked = _outreach.filter(function(o) { return o.campaign === cid; });
-  if (!linked.length) {
-    alert('No creators added to this campaign yet. Add creators via the tracker first.');
-    return;
-  }
+  console.log('[Sim] Linked outreach entries:', linked.length, linked.map(function(o){return o.name;}));
 
-  // Match outreach entries to CREATORS by name or handle
+  // Match to CREATORS — try name, handle, and fuzzy partial match
   var crIds = [];
   linked.forEach(function(o) {
+    var q = (o.name||'').toLowerCase().trim();
+    var qh = (o.handle||'').toLowerCase().replace('@','').trim();
     var cr = CREATORS.find(function(x) {
-      return x && x.name && (
-        x.name.toLowerCase() === (o.name||'').toLowerCase() ||
-        (o.handle && x.handle && x.handle.toLowerCase() === o.handle.toLowerCase())
-      );
+      if (!x || !x.name) return false;
+      var xn = x.name.toLowerCase();
+      var xh = (x.handle||'').toLowerCase().replace('@','');
+      return xn === q || xh === q || (qh && xh === qh) || (qh && xn === qh)
+        || (q.length > 3 && xn.indexOf(q) !== -1) || (q.length > 3 && xn.indexOf(q.split(' ')[0]) !== -1);
     });
+    console.log('[Sim] Matching "' + o.name + '" →', cr ? cr.name : 'NOT FOUND');
     if (cr) crIds.push(cr.id);
   });
 
-  if (!crIds.length) {
-    alert('Could not match any campaign creators to the database. Check creator names in the tracker.');
-    return;
-  }
+  console.log('[Sim] Matched creator IDs:', crIds);
 
-  // Load into selectedCreators
+  // Load into selectedCreators — even if partial match
   selectedCreators.clear();
   crIds.forEach(function(id) { selectedCreators.add(id); });
 
-  // Set budget from campaign if available
+  // Set budget from campaign
   var budgetEl = document.getElementById('budget');
   if (budgetEl && cmp.budget) {
     var budgetNum = parseInt((cmp.budget||'').replace(/[^0-9]/g,''));
     if (budgetNum > 0) budgetEl.value = budgetNum;
   }
 
-  // Set genre from campaign if available
-  if (cmp.genre && typeof setSelectedGenre === 'function') {
-    setSelectedGenre(cmp.genre);
-  }
+  // Set genre from campaign
+  if (cmp.genre && typeof setSelectedGenre === 'function') setSelectedGenre(cmp.genre);
 
-  // Navigate to simulator and run
+  // Force-clear cached results so showScreen recomputes fresh
   simResults = null;
+
+  // Navigate — showScreen('simulator') already calls computeSimResults + updateSimDisplay
   showScreen('simulator', document.querySelector('.nav-tab[data-screen="simulator"]'));
+
+  // Belt-and-braces: re-run after nav settles
   setTimeout(function() {
-    computeSimResults();
+    if (!simResults) computeSimResults();
     updateSimDisplay();
     if (typeof updateBandDisplays === 'function') updateBandDisplays();
     if (typeof renderEfficiencyCurve === 'function') renderEfficiencyCurve();
-  }, 100);
+  }, 200);
 }
 
 function deleteCampaign(id) {
