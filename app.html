@@ -16683,8 +16683,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (customInput) {
       customInput.addEventListener('input', function() {
-        var v = parseInt(this.value.replace(/[^0-9]/g,''));
-        if (v && v >= 1000) applyBudget(v);
+        var raw = this.value.trim();
+        var v = 0;
+        // Handle K/M suffixes e.g. $100k, 1.5M, 500K
+        var m = raw.replace(/[$,]/g,'').match(/^([0-9.]+)\s*([kKmM]?)$/);
+        if (m) {
+          var num = parseFloat(m[1]);
+          if (m[2].toLowerCase() === 'k') v = Math.round(num * 1000);
+          else if (m[2].toLowerCase() === 'm') v = Math.round(num * 1000000);
+          else v = Math.round(num);
+        } else {
+          v = parseInt(raw.replace(/[^0-9]/g,'')) || 0;
+        }
+        if (v >= 1000) applyBudget(v);
+      });
+      // Also handle Enter key to run sim
+      customInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+          if (typeof runSimulation === 'function') runSimulation();
+        }
       });
     }
 
@@ -16730,6 +16747,15 @@ document.addEventListener('click', function(e) {
       e.stopImmediatePropagation();
       e.preventDefault();
       if (typeof personaAutoSelect === 'function') personaAutoSelect();
+      return;
+    }
+    // Campaign simulate button — wired in capture phase to guarantee firing
+    if (btn.getAttribute && btn.getAttribute('data-action') === 'simulate-campaign') {
+      e.stopImmediatePropagation();
+      e.preventDefault();
+      var _cid = btn.getAttribute('data-cid');
+      console.log('[Sim] capture-phase fired, cid=', _cid);
+      if (_cid && typeof simulateCampaign === 'function') simulateCampaign(_cid);
       return;
     }
     btn = btn.parentElement;
