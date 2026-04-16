@@ -10611,6 +10611,12 @@ const CREATORS = [
 ];
 
 // ── GENRE AFFINITY ────────────────────────────────────────────────────
+// Remove any undefined/null entries from CREATORS (safety cleanup)
+if (typeof CREATORS !== 'undefined') {
+  for (var _ci = CREATORS.length - 1; _ci >= 0; _ci--) {
+    if (!CREATORS[_ci] || !CREATORS[_ci].id || !CREATORS[_ci].name) CREATORS.splice(_ci, 1);
+  }
+}
 const GENRE_AFFINITY = {
   // CREATOR GENRE -> CAMPAIGN GENRE affinity
   // Only genuine audience overlaps included. If not listed, affinity = 0 (excluded).
@@ -12237,6 +12243,12 @@ function updateTierLabel(v) {
 }
 
 function computeSimResults() {
+  // Guard: ensure CREATORS has no null/undefined entries
+  if (typeof CREATORS !== 'undefined') {
+    for (var _i = CREATORS.length - 1; _i >= 0; _i--) {
+      if (!CREATORS[_i] || typeof CREATORS[_i].id === 'undefined') CREATORS.splice(_i, 1);
+    }
+  }
   const budget   = parseInt((document.getElementById('budget') || {value:'85000'}).value) || 85000;
   const format   = (document.getElementById('format') || {value:'Integrated'}).value;
   const genre    = getSelectedGenre() || 'Gaming & Esports';
@@ -12246,8 +12258,8 @@ function computeSimResults() {
   // When creators are manually selected, validate GFI — warn but include
   // When auto-selecting defaults, only use creators that genuinely fit the genre
   const toSim = selectedCreators.size > 0
-    ? CREATORS.filter(cr => selectedCreators.has(cr.id))
-    : [...CREATORS]
+    ? CREATORS.filter(cr => cr && selectedCreators.has(cr.id))
+    : [...CREATORS].filter(cr => cr)
         .filter(cr => (cr.genre === genre || ((GENRE_AFFINITY[cr.genre]||{})[genre]||0) >= 0.6)
           && creatorFitsFormat(cr, budget, format))  // exclude creators whose min rate exceeds total budget
         .sort((a,b) => (b.cpi + computeGFI(b)) - (a.cpi + computeGFI(a)))
@@ -12272,7 +12284,7 @@ function computeSimResults() {
   const formatMult = format === 'Dedicated' ? 1.4 : format === 'Mixed' ? 1.15 : 1.0;
   const subModeMult = activeSubMode ? 1.08 : 1.0;
 
-  const crData = toSim.map(cr => {
+  const crData = toSim.filter(cr => cr && cr.id).map(cr => {
     const e       = computeCostEstimate(cr);
     const midRate = (e.ranges[formatKey][0] + e.ranges[formatKey][1]) / 2;
     return { cr, e, midRate };
@@ -12356,7 +12368,7 @@ function updateSimDisplay() {
 
   // Per-creator forecast
   const toShowSim = selectedCreators.size > 0
-    ? CREATORS.filter(function(cr) { return selectedCreators.has(cr.id); })
+    ? CREATORS.filter(function(cr) { return cr && selectedCreators.has(cr.id); })
     : CREATORS.filter(function(cr) {
         return cr.genre === genre || ((GENRE_AFFINITY[cr.genre]||{})[genre]||0) >= 0.6;
       }).sort(function(a,b) {
@@ -13071,9 +13083,9 @@ function personaAutoSelect() {
       return 5;
     })());
 
-  // Select them
+  // Select them — only add IDs that resolve in CREATORS
   selectedCreators.clear();
-  top.forEach(cr => selectedCreators.add(cr.id));
+  top.forEach(cr => { if (cr && cr.id !== undefined) selectedCreators.add(cr.id); });
 
   // Show recommendation banner
   const banner = document.getElementById('personaRecommendation');
@@ -15474,9 +15486,10 @@ function saveOutreachEntry() {
   if (!cr && searchVal && typeof CREATORS !== 'undefined') {
     var q = searchVal.toLowerCase().replace('@','');
     cr = CREATORS.find(function(c) {
-      return (c.name||'').toLowerCase().indexOf(q) !== -1 ||
-             (c.handle||'').toLowerCase().replace('@','').indexOf(q) !== -1;
+      return c && c.name && ((c.name||'').toLowerCase().indexOf(q) !== -1 ||
+             (c.handle||'').toLowerCase().replace('@','').indexOf(q) !== -1);
     });
+    if (!cr) cr = null; // ensure undefined becomes null
   }
 
   // Must have at least a name
@@ -16276,7 +16289,7 @@ document.addEventListener('click', function(e) {
       }
       else if (action==='or-pick-creator') {
         var crid=parseInt(el.getAttribute('data-crid'));
-        var found=(typeof CREATORS!=='undefined')?CREATORS.find(function(c){return c.id===crid;}):null;
+        var found=(typeof CREATORS!=='undefined')?CREATORS.find(function(c){return c && c.id===crid;}):null;
         if(found) orSelectCreator(found);
       }
       else if (action==='remove-extra-genre') { var rg=el.getAttribute('data-genre'); if(rg) orRemoveExtraGenre(rg); }
