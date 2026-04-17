@@ -254,6 +254,46 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
   .pricing-cards{grid-template-columns:1fr;}
 }
 </style>
+
+<script>
+// Handle Supabase email verification redirect
+// After clicking the verify link, Supabase redirects back with hash params
+(function() {
+  var hash = window.location.hash;
+  var search = window.location.search;
+
+  // Check for Supabase verification token in URL hash
+  if (hash && hash.includes('access_token')) {
+    var params = {};
+    hash.replace('#','').split('&').forEach(function(p) {
+      var kv = p.split('=');
+      params[kv[0]] = decodeURIComponent(kv[1]||'');
+    });
+    if (params.access_token && (params.type === 'signup' || params.type === 'recovery')) {
+      // Email verified — set session and redirect to app
+      var pendingEmail = '';
+      try { pendingEmail = sessionStorage.getItem('sf_pending_email') || ''; } catch(e) {}
+      try {
+        sessionStorage.setItem('sf_auth',   '1');
+        sessionStorage.setItem('sf_tier',   'free');
+        sessionStorage.setItem('sf_client', 'Free');
+        sessionStorage.setItem('sf_email',  pendingEmail);
+      } catch(e) {}
+      window.location.href = 'app.html?authed=1';
+    }
+  }
+
+  // Also check query param (some Supabase configs use this)
+  if (search && search.includes('type=signup')) {
+    try {
+      sessionStorage.setItem('sf_auth',   '1');
+      sessionStorage.setItem('sf_tier',   'free');
+      sessionStorage.setItem('sf_client', 'Free');
+    } catch(e) {}
+    window.location.href = 'app.html?authed=1';
+  }
+})();
+</script>
 </head>
 <body>
 
@@ -1518,6 +1558,7 @@ var IDX_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJl
 
 // ── SAME CLIENTS LOOKUP AS app.html ─────────────────────────────────
 var SF_CLIENTS = {
+  'Liamdipsey1994!': { client: 'Simfluence', tier: 'admin'    },
   'Simfluence2025!': { client: 'Simfluence', tier: 'admin'    },
   'Cleopatra1!':     { client: 'Internal',    tier: 'admin'    },
   'Nestle2026!':     { client: 'Nestle',      tier: 'bronze'   },
@@ -1554,33 +1595,72 @@ function sfFreeClose() {
 }
 
 function sfSignIn() {
-  // Use same CLIENTS password lookup as app.html — no Supabase Auth needed
+  var email = document.getElementById('siEmail') ? document.getElementById('siEmail').value.trim() : '';
   var pass  = document.getElementById('siPass').value;
   var errEl = document.getElementById('siErr');
   var btn   = document.querySelector('#sfSignInModal button[onclick="sfSignIn()"]');
-  if (!pass) { errEl.style.display='block'; setTimeout(function(){errEl.style.display='none';},3000); return; }
+  if (!email || !pass) { errEl.style.display='block'; setTimeout(function(){errEl.style.display='none';},3000); return; }
+  if (btn) { btn.textContent='SIGNING IN...'; btn.disabled=true; }
 
+  // Step 1: Try CLIENTS password lookup first (agency/demo accounts)
   var match = SF_CLIENTS[pass];
-  if (!match) {
-    // Also try email field as password (backwards compat)
-    var email = document.getElementById('siEmail') ? document.getElementById('siEmail').value.trim() : '';
-    match = SF_CLIENTS[email];
-  }
-
   if (match) {
-    if (btn) { btn.textContent='SIGNING IN...'; btn.disabled=true; }
     try {
       sessionStorage.setItem('sf_auth',   '1');
       sessionStorage.setItem('sf_tier',   match.tier);
       sessionStorage.setItem('sf_client', match.client);
-      sessionStorage.setItem('sf_email',  (document.getElementById('siEmail') ? document.getElementById('siEmail').value.trim() : ''));
+      sessionStorage.setItem('sf_email',  email);
     } catch(e) {}
     window.location.href = 'app.html?authed=1';
-  } else {
+    return;
+  }
+
+  // Step 2: Supabase Auth for registered users (email + password)
+  fetch(IDX_URL + '/auth/v1/token?grant_type=password', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json','apikey':IDX_KEY},
+    body: JSON.stringify({email:email, password:pass, options:{emailRedirectTo:'https://simfluence.ai/'}})
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    if (data.error || !data.access_token) {
+      errEl.style.display='block';
+      setTimeout(function(){errEl.style.display='none';},3000);
+      if(btn){btn.textContent='SIGN IN →';btn.disabled=false;}
+      return;
+    }
+    // Step 3: Fetch tier from profiles table
+    fetch(IDX_URL + '/rest/v1/profiles?email=eq.' + encodeURIComponent(email.toLowerCase()) + '&select=tier,client', {
+      headers: {'apikey':IDX_KEY, 'Authorization':'Bearer '+data.access_token}
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(profile){
+      var tier   = ((profile && profile[0] && profile[0].tier)   || 'free').trim();
+      var client = ((profile && profile[0] && profile[0].client) || 'Free');
+      try {
+        sessionStorage.setItem('sf_auth',   '1');
+        sessionStorage.setItem('sf_tier',   tier);
+        sessionStorage.setItem('sf_client', client);
+        sessionStorage.setItem('sf_email',  email);
+      } catch(e) {}
+      window.location.href = 'app.html?authed=1';
+    })
+    .catch(function(){
+      // Profile fetch failed — log in as free tier
+      try {
+        sessionStorage.setItem('sf_auth',   '1');
+        sessionStorage.setItem('sf_tier',   'free');
+        sessionStorage.setItem('sf_client', 'Free');
+        sessionStorage.setItem('sf_email',  email);
+      } catch(e) {}
+      window.location.href = 'app.html?authed=1';
+    });
+  })
+  .catch(function(){
     errEl.style.display='block';
     setTimeout(function(){errEl.style.display='none';},3000);
     if(btn){btn.textContent='SIGN IN →';btn.disabled=false;}
-  }
+  });
 }
 
 function sfForgotPassword() {
@@ -1615,7 +1695,7 @@ function sfFreeSignup() {
   fetch(IDX_URL + '/auth/v1/signup', {
     method: 'POST',
     headers: {'Content-Type':'application/json','apikey':IDX_KEY},
-    body: JSON.stringify({email:email, password:pass})
+    body: JSON.stringify({email:email, password:pass, options:{emailRedirectTo:'https://simfluence.ai/'}})
   })
   .then(function(r){ return r.json(); })
   .then(function(data){
@@ -1628,15 +1708,25 @@ function sfFreeSignup() {
       if(btn){btn.textContent='CREATE FREE ACCOUNT →';btn.disabled=false;}
       return;
     }
-    // Success — set session then redirect as free user
+    // Success — check if email confirmation required or session immediate
     var userEmail = document.getElementById('freeEmail').value.trim();
-    try {
-      sessionStorage.setItem('sf_auth',   '1');
-      sessionStorage.setItem('sf_tier',   'free');
-      sessionStorage.setItem('sf_client', 'Free');
-      sessionStorage.setItem('sf_email',  userEmail);
-    } catch(e) {}
-    window.location.href = 'app.html?authed=1';
+    if (data.access_token) {
+      // Supabase returned a session immediately — redirect straight to app
+      try {
+        sessionStorage.setItem('sf_auth',   '1');
+        sessionStorage.setItem('sf_tier',   'free');
+        sessionStorage.setItem('sf_client', 'Free');
+        sessionStorage.setItem('sf_email',  userEmail);
+      } catch(e) {}
+      window.location.href = 'app.html?authed=1';
+    } else {
+      // Email confirmation required — show message and store email for after verification
+      try { sessionStorage.setItem('sf_pending_email', userEmail); } catch(e) {}
+      if(btn){btn.textContent='✓ CHECK YOUR EMAIL';btn.style.background='#00C46A';btn.disabled=true;}
+      errEl.style.color='#00C46A';
+      errEl.textContent='Account created! Check your email to verify, then you'll be redirected to the platform.';
+      errEl.style.display='block';
+    }
   })
   .catch(function(){
     errEl.textContent='Connection error. Please try again.';
@@ -1714,13 +1804,13 @@ var MODALS = {
   <div style="background:#0D0D18;border:1px solid rgba(0,80,255,0.3);border-radius:16px;padding:40px;max-width:400px;width:90%;margin:60px auto;text-align:center;box-sizing:border-box;">
     <div style="font-size:24px;font-weight:700;color:#FFD400;margin-bottom:4px;font-family:'Space Grotesk',sans-serif">Sim<em style="font-style:italic;font-weight:300">fluence</em></div>
     <div style="font-family:'DM Mono',monospace;font-size:10px;color:rgba(255,255,255,0.3);letter-spacing:.1em;margin-bottom:32px">SIGN IN TO YOUR ACCOUNT</div>
-    <input id="siEmail" type="email" placeholder="Email address (optional)" autocomplete="email"
+    <input id="siEmail" type="email" placeholder="Email address" autocomplete="email"
       style="width:100%;padding:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:#fff;font-size:14px;outline:none;box-sizing:border-box;margin-bottom:10px;font-family:sans-serif;">
     <input id="siPass" type="password" placeholder="Access password" autocomplete="current-password"
       onkeydown="if(event.key==='Enter')sfSignIn()"
       style="width:100%;padding:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:#fff;font-size:14px;outline:none;box-sizing:border-box;margin-bottom:16px;font-family:sans-serif;">
     <button onclick="sfSignIn()" style="width:100%;padding:13px;background:#0050FF;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-weight:700;font-family:'DM Mono',monospace;letter-spacing:.06em;">SIGN IN →</button>
-    <div id="siErr" style="color:#ff5555;font-size:11px;margin-top:10px;display:none;">Incorrect password. Contact liam@simfluence.ai for access.</div>
+    <div id="siErr" style="color:#ff5555;font-size:11px;margin-top:10px;display:none;">Incorrect email or password. Contact liam@simfluence.ai for access.</div>
     <div id="siForgotOk" style="display:none;"></div>
     <div style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.08);">
       <span style="font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,255,255,0.3);">No account? </span>
