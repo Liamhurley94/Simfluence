@@ -1570,11 +1570,7 @@ var SF_CLIENTS = {
 };
 
 function openSignIn() {
-  var m = document.getElementById('sfSignInModal');
-  if (!m) return;
-  m.style.display = 'block';
-  document.body.style.overflow = 'hidden';
-  setTimeout(function(){ var e=document.getElementById('siEmail'); if(e) e.focus(); }, 150);
+  window.location.href = 'app.html';
 }
 function sfSignInClose() {
   var m = document.getElementById('sfSignInModal');
@@ -1809,14 +1805,14 @@ var MODALS = {
     <input id="siPass" type="password" placeholder="Access password" autocomplete="current-password"
       onkeydown="if(event.key==='Enter')sfSignIn()"
       style="width:100%;padding:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:#fff;font-size:14px;outline:none;box-sizing:border-box;margin-bottom:16px;font-family:sans-serif;">
-    <button onclick="sfSignIn()" style="width:100%;padding:13px;background:#0050FF;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-weight:700;font-family:'DM Mono',monospace;letter-spacing:.06em;">SIGN IN →</button>
+    <button id="sfSignInBtn" style="width:100%;padding:13px;background:#0050FF;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-weight:700;font-family:'DM Mono',monospace;letter-spacing:.06em;">SIGN IN →</button>
     <div id="siErr" style="color:#ff5555;font-size:11px;margin-top:10px;display:none;">Incorrect email or password. Contact liam@simfluence.ai for access.</div>
     <div id="siForgotOk" style="display:none;"></div>
     <div style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.08);">
       <span style="font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,255,255,0.3);">No account? </span>
-      <button onclick="sfSignInClose();openFreeSignup();" style="background:none;border:none;font-family:'DM Mono',monospace;font-size:9px;color:#6B9FFF;cursor:pointer;padding:0;">SIGN UP FREE →</button>
+      <button id="sfModalToSignup" style="background:none;border:none;font-family:'DM Mono',monospace;font-size:9px;color:#6B9FFF;cursor:pointer;padding:0;">SIGN UP FREE →</button>
     </div>
-    <button onclick="sfSignInClose()" style="margin-top:16px;background:none;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.3);border-radius:6px;padding:6px 16px;font-family:'DM Mono',monospace;font-size:9px;cursor:pointer;">CLOSE</button>
+    <button id="sfSignInCloseBtn" style="margin-top:16px;background:none;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.3);border-radius:6px;padding:6px 16px;font-family:'DM Mono',monospace;font-size:9px;cursor:pointer;">CLOSE</button>
   </div>
 </div>
 
@@ -1840,5 +1836,47 @@ var MODALS = {
   </div>
 </div>
 
+
+<script>
+// ── CAPTURE-PHASE HANDLERS (Cloudflare strips onclick) ───────────────
+document.addEventListener('click', function(e) {
+  var el = e.target;
+  while (el && el !== document) {
+    var id = el.id;
+    if (id === 'sfSignInBtn') {
+      e.stopImmediatePropagation();
+      e.preventDefault();
+      if (typeof sfSignIn === 'function') sfSignIn();
+      return;
+    }
+    if (id === 'sfSignInCloseBtn') {
+      e.stopImmediatePropagation();
+      e.preventDefault();
+      if (typeof sfSignInClose === 'function') sfSignInClose();
+      return;
+    }
+    if (id === 'sfModalToSignup') {
+      e.stopImmediatePropagation();
+      e.preventDefault();
+      if (typeof sfSignInClose === 'function') sfSignInClose();
+      if (typeof openFreeSignup === 'function') openFreeSignup();
+      return;
+    }
+    if (id === 'navSignInBtn') {
+      e.stopImmediatePropagation();
+      e.preventDefault();
+      if (typeof openSignIn === 'function') openSignIn();
+      return;
+    }
+    if (id === 'navTryFreeBtn') {
+      e.stopImmediatePropagation();
+      e.preventDefault();
+      if (typeof openFreeSignup === 'function') openFreeSignup();
+      return;
+    }
+    el = el.parentElement;
+  }
+}, true);
+</script>
 </body>
 </html>
