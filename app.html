@@ -12367,22 +12367,17 @@ _0x55cf06=_0x55cf06.concat([0x70,0x74,0x69,0x6d,0x69,0x73,0x65,0x64,0x20,0x66,0x
 _0x55cf06=_0x55cf06.concat([0x30,0x30,0x22,0x3e,0x24,0x7b,0x5f,0x30,0x78,0x31,0x31,0x37,0x7d,0x3c,0x2f,0x73,0x74,0x72,0x6f,0x6e,0x67,0x3e,0x20,0x61,0x6e,0x64,0x20,0x61,0x76,0x67,0x20,0x47,0x46,0x49,0x20,0x3c,0x73,0x74,0x72,0x6f,0x6e,0x67,0x20,0x73,0x74,0x79,0x6c,0x65,0x3d,0x22,0x63,0x6f,0x6c,0x6f,0x72,0x3a,0x23,0x46,0x46,0x44,0x34,0x30,0x30,0x22,0x3e,0x24,0x7b,0x5f,0x30,0x78,0x30,0x38,0x32,0x7d,0x25,0x3c,0x2f,0x73,0x74,0x72,0x6f,0x6e,0x67,0x3e,0x2e,0x3c,0x62,0x72,0x3e,0x0a,0x20,0x20,0x20,0x20,0x3c,0x73,0x70,0x61,0x6e,0x20]);
 _0x55cf06=_0x55cf06.concat([0x73,0x74,0x79,0x6c,0x65,0x3d,0x22,0x63,0x6f,0x6c,0x6f,0x72,0x3a,0x76,0x61,0x72,0x28,0x2d,0x2d,0x5f,0x30,0x78,0x30,0x30,0x33,0x2d,0x6d,0x75,0x74,0x65,0x64,0x29,0x22,0x3e,0x24,0x7b,0x5f,0x30,0x78,0x30,0x65,0x62,0x7d,0x3c,0x2f,0x73,0x70,0x61,0x6e,0x3e,0x60,0x3b,0x0a,0x20,0x20,0x20,0x20,0x5f,0x30,0x78,0x30,0x35,0x34,0x2e,0x73,0x74,0x79,0x6c,0x65,0x2e,0x64,0x69,0x73,0x70,0x6c,0x61,0x79,0x20,0x3d,0x20,0x27,0x5c,0x78,0x36,0x32,0x5c,0x78,0x36,0x63,0x5c,0x78,0x36,0x66,0x5c,0x78,0x36,0x33,0x5c,0x78,0x36]);
 _0x55cf06=_0x55cf06.concat([0x62,0x27,0x3b,0x0a,0x20,0x20,0x7d,0x0a,0x7d,0x0a,0x66,0x75,0x6e,0x63,0x74,0x69,0x6f,0x6e,0x20,0x72,0x65,0x6e,0x64,0x65,0x72,0x53,0x63,0x6f,0x72,0x69,0x6e,0x67,0x53,0x63,0x72,0x65,0x65,0x6e,0x46,0x75,0x6c,0x6c,0x28,0x29,0x20,0x7b,0x0a,0x20,0x20,0x72,0x65,0x6e,0x64,0x65,0x72,0x53,0x63,0x6f,0x72,0x69,0x6e,0x67,0x53,0x63,0x72,0x65,0x65,0x6e,0x28,0x29,0x3b,0x20,0x0a,0x20,0x20,0x72,0x65,0x6e,0x64,0x65,0x72,0x46,0x75,0x6c,0x6c,0x53,0x63,0x6f,0x72,0x65,0x54,0x61,0x62,0x6c,0x65,0x28,0x29,0x3b,0x0a,0x7d]);
-// ── PROTECTED EVAL WITH FALLBACKS ──────────────────────────────────────
+// ── PROTECTED EVAL WITH MINIMAL FALLBACKS ──────────────────────────────
 try {
   eval(String.fromCharCode.apply(null,_0x55cf06));
 } catch (e) {
-  console.warn('Obfuscated code failed to execute:', e.message);
-}
-
-// ── FALLBACK DEFINITIONS ─────────────────────────────────────────────
-// Provide working implementations regardless of eval success/failure
-(function() {
-  // Missing variable declarations
+  console.warn('Obfuscated code failed:', e.message);
+  
+  // Only provide missing pieces, don't override existing functionality
   if (typeof activeSubMode === 'undefined') {
     window.activeSubMode = '';
   }
   
-  // Provide computeCostEstimate if missing
   if (typeof computeCostEstimate !== 'function') {
     window.computeCostEstimate = function(cr) {
       return {
@@ -12398,107 +12393,14 @@ try {
     };
   }
   
-  // Minimal renderCreatorGrid if missing
-  if (typeof renderCreatorGrid !== 'function') {
-    window.renderCreatorGrid = function() {
-      var grid = document.getElementById('creatorGrid');
-      if (!grid || typeof CREATORS === 'undefined') return;
-      
-      var genre = (document.getElementById('genre')||{value:'Gaming & Esports'}).value;
-      var creators = CREATORS.filter(function(cr) { 
-        return cr.genre === genre || (cr.genre && genre && cr.genre.includes('Gaming'));
-      }).slice(0, 25);
-      
-      if (creators.length === 0) {
-        grid.innerHTML = '<div style="padding:40px;text-align:center;color:#666">No creators found for ' + genre + '</div>';
-        return;
-      }
-      
-      grid.innerHTML = creators.map(function(cr) {
-        return '<div style="padding:20px;margin:10px;border:1px solid #333;border-radius:8px;background:#1a1a1a">' +
-               '<h3 style="color:#fff;margin:0 0 10px">' + cr.name + '</h3>' +
-               '<p style="color:#aaa;font-size:14px">@' + cr.handle + ' • ' + cr.subs + ' • CPI: ' + cr.cpi + '</p>' +
-               '</div>';
-      }).join('');
-    };
-  }
-  
-  // Minimal onGenreChange if missing
-  if (typeof onGenreChange !== 'function') {
-    window.onGenreChange = function() {
-      if (typeof renderCreatorGrid === 'function') {
-        renderCreatorGrid();
-      }
-    };
-  }
-  
-  // Minimal showScreen if missing
+  // Stub functions only - don't override if they exist
   if (typeof showScreen !== 'function') {
-    window.showScreen = function(screenName) {
-      console.log('showScreen called:', screenName);
-      // Basic screen switching
-      var screens = document.querySelectorAll('[id^="screen-"]');
-      screens.forEach(function(screen) {
-        screen.style.display = screen.id === 'screen-' + screenName ? 'block' : 'none';
-      });
-    };
+    window.showScreen = function(screenName) { console.log('showScreen:', screenName); };
   }
-  
-  // Minimal computeSimResults if missing
   if (typeof computeSimResults !== 'function') {
-    window.computeSimResults = function() {
-      console.log('computeSimResults called');
-      // Basic simulation placeholder
-      window.simResults = { p10: {impressions: 10000, ctr: 2.1, roas: 1.2}, p50: {impressions: 50000, ctr: 3.5, roas: 2.1} };
-    };
+    window.computeSimResults = function() { console.log('computeSimResults called'); };
   }
-  
-  console.log('Fallback functions initialized');
-  
-  // IMMEDIATELY initialize the page since DOMContentLoaded handlers may not work
-  setTimeout(function() {
-    console.log('Running immediate initialization...');
-    
-    // Call onGenreChange to set up sub-modes and render grid
-    if (typeof onGenreChange === 'function') {
-      onGenreChange();
-    }
-    
-    // Call renderCreatorGrid directly 
-    if (typeof renderCreatorGrid === 'function') {
-      renderCreatorGrid();
-    }
-    
-    // Make sure we're on the discovery screen
-    if (typeof showScreen === 'function') {
-      showScreen('discovery');
-    }
-    
-    console.log('Immediate initialization complete');
-    
-    // Set up navigation tab clicks
-    var tabs = document.querySelectorAll('.nav-tab');
-    tabs.forEach(function(tab, index) {
-      tab.addEventListener('click', function(e) {
-        e.preventDefault();
-        console.log('Tab clicked:', index);
-        
-        // Remove active class from all tabs
-        tabs.forEach(function(t) { t.classList.remove('active'); });
-        // Add active class to clicked tab
-        tab.classList.add('active');
-        
-        // Show corresponding screen
-        var screenNames = ['discovery', 'scoring', 'personas', 'simulator', 'campaigns', 'outreach'];
-        var screenName = screenNames[index] || 'discovery';
-        showScreen(screenName);
-      });
-    });
-    
-    console.log('Tab handlers set up');
-  }, 100);
-})();
-
+}
 // ── UPDATE BAND DISPLAYS ───────────────────────────────────────────────
 function updateBandDisplays() {
   if (!simResults) return;
