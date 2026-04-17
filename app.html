@@ -1849,16 +1849,7 @@
 <script>
 // ── CLIENT ACCESS PASSWORDS ─────────────────────────────────────────
 // Add new clients here: 'Password': { client: 'Name', tier: 'bronze' }
-var CLIENTS = {
-  'Simfluence2025!': { client: 'Simfluence', tier: 'admin'    },
-  'Cleopatra1!':     { client: 'Internal',    tier: 'admin'    },
-  'Nestle2026!':     { client: 'Nestle',      tier: 'bronze'   },
-  'eFootball2026!':  { client: 'eFootball',   tier: 'bronze'   },
-  'Silver2026!':     { client: 'Demo',        tier: 'silver'   },
-  'Gold2026!':       { client: 'Demo',        tier: 'gold'     },
-  'Platinum2026!':   { client: 'Demo',        tier: 'platinum' },
-  'Diamond2026!':    { client: 'Demo',        tier: 'diamond'  },
-};
+// Auth handled server-side via Edge Function — no passwords in client code
 
 // ── SUPABASE AUTH CONFIG ─────────────────────────────────────────────
 var SF_URL = 'https://iysjxslzlbojoivxjrce.supabase.co';
@@ -2109,39 +2100,54 @@ function gForgotPassword() {
 
 document.getElementById('GP').addEventListener('keydown',function(e){if(e.key==='Enter')GC();});
 function GC(){
-  var v=document.getElementById('GP').value.trim();
-  var match=CLIENTS[v];
-  if(match){
+  var v = document.getElementById('GP').value.trim();
+  if (!v) return;
+
+  var btn = document.getElementById('GBtn');
+  if (btn) { btn.textContent = '...'; btn.disabled = true; }
+
+  // Validate password server-side — never in the browser
+  fetch('https://iysjxslzlbojoivxjrce.supabase.co/functions/v1/validate-password', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password: v })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (btn) { btn.textContent = 'ENTER'; btn.disabled = false; }
+    if (!data.success) {
+      document.getElementById('GE').style.display='block';
+      document.getElementById('GP').value='';
+      document.getElementById('GP').focus();
+      setTimeout(function(){document.getElementById('GE').style.display='none';},2500);
+      return;
+    }
+    // Success — activate session with tier from server
     var gEl = document.getElementById('G');
     gEl.style.display = 'none';
     gEl.style.pointerEvents = 'none';
     gEl.style.visibility = 'hidden';
     gEl.setAttribute('aria-hidden', 'true');
-    // Belt-and-suspenders: ensure nothing on the gate can absorb clicks
     gEl.style.zIndex = '-1';
     document.body.style.overflow = '';
-    // Immediately kill onboarding overlay so it can never block modals
     var obEl = document.getElementById('sfOnboard');
     if (obEl) { obEl.style.display = 'none'; obEl.style.pointerEvents = 'none'; }
     try {
-      sessionStorage.setItem('sf_auth','1');
-      sessionStorage.setItem('sf_client', match.client);
-      sessionStorage.setItem('sf_tier', match.tier);
-    } catch(e){}
-    // Re-apply tier gating now that tier is known
+      sessionStorage.setItem('sf_auth',   '1');
+      sessionStorage.setItem('sf_client', data.client);
+      sessionStorage.setItem('sf_tier',   data.tier);
+    } catch(e) {}
     setTimeout(function() {
       if (typeof patchSimRunCounter === 'function') patchSimRunCounter();
       if (typeof applyAllTierGates === 'function') applyAllTierGates();
       if (typeof renderCreatorGrid === 'function') renderCreatorGrid();
     }, 50);
-  } else {
-
-
+  })
+  .catch(function() {
+    if (btn) { btn.textContent = 'ENTER'; btn.disabled = false; }
     document.getElementById('GE').style.display='block';
-    document.getElementById('GP').value='';
-    document.getElementById('GP').focus();
     setTimeout(function(){document.getElementById('GE').style.display='none';},2500);
-  }
+  });
 }
 
 // ══════════════════════════════════════════════════════════════════════
