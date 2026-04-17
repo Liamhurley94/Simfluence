@@ -3540,6 +3540,33 @@ document.addEventListener('DOMContentLoaded', function() {
             <option value="Other">Other</option>
           </select>
         </div>
+
+        <!-- CPI MINIMUM FILTER — Gold+ only -->
+        <div class="field" style="margin-top:14px" id="cpiFilterField">
+          <label style="display:flex;align-items:center;justify-content:space-between">
+            <span>Min CPI Score</span>
+            <span id="cpiFilterVal" style="font-family:Archivo Black,sans-serif;color:#FFD400;font-size:13px">Any</span>
+          </label>
+          <input type="range" id="cpiFilter" min="0" max="90" step="5" value="0"
+            style="width:100%;accent-color:#FFD400;margin-top:6px">
+          <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text-muted);margin-top:2px;letter-spacing:.06em">
+            <span>0</span><span>45</span><span>90</span>
+          </div>
+        </div>
+
+        <!-- GFI MINIMUM FILTER — Gold+ only -->
+        <div class="field" style="margin-top:14px" id="gfiFilterField">
+          <label style="display:flex;align-items:center;justify-content:space-between">
+            <span>Min GFI Score</span>
+            <span id="gfiFilterVal" style="font-family:Archivo Black,sans-serif;color:#00C46A;font-size:13px">Any</span>
+          </label>
+          <input type="range" id="gfiFilter" min="0" max="95" step="5" value="0"
+            style="width:100%;accent-color:#00C46A;margin-top:6px">
+          <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text-muted);margin-top:2px;letter-spacing:.06em">
+            <span>0</span><span>50</span><span>95</span>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -11508,6 +11535,21 @@ function renderCreatorGrid(keepPage) {
     return;
   }
 
+  // ── CPI / GFI filters (Gold+ only) ──────────────────────────────
+  var _cpiMin = 0, _gfiMin = 0;
+  var _filterTier = typeof getTierLevel === 'function' ? getTierLevel() : 4;
+  if (_filterTier >= 2) { // Gold+
+    var _cpiEl = document.getElementById('cpiFilter');
+    var _gfiEl = document.getElementById('gfiFilter');
+    _cpiMin = _cpiEl ? parseInt(_cpiEl.value) || 0 : 0;
+    _gfiMin = _gfiEl ? parseInt(_gfiEl.value) || 0 : 0;
+  }
+  function passedCpiFilter(cr) { return !_cpiMin || (cr.cpi || 0) >= _cpiMin; }
+  function passedGfiFilter(cr) {
+    if (!_gfiMin) return true;
+    return computeGFI(cr) >= _gfiMin;
+  }
+
   // ── NORMAL MODE: filtered + scored ───────────────────────────────
   const scored = CREATORS
     .filter(cr => {
@@ -11516,6 +11558,8 @@ function renderCreatorGrid(keepPage) {
       var langOnly = selectedLang && selectedLang !== 'all' && selectedLang !== 'English';
       if (!langOnly && !passedTierFilter(cr)) return false;
       if (!passedLangFilter(cr)) return false;
+      if (!passedCpiFilter(cr)) return false;
+      if (!passedGfiFilter(cr)) return false;
       // Content targeting filter — applied before genre when active
       if (_contentFilterActive && !passedContentFilter(cr)) return false;
       if (genreScore(cr) < 0) return false;
@@ -16632,6 +16676,70 @@ document.addEventListener('DOMContentLoaded', function() {
     wire('tierMix',      function() { if(typeof renderCreatorGrid==='function') renderCreatorGrid(); if(typeof updateSim==='function') updateSim(); });
     wire('langFilter',   function() { if(typeof renderCreatorGrid==='function') renderCreatorGrid(); });
     wire('sortModeSelect', function(e) { if(typeof setSortMode==='function') setSortMode(e.target.value); });
+
+  // ── CPI / GFI FILTER SLIDERS ────────────────────────────────────
+  (function() {
+    var cpiEl   = document.getElementById('cpiFilter');
+    var gfiEl   = document.getElementById('gfiFilter');
+    var cpiVal  = document.getElementById('cpiFilterVal');
+    var gfiVal  = document.getElementById('gfiFilterVal');
+    var cpiWrap = document.getElementById('cpiFilterField');
+    var gfiWrap = document.getElementById('gfiFilterField');
+
+    function applyScoreFilterGating() {
+      var tier = typeof getTierLevel === 'function' ? getTierLevel() : 4;
+      var isGold = tier >= 2;
+      [cpiWrap, gfiWrap].forEach(function(el) {
+        if (!el) return;
+        if (!isGold) {
+          el.style.filter = 'blur(3px)';
+          el.style.pointerEvents = 'none';
+          el.style.opacity = '0.5';
+          el.setAttribute('title', 'Gold+ feature — upgrade to unlock');
+        } else {
+          el.style.filter = '';
+          el.style.pointerEvents = '';
+          el.style.opacity = '1';
+          el.removeAttribute('title');
+        }
+      });
+    }
+
+    function updateCpiLabel() {
+      if (!cpiEl || !cpiVal) return;
+      var v = parseInt(cpiEl.value);
+      cpiVal.textContent = v === 0 ? 'Any' : v + '+';
+    }
+
+    function updateGfiLabel() {
+      if (!gfiEl || !gfiVal) return;
+      var v = parseInt(gfiEl.value);
+      gfiVal.textContent = v === 0 ? 'Any' : v + '+';
+    }
+
+    if (cpiEl) cpiEl.addEventListener('input', function() {
+      updateCpiLabel();
+      if (typeof renderCreatorGrid === 'function') renderCreatorGrid();
+    });
+
+    if (gfiEl) gfiEl.addEventListener('input', function() {
+      updateGfiLabel();
+      if (typeof renderCreatorGrid === 'function') renderCreatorGrid();
+    });
+
+    // Apply gating on load and re-apply after login
+    applyScoreFilterGating();
+    updateCpiLabel();
+    updateGfiLabel();
+
+    // Hook into auth flow to re-gate after login
+    var _orig = window.sfShowUserMenu;
+    window.sfShowUserMenu = function() {
+      if (typeof _orig === 'function') _orig.apply(this, arguments);
+      setTimeout(applyScoreFilterGating, 250);
+    };
+  })();
+
   })();
 
   // Search input
