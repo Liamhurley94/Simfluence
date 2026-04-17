@@ -10784,20 +10784,30 @@ function computeCostEstimate(cr) {
 
 // ── DEBUG LOGGING ─────────────────────────────────────────────────────
 window.debugRender = function() {
-  console.log('=== DEBUG RENDER ===');
-  console.log('CREATORS array length:', typeof CREATORS !== 'undefined' ? CREATORS.length : 'UNDEFINED');
-  console.log('getSelectedGenre():', typeof getSelectedGenre === 'function' ? getSelectedGenre() : 'UNDEFINED');
-  console.log('activeSubMode:', typeof activeSubMode !== 'undefined' ? activeSubMode : 'UNDEFINED');
-  console.log('renderCreatorGrid function:', typeof renderCreatorGrid);
-  console.log('onGenreChange function:', typeof onGenreChange);
-  if (typeof renderCreatorGrid === 'function') {
-    try {
-      renderCreatorGrid();
-      console.log('renderCreatorGrid() called successfully');
-    } catch(e) {
-      console.error('renderCreatorGrid() error:', e);
+  console.log('=== CREATOR FILTERING DEBUG ===');
+  console.log('1. CREATORS total:', typeof CREATORS !== 'undefined' ? CREATORS.length : 'UNDEFINED');
+  console.log('2. Selected genre:', typeof getSelectedGenre === 'function' ? getSelectedGenre() : 'UNDEFINED');
+  
+  if (typeof CREATORS !== 'undefined' && typeof getSelectedGenre === 'function') {
+    const genre = getSelectedGenre();
+    const genreMatch = CREATORS.filter(cr => cr.genre === genre);
+    console.log('3. Creators matching genre "' + genre + '":', genreMatch.length);
+    
+    if (genreMatch.length > 0) {
+      console.log('4. First 3 genre matches:', genreMatch.slice(0,3).map(cr => ({name: cr.name, genre: cr.genre})));
+    }
+    
+    // Check if GENRE_AFFINITY helps
+    if (typeof GENRE_AFFINITY !== 'undefined') {
+      const affinityMatch = CREATORS.filter(cr => 
+        cr.genre === genre || ((GENRE_AFFINITY[cr.genre] || {})[genre] || 0) >= 0.6
+      );
+      console.log('5. With genre affinity:', affinityMatch.length);
     }
   }
+  
+  console.log('6. activeSubMode:', typeof activeSubMode !== 'undefined' ? activeSubMode : 'UNDEFINED');
+  console.log('7. renderCreatorGrid available:', typeof renderCreatorGrid);
 };
 
 /* Simfluence Proprietary Algorithm — Protected */
