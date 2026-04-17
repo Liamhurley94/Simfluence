@@ -10948,62 +10948,90 @@ function computeSubModeAlignment(creator, subMode) {
 }
 
 
-function computeGFI(creator) {
-  const campaignGenre = getSelectedGenre() || 'Gaming & Esports';
-  const subMode       = activeSubMode || '';
+// ═══ REAL-TIME ALGORITHM OBFUSCATION SYSTEM ═══
+// Generates new obfuscated code on every page load - keeps algorithms unreadable
 
-  // Step 1: Genre-level affinity (0.0–1.0)
-  // This is purely about whether the creator's AUDIENCE overlaps with the campaign genre
-  var genreAffinity;
-  if (creator.genre === campaignGenre) {
-    genreAffinity = 1.0;
-  } else {
-    const raw = (GENRE_AFFINITY[creator.genre]||{})[campaignGenre];
-    genreAffinity = (raw !== undefined && raw !== null) ? raw : 0.05;
-  }
-
-  // If genre affinity is too low, no amount of sub-mode match can save it
-  if (genreAffinity < 0.15) return Math.round(clamp(genreAffinity * 100, 5, 14));
-
-  // Step 2: Sub-mode alignment (0–100) — based purely on content signals
-  var subModeScore = computeSubModeAlignment(creator, subMode);
-
-  // Live boost: currently streaming a matching game = definitive proof of fit
-  if (subMode && window.__twitchLive && creator.platform === 'Twitch') {
-    var liveData = window.__twitchLive[creator.handle.replace('@','').toLowerCase()];
-    if (liveData && liveData.live && liveData.gameName) {
-      var gameKeywords = SUBMODE_KEYWORDS[subMode] || [];
-      var gameLower    = liveData.gameName.toLowerCase();
-      var liveMatch    = gameKeywords.some(function(kw) { return gameLower.indexOf(kw) !== -1; });
-      if (liveMatch) subModeScore = Math.max(subModeScore, 96);
-    }
-  }
-
-  // Step 3: GFI = genre gate × sub-mode alignment
-  // GFI is NOT derived from CPI — it's pure audience alignment
-  // Same genre: sub-mode is the primary signal
-  // Related genre: genre affinity reduces the ceiling
-  // Unrelated: hard cap regardless of content
-  var gfi;
-  if (genreAffinity >= 0.9) {
-    // Same genre — genre baseline is 70% (right audience, unknown sub-niche)
-    // Sub-mode selection boosts above 70 for matched creators, holds at 70 for no signal
-    // Score 8 (no match) → 70%, Score 95 (perfect) → 98%
-    var smBoost = subMode ? Math.max(0, ((subModeScore - 8) / 87) * 28) : 0;
-    gfi = 70 + smBoost;
-  } else if (genreAffinity >= 0.6) {
-    // Related genre — genre affinity as ceiling modifier
-    gfi = (subModeScore * genreAffinity * 0.8);
-  } else if (genreAffinity >= 0.3) {
-    // Weak crossover
-    gfi = (subModeScore * genreAffinity * 0.5);
-  } else {
-    // Unrelated — very low cap
-    gfi = genreAffinity * 30;
-  }
-
-  return Math.round(clamp(gfi, 5, 98));
-}
+(function() {
+  function _0xGen() { return '_0x' + Math.random().toString(16).substr(2, 4); }
+  function _0xStr(s) { return '"' + s.split('').map(c => '\\x' + c.charCodeAt(0).toString(16).padStart(2,'0')).join('') + '"'; }
+  
+  // Generate unique variable names for this session
+  var _v = {
+    gfiMain: _0xGen(), gfiCreator: _0xGen(), gfiGenre: _0xGen(), gfiSubMode: _0xGen(),
+    gfiAffinity: _0xGen(), gfiSubScore: _0xGen(), gfiLiveData: _0xGen(), gfiResult: _0xGen(),
+    gfiKeywords: _0xGen(), gfiGameLower: _0xGen(), gfiMatch: _0xGen(), gfiBoost: _0xGen(),
+    cpiMain: _0xGen(), cpiCreator: _0xGen(), cpiViewers: _0xGen(), cpiFollowers: _0xGen(),
+    cpiRatio: _0xGen(), cpiBase: _0xGen(), cpiResult: _0xGen()
+  };
+  
+  // Build obfuscated GFI function with random variable names
+  var _gfiCode = 'var ' + _v.gfiMain + ' = function(' + _v.gfiCreator + ') {' +
+    'var ' + _v.gfiGenre + ' = typeof getSelectedGenre === ' + _0xStr('function') + ' ? getSelectedGenre() : ' + _0xStr('Gaming & Esports') + ';' +
+    'var ' + _v.gfiSubMode + ' = activeSubMode || ' + _0xStr('') + ';' +
+    'var ' + _v.gfiAffinity + ';' +
+    'if (' + _v.gfiCreator + '.genre === ' + _v.gfiGenre + ') {' +
+      _v.gfiAffinity + ' = 1.0;' +
+    '} else {' +
+      'var raw = (GENRE_AFFINITY[' + _v.gfiCreator + '.genre]||{})[' + _v.gfiGenre + '];' +
+      _v.gfiAffinity + ' = (raw !== undefined && raw !== null) ? raw : 0.05;' +
+    '}' +
+    'if (' + _v.gfiAffinity + ' < 0.15) return Math.round(clamp(' + _v.gfiAffinity + ' * 100, 5, 14));' +
+    'var ' + _v.gfiSubScore + ' = computeSubModeAlignment(' + _v.gfiCreator + ', ' + _v.gfiSubMode + ');' +
+    'if (' + _v.gfiSubMode + ' && window.__twitchLive && ' + _v.gfiCreator + '.platform === ' + _0xStr('Twitch') + ') {' +
+      'var ' + _v.gfiLiveData + ' = window.__twitchLive[' + _v.gfiCreator + '.handle.replace(' + _0xStr('@') + ',' + _0xStr('') + ').toLowerCase()];' +
+      'if (' + _v.gfiLiveData + ' && ' + _v.gfiLiveData + '.live && ' + _v.gfiLiveData + '.gameName) {' +
+        'var ' + _v.gfiKeywords + ' = SUBMODE_KEYWORDS[' + _v.gfiSubMode + '] || [];' +
+        'var ' + _v.gfiGameLower + ' = ' + _v.gfiLiveData + '.gameName.toLowerCase();' +
+        'var ' + _v.gfiMatch + ' = ' + _v.gfiKeywords + '.some(function(kw) { return ' + _v.gfiGameLower + '.indexOf(kw) !== -1; });' +
+        'if (' + _v.gfiMatch + ') ' + _v.gfiSubScore + ' = Math.max(' + _v.gfiSubScore + ', 96);' +
+      '}' +
+    '}' +
+    'var ' + _v.gfiResult + ';' +
+    'if (' + _v.gfiAffinity + ' >= 0.9) {' +
+      'var ' + _v.gfiBoost + ' = ' + _v.gfiSubMode + ' ? Math.max(0, ((' + _v.gfiSubScore + ' - 8) / 87) * 28) : 0;' +
+      _v.gfiResult + ' = 70 + ' + _v.gfiBoost + ';' +
+    '} else if (' + _v.gfiAffinity + ' >= 0.6) {' +
+      _v.gfiResult + ' = (' + _v.gfiSubScore + ' * ' + _v.gfiAffinity + ' * 0.8);' +
+    '} else if (' + _v.gfiAffinity + ' >= 0.3) {' +
+      _v.gfiResult + ' = (' + _v.gfiSubScore + ' * ' + _v.gfiAffinity + ' * 0.5);' +
+    '} else {' +
+      _v.gfiResult + ' = ' + _v.gfiAffinity + ' * 30;' +
+    '}' +
+    'return Math.round(clamp(' + _v.gfiResult + ', 5, 98));' +
+  '};';
+  
+  // Build obfuscated CPI function with random variable names
+  var _cpiCode = 'var ' + _v.cpiMain + ' = function(' + _v.cpiCreator + ', ' + _v.cpiViewers + ') {' +
+    'var ' + _v.cpiFollowers + ' = parseSubs(' + _v.cpiCreator + '.subs);' +
+    'var ' + _v.cpiRatio + ' = ' + _v.cpiFollowers + ' > 0 ? ' + _v.cpiViewers + ' / ' + _v.cpiFollowers + ' : 0;' +
+    'var ' + _v.cpiBase + ' = 50;' +
+    'if (' + _v.cpiViewers + ' >= 50000) ' + _v.cpiBase + ' += 30;' +
+    'else if (' + _v.cpiViewers + ' >= 10000) ' + _v.cpiBase + ' += 24;' +
+    'else if (' + _v.cpiViewers + ' >= 5000) ' + _v.cpiBase + ' += 18;' +
+    'else if (' + _v.cpiViewers + ' >= 1000) ' + _v.cpiBase + ' += 12;' +
+    'else if (' + _v.cpiViewers + ' >= 500) ' + _v.cpiBase + ' += 8;' +
+    'else if (' + _v.cpiViewers + ' >= 100) ' + _v.cpiBase + ' += 4;' +
+    'if (' + _v.cpiRatio + ' >= 0.10) ' + _v.cpiBase + ' += 10;' +
+    'else if (' + _v.cpiRatio + ' >= 0.05) ' + _v.cpiBase + ' += 6;' +
+    'else if (' + _v.cpiRatio + ' >= 0.02) ' + _v.cpiBase + ' += 3;' +
+    'if (' + _v.cpiFollowers + ' >= 5000000) ' + _v.cpiBase + ' += 15;' +
+    'else if (' + _v.cpiFollowers + ' >= 1000000) ' + _v.cpiBase + ' += 12;' +
+    'else if (' + _v.cpiFollowers + ' >= 500000) ' + _v.cpiBase + ' += 8;' +
+    'else if (' + _v.cpiFollowers + ' >= 100000) ' + _v.cpiBase + ' += 5;' +
+    'return Math.min(98, Math.round(' + _v.cpiBase + '));' +
+  '};';
+  
+  // Execute obfuscated code and assign to global functions
+  eval(_gfiCode);
+  eval(_cpiCode);
+  window.computeGFI = window[_v.gfiMain];
+  window.computeLiveCPI = window[_v.cpiMain];
+  
+  // Clear traces
+  delete window[_v.gfiMain];
+  delete window[_v.cpiMain];
+  
+})();
 
 function getMismatch(creator) {
   const cg = getSelectedGenre() || 'Gaming & Esports';
@@ -13959,29 +13987,7 @@ function renderLivePanel() {
   listEl.innerHTML = html;
 }
 
-function computeLiveCPI(cr, currentViewers) {
-  // parseSubs already returns the full number (e.g. 261000 for '261K')
-  var followers = parseSubs(cr.subs);
-  var ratio     = followers > 0 ? currentViewers / followers : 0;
-  var cpi       = 50;
-  // Live viewer count is the primary signal
-  if (currentViewers >= 50000) cpi += 30;
-  else if (currentViewers >= 10000) cpi += 24;
-  else if (currentViewers >= 5000)  cpi += 18;
-  else if (currentViewers >= 1000)  cpi += 12;
-  else if (currentViewers >= 500)   cpi += 8;
-  else if (currentViewers >= 100)   cpi += 4;
-  // Live engagement ratio bonus
-  if (ratio >= 0.10)      cpi += 10;
-  else if (ratio >= 0.05) cpi += 6;
-  else if (ratio >= 0.02) cpi += 3;
-  // Follower scale bonus (brand recognition)
-  if (followers >= 5000000)      cpi += 15;
-  else if (followers >= 1000000) cpi += 12;
-  else if (followers >= 500000)  cpi += 8;
-  else if (followers >= 100000)  cpi += 5;
-  return Math.min(98, Math.round(cpi));
-}
+
 
 // Update live dot and count in panel header + refresh grid
 function updateLiveUI() {
