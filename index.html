@@ -303,12 +303,12 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
     <li><a href="#how">How it works</a></li>
     <li><a href="#features">Features</a></li>
     <li><a href="#pricing">Pricing</a></li>
-    <li><a href="#" onclick="openFreeSignup();return false;">See the platform</a></li>
+    <li><a href="app.html">See the platform</a></li>
   </ul>
   <div class="nav-right">
     <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn" title="Toggle mode">🌙</button>
-    <button id="navSignInBtn" class="nav-login" style="background:none;border:none;cursor:pointer;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.06em;color:var(--muted)">Sign in</button>
-    <button id="navTryFreeBtn" class="nav-cta" style="border:none;cursor:pointer">Try Free</button>
+    <a id="navSignInBtn" class="nav-login" href="javascript:void(0)" onclick="(function(){var m=document.getElementById('sfSignInModal');if(m){m.style.display='flex';document.body.style.overflow='hidden';}})()">Sign in</a>
+    <a id="navTryFreeBtn" class="nav-cta" href="app.html">Try Free</a>
   </div>
 </nav>
 
@@ -1744,7 +1744,7 @@ function wireNavButtons() {
   var signinBtn = document.getElementById('navSignInBtn');
   if (signinBtn) signinBtn.addEventListener('click', function(e) { e.preventDefault(); openSignIn(); });
   var freeBtn = document.getElementById('navTryFreeBtn');
-  if (freeBtn) freeBtn.addEventListener('click', function(e) { e.preventDefault(); openFreeSignup(); });
+  if (freeBtn) freeBtn.addEventListener('click', function(e) { e.preventDefault(); window.location.href='app.html'; });
 }
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', wireNavButtons);
@@ -1796,7 +1796,7 @@ var MODALS = {
   legal:{c:'#9B8FDD',e:'Legal · Legal Notice',t:'Legal Notice',d:'Simfluence Ltd is a technology company incorporated in Dubai, United Arab Emirates. This legal notice governs your use of the Simfluence platform and all associated intellectual property.',s:[{n:'LLC',l:'Entity type'},{n:'Dubai',l:'Registered office'},{n:'UAE',l:'Jurisdiction'},{n:'2025',l:'Incorporated'}],p:['Entity: Simfluence Ltd is registered as a Limited Liability Company in Dubai, UAE. All platform operations and commercial agreements are conducted under this entity.','Intellectual Property: The Simfluence name, logo, platform design, CPI, GFI, scoring algorithms and forecasting models are the exclusive intellectual property of Simfluence Ltd. Unauthorised use or reproduction is strictly prohibited.','Data and Privacy: Simfluence processes creator data from publicly available platforms including YouTube and Twitch. User data is handled in accordance with UAE data protection regulations. We do not sell or share user data with third parties.','Liability Limitation: Simfluence Ltd provides its platform on an as-is basis. To the fullest extent permitted by law, Simfluence excludes all liability for indirect or consequential losses arising from platform use.','Third Party Services: The platform integrates with YouTube Data API, Twitch API and Supabase. Simflu
 
 <!-- ── Sign In Modal ─────────────────────────────────────── -->
-<div id="sfSignInModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.9);z-index:9999;overflow-y:auto;">
+<div id="sfSignInModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.9);z-index:9999;overflow-y:auto;align-items:center;justify-content:center;">
   <div style="background:#0D0D18;border:1px solid rgba(0,80,255,0.3);border-radius:16px;padding:40px;max-width:400px;width:90%;margin:60px auto;text-align:center;box-sizing:border-box;">
     <div style="font-size:24px;font-weight:700;color:#FFD400;margin-bottom:4px;font-family:'Space Grotesk',sans-serif">Sim<em style="font-style:italic;font-weight:300">fluence</em></div>
     <div style="font-family:'DM Mono',monospace;font-size:10px;color:rgba(255,255,255,0.3);letter-spacing:.1em;margin-bottom:32px">SIGN IN TO YOUR ACCOUNT</div>
@@ -1805,7 +1805,7 @@ var MODALS = {
     <input id="siPass" type="password" placeholder="Access password" autocomplete="current-password"
       onkeydown="if(event.key==='Enter')sfSignIn()"
       style="width:100%;padding:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:#fff;font-size:14px;outline:none;box-sizing:border-box;margin-bottom:16px;font-family:sans-serif;">
-    <button id="sfSignInBtn" style="width:100%;padding:13px;background:#0050FF;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-weight:700;font-family:'DM Mono',monospace;letter-spacing:.06em;">SIGN IN →</button>
+    <button id="sfSignInBtn" onclick="sfSignIn()" style="width:100%;padding:13px;background:#0050FF;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-weight:700;font-family:'DM Mono',monospace;letter-spacing:.06em;">SIGN IN →</button>
     <div id="siErr" style="color:#ff5555;font-size:11px;margin-top:10px;display:none;">Incorrect email or password. Contact liam@simfluence.ai for access.</div>
     <div id="siForgotOk" style="display:none;"></div>
     <div style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.08);">
@@ -1858,8 +1858,7 @@ document.addEventListener('click', function(e) {
     if (id === 'sfModalToSignup') {
       e.stopImmediatePropagation();
       e.preventDefault();
-      if (typeof sfSignInClose === 'function') sfSignInClose();
-      if (typeof openFreeSignup === 'function') openFreeSignup();
+      window.location.href = 'app.html';
       return;
     }
     if (id === 'navSignInBtn') {
@@ -1871,7 +1870,7 @@ document.addEventListener('click', function(e) {
     if (id === 'navTryFreeBtn') {
       e.stopImmediatePropagation();
       e.preventDefault();
-      if (typeof openFreeSignup === 'function') openFreeSignup();
+      window.location.href = 'app.html';
       return;
     }
     el = el.parentElement;
