@@ -2183,6 +2183,9 @@ function tierCan(feature) {
     'profile_full': t>=1, 'profile_basic': t>=0,  // Bronze gets basic profiles
     'cpi_breakdown': t>=2, 'audience_intelligence': t>=2, 'audience_blur': t>=1,
 
+    // ── AI FEATURES ────────────────────────────────────────────────
+    'ai_assistant': t>=1,                // Silver+: AI Campaign Assistant
+
     // ── EXPORT ────────────────────────────────────────────────────
     'export_unlimited': t>=3, 'export_10': t>=2, 'export_5': t>=1,  // Silver: 5 creators
 
@@ -2292,6 +2295,8 @@ function showUpgradePrompt(feature, targetTier) {
     // PDF
     'pdf_summary':            'Export a campaign summary PDF — 1 per month on Silver, unlimited on Gold+.',
     'pdf_full':               'Export the full simulator report including per-creator P10/P50/P90 breakdown.',
+    // AI Assistant
+    'ai_assistant':           'Unlock the AI Campaign Assistant — create campaigns with natural language from Silver tier.',
     // Campaigns
     'saved_3':                'Save up to 3 recent campaigns for quick reference.',
     'saved_10':               'Save up to 10 campaigns and recall them instantly.',
@@ -2823,6 +2828,23 @@ function applyAllTierGates() {
     }
     oBadge.textContent = (cap2 === Infinity ? '∞' : _outreach.length + '/' + cap2);
   }
+  
+  // ── AI ASSISTANT TIER GATING ─────────────────────────────────────
+  // Re-initialize AI Assistant based on current tier
+  var existingAI = document.getElementById('ai-assistant-toggle') || document.getElementById('ai-assistant-toggle-locked');
+  var existingBadge = document.getElementById('ai-locked-badge');
+  var existingPanel = document.getElementById('ai-assistant-panel');
+  
+  if (existingAI) existingAI.remove();
+  if (existingBadge) existingBadge.remove();
+  if (existingPanel) existingPanel.remove();
+  
+  // Re-create based on current tier
+  setTimeout(function() {
+    if (typeof createAIInterface === 'function') {
+      createAIInterface();
+    }
+  }, 100);
 }
 
 // ── CONTENT TARGETING ENGINE ─────────────────────────────────────────────
@@ -17023,5 +17045,522 @@ document.addEventListener('click', function(e) {
     </div>
   </div>
 
+<!-- Simfluence app.html with AI Campaign Assistant integrated -->
+<script>
+// SIMFLUENCE AI CAMPAIGN ASSISTANT - INTEGRATED VERSION
+// Safe integration into existing platform
+
+(function() {
+  'use strict';
+  
+  // Wait for DOM and existing platform to load
+  function initializeAIAssistant() {
+    // Check if required platform functions exist
+    if (typeof CREATORS === 'undefined' || 
+        typeof selectedCreators === 'undefined' || 
+        typeof renderCreatorGrid !== 'function') {
+      console.log('AI Assistant: Platform not ready, retrying in 1s...');
+      setTimeout(initializeAIAssistant, 1000);
+      return;
+    }
+    
+    console.log('AI Assistant: Platform ready, initializing...');
+    createAIInterface();
+  }
+  
+  // Create the AI assistant interface
+  function createAIInterface() {
+    // Prevent duplicate initialization
+    if (document.getElementById('ai-assistant-toggle')) {
+      console.log('AI Assistant: Already initialized');
+      return;
+    }
+    
+    // Check tier access
+    const hasSilverAccess = typeof tierCan === 'function' && tierCan('ai_assistant');
+    const tierLevel = typeof getTierLevel === 'function' ? getTierLevel() : 0;
+    
+    if (!hasSilverAccess) {
+      // Show locked/blurred version for Bronze users
+      createLockedAIInterface(tierLevel);
+      return;
+    }
+    
+    // Full AI Assistant for Silver+ users
+    const aiHTML = `
+      <!-- AI Assistant Toggle Button -->
+      <button id="ai-assistant-toggle" style="
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #FFD400, #FFE566);
+        border: none;
+        cursor: pointer;
+        box-shadow: 0 4px 20px rgba(255,212,0,0.3);
+        z-index: 9998;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        transition: all 0.2s;
+      ">🤖</button>
+      
+      <!-- AI Assistant Panel -->
+      <div id="ai-assistant-panel" style="
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 400px;
+        height: 500px;
+        background: #14142A;
+        border: 2px solid #FFD400;
+        border-radius: 12px;
+        z-index: 9999;
+        display: none;
+        flex-direction: column;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+        font-family: 'Manrope', sans-serif;
+      ">
+        <!-- Header -->
+        <div style="
+          padding: 16px 20px;
+          border-bottom: 1px solid rgba(255,255,255,0.1);
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        ">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 20px;">🤖</span>
+            <span style="font-weight: 600; color: #FFD400;">Campaign AI Assistant</span>
+          </div>
+          <button id="ai-close-btn" style="
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.5);
+            cursor: pointer;
+            font-size: 16px;
+          ">✕</button>
+        </div>
+        
+        <!-- Messages -->
+        <div id="ai-chat-messages" style="
+          flex: 1;
+          padding: 16px 20px;
+          overflow-y: auto;
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        ">
+          <div class="ai-message">
+            <div style="color: #FFD400; font-size: 10px; margin-bottom: 4px; font-weight: 600;">AI ASSISTANT</div>
+            <div style="font-size: 12px; color: #F0F2FF;">
+              Hi! I can help you build campaigns instantly. Try:<br><br>
+              • <strong>"Find 5 fitness creators for a protein powder launch"</strong><br>
+              • <strong>"I need beauty influencers, budget $50k"</strong><br>
+              • <strong>"Gaming creators for mobile game launch"</strong>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Input -->
+        <div style="
+          padding: 16px 20px;
+          border-top: 1px solid rgba(255,255,255,0.1);
+        ">
+          <div style="position: relative;">
+            <input id="ai-input" placeholder="Describe your campaign..." style="
+              width: 100%;
+              padding: 12px 50px 12px 12px;
+              background: #1A1A34;
+              border: 1px solid rgba(255,255,255,0.2);
+              border-radius: 6px;
+              color: #F0F2FF;
+              font-size: 12px;
+              outline: none;
+              font-family: 'Manrope', sans-serif;
+            ">
+            <button id="ai-send-btn" style="
+              position: absolute;
+              right: 8px;
+              top: 50%;
+              transform: translateY(-50%);
+              background: #FFD400;
+              color: #07070F;
+              border: none;
+              border-radius: 4px;
+              padding: 6px 10px;
+              cursor: pointer;
+              font-size: 12px;
+              font-weight: 600;
+            ">Send</button>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', aiHTML);
+    
+    // Wire up event listeners for full version
+    setupEventListeners();
+    
+    console.log('AI Assistant: Full interface created for Silver+ user');
+  }
+  
+  // Create locked version for Bronze users
+  function createLockedAIInterface(tierLevel) {
+    const lockedHTML = `
+      <!-- AI Assistant Toggle Button - Locked -->
+      <button id="ai-assistant-toggle-locked" onclick="showUpgradePrompt('ai_assistant', 'Silver')" style="
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, rgba(255,212,0,0.3), rgba(255,229,102,0.3));
+        border: 2px solid rgba(255,212,0,0.5);
+        cursor: pointer;
+        box-shadow: 0 4px 20px rgba(255,212,0,0.2);
+        z-index: 9998;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        transition: all 0.2s;
+        filter: blur(1px);
+        opacity: 0.7;
+      " title="AI Assistant - Upgrade to Silver">
+        🤖
+      </button>
+      
+      <!-- Locked Feature Badge -->
+      <div id="ai-locked-badge" style="
+        position: fixed;
+        bottom: 90px;
+        right: 15px;
+        background: rgba(255,212,0,0.9);
+        color: #07070F;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-family: 'Manrope', sans-serif;
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        z-index: 9997;
+        pointer-events: none;
+        opacity: 0.8;
+      ">SILVER+ FEATURE</div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', lockedHTML);
+    
+    // Add hover effect for locked button
+    const lockedBtn = document.getElementById('ai-assistant-toggle-locked');
+    if (lockedBtn) {
+      lockedBtn.addEventListener('mouseenter', function() {
+        this.style.transform = 'scale(1.05)';
+        this.style.filter = 'blur(0px)';
+        this.style.opacity = '1';
+      });
+      
+      lockedBtn.addEventListener('mouseleave', function() {
+        this.style.transform = 'scale(1)';
+        this.style.filter = 'blur(1px)';
+        this.style.opacity = '0.7';
+      });
+    }
+    
+    console.log('AI Assistant: Locked interface created for Bronze user');
+  }
+  
+  // Set up event listeners
+  function setupEventListeners() {
+    const toggle = document.getElementById('ai-assistant-toggle');
+    const panel = document.getElementById('ai-assistant-panel');
+    const closeBtn = document.getElementById('ai-close-btn');
+    const sendBtn = document.getElementById('ai-send-btn');
+    const input = document.getElementById('ai-input');
+    
+    // Toggle panel
+    toggle.addEventListener('click', function() {
+      panel.style.display = 'flex';
+      toggle.style.display = 'none';
+      input.focus();
+    });
+    
+    // Close panel
+    closeBtn.addEventListener('click', function() {
+      panel.style.display = 'none';
+      toggle.style.display = 'flex';
+    });
+    
+    // Send message
+    sendBtn.addEventListener('click', sendMessage);
+    input.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        sendMessage();
+      }
+    });
+    
+    // Hover effects
+    toggle.addEventListener('mouseenter', function() {
+      this.style.transform = 'scale(1.1)';
+    });
+    
+    toggle.addEventListener('mouseleave', function() {
+      this.style.transform = 'scale(1)';
+    });
+  }
+  
+  // Send message to AI
+  function sendMessage() {
+    const input = document.getElementById('ai-input');
+    const message = input.value.trim();
+    
+    if (!message) return;
+    
+    // Add user message
+    addMessage(message, 'user');
+    input.value = '';
+    
+    // Show typing indicator
+    addTypingIndicator();
+    
+    // Process message
+    setTimeout(() => {
+      removeTypingIndicator();
+      processAIRequest(message);
+    }, 1500);
+  }
+  
+  // Process AI request
+  function processAIRequest(message) {
+    const response = generateAIResponse(message);
+    addMessage(response.text, 'ai');
+    
+    // Execute action if any
+    if (response.action) {
+      setTimeout(() => {
+        executeAction(response.action);
+      }, 500);
+    }
+  }
+  
+  // Generate AI response
+  function generateAIResponse(message) {
+    const msg = message.toLowerCase();
+    
+    // Fitness/Health campaigns
+    if (msg.includes('fitness') || msg.includes('protein') || msg.includes('gym') || msg.includes('health')) {
+      return {
+        text: "Perfect! I'll find top fitness creators for your protein powder campaign. Selecting creators with high engagement in the fitness community...",
+        action: {
+          type: 'create_campaign',
+          genre: 'Health & Fitness',
+          count: extractNumber(message) || 5,
+          budget: extractBudget(message) || 50000,
+          objectives: ['Brand Awareness', 'Direct Sales']
+        }
+      };
+    }
+    
+    // Beauty campaigns  
+    if (msg.includes('beauty') || msg.includes('makeup') || msg.includes('skincare') || msg.includes('cosmetic')) {
+      return {
+        text: "Great choice! I'll curate beauty creators for your campaign. Selecting a mix of macro and micro-influencers for balanced reach and engagement...",
+        action: {
+          type: 'create_campaign',
+          genre: 'Beauty & Skincare', 
+          count: extractNumber(message) || 6,
+          budget: extractBudget(message) || 75000,
+          objectives: ['Brand Awareness', 'Direct Sales']
+        }
+      };
+    }
+    
+    // Gaming campaigns
+    if (msg.includes('gaming') || msg.includes('game') || msg.includes('mobile') || msg.includes('esports')) {
+      return {
+        text: "Excellent! I'll select gaming creators perfect for your launch. Focusing on creators with strong engagement in the 18-25 demographic...",
+        action: {
+          type: 'create_campaign',
+          genre: 'Gaming & Esports',
+          count: extractNumber(message) || 4, 
+          budget: extractBudget(message) || 60000,
+          objectives: ['App Install', 'Content Virality']
+        }
+      };
+    }
+    
+    // Travel campaigns
+    if (msg.includes('travel') || msg.includes('adventure') || msg.includes('destination')) {
+      return {
+        text: "Amazing! I'll find travel creators for your campaign. Selecting creators known for high-quality destination content...",
+        action: {
+          type: 'create_campaign',
+          genre: 'Travel & Adventure',
+          count: extractNumber(message) || 5,
+          budget: extractBudget(message) || 80000,
+          objectives: ['Brand Awareness', 'Reach & Impressions']
+        }
+      };
+    }
+    
+    // Food campaigns
+    if (msg.includes('food') || msg.includes('cooking') || msg.includes('recipe') || msg.includes('restaurant')) {
+      return {
+        text: "Delicious! I'll find food creators for your campaign. Selecting creators with engaging cooking content and strong community...",
+        action: {
+          type: 'create_campaign',
+          genre: 'Food & Cooking',
+          count: extractNumber(message) || 4,
+          budget: extractBudget(message) || 45000,
+          objectives: ['Brand Awareness', 'Engagement Rate']
+        }
+      };
+    }
+    
+    // Default response
+    return {
+      text: "I can help you create campaigns for fitness, beauty, gaming, travel, food and more! Try being more specific about the industry and your budget. For example: 'Find 5 beauty creators for skincare launch, budget $50k'",
+      action: null
+    };
+  }
+  
+  // Execute campaign action
+  function executeAction(action) {
+    if (action.type !== 'create_campaign') return;
+    
+    try {
+      // Set genre
+      const genreSelect = document.getElementById('genre');
+      if (genreSelect && genreSelect.querySelector(`option[value="${action.genre}"]`)) {
+        genreSelect.value = action.genre;
+        
+        // Trigger change event if it exists
+        const event = new Event('change', { bubbles: true });
+        genreSelect.dispatchEvent(event);
+      }
+      
+      // Set budget
+      const budgetInput = document.getElementById('budget');
+      if (budgetInput) {
+        budgetInput.value = action.budget;
+      }
+      
+      // Select creators
+      const targetCreators = CREATORS
+        .filter(cr => cr.genre === action.genre)
+        .sort((a, b) => (b.cpi || 0) - (a.cpi || 0))
+        .slice(0, action.count);
+      
+      // Clear current selection and add new ones
+      selectedCreators.clear();
+      targetCreators.forEach(creator => {
+        if (creator && creator.id !== undefined) {
+          selectedCreators.add(creator.id);
+        }
+      });
+      
+      // Set objectives if the elements exist
+      action.objectives.forEach(objective => {
+        const objectiveChip = document.querySelector(`[data-obj="${objective}"]`);
+        if (objectiveChip) {
+          objectiveChip.classList.add('active');
+        }
+      });
+      
+      // Refresh display
+      if (typeof renderCreatorGrid === 'function') {
+        renderCreatorGrid();
+      }
+      
+      // Switch to discovery screen
+      const discoveryTab = document.querySelector('[data-screen="discovery"]');
+      if (discoveryTab && typeof showScreen === 'function') {
+        showScreen('discovery', discoveryTab);
+      }
+      
+      // Success message
+      addMessage(`✅ Campaign created! Selected ${targetCreators.length} ${action.genre.toLowerCase()} creators with $${action.budget.toLocaleString()} budget. Check the Discovery tab to see your selections!`, 'ai');
+      
+    } catch (error) {
+      console.error('AI Assistant Action Error:', error);
+      addMessage("I created your campaign but there might be an issue with the display. Please check the Discovery tab to see your selected creators.", 'ai');
+    }
+  }
+  
+  // Add message to chat
+  function addMessage(text, sender) {
+    const messages = document.getElementById('ai-chat-messages');
+    const isUser = sender === 'user';
+    
+    const messageHTML = `
+      <div class="${isUser ? 'user' : 'ai'}-message">
+        <div style="color: ${isUser ? '#0050FF' : '#FFD400'}; font-size: 10px; margin-bottom: 4px; font-weight: 600;">
+          ${isUser ? 'YOU' : 'AI ASSISTANT'}
+        </div>
+        <div style="font-size: 12px; color: #F0F2FF; line-height: 1.4;">
+          ${text}
+        </div>
+      </div>
+    `;
+    
+    messages.insertAdjacentHTML('beforeend', messageHTML);
+    messages.scrollTop = messages.scrollHeight;
+  }
+  
+  // Typing indicator
+  function addTypingIndicator() {
+    const messages = document.getElementById('ai-chat-messages');
+    const typingHTML = `
+      <div class="typing-indicator">
+        <div style="color: #FFD400; font-size: 10px; margin-bottom: 4px; font-weight: 600;">AI ASSISTANT</div>
+        <div style="color: rgba(255,255,255,0.5); font-size: 12px;">
+          Analyzing your request<span class="dots">...</span>
+        </div>
+      </div>
+    `;
+    messages.insertAdjacentHTML('beforeend', typingHTML);
+    messages.scrollTop = messages.scrollHeight;
+  }
+  
+  function removeTypingIndicator() {
+    const indicator = document.querySelector('.typing-indicator');
+    if (indicator) indicator.remove();
+  }
+  
+  // Utility functions
+  function extractNumber(text) {
+    const match = text.match(/\b(\d+)\b/);
+    return match ? parseInt(match[1]) : null;
+  }
+  
+  function extractBudget(text) {
+    const budgetMatch = text.match(/\$?(\d+)k?/i);
+    if (budgetMatch) {
+      let amount = parseInt(budgetMatch[1]);
+      if (text.toLowerCase().includes('k')) {
+        amount *= 1000;
+      }
+      return amount;
+    }
+    return null;
+  }
+  
+  // Make functions available for tier re-gating
+  window.createAIInterface = createAIInterface;
+  window.createLockedAIInterface = createLockedAIInterface;
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeAIAssistant);
+  } else {
+    initializeAIAssistant();
+  }
+  
+})();
+</script>
 </body>
 </html>
