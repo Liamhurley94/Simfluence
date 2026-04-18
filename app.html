@@ -66,17 +66,62 @@
     z-index: 100;
   }
 
-  .logo {
-    font-family:Archivo Black,sans-serif;
+  .nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .brand-text {
+    font-family: 'Archivo Black', sans-serif;
     font-size: 24px;
     font-weight: 600;
-    color: var(--gold);
+    color: #FFD700;
     letter-spacing: 0.02em;
   }
 
-  .logo span {
+  .brand-text span {
     font-style: italic;
     font-weight: 300;
+  }
+
+  /* LOGO - Pulse Wave S */
+  .logo {
+    font-family: 'Arial Black', Arial, sans-serif;
+    font-size: 28px;
+    font-weight: 900;
+    color: #FFD700;
+    position: relative;
+    display: inline-block;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .logo::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    border: 1px solid #FFD700;
+    border-radius: 50%;
+    opacity: 0.5;
+    transform: translate(-50%, -50%);
+    animation: simfluence-pulse 3s infinite;
+  }
+
+  @keyframes simfluence-pulse {
+    0% { 
+      width: 20px; 
+      height: 20px; 
+      opacity: 0.5; 
+    }
+    100% { 
+      width: 60px; 
+      height: 60px; 
+      opacity: 0; 
+    }
   }
 
   .nav-tabs {
@@ -3409,7 +3454,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <div id="sfOnboard">
   <div class="ob-box">
 
-    <div class="ob-logo">Sim<span>fluence</span></div>
+    <div class="ob-logo">S<span>imfluence</span></div>
     <div class="ob-badge">Campaign Intelligence Platform</div>
 
     <h1 class="ob-headline">Welcome.<br>Let's build your<br>first <em>brief.</em></h1>
@@ -3440,7 +3485,10 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 <nav>
-  <div class="logo">Sim<span>fluence</span></div>
+  <div class="nav-brand">
+    <div class="logo">S</div>
+    <div class="brand-text">IMFLUENCE</div>
+  </div>
   <div class="nav-tabs">
     <button class="nav-tab active" data-screen="discovery">Discovery</button>
     <button class="nav-tab" data-screen="scoring">Scoring</button>
@@ -14388,7 +14436,7 @@ document.addEventListener('DOMContentLoaded', () => {
 <div class="signup-overlay" id="signupOverlay" style="display:none">
   <div class="signup-modal">
     <button class="su-close" data-oc="hideSignUpModal()">✕</button>
-    <div class="su-logo">Sim<span>fluence</span></div>
+    <div class="su-logo">S<span>imfluence</span></div>
     <div class="su-sub">Create your free account. See the full creator database and start building your campaign brief.</div>
     <div class="su-field">
       <label>COMPANY / BRAND NAME</label>
