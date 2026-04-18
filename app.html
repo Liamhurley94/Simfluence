@@ -17424,7 +17424,7 @@ document.addEventListener('click', function(e) {
     if (response.action) {
       setTimeout(() => {
         executeAction(response.action);
-      }, 500);
+      }, 1000); // Increased delay to see the response first
     }
   }
   
@@ -17526,28 +17526,82 @@ document.addEventListener('click', function(e) {
   function executeAction(action) {
     if (action.type !== 'create_campaign') return;
     
+    console.log('AI Debug - Executing action:', action);
+    
     try {
       // Set genre
       const genreSelect = document.getElementById('genre');
-      if (genreSelect && genreSelect.querySelector(`option[value="${action.genre}"]`)) {
-        genreSelect.value = action.genre;
+      if (genreSelect) {
+        console.log('AI Debug - Available genres:', Array.from(genreSelect.options).map(o => o.value));
         
-        // Trigger change event if it exists
-        const event = new Event('change', { bubbles: true });
-        genreSelect.dispatchEvent(event);
+        // Try exact match first
+        const exactMatch = genreSelect.querySelector(`option[value="${action.genre}"]`);
+        if (exactMatch) {
+          genreSelect.value = action.genre;
+          console.log('AI Debug - Set genre to:', action.genre);
+          
+          // Trigger change event
+          const event = new Event('change', { bubbles: true });
+          genreSelect.dispatchEvent(event);
+        } else {
+          console.log('AI Debug - Genre not found:', action.genre);
+          addMessage(`⚠️ Genre "${action.genre}" not found. Using current genre instead.`, 'ai');
+        }
       }
       
       // Set budget
       const budgetInput = document.getElementById('budget');
       if (budgetInput) {
         budgetInput.value = action.budget;
+        console.log('AI Debug - Set budget to:', action.budget);
+        
+        // Trigger change event
+        const event = new Event('change', { bubbles: true });
+        budgetInput.dispatchEvent(event);
       }
       
-      // Select creators
-      const targetCreators = CREATORS
-        .filter(cr => cr.genre === action.genre)
+      // Find and select creators
+      console.log('AI Debug - Looking for creators in genre:', action.genre);
+      console.log('AI Debug - Total creators available:', CREATORS.length);
+      
+      const genreCreators = CREATORS.filter(cr => cr.genre === action.genre);
+      console.log('AI Debug - Creators in', action.genre, ':', genreCreators.length);
+      
+      if (genreCreators.length === 0) {
+        // Try alternative genre names
+        const alternativeGenres = {
+          'Beauty & Skincare': ['Beauty', 'Skincare', 'Makeup'],
+          'Health & Fitness': ['Fitness', 'Health', 'Wellness'],
+          'Gaming & Esports': ['Gaming', 'Games', 'Esports'],
+          'Food & Cooking': ['Food', 'Cooking', 'Culinary']
+        };
+        
+        const alternatives = alternativeGenres[action.genre] || [];
+        let foundCreators = [];
+        
+        for (let altGenre of alternatives) {
+          foundCreators = CREATORS.filter(cr => cr.genre === altGenre);
+          if (foundCreators.length > 0) {
+            console.log('AI Debug - Found creators in alternative genre:', altGenre, foundCreators.length);
+            break;
+          }
+        }
+        
+        if (foundCreators.length === 0) {
+          console.log('AI Debug - No creators found in any genre');
+          addMessage(`❌ Sorry, I couldn't find any ${action.genre.toLowerCase()} creators in the database. Try browsing the Discovery tab manually.`, 'ai');
+          return;
+        } else {
+          genreCreators = foundCreators;
+        }
+      }
+      
+      // Select top creators by CPI
+      const targetCreators = genreCreators
         .sort((a, b) => (b.cpi || 0) - (a.cpi || 0))
         .slice(0, action.count);
+      
+      console.log('AI Debug - Selected creators:', targetCreators.map(c => c.name));
       
       // Clear current selection and add new ones
       selectedCreators.clear();
@@ -17557,31 +17611,45 @@ document.addEventListener('click', function(e) {
         }
       });
       
+      console.log('AI Debug - selectedCreators now has:', selectedCreators.size, 'creators');
+      
       // Set objectives if the elements exist
       action.objectives.forEach(objective => {
         const objectiveChip = document.querySelector(`[data-obj="${objective}"]`);
         if (objectiveChip) {
           objectiveChip.classList.add('active');
+          console.log('AI Debug - Activated objective:', objective);
         }
       });
       
       // Refresh display
       if (typeof renderCreatorGrid === 'function') {
         renderCreatorGrid();
+        console.log('AI Debug - Refreshed creator grid');
       }
       
       // Switch to discovery screen
       const discoveryTab = document.querySelector('[data-screen="discovery"]');
       if (discoveryTab && typeof showScreen === 'function') {
         showScreen('discovery', discoveryTab);
+        console.log('AI Debug - Switched to discovery screen');
       }
       
-      // Success message
-      addMessage(`✅ Campaign created! Selected ${targetCreators.length} ${action.genre.toLowerCase()} creators with $${action.budget.toLocaleString()} budget. Check the Discovery tab to see your selections!`, 'ai');
+      // Success message with details
+      const successMsg = `✅ Campaign created! Selected ${targetCreators.length} ${action.genre.toLowerCase()} creators:
+      
+📊 **Budget:** $${action.budget.toLocaleString()}
+👥 **Creators:** ${targetCreators.map(c => c.name).join(', ')}
+🎯 **Objectives:** ${action.objectives.join(', ')}
+
+Check the Discovery tab to see your selections!`;
+      
+      addMessage(successMsg, 'ai');
+      console.log('AI Debug - Campaign creation completed successfully');
       
     } catch (error) {
       console.error('AI Assistant Action Error:', error);
-      addMessage("I created your campaign but there might be an issue with the display. Please check the Discovery tab to see your selected creators.", 'ai');
+      addMessage(`❌ There was an error creating your campaign: ${error.message}. Please try again or create the campaign manually.`, 'ai');
     }
   }
   
@@ -17632,19 +17700,54 @@ document.addEventListener('click', function(e) {
   
   // Utility functions
   function extractNumber(text) {
-    const match = text.match(/\b(\d+)\b/);
-    return match ? parseInt(match[1]) : null;
-  }
-  
-  function extractBudget(text) {
-    const budgetMatch = text.match(/\$?(\d+)k?/i);
-    if (budgetMatch) {
-      let amount = parseInt(budgetMatch[1]);
-      if (text.toLowerCase().includes('k')) {
-        amount *= 1000;
+    // Look for patterns like "10 creators", "5 influencers", "build me 3"
+    const patterns = [
+      /(\d+)\s*creators?/i,
+      /(\d+)\s*influencers?/i,
+      /with\s*(\d+)/i,
+      /(\d+)\s*beauty/i,
+      /(\d+)\s*fitness/i,
+      /(\d+)\s*gaming/i,
+      /build.*?(\d+)/i,
+      /need\s*(\d+)/i,
+      /find\s*(\d+)/i
+    ];
+    
+    for (let pattern of patterns) {
+      const match = text.match(pattern);
+      if (match) {
+        const num = parseInt(match[1]);
+        if (num > 0 && num <= 50) { // Reasonable range
+          console.log('AI Debug - Extracted count:', num, 'from pattern:', pattern.source);
+          return num;
+        }
       }
-      return amount;
     }
+    
+    console.log('AI Debug - No count found, using default');
+    return null;
+  }
+
+  function extractBudget(text) {
+    const budgetPatterns = [
+      /(\d+)k\s*budget/i,        // "50k budget"
+      /budget.*?(\d+)k/i,        // "budget 50k"  
+      /\$(\d+)k/i,               // "$50k"
+      /using.*?(\d+)k/i,         // "using 50k"
+      /with.*?\$(\d+)k/i,        // "with $50k"
+      /(\d+)k\s*dollar/i         // "50k dollars"
+    ];
+    
+    for (let pattern of budgetPatterns) {
+      const match = text.match(pattern);
+      if (match) {
+        const amount = parseInt(match[1]) * 1000;
+        console.log('AI Debug - Extracted budget:', amount, 'from pattern:', pattern.source);
+        return amount;
+      }
+    }
+    
+    console.log('AI Debug - No budget found, using default');
     return null;
   }
   
