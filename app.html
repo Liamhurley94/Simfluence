@@ -718,21 +718,32 @@
   #personaFiltersPanel select[multiple] {
     overflow-y: auto;
     cursor: pointer;
+    min-height: 80px;
   }
 
   #personaFiltersPanel select[multiple] option {
-    padding: 4px 8px;
+    padding: 6px 8px;
     margin: 1px 0;
-    border-radius: 2px;
+    border-radius: 3px;
+    background: var(--bg3);
+    color: var(--text);
   }
 
   #personaFiltersPanel select[multiple] option:checked {
-    background: rgba(255,212,0,0.2) !important;
+    background: linear-gradient(135deg, rgba(255,212,0,0.25), rgba(255,212,0,0.15)) !important;
     color: #FFD400 !important;
+    font-weight: 600;
+    border: 1px solid rgba(255,212,0,0.4) !important;
   }
 
   #personaFiltersPanel select[multiple] option:hover {
-    background: rgba(255,255,255,0.05) !important;
+    background: rgba(255,255,255,0.08) !important;
+    color: #fff;
+  }
+
+  #personaFiltersPanel select[multiple] option:checked:hover {
+    background: linear-gradient(135deg, rgba(255,212,0,0.35), rgba(255,212,0,0.25)) !important;
+    color: #FFD400 !important;
   }
 
   /* MATCH MATRIX */
@@ -17017,11 +17028,33 @@ document.addEventListener('DOMContentLoaded', function() {
   };
 
   function updateFilterCount() {
-    var count = getFilteredCreators().length;
+    var filtered = getFilteredCreators();
+    var count = filtered.length;
     var el = document.getElementById('filterPreviewCount');
+    
+    console.log('Filter count update:', {
+      totalCreators: typeof CREATORS !== 'undefined' ? CREATORS.length : 0,
+      filteredCount: count,
+      activeFilters: personaFilters
+    });
+    
     if (el) {
       el.textContent = '~' + (count > 1000 ? Math.round(count/100)*100 : count) + ' creators';
-      el.style.color = count < 1000 ? '#FFD400' : count < 2000 ? '#00D47A' : '#FF7300';
+      
+      // Color coding: green for targeted (< 500), gold for good (500-1500), orange for broad (1500+)
+      if (count < 500) {
+        el.style.color = '#00D47A';
+        el.style.background = 'rgba(0,212,122,0.1)';
+        el.style.borderColor = 'rgba(0,212,122,0.3)';
+      } else if (count < 1500) {
+        el.style.color = '#FFD400';
+        el.style.background = 'rgba(255,212,0,0.1)';
+        el.style.borderColor = 'rgba(255,212,0,0.2)';
+      } else {
+        el.style.color = '#FF7300';
+        el.style.background = 'rgba(255,115,0,0.1)';
+        el.style.borderColor = 'rgba(255,115,0,0.3)';
+      }
     }
   }
 
@@ -17047,29 +17080,55 @@ document.addEventListener('DOMContentLoaded', function() {
       return [];
     }
     
-    console.log('Filtering from', CREATORS.length, 'total creators with filters:', personaFilters);
+    console.log('🔍 Filtering from', CREATORS.length, 'total creators with filters:', personaFilters);
     
     var filtered = CREATORS.filter(function(creator) {
-      // Region filter
+      // Region filter - check multiple ways
       if (personaFilters.region.length > 0) {
         var creatorCountry = creator.country || '';
+        var creatorBio = (creator.bio || '').toLowerCase();
+        var creatorName = (creator.name || '').toLowerCase();
+        
         var hasRegion = personaFilters.region.some(function(r) {
-          return creatorCountry === r || (creator.bio && creator.bio.toLowerCase().includes(r.toLowerCase()));
+          // Direct country match
+          if (creatorCountry === r) return true;
+          
+          // Bio/name contains region identifiers
+          if (r === 'AE' || r === 'UAE') {
+            return creatorBio.includes('uae') || 
+                   creatorBio.includes('dubai') || 
+                   creatorBio.includes('abu dhabi') ||
+                   creatorBio.includes('emirates') ||
+                   creatorName.includes('dubai') ||
+                   creatorName.includes('uae');
+          }
+          
+          return creatorBio.includes(r.toLowerCase()) || creatorName.includes(r.toLowerCase());
         });
-        if (!hasRegion) return false;
+        
+        if (!hasRegion) {
+          console.log('❌ Creator filtered out by region:', creator.name, 'Country:', creatorCountry);
+          return false;
+        }
       }
 
       // Language filter
       if (personaFilters.language.length > 0) {
         var creatorLang = creator.language || '';
         var hasLanguage = personaFilters.language.includes(creatorLang);
-        if (!hasLanguage) return false;
+        if (!hasLanguage) {
+          console.log('❌ Creator filtered out by language:', creator.name, 'Language:', creatorLang);
+          return false;
+        }
       }
 
       // Platform filter
       if (personaFilters.platform.length > 0) {
         var hasPlat = personaFilters.platform.includes(creator.platform);
-        if (!hasPlat) return false;
+        if (!hasPlat) {
+          console.log('❌ Creator filtered out by platform:', creator.name, 'Platform:', creator.platform);
+          return false;
+        }
       }
 
       // Tier filter
@@ -17080,7 +17139,10 @@ document.addEventListener('DOMContentLoaded', function() {
         else if (subs >= 100000) tier = 'macro';
         else if (subs >= 10000) tier = 'micro';
         else tier = 'nano';
-        if (tier !== personaFilters.tier) return false;
+        if (tier !== personaFilters.tier) {
+          console.log('❌ Creator filtered out by tier:', creator.name, 'Tier:', tier, 'Expected:', personaFilters.tier);
+          return false;
+        }
       }
 
       // Subscriber range
@@ -17116,7 +17178,10 @@ document.addEventListener('DOMContentLoaded', function() {
       return true;
     });
 
-    console.log('Filtered to', filtered.length, 'creators');
+    console.log('✅ Filtered to', filtered.length, 'creators');
+    if (filtered.length > 0 && filtered.length < 20) {
+      console.log('Sample filtered creators:', filtered.slice(0, 5).map(c => c.name));
+    }
     return filtered;
   }
 
@@ -17177,32 +17242,42 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Quick filters
     wire('quickFilterUAE', function() {
+      console.log('🇦🇪 UAE quick filter clicked');
+      
       var regionEl = document.getElementById('regionFilter');
       var langEl = document.getElementById('languageFilter');
       
+      // Reset first
+      personaFilters.region = [];
+      personaFilters.language = [];
+      
       if (regionEl) {
+        // Clear existing selections
+        Array.from(regionEl.options).forEach(function(opt) { opt.selected = false; });
         // Select UAE option
         for (var i = 0; i < regionEl.options.length; i++) {
           if (regionEl.options[i].value === 'AE') {
             regionEl.options[i].selected = true;
+            personaFilters.region.push('AE');
             break;
           }
         }
       }
       
       if (langEl) {
+        // Clear existing selections
+        Array.from(langEl.options).forEach(function(opt) { opt.selected = false; });
         // Select English option
         for (var i = 0; i < langEl.options.length; i++) {
           if (langEl.options[i].value === 'English') {
             langEl.options[i].selected = true;
+            personaFilters.language.push('English');
             break;
           }
         }
       }
       
-      personaFilters.region = ['AE'];
-      personaFilters.language = ['English'];
-      console.log('UAE quick filter applied');
+      console.log('UAE filter applied - Region:', personaFilters.region, 'Language:', personaFilters.language);
       updateFilterCount();
     });
 
