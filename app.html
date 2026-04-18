@@ -13537,9 +13537,11 @@ function renderPersonaScreen() {
   }).join('');
 
   // Initialize smart filters after rendering personas
-  if (typeof initPersonaFilters === 'function') {
-    setTimeout(initPersonaFilters, 100);
-  }
+  setTimeout(function() {
+    if (typeof setupPersonaFilters === 'function') {
+      setupPersonaFilters();
+    }
+  }, 500);
 }
 
 function personaAutoSelect() {
@@ -17010,15 +17012,14 @@ document.addEventListener('DOMContentLoaded', function() {
   // AUTO-SELECT CREATORS (Personas screen) — direct wire
   wire('personaAutoSelectBtn', function() { if(typeof personaAutoSelect==='function') personaAutoSelect(); });
 
-  // ── SMART PERSONA FILTERS ────────────────────────────────────────────
-  // Smart filter functionality for enhanced AI persona matching
+  // ── SMART PERSONA FILTERS (SIMPLIFIED) ────────────────────────────────
+  // Simple, reliable filter system for AI persona matching
   
-  var personaFilters = {
+  window.personaFilters = {
     region: [],
     language: [],
     platform: [],
     tier: '',
-    verifiedOnly: false,
     minSubs: '',
     maxSubs: '',
     minEng: '',
@@ -17027,41 +17028,10 @@ document.addEventListener('DOMContentLoaded', function() {
     maxCpi: ''
   };
 
-  function updateFilterCount() {
-    var filtered = getFilteredCreators();
-    var count = filtered.length;
-    var el = document.getElementById('filterPreviewCount');
-    
-    console.log('Filter count update:', {
-      totalCreators: typeof CREATORS !== 'undefined' ? CREATORS.length : 0,
-      filteredCount: count,
-      activeFilters: personaFilters
-    });
-    
-    if (el) {
-      el.textContent = '~' + (count > 1000 ? Math.round(count/100)*100 : count) + ' creators';
-      
-      // Color coding: green for targeted (< 500), gold for good (500-1500), orange for broad (1500+)
-      if (count < 500) {
-        el.style.color = '#00D47A';
-        el.style.background = 'rgba(0,212,122,0.1)';
-        el.style.borderColor = 'rgba(0,212,122,0.3)';
-      } else if (count < 1500) {
-        el.style.color = '#FFD400';
-        el.style.background = 'rgba(255,212,0,0.1)';
-        el.style.borderColor = 'rgba(255,212,0,0.2)';
-      } else {
-        el.style.color = '#FF7300';
-        el.style.background = 'rgba(255,115,0,0.1)';
-        el.style.borderColor = 'rgba(255,115,0,0.3)';
-      }
-    }
-  }
-
   function parseSubsString(str) {
     if (!str) return 0;
-    str = str.toUpperCase().replace(/[^0-9.KMB]/g, '');
-    var num = parseFloat(str);
+    str = str.toString().toUpperCase().replace(/[^0-9.KMB]/g, '');
+    var num = parseFloat(str) || 0;
     if (str.includes('K')) num *= 1000;
     else if (str.includes('M')) num *= 1000000;
     else if (str.includes('B')) num *= 1000000000;
@@ -17070,332 +17040,207 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function getCreatorSubsNumber(creator) {
     if (typeof creator.subs === 'number') return creator.subs;
-    if (typeof creator.subs === 'string') return parseSubsString(creator.subs);
-    return 0;
+    return parseSubsString(creator.subs);
   }
 
   function getFilteredCreators() {
-    if (typeof CREATORS === 'undefined' || !CREATORS) {
-      console.warn('CREATORS array not found');
-      return [];
-    }
+    if (typeof CREATORS === 'undefined' || !CREATORS) return [];
     
-    console.log('🔍 Filtering from', CREATORS.length, 'total creators with filters:', personaFilters);
+    console.log('🔍 Filtering creators with:', window.personaFilters);
+    
+    // Find UAE creators first
+    var uaeCreators = CREATORS.filter(function(creator) {
+      var country = (creator.country || '').toLowerCase();
+      var bio = (creator.bio || '').toLowerCase();
+      var name = (creator.name || '').toLowerCase();
+      
+      return country === 'ae' || 
+             bio.includes('uae') || 
+             bio.includes('dubai') || 
+             bio.includes('abu dhabi') ||
+             bio.includes('emirates') ||
+             name.includes('dubai') ||
+             name.includes('uae');
+    });
+    
+    console.log('Found', uaeCreators.length, 'UAE creators:', uaeCreators.slice(0,5).map(c => c.name));
     
     var filtered = CREATORS.filter(function(creator) {
-      // Region filter - check multiple ways
-      if (personaFilters.region.length > 0) {
-        var creatorCountry = creator.country || '';
-        var creatorBio = (creator.bio || '').toLowerCase();
-        var creatorName = (creator.name || '').toLowerCase();
+      // Region filter
+      if (window.personaFilters.region.length > 0) {
+        var country = (creator.country || '').toLowerCase();
+        var bio = (creator.bio || '').toLowerCase();
+        var name = (creator.name || '').toLowerCase();
         
-        var hasRegion = personaFilters.region.some(function(r) {
-          // Direct country match
-          if (creatorCountry === r) return true;
-          
-          // Bio/name contains region identifiers
+        var hasRegion = window.personaFilters.region.some(function(r) {
           if (r === 'AE' || r === 'UAE') {
-            return creatorBio.includes('uae') || 
-                   creatorBio.includes('dubai') || 
-                   creatorBio.includes('abu dhabi') ||
-                   creatorBio.includes('emirates') ||
-                   creatorName.includes('dubai') ||
-                   creatorName.includes('uae');
+            return country === 'ae' || 
+                   bio.includes('uae') || 
+                   bio.includes('dubai') || 
+                   bio.includes('abu dhabi') ||
+                   bio.includes('emirates') ||
+                   name.includes('dubai') ||
+                   name.includes('uae');
           }
-          
-          return creatorBio.includes(r.toLowerCase()) || creatorName.includes(r.toLowerCase());
+          return country === r.toLowerCase() || bio.includes(r.toLowerCase());
         });
         
-        if (!hasRegion) {
-          console.log('❌ Creator filtered out by region:', creator.name, 'Country:', creatorCountry);
-          return false;
-        }
+        if (!hasRegion) return false;
       }
 
       // Language filter
-      if (personaFilters.language.length > 0) {
-        var creatorLang = creator.language || '';
-        var hasLanguage = personaFilters.language.includes(creatorLang);
-        if (!hasLanguage) {
-          console.log('❌ Creator filtered out by language:', creator.name, 'Language:', creatorLang);
-          return false;
-        }
+      if (window.personaFilters.language.length > 0) {
+        var hasLanguage = window.personaFilters.language.includes(creator.language);
+        if (!hasLanguage) return false;
       }
 
       // Platform filter
-      if (personaFilters.platform.length > 0) {
-        var hasPlat = personaFilters.platform.includes(creator.platform);
-        if (!hasPlat) {
-          console.log('❌ Creator filtered out by platform:', creator.name, 'Platform:', creator.platform);
-          return false;
-        }
-      }
-
-      // Tier filter
-      if (personaFilters.tier) {
-        var subs = getCreatorSubsNumber(creator);
-        var tier = '';
-        if (subs >= 1000000) tier = 'mega';
-        else if (subs >= 100000) tier = 'macro';
-        else if (subs >= 10000) tier = 'micro';
-        else tier = 'nano';
-        if (tier !== personaFilters.tier) {
-          console.log('❌ Creator filtered out by tier:', creator.name, 'Tier:', tier, 'Expected:', personaFilters.tier);
-          return false;
-        }
-      }
-
-      // Subscriber range
-      if (personaFilters.minSubs) {
-        var minSubs = parseSubsString(personaFilters.minSubs);
-        if (getCreatorSubsNumber(creator) < minSubs) return false;
-      }
-      if (personaFilters.maxSubs) {
-        var maxSubs = parseSubsString(personaFilters.maxSubs);
-        if (getCreatorSubsNumber(creator) > maxSubs) return false;
-      }
-
-      // Engagement range
-      if (personaFilters.minEng) {
-        var eng = parseFloat(creator.eng) || 0;
-        if (eng < parseFloat(personaFilters.minEng)) return false;
-      }
-      if (personaFilters.maxEng) {
-        var eng = parseFloat(creator.eng) || 0;
-        if (eng > parseFloat(personaFilters.maxEng)) return false;
-      }
-
-      // CPI range
-      if (personaFilters.minCpi) {
-        var cpi = creator.cpi || 0;
-        if (cpi < parseFloat(personaFilters.minCpi)) return false;
-      }
-      if (personaFilters.maxCpi) {
-        var cpi = creator.cpi || 0;
-        if (cpi > parseFloat(personaFilters.maxCpi)) return false;
+      if (window.personaFilters.platform.length > 0) {
+        var hasPlatform = window.personaFilters.platform.includes(creator.platform);
+        if (!hasPlatform) return false;
       }
 
       return true;
     });
 
     console.log('✅ Filtered to', filtered.length, 'creators');
-    if (filtered.length > 0 && filtered.length < 20) {
-      console.log('Sample filtered creators:', filtered.slice(0, 5).map(c => c.name));
-    }
     return filtered;
   }
 
-  function setupFilterListeners() {
-    console.log('Setting up filter listeners...');
+  function updateFilterCount() {
+    var filtered = getFilteredCreators();
+    var count = filtered.length;
+    var el = document.getElementById('filterPreviewCount');
+    
+    if (el) {
+      el.textContent = '~' + count + ' creators';
+      
+      if (count < 100) {
+        el.style.color = '#00D47A';
+        el.style.background = 'rgba(0,212,122,0.1)';
+      } else if (count < 500) {
+        el.style.color = '#FFD400';
+        el.style.background = 'rgba(255,212,0,0.1)';
+      } else {
+        el.style.color = '#FF7300';
+        el.style.background = 'rgba(255,115,0,0.1)';
+      }
+    }
+  }
 
-    // Region filter
-    var regionEl = document.getElementById('regionFilter');
-    if (regionEl) {
-      regionEl.addEventListener('change', function() {
-        personaFilters.region = Array.from(this.selectedOptions).map(function(opt) { return opt.value; }).filter(Boolean);
-        console.log('Region filter changed:', personaFilters.region);
+  // Direct event handlers (bypass wire function)
+  function setupPersonaFilters() {
+    console.log('🎯 Setting up persona filters...');
+    
+    // UAE Quick Filter
+    var uaeBtn = document.getElementById('quickFilterUAE');
+    if (uaeBtn) {
+      uaeBtn.onclick = function() {
+        console.log('🇦🇪 UAE filter clicked');
+        
+        window.personaFilters.region = ['AE'];
+        window.personaFilters.language = ['English'];
+        
+        // Update UI
+        var regionEl = document.getElementById('regionFilter');
+        var langEl = document.getElementById('languageFilter');
+        
+        if (regionEl) {
+          Array.from(regionEl.options).forEach(opt => opt.selected = false);
+          Array.from(regionEl.options).forEach(opt => {
+            if (opt.value === 'AE') opt.selected = true;
+          });
+        }
+        
+        if (langEl) {
+          Array.from(langEl.options).forEach(opt => opt.selected = false);
+          Array.from(langEl.options).forEach(opt => {
+            if (opt.value === 'English') opt.selected = true;
+          });
+        }
+        
         updateFilterCount();
-      });
+      };
     }
 
-    // Language filter
-    var langEl = document.getElementById('languageFilter');
-    if (langEl) {
-      langEl.addEventListener('change', function() {
-        personaFilters.language = Array.from(this.selectedOptions).map(function(opt) { return opt.value; }).filter(Boolean);
-        console.log('Language filter changed:', personaFilters.language);
+    // Reset Filter
+    var resetBtn = document.getElementById('resetFiltersBtn');
+    if (resetBtn) {
+      resetBtn.onclick = function() {
+        console.log('🔄 Reset filters');
+        
+        window.personaFilters = {
+          region: [],
+          language: [],
+          platform: [],
+          tier: '',
+          minSubs: '',
+          maxSubs: '',
+          minEng: '',
+          maxEng: '',
+          minCpi: '',
+          maxCpi: ''
+        };
+        
+        // Reset UI
+        ['regionFilter', 'languageFilter', 'platformFilter'].forEach(function(id) {
+          var el = document.getElementById(id);
+          if (el) Array.from(el.options).forEach(opt => opt.selected = false);
+        });
+        
         updateFilterCount();
-      });
+      };
     }
 
-    // Platform filter
-    var platEl = document.getElementById('platformFilter');
-    if (platEl) {
-      platEl.addEventListener('change', function() {
-        personaFilters.platform = Array.from(this.selectedOptions).map(function(opt) { return opt.value; }).filter(Boolean);
-        console.log('Platform filter changed:', personaFilters.platform);
-        updateFilterCount();
-      });
+    // Simulate Filtered
+    var simBtn = document.getElementById('runPersonaSimulation');
+    if (simBtn) {
+      simBtn.onclick = function() {
+        console.log('🎯 Simulate filtered clicked');
+        
+        var filtered = getFilteredCreators();
+        console.log('Simulating with', filtered.length, 'creators');
+        
+        if (filtered.length === 0) {
+          alert('No creators match your filters. Try adjusting the criteria.');
+          return;
+        }
+
+        // Clear and set new selection
+        selectedCreators.clear();
+        filtered.slice(0, 25).forEach(function(creator) {
+          selectedCreators.add(creator.id);
+        });
+        
+        console.log('Selected', selectedCreators.size, 'creators');
+        
+        // Update display
+        if (typeof updateSelectedCreatorDisplay === 'function') {
+          updateSelectedCreatorDisplay();
+        }
+        
+        alert('✅ Selected ' + Math.min(filtered.length, 25) + ' creators!\n\nSwitch to Simulator tab to run analysis.');
+      };
     }
 
-    // Tier filter
-    var tierEl = document.getElementById('tierFilter');
-    if (tierEl) {
-      tierEl.addEventListener('change', function() {
-        personaFilters.tier = this.value;
-        console.log('Tier filter changed:', personaFilters.tier);
-        updateFilterCount();
-      });
-    }
-
-    // Numeric filters
-    ['minSubs', 'maxSubs', 'minEng', 'maxEng', 'minCpi', 'maxCpi'].forEach(function(filterId) {
-      var el = document.getElementById(filterId + 'Filter');
+    // Multi-select handlers
+    ['regionFilter', 'languageFilter', 'platformFilter'].forEach(function(id) {
+      var el = document.getElementById(id);
       if (el) {
-        el.addEventListener('input', function() {
-          personaFilters[filterId] = this.value;
-          console.log(filterId + ' filter changed:', this.value);
+        el.addEventListener('change', function() {
+          var filterKey = id.replace('Filter', '');
+          window.personaFilters[filterKey] = Array.from(this.selectedOptions)
+            .map(opt => opt.value)
+            .filter(Boolean);
+          
+          console.log(filterKey + ' changed:', window.personaFilters[filterKey]);
           updateFilterCount();
         });
       }
     });
 
-    // Quick filters
-    wire('quickFilterUAE', function() {
-      console.log('🇦🇪 UAE quick filter clicked');
-      
-      var regionEl = document.getElementById('regionFilter');
-      var langEl = document.getElementById('languageFilter');
-      
-      // Reset first
-      personaFilters.region = [];
-      personaFilters.language = [];
-      
-      if (regionEl) {
-        // Clear existing selections
-        Array.from(regionEl.options).forEach(function(opt) { opt.selected = false; });
-        // Select UAE option
-        for (var i = 0; i < regionEl.options.length; i++) {
-          if (regionEl.options[i].value === 'AE') {
-            regionEl.options[i].selected = true;
-            personaFilters.region.push('AE');
-            break;
-          }
-        }
-      }
-      
-      if (langEl) {
-        // Clear existing selections
-        Array.from(langEl.options).forEach(function(opt) { opt.selected = false; });
-        // Select English option
-        for (var i = 0; i < langEl.options.length; i++) {
-          if (langEl.options[i].value === 'English') {
-            langEl.options[i].selected = true;
-            personaFilters.language.push('English');
-            break;
-          }
-        }
-      }
-      
-      console.log('UAE filter applied - Region:', personaFilters.region, 'Language:', personaFilters.language);
-      updateFilterCount();
-    });
-
-    wire('quickFilterFitness', function() {
-      var genreSelect = document.getElementById('genreSelect');
-      if (genreSelect) genreSelect.value = 'Sports & Athletics';
-      console.log('Fitness quick filter applied');
-      updateFilterCount();
-    });
-
-    wire('quickFilterMega', function() {
-      var tierEl = document.getElementById('tierFilter');
-      if (tierEl) tierEl.value = 'mega';
-      personaFilters.tier = 'mega';
-      console.log('Mega tier quick filter applied');
-      updateFilterCount();
-    });
-
-    wire('quickFilterHighEng', function() {
-      var minEngEl = document.getElementById('minEngFilter');
-      if (minEngEl) minEngEl.value = '5';
-      personaFilters.minEng = '5';
-      console.log('High engagement quick filter applied');
-      updateFilterCount();
-    });
-
-    // Reset filters
-    wire('resetFiltersBtn', function() {
-      console.log('Resetting all filters...');
-      
-      personaFilters = {
-        region: [],
-        language: [],
-        platform: [],
-        tier: '',
-        verifiedOnly: false,
-        minSubs: '',
-        maxSubs: '',
-        minEng: '',
-        maxEng: '',
-        minCpi: '',
-        maxCpi: ''
-      };
-
-      // Reset all form elements
-      ['regionFilter', 'languageFilter', 'platformFilter', 'tierFilter'].forEach(function(id) {
-        var el = document.getElementById(id);
-        if (el) {
-          el.selectedIndex = -1; // Clear all selections for multi-select
-          if (el.multiple) {
-            Array.from(el.options).forEach(function(opt) { opt.selected = false; });
-          }
-        }
-      });
-      
-      ['minSubsFilter', 'maxSubsFilter', 'minEngFilter', 'maxEngFilter', 'minCpiFilter', 'maxCpiFilter'].forEach(function(id) {
-        var el = document.getElementById(id);
-        if (el) el.value = '';
-      });
-
-      var verifiedEl = document.getElementById('verifiedOnlyFilter');
-      if (verifiedEl) verifiedEl.checked = false;
-
-      updateFilterCount();
-    });
-
-    // Filtered simulation
-    wire('runPersonaSimulation', function() {
-      console.log('🎯 Running filtered persona simulation...');
-      
-      var modeEl = document.getElementById('simulationMode');
-      var mode = modeEl ? modeEl.value : 'balanced';
-      var limits = { quick: 10, balanced: 25, comprehensive: 50 };
-      var limit = limits[mode] || 25;
-      
-      var filtered = getFilteredCreators().slice(0, limit);
-      console.log('Filtered creators:', filtered.length, 'of limit:', limit);
-      
-      if (filtered.length === 0) {
-        alert('No creators match your filters. Try adjusting the criteria or use the Reset button.');
-        return;
-      }
-
-      // Clear current selection and select filtered creators
-      if (typeof selectedCreators !== 'undefined') {
-        selectedCreators.clear();
-        filtered.forEach(function(creator) {
-          selectedCreators.add(creator.id);
-        });
-        console.log('Selected creators:', selectedCreators.size);
-        
-        if (typeof updateSelectedCreatorDisplay === 'function') {
-          updateSelectedCreatorDisplay();
-        }
-      }
-
-      // Show success message and suggest next step
-      var message = '✅ ' + filtered.length + ' ' + (mode === 'quick' ? 'targeted' : mode === 'comprehensive' ? 'comprehensive' : 'balanced') + ' creators selected!\n\n';
-      message += 'Switch to the Simulator tab to run your campaign analysis.';
-      
-      alert(message);
-      
-      // Optionally auto-switch to simulator
-      var switchToSim = confirm('Would you like to switch to the Simulator now?');
-      if (switchToSim && typeof showScreen === 'function') {
-        showScreen('simulator', document.querySelector('[data-screen="simulator"]'));
-      }
-    });
-  }
-
-  // Initialize filters when persona screen loads
-  function initPersonaFilters() {
-    // Add small delay to ensure DOM is ready
-    setTimeout(function() {
-      setupFilterListeners();
-      updateFilterCount();
-      console.log('🎯 Persona filters initialized');
-    }, 200);
+    // Initial count
+    updateFilterCount();
   }
 
   // CANCEL in outreach modal
