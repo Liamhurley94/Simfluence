@@ -17529,7 +17529,7 @@ document.addEventListener('click', function(e) {
     console.log('AI Debug - Executing action:', action);
     
     try {
-      // Set genre
+      // Set genre with multiple attempts
       const genreSelect = document.getElementById('genre');
       if (genreSelect) {
         console.log('AI Debug - Available genres:', Array.from(genreSelect.options).map(o => o.value));
@@ -17537,15 +17537,34 @@ document.addEventListener('click', function(e) {
         // Try exact match first
         const exactMatch = genreSelect.querySelector(`option[value="${action.genre}"]`);
         if (exactMatch) {
-          genreSelect.value = action.genre;
-          console.log('AI Debug - Set genre to:', action.genre);
+          console.log('AI Debug - Found exact genre match:', action.genre);
           
-          // Trigger change event
-          const event = new Event('change', { bubbles: true });
-          genreSelect.dispatchEvent(event);
+          // Multiple attempts to change genre
+          genreSelect.value = action.genre;
+          
+          // Force the change with multiple event types
+          ['change', 'input', 'blur'].forEach(eventType => {
+            const event = new Event(eventType, { bubbles: true, cancelable: true });
+            genreSelect.dispatchEvent(event);
+          });
+          
+          // Verify the change stuck
+          setTimeout(() => {
+            const currentGenre = genreSelect.value;
+            console.log('AI Debug - Genre after change attempt:', currentGenre);
+            
+            if (currentGenre === action.genre) {
+              console.log('AI Debug - Genre change successful!');
+              addMessage(`✅ Genre changed to: ${action.genre}`, 'ai');
+            } else {
+              console.log('AI Debug - Genre change failed, forcing manual refresh');
+              addMessage(`⚠️ Please manually change genre to "${action.genre}" in the sidebar to see your selected creators.`, 'ai');
+            }
+          }, 500);
+          
         } else {
           console.log('AI Debug - Genre not found:', action.genre);
-          addMessage(`⚠️ Genre "${action.genre}" not found. Using current genre instead.`, 'ai');
+          addMessage(`⚠️ Genre "${action.genre}" not found. Please select it manually from the sidebar dropdown.`, 'ai');
         }
       }
       
@@ -17622,18 +17641,46 @@ document.addEventListener('click', function(e) {
         }
       });
       
-      // Refresh display
+      // Refresh display with verification
+      console.log('AI Debug - Refreshing creator grid...');
+      
       if (typeof renderCreatorGrid === 'function') {
         renderCreatorGrid();
-        console.log('AI Debug - Refreshed creator grid');
+        console.log('AI Debug - renderCreatorGrid() called');
       }
       
-      // Switch to discovery screen
+      // Force switch to discovery screen  
       const discoveryTab = document.querySelector('[data-screen="discovery"]');
-      if (discoveryTab && typeof showScreen === 'function') {
-        showScreen('discovery', discoveryTab);
-        console.log('AI Debug - Switched to discovery screen');
+      if (discoveryTab) {
+        // Remove active from all tabs first
+        document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        
+        // Activate discovery
+        discoveryTab.classList.add('active');
+        const discoveryScreen = document.getElementById('screen-discovery');
+        if (discoveryScreen) {
+          discoveryScreen.classList.add('active');
+          console.log('AI Debug - Switched to discovery screen');
+        }
+        
+        // Call showScreen function if it exists
+        if (typeof showScreen === 'function') {
+          showScreen('discovery', discoveryTab);
+          console.log('AI Debug - Called showScreen function');
+        }
       }
+      
+      // Final verification after a delay
+      setTimeout(() => {
+        const finalGenre = document.getElementById('genre')?.value;
+        const finalSelection = selectedCreators.size;
+        console.log('AI Debug - Final verification - Genre:', finalGenre, 'Selected:', finalSelection);
+        
+        if (finalSelection === action.count) {
+          addMessage(`🔄 **Tip:** If you don't see the beauty creators, manually change the genre dropdown in the sidebar to "Beauty & Skincare" to view your ${finalSelection} selected creators.`, 'ai');
+        }
+      }, 1500);
       
       // Success message with details
       const successMsg = `✅ Campaign created! Selected ${targetCreators.length} ${action.genre.toLowerCase()} creators:
