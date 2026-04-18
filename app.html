@@ -714,6 +714,27 @@
     background: rgba(0,50,160,0.07);
   }
 
+  /* PERSONA FILTERS */
+  #personaFiltersPanel select[multiple] {
+    overflow-y: auto;
+    cursor: pointer;
+  }
+
+  #personaFiltersPanel select[multiple] option {
+    padding: 4px 8px;
+    margin: 1px 0;
+    border-radius: 2px;
+  }
+
+  #personaFiltersPanel select[multiple] option:checked {
+    background: rgba(255,212,0,0.2) !important;
+    color: #FFD400 !important;
+  }
+
+  #personaFiltersPanel select[multiple] option:hover {
+    background: rgba(255,255,255,0.05) !important;
+  }
+
   /* MATCH MATRIX */
   .match-matrix {
     display: grid;
@@ -3939,6 +3960,139 @@ document.addEventListener('DOMContentLoaded', function() {
 
       <!-- Selected creators banner -->
       <div id="personaBanner" style="display:none;background:rgba(0,80,255,0.06);border:1px solid rgba(0,80,255,0.2);border-radius:8px;padding:14px 18px;margin-bottom:20px"></div>
+
+      <!-- AI PERSONA SMART FILTERS -->
+      <div id="personaFiltersPanel" style="background:rgba(255,255,255,0.02);border:1px solid rgba(80,100,200,0.15);border-radius:8px;padding:20px;margin-bottom:24px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+          <div>
+            <div style="font-family:Manrope,sans-serif;font-weight:600;font-size:14px;color:#fff;margin-bottom:4px">🎯 Smart Filters</div>
+            <div style="font-family:Manrope,sans-serif;font-size:11px;color:var(--text-dim);letter-spacing:.04em">Filter creators before simulation for better targeting</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <div id="filterPreviewCount" style="font-family:Manrope,sans-serif;font-size:11px;color:#FFD400;padding:4px 8px;background:rgba(255,212,0,0.1);border-radius:4px;border:1px solid rgba(255,212,0,0.2)">~3,600 creators</div>
+            <button id="resetFiltersBtn" style="padding:6px 12px;background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:4px;font-family:Manrope,sans-serif;font-weight:500;font-size:11px;cursor:pointer">Reset</button>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px">
+          <!-- Geographic Filters -->
+          <div>
+            <div style="font-family:Manrope,sans-serif;font-weight:600;font-size:12px;color:#fff;margin-bottom:10px;display:flex;align-items:center;gap:6px">
+              🌍 Region & Language
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <select id="regionFilter" multiple style="background:var(--bg3);border:1px solid var(--border);color:#fff;border-radius:4px;padding:8px;font-family:Manrope,sans-serif;font-size:11px;max-height:80px">
+                <option value="">All Regions</option>
+                <option value="US">🇺🇸 United States</option>
+                <option value="AE">🇦🇪 UAE</option>
+                <option value="GB">🇬🇧 United Kingdom</option>
+                <option value="CA">🇨🇦 Canada</option>
+                <option value="AU">🇦🇺 Australia</option>
+                <option value="IN">🇮🇳 India</option>
+                <option value="BR">🇧🇷 Brazil</option>
+                <option value="MX">🇲🇽 Mexico</option>
+                <option value="DE">🇩🇪 Germany</option>
+                <option value="FR">🇫🇷 France</option>
+                <option value="ES">🇪🇸 Spain</option>
+                <option value="JP">🇯🇵 Japan</option>
+                <option value="KR">🇰🇷 South Korea</option>
+              </select>
+              <select id="languageFilter" multiple style="background:var(--bg3);border:1px solid var(--border);color:#fff;border-radius:4px;padding:8px;font-family:Manrope,sans-serif;font-size:11px;max-height:80px">
+                <option value="">All Languages</option>
+                <option value="English">🇬🇧 English</option>
+                <option value="Arabic">🇸🇦 Arabic</option>
+                <option value="Spanish">🇪🇸 Spanish</option>
+                <option value="Portuguese">🇧🇷 Portuguese</option>
+                <option value="French">🇫🇷 French</option>
+                <option value="German">🇩🇪 German</option>
+                <option value="Japanese">🇯🇵 Japanese</option>
+                <option value="Korean">🇰🇷 Korean</option>
+                <option value="Hindi">🇮🇳 Hindi</option>
+                <option value="Italian">🇮🇹 Italian</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Performance Filters -->
+          <div>
+            <div style="font-family:Manrope,sans-serif;font-weight:600;font-size:12px;color:#fff;margin-bottom:10px;display:flex;align-items:center;gap:6px">
+              📊 Performance
+            </div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div>
+                <label style="font-family:Manrope,sans-serif;font-size:10px;color:var(--text-dim);margin-bottom:4px;display:block">Subscribers</label>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <input id="minSubsFilter" type="text" placeholder="10K" style="background:var(--bg3);border:1px solid var(--border);color:#fff;border-radius:4px;padding:6px;font-family:Manrope,sans-serif;font-size:11px;width:60px">
+                  <span style="color:var(--text-muted);font-size:11px">to</span>
+                  <input id="maxSubsFilter" type="text" placeholder="10M" style="background:var(--bg3);border:1px solid var(--border);color:#fff;border-radius:4px;padding:6px;font-family:Manrope,sans-serif;font-size:11px;width:60px">
+                </div>
+              </div>
+              <div>
+                <label style="font-family:Manrope,sans-serif;font-size:10px;color:var(--text-dim);margin-bottom:4px;display:block">Engagement Rate</label>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <input id="minEngFilter" type="number" placeholder="1" min="0" max="100" step="0.1" style="background:var(--bg3);border:1px solid var(--border);color:#fff;border-radius:4px;padding:6px;font-family:Manrope,sans-serif;font-size:11px;width:50px">
+                  <span style="color:var(--text-muted);font-size:11px">% to</span>
+                  <input id="maxEngFilter" type="number" placeholder="50" min="0" max="100" step="0.1" style="background:var(--bg3);border:1px solid var(--border);color:#fff;border-radius:4px;padding:6px;font-family:Manrope,sans-serif;font-size:11px;width:50px">
+                  <span style="color:var(--text-muted);font-size:11px">%</span>
+                </div>
+              </div>
+              <div>
+                <label style="font-family:Manrope,sans-serif;font-size:10px;color:var(--text-dim);margin-bottom:4px;display:block">CPI Score</label>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <input id="minCpiFilter" type="number" placeholder="60" min="0" max="100" style="background:var(--bg3);border:1px solid var(--border);color:#fff;border-radius:4px;padding:6px;font-family:Manrope,sans-serif;font-size:11px;width:50px">
+                  <span style="color:var(--text-muted);font-size:11px">to</span>
+                  <input id="maxCpiFilter" type="number" placeholder="100" min="0" max="100" style="background:var(--bg3);border:1px solid var(--border);color:#fff;border-radius:4px;padding:6px;font-family:Manrope,sans-serif;font-size:11px;width:50px">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Content Filters -->
+          <div>
+            <div style="font-family:Manrope,sans-serif;font-weight:600;font-size:12px;color:#fff;margin-bottom:10px;display:flex;align-items:center;gap:6px">
+              🎨 Content & Platform
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <select id="platformFilter" multiple style="background:var(--bg3);border:1px solid var(--border);color:#fff;border-radius:4px;padding:8px;font-family:Manrope,sans-serif;font-size:11px">
+                <option value="">All Platforms</option>
+                <option value="YouTube">📺 YouTube</option>
+                <option value="TikTok">🎵 TikTok</option>
+                <option value="Instagram">📷 Instagram</option>
+                <option value="Twitch">🎮 Twitch</option>
+                <option value="Twitter">🐦 Twitter</option>
+              </select>
+              <select id="tierFilter" style="background:var(--bg3);border:1px solid var(--border);color:#fff;border-radius:4px;padding:8px;font-family:Manrope,sans-serif;font-size:11px">
+                <option value="">All Tiers</option>
+                <option value="mega">🌟 Mega (1M+)</option>
+                <option value="macro">⭐ Macro (100K-1M)</option>
+                <option value="micro">✨ Micro (10K-100K)</option>
+                <option value="nano">💫 Nano (1K-10K)</option>
+              </select>
+              <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+                <input id="verifiedOnlyFilter" type="checkbox" style="width:14px;height:14px">
+                <label for="verifiedOnlyFilter" style="font-family:Manrope,sans-serif;font-size:11px;color:var(--text-dim)">Verified only</label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:between;gap:12px;margin-top:16px;padding-top:16px;border-top:1px solid rgba(80,100,200,0.1)">
+          <div style="flex:1;display:flex;gap:12px">
+            <button id="quickFilterUAE" style="padding:6px 12px;background:rgba(255,212,0,0.1);border:1px solid rgba(255,212,0,0.3);color:#FFD400;border-radius:4px;font-family:Manrope,sans-serif;font-weight:500;font-size:11px;cursor:pointer">🇦🇪 UAE Creators</button>
+            <button id="quickFilterFitness" style="padding:6px 12px;background:rgba(0,212,100,0.1);border:1px solid rgba(0,212,100,0.3);color:#00D47A;border-radius:4px;font-family:Manrope,sans-serif;font-weight:500;font-size:11px;cursor:pointer">🏋️ Fitness</button>
+            <button id="quickFilterMega" style="padding:6px 12px;background:rgba(255,115,0,0.1);border:1px solid rgba(255,115,0,0.3);color:#FF7300;border-radius:4px;font-family:Manrope,sans-serif;font-weight:500;font-size:11px;cursor:pointer">🌟 Mega Tier</button>
+            <button id="quickFilterHighEng" style="padding:6px 12px;background:rgba(80,50,255,0.1);border:1px solid rgba(80,50,255,0.3);color:#5032FF;border-radius:4px;font-family:Manrope,sans-serif;font-weight:500;font-size:11px;cursor:pointer">⚡ High Engagement</button>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <select id="simulationMode" style="background:var(--bg3);border:1px solid var(--border);color:#fff;border-radius:4px;padding:6px 10px;font-family:Manrope,sans-serif;font-size:11px">
+              <option value="quick">⚡ Quick Match (10 creators)</option>
+              <option value="balanced">🎯 Balanced (25 creators)</option>
+              <option value="comprehensive">🔍 Comprehensive (50 creators)</option>
+            </select>
+            <button id="runPersonaSimulation" style="padding:8px 16px;background:#FFD400;color:#000;border:none;border-radius:4px;font-family:Manrope,sans-serif;font-weight:600;font-size:12px;cursor:pointer;font-weight:700;letter-spacing:.05em">🎯 SIMULATE FILTERED</button>
+          </div>
+        </div>
+      </div>
 
       <div id="personaGrid" class="persona-grid"></div>
     </div>
@@ -13370,6 +13524,11 @@ function renderPersonaScreen() {
         + '</div>' : '<div style="font-size:11px;color:var(--text-muted);text-align:center;padding:12px">No matched creators for this sub-mode</div>')
     + '</div>';
   }).join('');
+
+  // Initialize smart filters after rendering personas
+  if (typeof initPersonaFilters === 'function') {
+    setTimeout(initPersonaFilters, 100);
+  }
 }
 
 function personaAutoSelect() {
@@ -16839,6 +16998,259 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // AUTO-SELECT CREATORS (Personas screen) — direct wire
   wire('personaAutoSelectBtn', function() { if(typeof personaAutoSelect==='function') personaAutoSelect(); });
+
+  // ── SMART PERSONA FILTERS ────────────────────────────────────────────
+  // Smart filter functionality for enhanced AI persona matching
+  
+  var personaFilters = {
+    region: [],
+    language: [],
+    platform: [],
+    tier: '',
+    verifiedOnly: false,
+    minSubs: '',
+    maxSubs: '',
+    minEng: '',
+    maxEng: '',
+    minCpi: '',
+    maxCpi: ''
+  };
+
+  function updateFilterCount() {
+    var count = getFilteredCreators().length;
+    var el = document.getElementById('filterPreviewCount');
+    if (el) {
+      el.textContent = '~' + (count > 1000 ? Math.round(count/100)*100 : count) + ' creators';
+      el.style.color = count < 1000 ? '#FFD400' : count < 2000 ? '#00D47A' : '#FF7300';
+    }
+  }
+
+  function parseSubsString(str) {
+    if (!str) return 0;
+    str = str.toUpperCase().replace(/[^0-9.KMB]/g, '');
+    var num = parseFloat(str);
+    if (str.includes('K')) num *= 1000;
+    else if (str.includes('M')) num *= 1000000;
+    else if (str.includes('B')) num *= 1000000000;
+    return num;
+  }
+
+  function getCreatorSubsNumber(creator) {
+    if (typeof creator.subs === 'number') return creator.subs;
+    if (typeof creator.subs === 'string') return parseSubsString(creator.subs);
+    return 0;
+  }
+
+  function getFilteredCreators() {
+    if (typeof CREATORS === 'undefined') return [];
+    
+    return CREATORS.filter(function(creator) {
+      // Region filter
+      if (personaFilters.region.length > 0) {
+        var creatorCountry = creator.country || '';
+        var hasRegion = personaFilters.region.some(function(r) {
+          return creatorCountry === r || (creator.bio && creator.bio.includes(r));
+        });
+        if (!hasRegion) return false;
+      }
+
+      // Language filter
+      if (personaFilters.language.length > 0) {
+        var creatorLang = creator.language || '';
+        var hasLanguage = personaFilters.language.includes(creatorLang);
+        if (!hasLanguage) return false;
+      }
+
+      // Platform filter
+      if (personaFilters.platform.length > 0) {
+        var hasPlat = personaFilters.platform.includes(creator.platform);
+        if (!hasPlat) return false;
+      }
+
+      // Tier filter
+      if (personaFilters.tier) {
+        var subs = getCreatorSubsNumber(creator);
+        var tier = '';
+        if (subs >= 1000000) tier = 'mega';
+        else if (subs >= 100000) tier = 'macro';
+        else if (subs >= 10000) tier = 'micro';
+        else tier = 'nano';
+        if (tier !== personaFilters.tier) return false;
+      }
+
+      // Subscriber range
+      if (personaFilters.minSubs) {
+        var minSubs = parseSubsString(personaFilters.minSubs);
+        if (getCreatorSubsNumber(creator) < minSubs) return false;
+      }
+      if (personaFilters.maxSubs) {
+        var maxSubs = parseSubsString(personaFilters.maxSubs);
+        if (getCreatorSubsNumber(creator) > maxSubs) return false;
+      }
+
+      // Engagement range
+      if (personaFilters.minEng) {
+        var eng = parseFloat(creator.eng) || 0;
+        if (eng < parseFloat(personaFilters.minEng)) return false;
+      }
+      if (personaFilters.maxEng) {
+        var eng = parseFloat(creator.eng) || 0;
+        if (eng > parseFloat(personaFilters.maxEng)) return false;
+      }
+
+      // CPI range
+      if (personaFilters.minCpi) {
+        var cpi = creator.cpi || 0;
+        if (cpi < parseFloat(personaFilters.minCpi)) return false;
+      }
+      if (personaFilters.maxCpi) {
+        var cpi = creator.cpi || 0;
+        if (cpi > parseFloat(personaFilters.maxCpi)) return false;
+      }
+
+      return true;
+    });
+  }
+
+  function setupFilterListeners() {
+    // Region filter
+    var regionEl = document.getElementById('regionFilter');
+    if (regionEl) {
+      regionEl.addEventListener('change', function() {
+        personaFilters.region = Array.from(this.selectedOptions).map(function(opt) { return opt.value; }).filter(Boolean);
+        updateFilterCount();
+      });
+    }
+
+    // Language filter
+    var langEl = document.getElementById('languageFilter');
+    if (langEl) {
+      langEl.addEventListener('change', function() {
+        personaFilters.language = Array.from(this.selectedOptions).map(function(opt) { return opt.value; }).filter(Boolean);
+        updateFilterCount();
+      });
+    }
+
+    // Platform filter
+    var platEl = document.getElementById('platformFilter');
+    if (platEl) {
+      platEl.addEventListener('change', function() {
+        personaFilters.platform = Array.from(this.selectedOptions).map(function(opt) { return opt.value; }).filter(Boolean);
+        updateFilterCount();
+      });
+    }
+
+    // Tier filter
+    var tierEl = document.getElementById('tierFilter');
+    if (tierEl) {
+      tierEl.addEventListener('change', function() {
+        personaFilters.tier = this.value;
+        updateFilterCount();
+      });
+    }
+
+    // Numeric filters
+    ['minSubs', 'maxSubs', 'minEng', 'maxEng', 'minCpi', 'maxCpi'].forEach(function(filterId) {
+      var el = document.getElementById(filterId + 'Filter');
+      if (el) {
+        el.addEventListener('input', function() {
+          personaFilters[filterId] = this.value;
+          updateFilterCount();
+        });
+      }
+    });
+
+    // Quick filters
+    wire('quickFilterUAE', function() {
+      document.getElementById('regionFilter').value = 'AE';
+      document.getElementById('languageFilter').value = 'English';
+      personaFilters.region = ['AE'];
+      personaFilters.language = ['English'];
+      updateFilterCount();
+    });
+
+    wire('quickFilterFitness', function() {
+      var genreSelect = document.getElementById('genreSelect');
+      if (genreSelect) genreSelect.value = 'Sports & Athletics';
+      updateFilterCount();
+    });
+
+    wire('quickFilterMega', function() {
+      document.getElementById('tierFilter').value = 'mega';
+      personaFilters.tier = 'mega';
+      updateFilterCount();
+    });
+
+    wire('quickFilterHighEng', function() {
+      document.getElementById('minEngFilter').value = '5';
+      personaFilters.minEng = '5';
+      updateFilterCount();
+    });
+
+    // Reset filters
+    wire('resetFiltersBtn', function() {
+      personaFilters = {
+        region: [],
+        language: [],
+        platform: [],
+        tier: '',
+        verifiedOnly: false,
+        minSubs: '',
+        maxSubs: '',
+        minEng: '',
+        maxEng: '',
+        minCpi: '',
+        maxCpi: ''
+      };
+
+      // Reset all form elements
+      ['regionFilter', 'languageFilter', 'platformFilter', 'tierFilter'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.selectedIndex = 0;
+      });
+      
+      ['minSubsFilter', 'maxSubsFilter', 'minEngFilter', 'maxEngFilter', 'minCpiFilter', 'maxCpiFilter'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+
+      var verifiedEl = document.getElementById('verifiedOnlyFilter');
+      if (verifiedEl) verifiedEl.checked = false;
+
+      updateFilterCount();
+    });
+
+    // Filtered simulation
+    wire('runPersonaSimulation', function() {
+      var mode = document.getElementById('simulationMode').value;
+      var limits = { quick: 10, balanced: 25, comprehensive: 50 };
+      var limit = limits[mode] || 25;
+      
+      var filtered = getFilteredCreators().slice(0, limit);
+      
+      if (filtered.length === 0) {
+        alert('No creators match your filters. Try adjusting the criteria.');
+        return;
+      }
+
+      // Clear current selection and select filtered creators
+      if (typeof selectedCreators !== 'undefined') {
+        selectedCreators.clear();
+        filtered.forEach(function(creator) {
+          selectedCreators.add(creator.id);
+        });
+        if (typeof updateSelectedCreatorDisplay === 'function') updateSelectedCreatorDisplay();
+      }
+
+      alert(filtered.length + ' creators selected for simulation. Switch to Simulator to run analysis.');
+    });
+  }
+
+  // Initialize filters when persona screen loads
+  function initPersonaFilters() {
+    setupFilterListeners();
+    updateFilterCount();
+  }
 
   // CANCEL in outreach modal
   wire('cancelOutreachBtn', function() { if(typeof closeOutreachModal==='function') closeOutreachModal(); });
