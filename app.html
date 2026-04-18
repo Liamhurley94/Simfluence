@@ -11317,6 +11317,93 @@ function avgViewsLabel(cr) {
 
 function renderCreatorGrid(keepPage) {
   if (!keepPage) currentPage = 1;
+  
+  // ── AI SELECTION MODE ─────────────────────────────────────────────
+  // If AI has made a selection, show only those creators
+  if (window.aiSelectionMode && window.aiSelectedCreators) {
+    console.log('AI Debug - Rendering only AI-selected creators:', window.aiSelectedCreators.length);
+    
+    const aiCreators = window.aiSelectedCreators;
+    const selectedIds = new Set(selectedCreators);
+    
+    // Add Show All button
+    var showAllBtn = document.getElementById('show-all-creators-btn');
+    if (!showAllBtn) {
+      showAllBtn = document.createElement('button');
+      showAllBtn.id = 'show-all-creators-btn';
+      showAllBtn.style.cssText = 'margin-bottom:16px;padding:8px 16px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.2);color:#F0F2FF;border-radius:6px;font-family:Manrope,sans-serif;font-size:12px;cursor:pointer';
+      showAllBtn.textContent = '← Show All Creators';
+      showAllBtn.onclick = function() {
+        window.aiSelectionMode = false;
+        window.aiSelectedCreators = null;
+        renderCreatorGrid();
+        this.remove();
+      };
+      const grid = document.getElementById('creatorGrid');
+      if (grid) grid.parentNode.insertBefore(showAllBtn, grid);
+    }
+    
+    // Render AI-selected creators
+    const gridHTML = aiCreators.map(cr => {
+      const isSelected = selectedIds.has(cr.id);
+      const btnStyle = isSelected 
+        ? 'background:#00C46A;color:#000;font-weight:600;' 
+        : 'background:rgba(255,255,255,0.08);color:#F0F2FF;border:1px solid rgba(255,255,255,0.2);';
+      const btnText = isSelected ? '✓ SELECTED' : '+ SELECT';
+      
+      const costEst = computeCostEstimate(cr);
+      
+      return `<div class="creator-card" style="background:var(--creator-card-bg);border:var(--creator-card-border);border-radius:var(--radius);padding:16px;position:relative;min-height:300px;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+          <img src="${cr.avatar}" style="width:48px;height:48px;border-radius:50%;object-fit:cover">
+          <div style="flex:1">
+            <div style="font-family:Manrope,sans-serif;font-size:16px;font-weight:600;margin-bottom:2px;color:#F0F2FF">${cr.name}</div>
+            <div style="font-size:11px;color:var(--text-muted);font-family:Manrope,sans-serif;font-weight:500">@${cr.handle}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-family:Manrope,sans-serif;font-size:8px;font-weight:600;color:#FFD400;letter-spacing:.1em;margin-bottom:2px">${cr.platform.toUpperCase()}</div>
+            <div style="font-size:10px;color:var(--text-dim)">${cr.genre}</div>
+          </div>
+        </div>
+        
+        <div class="creator-stats">
+          <div class="stat"><div class="stat-label">SUBS</div><div class="stat-val">${cr.subs}</div></div>
+          <div class="stat"><div class="stat-label">AVG VIEWS</div><div class="stat-val">${cr.avgViews}</div></div>
+          <div class="stat"><div class="stat-label">ENG RATE</div><div class="stat-val">${cr.eng}</div></div>
+          <div class="stat"><div class="stat-label">CPI SCORE</div><div class="stat-val" style="color:${cpiScoreColor(cr.cpi)};font-size:22px;font-weight:700">${cr.cpi}</div></div>
+        </div>
+        
+        <div style="margin-top:12px;margin-bottom:16px;font-size:10px;color:var(--text-muted);display:flex;justify-content:space-between">
+          <span style="color:var(--text-dim);font-weight:600;font-size:11px">Int: <strong style="color:#FFD400">${costEst.fmt(costEst.ranges.int[0])}–${costEst.fmt(costEst.ranges.int[1])}</strong></span>
+          <span style="color:var(--text-dim);font-weight:600;font-size:11px">Ded: <strong style="color:#FFD400">${costEst.fmt(costEst.ranges.ded[0])}–${costEst.fmt(costEst.ranges.ded[1])}</strong></span>
+        </div>
+        
+        <div style="display:flex;gap:8px;margin-top:auto">
+          <button onclick="toggleCreator(${cr.id})" style="flex:1;padding:10px;border:none;border-radius:4px;font-family:Manrope,sans-serif;font-size:11px;font-weight:600;cursor:pointer;${btnStyle}">${btnText}</button>
+        </div>
+      </div>`;
+    }).join('');
+    
+    document.getElementById('creatorGrid').innerHTML = gridHTML;
+    
+    // Update result summary
+    const resultSummary = document.getElementById('resultSummary');
+    if (resultSummary) {
+      resultSummary.innerHTML = `<span style="color:#FFD400;font-weight:600">AI Selection:</span> Showing ${aiCreators.length} curated creators`;
+    }
+    
+    // Update pagination
+    const paginationEl = document.getElementById('pagination');
+    if (paginationEl) paginationEl.style.display = 'none';
+    
+    return;
+  }
+  
+  // ── NORMAL MODE ───────────────────────────────────────────────────
+  // Remove show all button if it exists
+  const existingBtn = document.getElementById('show-all-creators-btn');
+  if (existingBtn) existingBtn.remove();
+  
   const genre   = getSelectedGenre();
   const budget  = parseInt((document.getElementById('budget')||{value:'500000'}).value)||500000;
   const tierMix = parseInt((document.getElementById('tierMix')||{value:'4'}).value);
@@ -17542,20 +17629,24 @@ document.addEventListener('click', function(e) {
         }
       });
       
-      // Refresh display (no genre/screen switching needed)
+      // Set AI selection mode to show only selected creators
+      window.aiSelectionMode = true;
+      window.aiSelectedCreators = targetCreators;
+      
+      // Refresh display to show only selected creators
       if (typeof renderCreatorGrid === 'function') {
         renderCreatorGrid();
-        console.log('AI Debug - Refreshed creator grid');
+        console.log('AI Debug - Refreshed to show only AI-selected creators');
       }
       
       // Success message with details
       const successMsg = `✅ Selected ${targetCreators.length} top ${currentGenre.toLowerCase()} creators:
       
-👥 **Creators:** ${targetCreators.map(c => c.name).join(', ')}
+👥 **Showing only:** ${targetCreators.map(c => c.name).join(', ')}
 📊 **Budget:** $${action.budget.toLocaleString()}
 🎯 **Objectives:** ${action.objectives.join(', ')}
 
-Look for the "✓ SELECTED" buttons below!`;
+Discovery tab now shows ONLY your AI-selected creators. Click "Show All" to see the full list.`;
       
       addMessage(successMsg, 'ai');
       console.log('AI Debug - Campaign creation completed successfully');
