@@ -15728,7 +15728,7 @@ function generateBudgetDistributionPanel(campaign, linkedOutreach) {
   
   // Generate creator chips HTML
   const creatorChips = creatorAllocations.map(creator => `
-    <div class="creator-rate-chip" data-creator="${creator.name}">
+    <div class="creator-rate-chip" data-creator="${creator.name}" data-action="view-creator-budget" data-campaign-id="${campaign.id}" title="${creator.reasoning}">
       <div class="chip-initial" style="background: ${creator.color}22; border: 1px solid ${creator.color}; color: ${creator.color};">
         ${creator.initial}
       </div>
@@ -15757,10 +15757,10 @@ function generateBudgetDistributionPanel(campaign, linkedOutreach) {
       </div>
       
       <div class="budget-actions">
-        <button class="budget-btn budget-btn-secondary" onclick="optimizeBudget('${campaign.id}')">
+        <button class="budget-btn budget-btn-secondary" data-action="optimize-budget" data-campaign-id="${campaign.id}">
           🎯 Optimize Rates
         </button>
-        <button class="budget-btn budget-btn-primary" onclick="exportBudgetPlan('${campaign.id}')">
+        <button class="budget-btn budget-btn-primary" data-action="export-budget" data-campaign-id="${campaign.id}">
           📊 Export Plan
         </button>
       </div>
@@ -15821,11 +15821,35 @@ function calculateRecommendedRate(creator, totalBudget, creatorCount) {
 
 // Budget action functions
 function optimizeBudget(campaignId) {
+  console.log('Optimizing budget for campaign:', campaignId);
   alert('🎯 Budget Optimization\n\nThis would redistribute the budget based on latest CPI/GFI scores and performance data.');
 }
 
 function exportBudgetPlan(campaignId) {
+  console.log('Exporting budget plan for campaign:', campaignId);
   alert('📊 Export Budget Plan\n\nThis would generate a detailed budget breakdown PDF for client presentation.');
+}
+
+function viewCreatorBudget(creatorName, campaignId) {
+  console.log('Viewing budget for creator:', creatorName, 'in campaign:', campaignId);
+  
+  // Find the creator to get more details
+  const creator = CREATORS.find(c => c.name === creatorName);
+  if (!creator) {
+    alert(`Creator details for ${creatorName} not found.`);
+    return;
+  }
+  
+  // Calculate the rate details
+  const rate = calculateRecommendedRate(creator, 100000, 10); // Sample calculation
+  
+  alert(`💰 ${creatorName} Budget Details\n\n` +
+        `CPI Score: ${creator.cpi || 'N/A'}\n` +
+        `GFI Score: ${creator.gfi || 'N/A'}\n` +
+        `Followers: ${creator.followers?.toLocaleString() || 'N/A'}\n` +
+        `Tier: ${rate.tier}\n` +
+        `Reasoning: ${rate.reasoning}\n\n` +
+        `This would open a detailed budget breakdown modal.`);
 }
 
 function renderCampaignsScreen() {
@@ -16973,6 +16997,9 @@ document.addEventListener('click', function(e) {
       else if (action==='overlap-add-search') overlapAddFromSearch();
       else if (action==='remove-subgenre') { var sg=el.getAttribute('data-sg'); if(sg) orRemoveSubgenre(sg); }
       else if (action==='outreach-upgrade') { var utier=el.getAttribute('data-tier')||'Platinum'; showUpgradePrompt('personas_all',utier); }
+      else if (action==='optimize-budget') { var campaignId=el.getAttribute('data-campaign-id'); optimizeBudget(campaignId); }
+      else if (action==='export-budget') { var campaignId=el.getAttribute('data-campaign-id'); exportBudgetPlan(campaignId); }
+      else if (action==='view-creator-budget') { var creatorName=el.getAttribute('data-creator'); var campaignId=el.getAttribute('data-campaign-id'); viewCreatorBudget(creatorName, campaignId); }
       else if (action==='open-outreach-profile') {
         var crid = parseInt(el.getAttribute('data-crid'));
         if (crid && typeof openProfileOverlay === 'function') openProfileOverlay(crid);
