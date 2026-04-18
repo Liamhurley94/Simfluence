@@ -17530,6 +17530,8 @@ document.addEventListener('click', function(e) {
     const requestedCount = extractNumber(message) || 5;
     const requestedBudget = extractBudget(message) || 50000;
     
+    console.log('AI Debug - Extracted count:', requestedCount, 'budget:', requestedBudget);
+    
     // Determine objectives based on keywords
     let objectives = ['Brand Awareness', 'Direct Sales'];
     
@@ -17604,10 +17606,13 @@ document.addEventListener('click', function(e) {
       }
       
       // Select top creators by CPI
+      console.log('AI Debug - action.count:', action.count, 'genreCreators.length:', genreCreators.length);
+      
       const targetCreators = genreCreators
         .sort((a, b) => (b.cpi || 0) - (a.cpi || 0))
         .slice(0, action.count);
       
+      console.log('AI Debug - targetCreators.length after slice:', targetCreators.length);
       console.log('AI Debug - Selected creators:', targetCreators.map(c => c.name));
       
       // Clear current selection and add new ones
