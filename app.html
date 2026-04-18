@@ -1789,6 +1789,194 @@
     .band-card, [id^="band"] { border: 1px solid #ccc !important; }
   }
 
+
+  /* Budget Distribution Panel Styles */
+  .budget-distribution-panel {
+    margin: 16px 0;
+    background: linear-gradient(135deg, var(--bg3) 0%, var(--bg4) 100%);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .budget-distribution-panel::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--gold), var(--blue), var(--green));
+  }
+
+  .budget-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .budget-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Manrope', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .budget-icon {
+    font-size: 20px;
+  }
+
+  .budget-total {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--gold);
+    font-family: 'Manrope', sans-serif;
+  }
+
+  .budget-summary {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+
+  .budget-stat {
+    font-family: 'Manrope', sans-serif;
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+
+  .creator-rate-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 16px;
+    max-height: 120px;
+    overflow-y: auto;
+  }
+
+  .creator-rate-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 6px;
+    font-size: 11px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+
+  .creator-rate-chip:hover {
+    background: rgba(255,255,255,0.08);
+    border-color: var(--gold);
+    transform: translateY(-1px);
+  }
+
+  .chip-initial {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .chip-rate {
+    color: var(--gold);
+    font-weight: 700;
+  }
+
+  .budget-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+
+  .budget-btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-family: 'Manrope', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    outline: none;
+  }
+
+  .budget-btn-secondary {
+    background: rgba(255,255,255,0.06);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  .budget-btn-secondary:hover {
+    background: rgba(255,255,255,0.1);
+    border-color: rgba(255,255,255,0.2);
+  }
+
+  .budget-btn-primary {
+    background: linear-gradient(135deg, var(--gold), var(--gold-light));
+    color: var(--bg);
+    border: 1px solid transparent;
+  }
+
+  .budget-btn-primary:hover {
+    background: linear-gradient(135deg, var(--gold-light), var(--gold));
+    transform: translateY(-1px);
+  }
+
+  .creator-rate-chips::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .creator-rate-chips::-webkit-scrollbar-track {
+    background: rgba(255,255,255,0.05);
+    border-radius: 2px;
+  }
+
+  .creator-rate-chips::-webkit-scrollbar-thumb {
+    background: var(--gold);
+    border-radius: 2px;
+  }
+
+  @media (max-width: 768px) {
+    .budget-panel-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .budget-summary {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .budget-actions {
+      flex-direction: column;
+    }
+  }
+
+  .budget-distribution-panel[data-hidden="true"] {
+    display: none;
+  }
+
   </style>
 </head>
 <body>
@@ -15492,6 +15680,154 @@ function renderAgencyPanel() {
   }
 }
 
+// Generate budget distribution panel for campaign
+function generateBudgetDistributionPanel(campaign, linkedOutreach) {
+  if (!campaign || !linkedOutreach || linkedOutreach.length === 0) return '';
+  
+  // Get campaign budget (clean the string and convert to number)
+  const budgetStr = campaign.budget || '100,000';
+  const totalBudget = parseInt(budgetStr.replace(/[^0-9]/g, '')) || 100000;
+  
+  // Calculate budget allocations for each creator
+  const creatorAllocations = linkedOutreach.map(outreach => {
+    // Find the creator in CREATORS array to get CPI/GFI
+    const creator = CREATORS.find(c => 
+      c.name.toLowerCase() === outreach.name.toLowerCase() ||
+      (outreach.handle && c.handle && c.handle.toLowerCase() === outreach.handle.toLowerCase())
+    );
+    
+    if (!creator) {
+      return {
+        name: outreach.name,
+        initial: outreach.name.charAt(0).toUpperCase(),
+        color: '#6B9FFF',
+        allocation: Math.floor(totalBudget / linkedOutreach.length),
+        cpi: 50,
+        gfi: 50,
+        reasoning: 'Standard allocation'
+      };
+    }
+    
+    // Calculate recommended rate based on CPI/GFI scores
+    const allocation = calculateRecommendedRate(creator, totalBudget, linkedOutreach.length);
+    
+    return {
+      name: creator.name,
+      initial: creator.name.charAt(0).toUpperCase(),
+      color: creator.color || '#6B9FFF',
+      allocation: allocation.amount,
+      cpi: creator.cpi || 50,
+      gfi: creator.gfi || 50,
+      reasoning: allocation.reasoning
+    };
+  });
+  
+  // Calculate totals
+  const totalAllocated = creatorAllocations.reduce((sum, c) => sum + c.allocation, 0);
+  const avgRate = Math.floor(totalAllocated / creatorAllocations.length);
+  
+  // Generate creator chips HTML
+  const creatorChips = creatorAllocations.map(creator => `
+    <div class="creator-rate-chip" data-creator="${creator.name}">
+      <div class="chip-initial" style="background: ${creator.color}22; border: 1px solid ${creator.color}; color: ${creator.color};">
+        ${creator.initial}
+      </div>
+      <span class="chip-rate">$${creator.allocation.toLocaleString()}</span>
+    </div>
+  `).join('');
+  
+  return `
+    <div class="budget-distribution-panel" style="margin-top:16px;">
+      <div class="budget-panel-header">
+        <div class="budget-title">
+          <span class="budget-icon">💰</span>
+          Smart Budget Distribution
+        </div>
+        <div class="budget-total">$${totalBudget.toLocaleString()}</div>
+      </div>
+      
+      <div class="budget-summary">
+        <span class="budget-stat">${creatorAllocations.length} creators selected</span>
+        <span class="budget-stat">Avg rate: $${avgRate.toLocaleString()}</span>
+        <span class="budget-stat">Total allocated: $${totalAllocated.toLocaleString()}</span>
+      </div>
+      
+      <div class="creator-rate-chips">
+        ${creatorChips}
+      </div>
+      
+      <div class="budget-actions">
+        <button class="budget-btn budget-btn-secondary" onclick="optimizeBudget('${campaign.id}')">
+          🎯 Optimize Rates
+        </button>
+        <button class="budget-btn budget-btn-primary" onclick="exportBudgetPlan('${campaign.id}')">
+          📊 Export Plan
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+// Calculate recommended rate for a creator
+function calculateRecommendedRate(creator, totalBudget, creatorCount) {
+  // Base rates by follower tier
+  const baseRates = {
+    macro: Math.floor(totalBudget * 0.15 / creatorCount), // 15% for macro tier
+    mid: Math.floor(totalBudget * 0.10 / creatorCount),   // 10% for mid tier  
+    micro: Math.floor(totalBudget * 0.06 / creatorCount)  // 6% for micro tier
+  };
+  
+  // Determine tier based on followers
+  let tier = 'micro';
+  if (creator.followers >= 1000000) {
+    tier = 'macro';
+  } else if (creator.followers >= 100000) {
+    tier = 'mid';
+  }
+  
+  let basePrice = baseRates[tier];
+  
+  // CPI Score Multiplier (normalize around 75 as average)
+  const cpi = creator.cpi || 50;
+  const cpiMultiplier = Math.max(0.5, Math.min(2.0, cpi / 75));
+  
+  // GFI Score Multiplier (normalize around 50 as average)
+  const gfi = creator.gfi || 50;
+  const gfiMultiplier = Math.max(0.8, Math.min(1.5, gfi / 50));
+  
+  // Calculate final allocation
+  const finalAmount = Math.round(basePrice * cpiMultiplier * gfiMultiplier);
+  
+  // Generate reasoning
+  let reasoning = `${tier} tier`;
+  if (cpi >= 85) {
+    reasoning += ' • High CPI boost';
+  } else if (cpi < 60) {
+    reasoning += ' • Low CPI adjustment';
+  }
+  
+  if (gfi >= 70) {
+    reasoning += ' • Strong GFI';
+  }
+  
+  return {
+    amount: finalAmount,
+    reasoning: reasoning,
+    tier: tier,
+    cpiMultiplier: cpiMultiplier,
+    gfiMultiplier: gfiMultiplier
+  };
+}
+
+// Budget action functions
+function optimizeBudget(campaignId) {
+  alert('🎯 Budget Optimization\n\nThis would redistribute the budget based on latest CPI/GFI scores and performance data.');
+}
+
+function exportBudgetPlan(campaignId) {
+  alert('📊 Export Budget Plan\n\nThis would generate a detailed budget breakdown PDF for client presentation.');
+}
+
 function renderCampaignsScreen() {
   var list  = document.getElementById('campaigns-list');
   var empty = document.getElementById('campaigns-empty');
@@ -15554,6 +15890,7 @@ function renderCampaignsScreen() {
           + '<button data-cid=\"' + cmp.id + '\" data-action=\"delete-campaign\" style=\"padding:6px 10px;background:rgba(230,0,35,0.08);border:1px solid rgba(230,0,35,0.2);color:#E60023;border-radius:5px;font-family:Manrope,sans-serif;font-size:11px;font-weight:600;cursor:pointer\">✕</button>'
         + '</div>'
       + '</div>'
+      + (linked.length > 0 ? generateBudgetDistributionPanel(cmp, linked) : '')
       + (linked.length > 0
           ? '<div style=\"margin-top:14px;padding-top:14px;border-top:1px solid var(--border)\">'
               + '<div style=\"font-family:Manrope,sans-serif;font-weight:500;font-size:8px;letter-spacing:.08em;color:var(--text-muted);margin-bottom:10px\">CREATORS — click to view profile</div>'
