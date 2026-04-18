@@ -17435,87 +17435,51 @@ document.addEventListener('click', function(e) {
     console.log('AI Debug - Input:', message);
     console.log('AI Debug - Lowercase:', msg);
     
-    // Beauty campaigns  
-    if (msg.includes('beauty') || msg.includes('makeup') || msg.includes('skincare') || msg.includes('cosmetic')) {
-      console.log('AI Debug - Matched: Beauty campaign');
-      return {
-        text: "Great choice! I'll curate beauty creators for your campaign. Selecting a mix of macro and micro-influencers for balanced reach and engagement...",
-        action: {
-          type: 'create_campaign',
-          genre: 'Beauty & Skincare', 
-          count: extractNumber(message) || 6,
-          budget: extractBudget(message) || 75000,
-          objectives: ['Brand Awareness', 'Direct Sales']
-        }
-      };
+    // Get current genre from dropdown
+    const currentGenre = document.getElementById('genre')?.value || 'Gaming & Esports';
+    console.log('AI Debug - Working with current genre:', currentGenre);
+    
+    // Extract count and budget from message
+    const requestedCount = extractNumber(message) || 5;
+    const requestedBudget = extractBudget(message) || 50000;
+    
+    // Determine objectives based on keywords
+    let objectives = ['Brand Awareness', 'Direct Sales'];
+    
+    if (msg.includes('awareness') || msg.includes('reach')) {
+      objectives = ['Brand Awareness', 'Reach & Impressions'];
+    } else if (msg.includes('engagement') || msg.includes('community')) {
+      objectives = ['Engagement Rate', 'Community Growth'];
+    } else if (msg.includes('sales') || msg.includes('conversion')) {
+      objectives = ['Direct Sales', 'Lead Generation'];
+    } else if (msg.includes('app') || msg.includes('mobile') || msg.includes('download')) {
+      objectives = ['App Install', 'Content Virality'];
     }
     
-    // Fitness/Health campaigns
-    if (msg.includes('fitness') || msg.includes('protein') || msg.includes('gym') || msg.includes('health')) {
-      console.log('AI Debug - Matched: Fitness campaign');
-      return {
-        text: "Perfect! I'll find top fitness creators for your protein powder campaign. Selecting creators with high engagement in the fitness community...",
-        action: {
-          type: 'create_campaign',
-          genre: 'Health & Fitness',
-          count: extractNumber(message) || 5,
-          budget: extractBudget(message) || 50000,
-          objectives: ['Brand Awareness', 'Direct Sales']
-        }
-      };
-    }
+    // Generate response based on current genre
+    const genreResponses = {
+      'Beauty & Skincare': `Perfect! I'll curate the top ${requestedCount} beauty & skincare creators from your current selection. Looking for creators with authentic engagement and proven brand partnership success...`,
+      'Health & Fitness': `Excellent! I'll select the top ${requestedCount} fitness creators with strong community engagement and proven results in health & wellness campaigns...`,
+      'Gaming & Esports': `Great choice! I'll pick the top ${requestedCount} gaming creators with high engagement rates and strong performance in gaming campaigns...`,
+      'Food & Cooking': `Delicious! I'll find the top ${requestedCount} food creators known for authentic content and strong brand partnerships...`,
+      'Travel & Adventure': `Amazing! I'll select ${requestedCount} travel creators with stunning visual content and engaged audiences...`,
+      'Tech & Gadgets': `Perfect! I'll choose ${requestedCount} tech creators with credible reviews and strong influence in the tech community...`,
+      'Lifestyle & Vlogs': `Great! I'll select ${requestedCount} lifestyle creators with authentic storytelling and high engagement...`,
+      'Fashion & Style': `Excellent! I'll curate ${requestedCount} fashion creators with strong style influence and brand partnership experience...`
+    };
     
-    // Gaming campaigns
-    if (msg.includes('gaming') || msg.includes('game') || msg.includes('mobile') || msg.includes('esports')) {
-      console.log('AI Debug - Matched: Gaming campaign');
-      return {
-        text: "Excellent! I'll select gaming creators perfect for your launch. Focusing on creators with strong engagement in the 18-25 demographic...",
-        action: {
-          type: 'create_campaign',
-          genre: 'Gaming & Esports',
-          count: extractNumber(message) || 4, 
-          budget: extractBudget(message) || 60000,
-          objectives: ['App Install', 'Content Virality']
-        }
-      };
-    }
+    const responseText = genreResponses[currentGenre] || 
+      `I'll select the top ${requestedCount} creators from your current "${currentGenre}" genre with the best engagement and brand partnership potential...`;
     
-    // Travel campaigns
-    if (msg.includes('travel') || msg.includes('adventure') || msg.includes('destination')) {
-      console.log('AI Debug - Matched: Travel campaign');
-      return {
-        text: "Amazing! I'll find travel creators for your campaign. Selecting creators known for high-quality destination content...",
-        action: {
-          type: 'create_campaign',
-          genre: 'Travel & Adventure',
-          count: extractNumber(message) || 5,
-          budget: extractBudget(message) || 80000,
-          objectives: ['Brand Awareness', 'Reach & Impressions']
-        }
-      };
-    }
-    
-    // Food campaigns
-    if (msg.includes('food') || msg.includes('cooking') || msg.includes('recipe') || msg.includes('restaurant')) {
-      console.log('AI Debug - Matched: Food campaign');
-      return {
-        text: "Delicious! I'll find food creators for your campaign. Selecting creators with engaging cooking content and strong community...",
-        action: {
-          type: 'create_campaign',
-          genre: 'Food & Cooking',
-          count: extractNumber(message) || 4,
-          budget: extractBudget(message) || 45000,
-          objectives: ['Brand Awareness', 'Engagement Rate']
-        }
-      };
-    }
-    
-    console.log('AI Debug - No match found, showing default');
-    
-    // Default response
     return {
-      text: "I can help you create campaigns for fitness, beauty, gaming, travel, food and more! Try being more specific about the industry and your budget. For example: 'Find 5 beauty creators for skincare launch, budget $50k'",
-      action: null
+      text: responseText,
+      action: {
+        type: 'create_campaign',
+        genre: currentGenre, // Use current genre instead of trying to change it
+        count: requestedCount,
+        budget: requestedBudget,
+        objectives: objectives
+      }
     };
   }
   
@@ -17526,93 +17490,30 @@ document.addEventListener('click', function(e) {
   function executeAction(action) {
     if (action.type !== 'create_campaign') return;
     
-    console.log('AI Debug - Executing action:', action);
+    console.log('AI Debug - Executing action for genre:', action.genre);
     
     try {
-      // Set genre with multiple attempts
-      const genreSelect = document.getElementById('genre');
-      if (genreSelect) {
-        console.log('AI Debug - Available genres:', Array.from(genreSelect.options).map(o => o.value));
-        
-        // Try exact match first
-        const exactMatch = genreSelect.querySelector(`option[value="${action.genre}"]`);
-        if (exactMatch) {
-          console.log('AI Debug - Found exact genre match:', action.genre);
-          
-          // Multiple attempts to change genre
-          genreSelect.value = action.genre;
-          
-          // Force the change with multiple event types
-          ['change', 'input', 'blur'].forEach(eventType => {
-            const event = new Event(eventType, { bubbles: true, cancelable: true });
-            genreSelect.dispatchEvent(event);
-          });
-          
-          // Verify the change stuck
-          setTimeout(() => {
-            const currentGenre = genreSelect.value;
-            console.log('AI Debug - Genre after change attempt:', currentGenre);
-            
-            if (currentGenre === action.genre) {
-              console.log('AI Debug - Genre change successful!');
-              addMessage(`✅ Genre changed to: ${action.genre}`, 'ai');
-            } else {
-              console.log('AI Debug - Genre change failed, forcing manual refresh');
-              addMessage(`⚠️ Please manually change genre to "${action.genre}" in the sidebar to see your selected creators.`, 'ai');
-            }
-          }, 500);
-          
-        } else {
-          console.log('AI Debug - Genre not found:', action.genre);
-          addMessage(`⚠️ Genre "${action.genre}" not found. Please select it manually from the sidebar dropdown.`, 'ai');
-        }
-      }
+      // DON'T change genre - work with current one
+      const currentGenre = action.genre;
+      console.log('AI Debug - Using current genre:', currentGenre);
       
       // Set budget
       const budgetInput = document.getElementById('budget');
       if (budgetInput) {
         budgetInput.value = action.budget;
         console.log('AI Debug - Set budget to:', action.budget);
-        
-        // Trigger change event
-        const event = new Event('change', { bubbles: true });
-        budgetInput.dispatchEvent(event);
       }
       
-      // Find and select creators
-      console.log('AI Debug - Looking for creators in genre:', action.genre);
+      // Find and select creators from current genre
+      console.log('AI Debug - Looking for creators in current genre:', currentGenre);
       console.log('AI Debug - Total creators available:', CREATORS.length);
       
-      const genreCreators = CREATORS.filter(cr => cr.genre === action.genre);
-      console.log('AI Debug - Creators in', action.genre, ':', genreCreators.length);
+      const genreCreators = CREATORS.filter(cr => cr.genre === currentGenre);
+      console.log('AI Debug - Creators in', currentGenre, ':', genreCreators.length);
       
       if (genreCreators.length === 0) {
-        // Try alternative genre names
-        const alternativeGenres = {
-          'Beauty & Skincare': ['Beauty', 'Skincare', 'Makeup'],
-          'Health & Fitness': ['Fitness', 'Health', 'Wellness'],
-          'Gaming & Esports': ['Gaming', 'Games', 'Esports'],
-          'Food & Cooking': ['Food', 'Cooking', 'Culinary']
-        };
-        
-        const alternatives = alternativeGenres[action.genre] || [];
-        let foundCreators = [];
-        
-        for (let altGenre of alternatives) {
-          foundCreators = CREATORS.filter(cr => cr.genre === altGenre);
-          if (foundCreators.length > 0) {
-            console.log('AI Debug - Found creators in alternative genre:', altGenre, foundCreators.length);
-            break;
-          }
-        }
-        
-        if (foundCreators.length === 0) {
-          console.log('AI Debug - No creators found in any genre');
-          addMessage(`❌ Sorry, I couldn't find any ${action.genre.toLowerCase()} creators in the database. Try browsing the Discovery tab manually.`, 'ai');
-          return;
-        } else {
-          genreCreators = foundCreators;
-        }
+        addMessage(`❌ No creators found in "${currentGenre}". Try changing to a different genre first, then ask me to select creators.`, 'ai');
+        return;
       }
       
       // Select top creators by CPI
@@ -17632,7 +17533,7 @@ document.addEventListener('click', function(e) {
       
       console.log('AI Debug - selectedCreators now has:', selectedCreators.size, 'creators');
       
-      // Set objectives if the elements exist
+      // Set objectives
       action.objectives.forEach(objective => {
         const objectiveChip = document.querySelector(`[data-obj="${objective}"]`);
         if (objectiveChip) {
@@ -17641,62 +17542,27 @@ document.addEventListener('click', function(e) {
         }
       });
       
-      // Refresh display with verification
-      console.log('AI Debug - Refreshing creator grid...');
-      
+      // Refresh display (no genre/screen switching needed)
       if (typeof renderCreatorGrid === 'function') {
         renderCreatorGrid();
-        console.log('AI Debug - renderCreatorGrid() called');
+        console.log('AI Debug - Refreshed creator grid');
       }
-      
-      // Force switch to discovery screen  
-      const discoveryTab = document.querySelector('[data-screen="discovery"]');
-      if (discoveryTab) {
-        // Remove active from all tabs first
-        document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        
-        // Activate discovery
-        discoveryTab.classList.add('active');
-        const discoveryScreen = document.getElementById('screen-discovery');
-        if (discoveryScreen) {
-          discoveryScreen.classList.add('active');
-          console.log('AI Debug - Switched to discovery screen');
-        }
-        
-        // Call showScreen function if it exists
-        if (typeof showScreen === 'function') {
-          showScreen('discovery', discoveryTab);
-          console.log('AI Debug - Called showScreen function');
-        }
-      }
-      
-      // Final verification after a delay
-      setTimeout(() => {
-        const finalGenre = document.getElementById('genre')?.value;
-        const finalSelection = selectedCreators.size;
-        console.log('AI Debug - Final verification - Genre:', finalGenre, 'Selected:', finalSelection);
-        
-        if (finalSelection === action.count) {
-          addMessage(`🔄 **Tip:** If you don't see the beauty creators, manually change the genre dropdown in the sidebar to "Beauty & Skincare" to view your ${finalSelection} selected creators.`, 'ai');
-        }
-      }, 1500);
       
       // Success message with details
-      const successMsg = `✅ Campaign created! Selected ${targetCreators.length} ${action.genre.toLowerCase()} creators:
+      const successMsg = `✅ Selected ${targetCreators.length} top ${currentGenre.toLowerCase()} creators:
       
-📊 **Budget:** $${action.budget.toLocaleString()}
 👥 **Creators:** ${targetCreators.map(c => c.name).join(', ')}
+📊 **Budget:** $${action.budget.toLocaleString()}
 🎯 **Objectives:** ${action.objectives.join(', ')}
 
-Check the Discovery tab to see your selections!`;
+Look for the "✓ SELECTED" buttons below!`;
       
       addMessage(successMsg, 'ai');
       console.log('AI Debug - Campaign creation completed successfully');
       
     } catch (error) {
       console.error('AI Assistant Action Error:', error);
-      addMessage(`❌ There was an error creating your campaign: ${error.message}. Please try again or create the campaign manually.`, 'ai');
+      addMessage(`❌ Error selecting creators: ${error.message}. Please try again.`, 'ai');
     }
   }
   
