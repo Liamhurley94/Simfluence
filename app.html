@@ -17012,43 +17012,48 @@ document.addEventListener('DOMContentLoaded', function() {
   // AUTO-SELECT CREATORS (Personas screen) — direct wire
   wire('personaAutoSelectBtn', function() { if(typeof personaAutoSelect==='function') personaAutoSelect(); });
 
-  // ── SMART PERSONA FILTERS (SIMPLIFIED) ────────────────────────────────
-  // Simple, reliable filter system for AI persona matching
+  // ── PERSONA FILTER DIAGNOSTIC & SETUP ───────────────────────────────
   
-  window.personaFilters = {
-    region: [],
-    language: [],
-    platform: [],
-    tier: '',
-    minSubs: '',
-    maxSubs: '',
-    minEng: '',
-    maxEng: '',
-    minCpi: '',
-    maxCpi: ''
+  // Simple test function
+  window.testPersonaFilters = function() {
+    console.log('🧪 Testing persona filters...');
+    console.log('CREATORS array length:', typeof CREATORS !== 'undefined' ? CREATORS.length : 'undefined');
+    console.log('selectedCreators:', typeof selectedCreators !== 'undefined' ? selectedCreators.size : 'undefined');
+    
+    // Test UAE detection
+    if (typeof CREATORS !== 'undefined') {
+      var uaeCount = 0;
+      CREATORS.forEach(function(creator) {
+        var country = (creator.country || '').toLowerCase();
+        var bio = (creator.bio || '').toLowerCase();
+        var name = (creator.name || '').toLowerCase();
+        
+        if (country === 'ae' || bio.includes('uae') || bio.includes('dubai') || name.includes('dubai')) {
+          uaeCount++;
+          if (uaeCount <= 5) console.log('UAE creator found:', creator.name, '- Country:', creator.country);
+        }
+      });
+      console.log('Total UAE creators found:', uaeCount);
+    }
+    
+    // Test button existence
+    var buttons = ['quickFilterUAE', 'resetFiltersBtn', 'runPersonaSimulation'];
+    buttons.forEach(function(id) {
+      var btn = document.getElementById(id);
+      console.log('Button ' + id + ':', btn ? 'EXISTS' : 'MISSING');
+    });
   };
 
-  function parseSubsString(str) {
-    if (!str) return 0;
-    str = str.toString().toUpperCase().replace(/[^0-9.KMB]/g, '');
-    var num = parseFloat(str) || 0;
-    if (str.includes('K')) num *= 1000;
-    else if (str.includes('M')) num *= 1000000;
-    else if (str.includes('B')) num *= 1000000000;
-    return num;
-  }
-
-  function getCreatorSubsNumber(creator) {
-    if (typeof creator.subs === 'number') return creator.subs;
-    return parseSubsString(creator.subs);
-  }
-
-  function getFilteredCreators() {
-    if (typeof CREATORS === 'undefined' || !CREATORS) return [];
+  // Simple working filter system
+  window.simpleUAEFilter = function() {
+    console.log('🇦🇪 Simple UAE filter starting...');
     
-    console.log('🔍 Filtering creators with:', window.personaFilters);
+    if (typeof CREATORS === 'undefined') {
+      alert('CREATORS array not found!');
+      return;
+    }
     
-    // Find UAE creators first
+    // Find UAE creators
     var uaeCreators = CREATORS.filter(function(creator) {
       var country = (creator.country || '').toLowerCase();
       var bio = (creator.bio || '').toLowerCase();
@@ -17059,189 +17064,86 @@ document.addEventListener('DOMContentLoaded', function() {
              bio.includes('dubai') || 
              bio.includes('abu dhabi') ||
              bio.includes('emirates') ||
-             name.includes('dubai') ||
-             name.includes('uae');
+             name.includes('dubai');
     });
     
-    console.log('Found', uaeCreators.length, 'UAE creators:', uaeCreators.slice(0,5).map(c => c.name));
+    console.log('Found', uaeCreators.length, 'UAE creators');
     
-    var filtered = CREATORS.filter(function(creator) {
-      // Region filter
-      if (window.personaFilters.region.length > 0) {
-        var country = (creator.country || '').toLowerCase();
-        var bio = (creator.bio || '').toLowerCase();
-        var name = (creator.name || '').toLowerCase();
-        
-        var hasRegion = window.personaFilters.region.some(function(r) {
-          if (r === 'AE' || r === 'UAE') {
-            return country === 'ae' || 
-                   bio.includes('uae') || 
-                   bio.includes('dubai') || 
-                   bio.includes('abu dhabi') ||
-                   bio.includes('emirates') ||
-                   name.includes('dubai') ||
-                   name.includes('uae');
-          }
-          return country === r.toLowerCase() || bio.includes(r.toLowerCase());
-        });
-        
-        if (!hasRegion) return false;
-      }
-
-      // Language filter
-      if (window.personaFilters.language.length > 0) {
-        var hasLanguage = window.personaFilters.language.includes(creator.language);
-        if (!hasLanguage) return false;
-      }
-
-      // Platform filter
-      if (window.personaFilters.platform.length > 0) {
-        var hasPlatform = window.personaFilters.platform.includes(creator.platform);
-        if (!hasPlatform) return false;
-      }
-
-      return true;
-    });
-
-    console.log('✅ Filtered to', filtered.length, 'creators');
-    return filtered;
-  }
-
-  function updateFilterCount() {
-    var filtered = getFilteredCreators();
-    var count = filtered.length;
-    var el = document.getElementById('filterPreviewCount');
+    // Update counter
+    var counter = document.getElementById('filterPreviewCount');
+    if (counter) {
+      counter.textContent = '~' + uaeCreators.length + ' creators';
+      counter.style.color = '#00D47A';
+      counter.style.background = 'rgba(0,212,122,0.1)';
+    }
     
-    if (el) {
-      el.textContent = '~' + count + ' creators';
+    alert('✅ Found ' + uaeCreators.length + ' UAE creators!');
+  };
+
+  window.simpleSimulation = function() {
+    console.log('🎯 Simple simulation starting...');
+    
+    if (typeof selectedCreators === 'undefined') {
+      alert('selectedCreators not found!');
+      return;
+    }
+    
+    if (typeof CREATORS === 'undefined') {
+      alert('CREATORS array not found!');
+      return;
+    }
+    
+    // Get UAE creators
+    var uaeCreators = CREATORS.filter(function(creator) {
+      var country = (creator.country || '').toLowerCase();
+      var bio = (creator.bio || '').toLowerCase();
+      var name = (creator.name || '').toLowerCase();
       
-      if (count < 100) {
-        el.style.color = '#00D47A';
-        el.style.background = 'rgba(0,212,122,0.1)';
-      } else if (count < 500) {
-        el.style.color = '#FFD400';
-        el.style.background = 'rgba(255,212,0,0.1)';
-      } else {
-        el.style.color = '#FF7300';
-        el.style.background = 'rgba(255,115,0,0.1)';
-      }
-    }
-  }
-
-  // Direct event handlers (bypass wire function)
-  function setupPersonaFilters() {
-    console.log('🎯 Setting up persona filters...');
-    
-    // UAE Quick Filter
-    var uaeBtn = document.getElementById('quickFilterUAE');
-    if (uaeBtn) {
-      uaeBtn.onclick = function() {
-        console.log('🇦🇪 UAE filter clicked');
-        
-        window.personaFilters.region = ['AE'];
-        window.personaFilters.language = ['English'];
-        
-        // Update UI
-        var regionEl = document.getElementById('regionFilter');
-        var langEl = document.getElementById('languageFilter');
-        
-        if (regionEl) {
-          Array.from(regionEl.options).forEach(opt => opt.selected = false);
-          Array.from(regionEl.options).forEach(opt => {
-            if (opt.value === 'AE') opt.selected = true;
-          });
-        }
-        
-        if (langEl) {
-          Array.from(langEl.options).forEach(opt => opt.selected = false);
-          Array.from(langEl.options).forEach(opt => {
-            if (opt.value === 'English') opt.selected = true;
-          });
-        }
-        
-        updateFilterCount();
-      };
-    }
-
-    // Reset Filter
-    var resetBtn = document.getElementById('resetFiltersBtn');
-    if (resetBtn) {
-      resetBtn.onclick = function() {
-        console.log('🔄 Reset filters');
-        
-        window.personaFilters = {
-          region: [],
-          language: [],
-          platform: [],
-          tier: '',
-          minSubs: '',
-          maxSubs: '',
-          minEng: '',
-          maxEng: '',
-          minCpi: '',
-          maxCpi: ''
-        };
-        
-        // Reset UI
-        ['regionFilter', 'languageFilter', 'platformFilter'].forEach(function(id) {
-          var el = document.getElementById(id);
-          if (el) Array.from(el.options).forEach(opt => opt.selected = false);
-        });
-        
-        updateFilterCount();
-      };
-    }
-
-    // Simulate Filtered
-    var simBtn = document.getElementById('runPersonaSimulation');
-    if (simBtn) {
-      simBtn.onclick = function() {
-        console.log('🎯 Simulate filtered clicked');
-        
-        var filtered = getFilteredCreators();
-        console.log('Simulating with', filtered.length, 'creators');
-        
-        if (filtered.length === 0) {
-          alert('No creators match your filters. Try adjusting the criteria.');
-          return;
-        }
-
-        // Clear and set new selection
-        selectedCreators.clear();
-        filtered.slice(0, 25).forEach(function(creator) {
-          selectedCreators.add(creator.id);
-        });
-        
-        console.log('Selected', selectedCreators.size, 'creators');
-        
-        // Update display
-        if (typeof updateSelectedCreatorDisplay === 'function') {
-          updateSelectedCreatorDisplay();
-        }
-        
-        alert('✅ Selected ' + Math.min(filtered.length, 25) + ' creators!\n\nSwitch to Simulator tab to run analysis.');
-      };
-    }
-
-    // Multi-select handlers
-    ['regionFilter', 'languageFilter', 'platformFilter'].forEach(function(id) {
-      var el = document.getElementById(id);
-      if (el) {
-        el.addEventListener('change', function() {
-          var filterKey = id.replace('Filter', '');
-          window.personaFilters[filterKey] = Array.from(this.selectedOptions)
-            .map(opt => opt.value)
-            .filter(Boolean);
-          
-          console.log(filterKey + ' changed:', window.personaFilters[filterKey]);
-          updateFilterCount();
-        });
-      }
+      return country === 'ae' || 
+             bio.includes('uae') || 
+             bio.includes('dubai') || 
+             bio.includes('abu dhabi') ||
+             name.includes('dubai');
     });
+    
+    console.log('Selecting from', uaeCreators.length, 'UAE creators');
+    
+    // Clear and select
+    selectedCreators.clear();
+    uaeCreators.slice(0, 10).forEach(function(creator) {
+      selectedCreators.add(creator.id);
+    });
+    
+    console.log('Selected', selectedCreators.size, 'creators');
+    alert('✅ Selected ' + selectedCreators.size + ' UAE creators for simulation!');
+  };
 
-    // Initial count
-    updateFilterCount();
-  }
+  // Attach simple handlers directly to buttons when DOM loads
+  document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(function() {
+      console.log('🎯 Attaching simple persona handlers...');
+      
+      var uaeBtn = document.getElementById('quickFilterUAE');
+      if (uaeBtn) {
+        uaeBtn.onclick = window.simpleUAEFilter;
+        console.log('✅ UAE button handler attached');
+      } else {
+        console.log('❌ UAE button not found');
+      }
+      
+      var simBtn = document.getElementById('runPersonaSimulation');
+      if (simBtn) {
+        simBtn.onclick = window.simpleSimulation;
+        console.log('✅ Simulation button handler attached');
+      } else {
+        console.log('❌ Simulation button not found');
+      }
+      
+      // Test everything
+      window.testPersonaFilters();
+      
+    }, 1000);
+  });
 
   // CANCEL in outreach modal
   wire('cancelOutreachBtn', function() { if(typeof closeOutreachModal==='function') closeOutreachModal(); });
