@@ -17042,14 +17042,19 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function getFilteredCreators() {
-    if (typeof CREATORS === 'undefined') return [];
+    if (typeof CREATORS === 'undefined' || !CREATORS) {
+      console.warn('CREATORS array not found');
+      return [];
+    }
     
-    return CREATORS.filter(function(creator) {
+    console.log('Filtering from', CREATORS.length, 'total creators with filters:', personaFilters);
+    
+    var filtered = CREATORS.filter(function(creator) {
       // Region filter
       if (personaFilters.region.length > 0) {
         var creatorCountry = creator.country || '';
         var hasRegion = personaFilters.region.some(function(r) {
-          return creatorCountry === r || (creator.bio && creator.bio.includes(r));
+          return creatorCountry === r || (creator.bio && creator.bio.toLowerCase().includes(r.toLowerCase()));
         });
         if (!hasRegion) return false;
       }
@@ -17110,14 +17115,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
       return true;
     });
+
+    console.log('Filtered to', filtered.length, 'creators');
+    return filtered;
   }
 
   function setupFilterListeners() {
+    console.log('Setting up filter listeners...');
+
     // Region filter
     var regionEl = document.getElementById('regionFilter');
     if (regionEl) {
       regionEl.addEventListener('change', function() {
         personaFilters.region = Array.from(this.selectedOptions).map(function(opt) { return opt.value; }).filter(Boolean);
+        console.log('Region filter changed:', personaFilters.region);
         updateFilterCount();
       });
     }
@@ -17127,6 +17138,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (langEl) {
       langEl.addEventListener('change', function() {
         personaFilters.language = Array.from(this.selectedOptions).map(function(opt) { return opt.value; }).filter(Boolean);
+        console.log('Language filter changed:', personaFilters.language);
         updateFilterCount();
       });
     }
@@ -17136,6 +17148,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (platEl) {
       platEl.addEventListener('change', function() {
         personaFilters.platform = Array.from(this.selectedOptions).map(function(opt) { return opt.value; }).filter(Boolean);
+        console.log('Platform filter changed:', personaFilters.platform);
         updateFilterCount();
       });
     }
@@ -17145,6 +17158,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (tierEl) {
       tierEl.addEventListener('change', function() {
         personaFilters.tier = this.value;
+        console.log('Tier filter changed:', personaFilters.tier);
         updateFilterCount();
       });
     }
@@ -17155,6 +17169,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (el) {
         el.addEventListener('input', function() {
           personaFilters[filterId] = this.value;
+          console.log(filterId + ' filter changed:', this.value);
           updateFilterCount();
         });
       }
@@ -17162,33 +17177,62 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Quick filters
     wire('quickFilterUAE', function() {
-      document.getElementById('regionFilter').value = 'AE';
-      document.getElementById('languageFilter').value = 'English';
+      var regionEl = document.getElementById('regionFilter');
+      var langEl = document.getElementById('languageFilter');
+      
+      if (regionEl) {
+        // Select UAE option
+        for (var i = 0; i < regionEl.options.length; i++) {
+          if (regionEl.options[i].value === 'AE') {
+            regionEl.options[i].selected = true;
+            break;
+          }
+        }
+      }
+      
+      if (langEl) {
+        // Select English option
+        for (var i = 0; i < langEl.options.length; i++) {
+          if (langEl.options[i].value === 'English') {
+            langEl.options[i].selected = true;
+            break;
+          }
+        }
+      }
+      
       personaFilters.region = ['AE'];
       personaFilters.language = ['English'];
+      console.log('UAE quick filter applied');
       updateFilterCount();
     });
 
     wire('quickFilterFitness', function() {
       var genreSelect = document.getElementById('genreSelect');
       if (genreSelect) genreSelect.value = 'Sports & Athletics';
+      console.log('Fitness quick filter applied');
       updateFilterCount();
     });
 
     wire('quickFilterMega', function() {
-      document.getElementById('tierFilter').value = 'mega';
+      var tierEl = document.getElementById('tierFilter');
+      if (tierEl) tierEl.value = 'mega';
       personaFilters.tier = 'mega';
+      console.log('Mega tier quick filter applied');
       updateFilterCount();
     });
 
     wire('quickFilterHighEng', function() {
-      document.getElementById('minEngFilter').value = '5';
+      var minEngEl = document.getElementById('minEngFilter');
+      if (minEngEl) minEngEl.value = '5';
       personaFilters.minEng = '5';
+      console.log('High engagement quick filter applied');
       updateFilterCount();
     });
 
     // Reset filters
     wire('resetFiltersBtn', function() {
+      console.log('Resetting all filters...');
+      
       personaFilters = {
         region: [],
         language: [],
@@ -17206,7 +17250,12 @@ document.addEventListener('DOMContentLoaded', function() {
       // Reset all form elements
       ['regionFilter', 'languageFilter', 'platformFilter', 'tierFilter'].forEach(function(id) {
         var el = document.getElementById(id);
-        if (el) el.selectedIndex = 0;
+        if (el) {
+          el.selectedIndex = -1; // Clear all selections for multi-select
+          if (el.multiple) {
+            Array.from(el.options).forEach(function(opt) { opt.selected = false; });
+          }
+        }
       });
       
       ['minSubsFilter', 'maxSubsFilter', 'minEngFilter', 'maxEngFilter', 'minCpiFilter', 'maxCpiFilter'].forEach(function(id) {
@@ -17222,14 +17271,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Filtered simulation
     wire('runPersonaSimulation', function() {
-      var mode = document.getElementById('simulationMode').value;
+      console.log('🎯 Running filtered persona simulation...');
+      
+      var modeEl = document.getElementById('simulationMode');
+      var mode = modeEl ? modeEl.value : 'balanced';
       var limits = { quick: 10, balanced: 25, comprehensive: 50 };
       var limit = limits[mode] || 25;
       
       var filtered = getFilteredCreators().slice(0, limit);
+      console.log('Filtered creators:', filtered.length, 'of limit:', limit);
       
       if (filtered.length === 0) {
-        alert('No creators match your filters. Try adjusting the criteria.');
+        alert('No creators match your filters. Try adjusting the criteria or use the Reset button.');
         return;
       }
 
@@ -17239,17 +17292,35 @@ document.addEventListener('DOMContentLoaded', function() {
         filtered.forEach(function(creator) {
           selectedCreators.add(creator.id);
         });
-        if (typeof updateSelectedCreatorDisplay === 'function') updateSelectedCreatorDisplay();
+        console.log('Selected creators:', selectedCreators.size);
+        
+        if (typeof updateSelectedCreatorDisplay === 'function') {
+          updateSelectedCreatorDisplay();
+        }
       }
 
-      alert(filtered.length + ' creators selected for simulation. Switch to Simulator to run analysis.');
+      // Show success message and suggest next step
+      var message = '✅ ' + filtered.length + ' ' + (mode === 'quick' ? 'targeted' : mode === 'comprehensive' ? 'comprehensive' : 'balanced') + ' creators selected!\n\n';
+      message += 'Switch to the Simulator tab to run your campaign analysis.';
+      
+      alert(message);
+      
+      // Optionally auto-switch to simulator
+      var switchToSim = confirm('Would you like to switch to the Simulator now?');
+      if (switchToSim && typeof showScreen === 'function') {
+        showScreen('simulator', document.querySelector('[data-screen="simulator"]'));
+      }
     });
   }
 
   // Initialize filters when persona screen loads
   function initPersonaFilters() {
-    setupFilterListeners();
-    updateFilterCount();
+    // Add small delay to ensure DOM is ready
+    setTimeout(function() {
+      setupFilterListeners();
+      updateFilterCount();
+      console.log('🎯 Persona filters initialized');
+    }, 200);
   }
 
   // CANCEL in outreach modal
