@@ -17053,7 +17053,7 @@ document.addEventListener('click', function(e) {
 (function() {
   'use strict';
   
-  // Wait for DOM and existing platform to load
+  // Initialize AI Assistant and load chat history
   function initializeAIAssistant() {
     // Check if required platform functions exist
     if (typeof CREATORS === 'undefined' || 
@@ -17066,6 +17066,74 @@ document.addEventListener('click', function(e) {
     
     console.log('AI Assistant: Platform ready, initializing...');
     createAIInterface();
+    loadChatHistory(); // Load previous conversation
+  }
+  
+  // Load chat history from sessionStorage
+  function loadChatHistory() {
+    try {
+      const history = sessionStorage.getItem('ai_chat_history');
+      if (history) {
+        const messages = JSON.parse(history);
+        const messagesContainer = document.getElementById('ai-chat-messages');
+        if (messagesContainer && messages.length > 0) {
+          // Clear default welcome message
+          messagesContainer.innerHTML = '';
+          
+          // Restore messages
+          messages.forEach(msg => {
+            addMessage(msg.text, msg.sender, false); // false = don't save to storage
+          });
+          
+          console.log('AI Assistant: Restored', messages.length, 'messages from history');
+        }
+      }
+    } catch (e) {
+      console.log('AI Assistant: Could not load chat history:', e);
+    }
+  }
+  
+  // Save chat history to sessionStorage
+  function saveChatHistory() {
+    try {
+      const messages = Array.from(document.querySelectorAll('#ai-chat-messages .ai-message, #ai-chat-messages .user-message'))
+        .map(msgEl => {
+          const isUser = msgEl.classList.contains('user-message');
+          const textEl = msgEl.querySelector('div:last-child');
+          return {
+            text: textEl ? textEl.innerHTML : '',
+            sender: isUser ? 'user' : 'ai'
+          };
+        })
+        .slice(-20); // Keep only last 20 messages
+      
+      sessionStorage.setItem('ai_chat_history', JSON.stringify(messages));
+    } catch (e) {
+      console.log('AI Assistant: Could not save chat history:', e);
+    }
+  }
+  
+  // Clear chat history
+  function clearChatHistory() {
+    try {
+      sessionStorage.removeItem('ai_chat_history');
+      const messagesContainer = document.getElementById('ai-chat-messages');
+      if (messagesContainer) {
+        messagesContainer.innerHTML = `
+          <div class="ai-message">
+            <div style="color: #FFD400; font-size: 10px; margin-bottom: 4px; font-weight: 600;">AI ASSISTANT</div>
+            <div style="font-size: 12px; color: #F0F2FF;">
+              Chat cleared! I can help you build campaigns instantly. Try:<br><br>
+              • <strong>"Find 5 beauty creators for makeup launch"</strong><br>
+              • <strong>"I need fitness influencers, budget $50k"</strong><br>
+              • <strong>"Gaming creators for mobile game launch"</strong>
+            </div>
+          </div>
+        `;
+      }
+    } catch (e) {
+      console.log('AI Assistant: Could not clear chat history:', e);
+    }
   }
   
   // Create the AI assistant interface
@@ -17136,13 +17204,24 @@ document.addEventListener('click', function(e) {
             <span style="font-size: 20px;">🤖</span>
             <span style="font-weight: 600; color: #FFD400;">Campaign AI Assistant</span>
           </div>
-          <button id="ai-close-btn" style="
-            background: none;
-            border: none;
-            color: rgba(255,255,255,0.5);
-            cursor: pointer;
-            font-size: 16px;
-          ">✕</button>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <button id="ai-clear-btn" onclick="clearChatHistory()" style="
+              background: none;
+              border: none;
+              color: rgba(255,255,255,0.3);
+              cursor: pointer;
+              font-size: 12px;
+              padding: 4px 6px;
+              border-radius: 3px;
+            " title="Clear chat history">🗑️</button>
+            <button id="ai-close-btn" style="
+              background: none;
+              border: none;
+              color: rgba(255,255,255,0.5);
+              cursor: pointer;
+              font-size: 16px;
+            ">✕</button>
+          </div>
         </div>
         
         <!-- Messages -->
@@ -17353,22 +17432,12 @@ document.addEventListener('click', function(e) {
   function generateAIResponse(message) {
     const msg = message.toLowerCase();
     
-    // Fitness/Health campaigns
-    if (msg.includes('fitness') || msg.includes('protein') || msg.includes('gym') || msg.includes('health')) {
-      return {
-        text: "Perfect! I'll find top fitness creators for your protein powder campaign. Selecting creators with high engagement in the fitness community...",
-        action: {
-          type: 'create_campaign',
-          genre: 'Health & Fitness',
-          count: extractNumber(message) || 5,
-          budget: extractBudget(message) || 50000,
-          objectives: ['Brand Awareness', 'Direct Sales']
-        }
-      };
-    }
+    console.log('AI Debug - Input:', message);
+    console.log('AI Debug - Lowercase:', msg);
     
     // Beauty campaigns  
     if (msg.includes('beauty') || msg.includes('makeup') || msg.includes('skincare') || msg.includes('cosmetic')) {
+      console.log('AI Debug - Matched: Beauty campaign');
       return {
         text: "Great choice! I'll curate beauty creators for your campaign. Selecting a mix of macro and micro-influencers for balanced reach and engagement...",
         action: {
@@ -17381,8 +17450,24 @@ document.addEventListener('click', function(e) {
       };
     }
     
+    // Fitness/Health campaigns
+    if (msg.includes('fitness') || msg.includes('protein') || msg.includes('gym') || msg.includes('health')) {
+      console.log('AI Debug - Matched: Fitness campaign');
+      return {
+        text: "Perfect! I'll find top fitness creators for your protein powder campaign. Selecting creators with high engagement in the fitness community...",
+        action: {
+          type: 'create_campaign',
+          genre: 'Health & Fitness',
+          count: extractNumber(message) || 5,
+          budget: extractBudget(message) || 50000,
+          objectives: ['Brand Awareness', 'Direct Sales']
+        }
+      };
+    }
+    
     // Gaming campaigns
     if (msg.includes('gaming') || msg.includes('game') || msg.includes('mobile') || msg.includes('esports')) {
+      console.log('AI Debug - Matched: Gaming campaign');
       return {
         text: "Excellent! I'll select gaming creators perfect for your launch. Focusing on creators with strong engagement in the 18-25 demographic...",
         action: {
@@ -17397,6 +17482,7 @@ document.addEventListener('click', function(e) {
     
     // Travel campaigns
     if (msg.includes('travel') || msg.includes('adventure') || msg.includes('destination')) {
+      console.log('AI Debug - Matched: Travel campaign');
       return {
         text: "Amazing! I'll find travel creators for your campaign. Selecting creators known for high-quality destination content...",
         action: {
@@ -17411,6 +17497,7 @@ document.addEventListener('click', function(e) {
     
     // Food campaigns
     if (msg.includes('food') || msg.includes('cooking') || msg.includes('recipe') || msg.includes('restaurant')) {
+      console.log('AI Debug - Matched: Food campaign');
       return {
         text: "Delicious! I'll find food creators for your campaign. Selecting creators with engaging cooking content and strong community...",
         action: {
@@ -17423,12 +17510,17 @@ document.addEventListener('click', function(e) {
       };
     }
     
+    console.log('AI Debug - No match found, showing default');
+    
     // Default response
     return {
       text: "I can help you create campaigns for fitness, beauty, gaming, travel, food and more! Try being more specific about the industry and your budget. For example: 'Find 5 beauty creators for skincare launch, budget $50k'",
       action: null
     };
   }
+  
+  // Make function available for debugging
+  window.generateAIResponse = generateAIResponse;
   
   // Execute campaign action
   function executeAction(action) {
@@ -17494,7 +17586,7 @@ document.addEventListener('click', function(e) {
   }
   
   // Add message to chat
-  function addMessage(text, sender) {
+  function addMessage(text, sender, saveToHistory = true) {
     const messages = document.getElementById('ai-chat-messages');
     const isUser = sender === 'user';
     
@@ -17511,6 +17603,11 @@ document.addEventListener('click', function(e) {
     
     messages.insertAdjacentHTML('beforeend', messageHTML);
     messages.scrollTop = messages.scrollHeight;
+    
+    // Save to history
+    if (saveToHistory) {
+      saveChatHistory();
+    }
   }
   
   // Typing indicator
@@ -17554,6 +17651,7 @@ document.addEventListener('click', function(e) {
   // Make functions available for tier re-gating
   window.createAIInterface = createAIInterface;
   window.createLockedAIInterface = createLockedAIInterface;
+  window.clearChatHistory = clearChatHistory;
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initializeAIAssistant);
   } else {
