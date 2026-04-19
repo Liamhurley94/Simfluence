@@ -1850,7 +1850,8 @@ if (document.readyState === 'loading') {
 
 
 <script>
-// ── CAPTURE-PHASE HANDLERS (Cloudflare strips onclick) ───────────────
+// ── CAPTURE-PHASE HANDLERS DISABLED (was blocking Legal/Terms links) ───────────────
+/*
 document.addEventListener('click', function(e) {
   var el = e.target;
   while (el && el !== document) {
@@ -1888,6 +1889,8 @@ document.addEventListener('click', function(e) {
     el = el.parentElement;
   }
 }, true);
+*/
+console.log('FIXED: Removed capture-phase handler that was blocking clicks');
 </script>
 </body>
 </html>
