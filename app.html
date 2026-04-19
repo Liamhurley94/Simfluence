@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Simfluence app.html v19.04.2026 | 6102 creators | NEW TWITCH IMPORT | cache-bust -->
+<!-- Simfluence app.html v13.04.2026 | 167 creators | cpiScoreColor fix | stat labels visible -->
 
 <html lang="en">
 <head>
@@ -14,7 +14,7 @@
 <meta name="copyright" content="© 2026 Simfluence Ltd. All rights reserved.">
 <meta name="description" content="Simfluence Campaign Intelligence Platform - Proprietary algorithms and data protected by intellectual property law.">
 
-<title>Simfluence — Brand Platform [6102-CREATORS-v2]</title>
+<title>Simfluence — Brand Platform</title>
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Manrope:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -3922,9 +3922,8 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="field">
           <label>Campaign Genre</label>
           <select id="genre" >
-            <option selected>ALL</option>
             <optgroup label="— Core Entertainment —">
-              <option>Gaming &amp; Esports</option>
+              <option selected>Gaming &amp; Esports</option>
               <option>Entertainment &amp; Comedy</option>
               <option>Music</option>
               <option>Theatre &amp; Performing Arts</option>
@@ -4125,7 +4124,7 @@ document.addEventListener('DOMContentLoaded', function() {
       <div class="page-header">
         <div>
           <div class="page-title">Creator <em>Discovery</em></div>
-          <div class="page-meta" id="discoveryMeta">ALL CREATORS · GAMING &amp; ESPORTS · DEBUG VERSION</div>
+          <div class="page-meta" id="discoveryMeta">ALL CREATORS · GAMING &amp; ESPORTS</div>
         </div>
         <div style="display:flex;gap:8px;align-items:center">
           <select id="sortModeSelect" style="font-family:Manrope,sans-serif;font-weight:500;font-size:10px;background:var(--bg3);border:1px solid var(--border);color:var(--text-dim);padding:6px 10px;border-radius:var(--radius)">
@@ -11595,22 +11594,6 @@ var currentPage = 1;
 var pageSize = 25;
 var activePlatforms = new Set(); // empty = show all
 var activeLanguages = new Set(); // empty = show all
-// Create debug display
-var debugDiv = document.createElement('div');
-debugDiv.id = 'debugOutput';
-debugDiv.style.cssText = 'position:fixed;top:10px;right:10px;background:rgba(0,0,0,0.9);color:#00ff00;padding:10px;font-family:monospace;font-size:11px;border:1px solid #333;border-radius:4px;max-width:400px;max-height:300px;overflow-y:auto;z-index:9999';
-debugDiv.innerHTML = '<div style="color:#ffff00;font-weight:bold">DEBUG LOG</div>';
-document.body.appendChild(debugDiv);
-
-function console.log(msg) {
-  var debugDiv = document.getElementById('debugOutput');
-  if (debugDiv) {
-    debugDiv.innerHTML += '<div>' + msg + '</div>';
-    debugDiv.scrollTop = debugDiv.scrollHeight;
-  }
-}
-
-console.log('activeLanguages initialized as empty, size: ' + activeLanguages.size);
 
 function sfRenderPagination(elId, totalPages) {
   var el = document.getElementById(elId);
@@ -11766,29 +11749,6 @@ function avgViewsLabel(cr) {
 
 function renderCreatorGrid(keepPage) {
   if (!keepPage) currentPage = 1;
-  
-  // ── DEBUG DISPLAY ─────────────────────────────────────────────────
-  var debugDiv = document.getElementById('pageDebugOutput') || document.createElement('div');
-  if (!document.getElementById('pageDebugOutput')) {
-    debugDiv.id = 'pageDebugOutput';
-    debugDiv.style.cssText = 'position:fixed;top:10px;left:10px;background:black;color:lime;padding:8px;border-radius:4px;font-family:monospace;font-size:10px;max-width:400px;z-index:9999;max-height:300px;overflow-y:auto;';
-    document.body.appendChild(debugDiv);
-  }
-  const genre = getSelectedGenre();
-  
-  // Test first 5 creators to see where they fail
-  var debugInfo = '<strong>🔧 DEBUG</strong><br>Genre: ' + genre + '<br>Total creators: ' + CREATORS.length + '<br><br>';
-  
-  for (let i = 0; i < Math.min(5, CREATORS.length); i++) {
-    const cr = CREATORS[i];
-    debugInfo += '<strong>' + cr.name + '</strong><br>';
-    debugInfo += '- Budget: ' + (passedBudgetFilter ? passedBudgetFilter(cr) : 'unknown') + '<br>';
-    debugInfo += '- Tier: ' + (passedTierFilter ? passedTierFilter(cr) : 'unknown') + '<br>';
-    debugInfo += '- Lang: ' + (passedLangFilter ? passedLangFilter(cr) : 'unknown') + '<br>';
-    debugInfo += '- Genre Score: ' + (genreScore ? genreScore(cr) : 'unknown') + '<br><br>';
-  }
-  
-  debugDiv.innerHTML = debugInfo;
   
   // ── AI SELECTION MODE ─────────────────────────────────────────────
   // If AI has made a selection, show only those creators
@@ -12016,7 +11976,6 @@ function renderCreatorGrid(keepPage) {
   // ── Language filter ──────────────────────────────────────────────
   var langEl = document.getElementById('langFilter');
   var selectedLang = langEl ? langEl.value : 'all';
-  console.log('selectedLang from dropdown: ' + selectedLang);
   // Language signal maps for inference when no language field set
   var LANG_SIGNALS = {
     'German':     ['german','deutsch','germany','deutschland','österreich','schweiz'],
@@ -12109,9 +12068,6 @@ function renderCreatorGrid(keepPage) {
 
   // ── Genre filter ──────────────────────────────────────────────────
   function genreScore(cr) {
-    // Handle "ALL" genre selection - show all creators
-    if (genre === 'ALL') return 30;
-    
     // ── UNTAPPED MODE: enforce genre AND subMode match ────────────────
     // We want creators in the right genre pool, not just the same top-level genre.
     // MrBeast Gaming is Gaming & Esports but covers everything — not a valid
@@ -12159,18 +12115,6 @@ function renderCreatorGrid(keepPage) {
       .filter(cr => {
         var hay = (cr.name + ' ' + cr.handle + ' ' + cr.genre + ' ' + cr.platform + ' ' + (cr.bio||'')).toLowerCase();
         if (hay.indexOf(sq) === -1) return false;
-        
-        // Debug MontanaBlack88 specifically
-        if (cr.name === 'MontanaBlack88') {
-          console.log('🔍 MontanaBlack88 found in search!');
-          console.log('- Search term: ' + sq);
-          console.log('- Selected genre: ' + genre);
-          console.log('- Creator genre: ' + cr.genre);
-          console.log('- activeLanguages size: ' + activeLanguages.size);
-          console.log('- activeLanguages: [' + Array.from(activeLanguages).join(',') + ']');
-          console.log('- Creator language: ' + cr.language);
-        }
-        
         // Also apply platform filter during search
         if (activePlatforms.size > 0) {
           var plats = cr.allPlatforms || [cr.platform];
@@ -12179,19 +12123,8 @@ function renderCreatorGrid(keepPage) {
         // Also apply language filter during search
         if (activeLanguages.size > 0) {
           var creatorLang = cr.language || 'English'; // Default to English if not specified
-          if (!activeLanguages.has(creatorLang)) {
-            if (cr.name === 'MontanaBlack88') {
-              console.log('❌ MontanaBlack88 FILTERED OUT by language!');
-              console.log('- Creator lang: ' + creatorLang + ' - Active: [' + Array.from(activeLanguages).join(',') + ']');
-            }
-            return false;
-          }
+          if (!activeLanguages.has(creatorLang)) return false;
         }
-        
-        if (cr.name === 'MontanaBlack88') {
-          console.log('MontanaBlack88 PASSED all filters!');
-        }
-        
         return true;
       })
       .map(cr => {
@@ -12204,7 +12137,7 @@ function renderCreatorGrid(keepPage) {
                      sortMode==='subs' ? parseSubs(cr.subs) / 1e6 :
                      cr.cpi;
         // If genre has been set, rank by score; otherwise rank by CPI descending
-        const total = (genre && genre !== 'all' && genre !== 'ALL') ? (base + gScore + oScore + smScore) : base;
+        const total = (genre && genre !== 'all') ? (base + gScore + oScore + smScore) : base;
         return { cr, total };
       })
       .sort((a,b) => b.total - a.total)
@@ -12276,15 +12209,6 @@ function renderCreatorGrid(keepPage) {
       if (!passedGfiFilter(cr)) return false;
       // Content targeting filter — applied before genre when active
       if (_contentFilterActive && !passedContentFilter(cr)) return false;
-      
-      // Debug MontanaBlack88 genre filtering
-      if (cr.name === 'MontanaBlack88') {
-        console.log('🎯 MontanaBlack88 in discovery mode!');
-        console.log('- Selected genre: ' + genre);
-        console.log('- Creator genre: ' + cr.genre);
-        console.log('- genreScore: ' + genreScore(cr));
-      }
-      
       if (genreScore(cr) < 0) return false;
       return true;
     })
@@ -12313,15 +12237,11 @@ function renderCreatorGrid(keepPage) {
   function languageMatch(cr) {
     if (activeLanguages.size === 0) return true;
     var creatorLang = cr.language || 'English'; // Default to English if not specified
-    var result = activeLanguages.has(creatorLang);
-    if (cr.name === 'MontanaBlack88') {
-      console.log('languageMatch for MontanaBlack88: ' + result + ' creator lang: ' + creatorLang + ' active: [' + Array.from(activeLanguages).join(',') + ']');
-    }
-    return result;
+    return activeLanguages.has(creatorLang);
   }
 
   const display = scored.length >= 3 ? scored.filter(s => platformMatch(s.cr) && languageMatch(s.cr)) : CREATORS
-    .filter(cr => (genre === 'ALL' || cr.genre === genre) && platformMatch(cr) && languageMatch(cr))
+    .filter(cr => cr.genre === genre && platformMatch(cr) && languageMatch(cr))
     .map(cr => ({ cr, total: cr.cpi }))
     .sort((a,b) => b.total - a.total);
 
