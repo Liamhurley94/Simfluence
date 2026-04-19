@@ -3922,8 +3922,9 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="field">
           <label>Campaign Genre</label>
           <select id="genre" >
+            <option selected>ALL</option>
             <optgroup label="— Core Entertainment —">
-              <option selected>Gaming &amp; Esports</option>
+              <option>Gaming &amp; Esports</option>
               <option>Entertainment &amp; Comedy</option>
               <option>Music</option>
               <option>Theatre &amp; Performing Arts</option>
@@ -12085,6 +12086,9 @@ function renderCreatorGrid(keepPage) {
 
   // ── Genre filter ──────────────────────────────────────────────────
   function genreScore(cr) {
+    // Handle "ALL" genre selection - show all creators
+    if (genre === 'ALL') return 30;
+    
     // ── UNTAPPED MODE: enforce genre AND subMode match ────────────────
     // We want creators in the right genre pool, not just the same top-level genre.
     // MrBeast Gaming is Gaming & Esports but covers everything — not a valid
@@ -12135,8 +12139,10 @@ function renderCreatorGrid(keepPage) {
         
         // Debug MontanaBlack88 specifically
         if (cr.name === 'MontanaBlack88') {
-          console.log('MontanaBlack88 found in search!');
+          console.log('🔍 MontanaBlack88 found in search!');
           console.log('- Search term: ' + sq);
+          console.log('- Selected genre: ' + genre);
+          console.log('- Creator genre: ' + cr.genre);
           console.log('- activeLanguages size: ' + activeLanguages.size);
           console.log('- activeLanguages: [' + Array.from(activeLanguages).join(',') + ']');
           console.log('- Creator language: ' + cr.language);
@@ -12152,7 +12158,7 @@ function renderCreatorGrid(keepPage) {
           var creatorLang = cr.language || 'English'; // Default to English if not specified
           if (!activeLanguages.has(creatorLang)) {
             if (cr.name === 'MontanaBlack88') {
-              console.log('MontanaBlack88 FILTERED OUT by language!');
+              console.log('❌ MontanaBlack88 FILTERED OUT by language!');
               console.log('- Creator lang: ' + creatorLang + ' - Active: [' + Array.from(activeLanguages).join(',') + ']');
             }
             return false;
@@ -12175,7 +12181,7 @@ function renderCreatorGrid(keepPage) {
                      sortMode==='subs' ? parseSubs(cr.subs) / 1e6 :
                      cr.cpi;
         // If genre has been set, rank by score; otherwise rank by CPI descending
-        const total = (genre && genre !== 'all') ? (base + gScore + oScore + smScore) : base;
+        const total = (genre && genre !== 'all' && genre !== 'ALL') ? (base + gScore + oScore + smScore) : base;
         return { cr, total };
       })
       .sort((a,b) => b.total - a.total)
@@ -12283,7 +12289,7 @@ function renderCreatorGrid(keepPage) {
   }
 
   const display = scored.length >= 3 ? scored.filter(s => platformMatch(s.cr) && languageMatch(s.cr)) : CREATORS
-    .filter(cr => cr.genre === genre && platformMatch(cr) && languageMatch(cr))
+    .filter(cr => (genre === 'ALL' || cr.genre === genre) && platformMatch(cr) && languageMatch(cr))
     .map(cr => ({ cr, total: cr.cpi }))
     .sort((a,b) => b.total - a.total);
 
