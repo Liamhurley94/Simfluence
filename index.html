@@ -1895,13 +1895,120 @@ console.log('FIXED: Removed capture-phase handler that was blocking clicks');
 // Simple modal function that will work
 function showLegalModal(type) {
   var content = '';
+  var title = '';
+  
   if (type === 'terms') {
-    content = 'Terms of Use\\n\\nEffective Date: 2025\\nJurisdiction: Dubai, UAE\\n\\nAccess to Simfluence is granted on a subscription basis. All creator data, scoring methodologies, forecasting models and platform outputs are proprietary to Simfluence Ltd.\\n\\nContact: Liam@Simfluence.AI';
+    title = 'Terms of Use';
+    content = `
+      <h3 style="color:#6B9FFF; margin-bottom:20px;">Terms of Use</h3>
+      <p><strong>Effective Date:</strong> 2025 | <strong>Jurisdiction:</strong> Dubai, UAE</p>
+      
+      <h4 style="color:#FFD400; margin-top:25px;">Access and Subscription</h4>
+      <p>Access to Simfluence is granted on a subscription basis. Your subscription is personal to your organisation and may not be shared, resold or transferred to any third party.</p>
+      
+      <h4 style="color:#FFD400; margin-top:25px;">Platform Data</h4>
+      <p>All creator data, scoring methodologies, forecasting models and platform outputs are proprietary to Simfluence Ltd. You may not extract, reproduce or redistribute any platform data without written consent.</p>
+      
+      <h4 style="color:#FFD400; margin-top:25px;">Billing and Cancellation</h4>
+      <p>Subscriptions are billed monthly or annually as agreed. All fees are non-refundable except where required by applicable law. Pricing may be updated with 30 days written notice.</p>
+      
+      <h4 style="color:#FFD400; margin-top:25px;">Governing Law</h4>
+      <p>These terms are governed by the laws of the United Arab Emirates. Disputes shall be subject to the exclusive jurisdiction of the courts of Dubai, UAE.</p>
+      
+      <p style="margin-top:25px;"><strong>Contact:</strong> <a href="mailto:liam@simfluence.ai" style="color:#FFD400;">Liam@Simfluence.AI</a></p>
+    `;
   } else if (type === 'legal') {
-    content = 'Legal Notice\\n\\nEntity: LLC | Registered: Dubai, UAE\\n\\nIntellectual Property: The Simfluence name, logo, platform design, CPI, GFI, scoring algorithms are exclusive IP of Simfluence Ltd. Unauthorized use prohibited.\\n\\nContact: Liam@Simfluence.AI';
+    title = 'Legal Notice';
+    content = `
+      <h3 style="color:#9B8FDD; margin-bottom:20px;">Legal Notice</h3>
+      <p><strong>Entity:</strong> LLC | <strong>Registered:</strong> Dubai, UAE | <strong>Incorporated:</strong> 2025</p>
+      
+      <h4 style="color:#FFD400; margin-top:25px;">Entity Information</h4>
+      <p>Simfluence Ltd is registered as a Limited Liability Company in Dubai, UAE. All platform operations and commercial agreements are conducted under this entity.</p>
+      
+      <h4 style="color:#FFD400; margin-top:25px;">Intellectual Property</h4>
+      <p>The Simfluence name, logo, platform design, CPI, GFI, scoring algorithms and forecasting models are the exclusive intellectual property of Simfluence Ltd. Unauthorised use or reproduction is strictly prohibited.</p>
+      
+      <h4 style="color:#FFD400; margin-top:25px;">Data and Privacy</h4>
+      <p>Simfluence processes creator data from publicly available platforms including YouTube and Twitch. User data is handled in accordance with UAE data protection regulations. We do not sell or share user data with third parties.</p>
+      
+      <h4 style="color:#FFD400; margin-top:25px;">Liability Limitation</h4>
+      <p>Simfluence Ltd provides its platform on an as-is basis. To the fullest extent permitted by law, Simfluence excludes all liability for indirect or consequential losses arising from platform use.</p>
+      
+      <p style="margin-top:25px;"><strong>Contact:</strong> <a href="mailto:liam@simfluence.ai" style="color:#FFD400;">Liam@Simfluence.AI</a></p>
+    `;
   }
-  alert(content);
+  
+  // Create modal HTML
+  var modalHTML = `
+    <div id="legalModal" style="
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.9);
+      z-index: 99999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      box-sizing: border-box;
+    ">
+      <div style="
+        background: #1A1A1A;
+        border: 2px solid #FFD700;
+        border-radius: 12px;
+        padding: 30px;
+        max-width: 600px;
+        max-height: 80vh;
+        overflow-y: auto;
+        position: relative;
+        color: white;
+        font-family: Inter, sans-serif;
+        line-height: 1.6;
+      ">
+        <button onclick="closeLegalModal()" style="
+          position: absolute;
+          top: 15px;
+          right: 15px;
+          background: #333;
+          border: none;
+          color: white;
+          width: 30px;
+          height: 30px;
+          border-radius: 50%;
+          cursor: pointer;
+          font-size: 16px;
+        ">×</button>
+        
+        <div>${content}</div>
+      </div>
+    </div>
+  `;
+  
+  // Remove any existing modal
+  var existingModal = document.getElementById('legalModal');
+  if (existingModal) {
+    existingModal.remove();
+  }
+  
+  // Add modal to page
+  document.body.insertAdjacentHTML('beforeend', modalHTML);
+  document.body.style.overflow = 'hidden';
 }
+
+function closeLegalModal() {
+  var modal = document.getElementById('legalModal');
+  if (modal) {
+    modal.remove();
+    document.body.style.overflow = '';
+  }
+}
+
+// Close modal with Escape key
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    closeLegalModal();
+  }
+});
 
 console.log('Legal modal function added');
 </script>
