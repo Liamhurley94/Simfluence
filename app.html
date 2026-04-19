@@ -12108,44 +12108,22 @@ function renderCreatorGrid(keepPage) {
   // Check if content targeting is active
   var _contentFilterActive = sfContentMustInclude.length > 0 || sfContentMustExclude.length > 0 || sfContentUntapped;
 
-  // ── SEARCH MODE: pure lookup, zero restrictions ──────────────────
+  // ── SEARCH MODE: universal lookup — zero filters of any kind ──────────────────
   if (window.__sfSearch) {
     const sq = window.__sfSearch;
+    // The search bar is a universal lookup across ALL creators in the database.
+    // No genre affinity, no platform, no language, no budget, no tier gating.
+    // If a creator exists, searching their name or handle will always find them.
     const display = CREATORS
       .filter(cr => {
         var hay = (cr.name + ' ' + cr.handle + ' ' + cr.genre + ' ' + cr.platform + ' ' + (cr.bio||'')).toLowerCase();
-        if (hay.indexOf(sq) === -1) return false;
-        // Also apply platform filter during search
-        if (activePlatforms.size > 0) {
-          var plats = cr.allPlatforms || [cr.platform];
-          if (!plats.some(function(p) { return activePlatforms.has(p); })) return false;
-        }
-        // Also apply language filter during search
-        if (activeLanguages.size > 0) {
-          var creatorLang = cr.language || 'English'; // Default to English if not specified
-          if (!activeLanguages.has(creatorLang)) return false;
-        }
-        return true;
+        return hay.indexOf(sq) !== -1;
       })
-      .map(cr => {
-        // Still score by campaign genre/sub-mode even in search mode
-        // so relevant creators rank above irrelevant ones
-        const gScore  = genreScore(cr);   // uses selected genre
-        const oScore  = objectiveScore(cr);
-        const smScore = subModeScore(cr);
-        const base = sortMode==='gfi'  ? computeGFI(cr) :
-                     sortMode==='subs' ? parseSubs(cr.subs) / 1e6 :
-                     cr.cpi;
-        // If genre has been set, rank by score; otherwise rank by CPI descending
-        const total = (genre && genre !== 'all') ? (base + gScore + oScore + smScore) : base;
-        return { cr, total };
-      })
-      .sort((a,b) => b.total - a.total)
-      .map(x => x.cr);
+      .sort((a, b) => b.cpi - a.cpi);
 
-    const totalHidden = CREATORS.length - display.length;
     document.getElementById('discoveryMeta').textContent =
-      display.length + ' RESULT' + (display.length !== 1 ? 'S' : '') + ' FOR "' + sq.toUpperCase() + '" · ACROSS ALL ' + CREATORS.length + ' CREATORS';
+      display.length + ' RESULT' + (display.length !== 1 ? 'S' : '') +
+      ' FOR "' + sq.toUpperCase() + '" · ACROSS ALL ' + CREATORS.length + ' CREATORS';
 
     document.getElementById('creatorGrid').innerHTML = display.map(cr => {
       const selected  = selectedCreators.has(cr.id);
