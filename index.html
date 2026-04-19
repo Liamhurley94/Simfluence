@@ -1540,32 +1540,6 @@ function scrollToPlan(planClass) {
   resize();init();draw();
 })();
 
-/* ── SIMPLE TEST - COMPATIBLE WITH ALL BROWSERS ─────────────────────────────── */
-
-// Test: Basic click detection
-document.addEventListener('click', function(e) {
-  console.log('CLICK: ' + e.target.tagName + ' - ' + (e.target.textContent || 'no text'));
-  
-  // Check for data-modal attribute
-  if (e.target.getAttribute && e.target.getAttribute('data-modal')) {
-    console.log('FOUND data-modal: ' + e.target.getAttribute('data-modal'));
-    e.preventDefault();
-    alert('SUCCESS: Found modal link - ' + e.target.getAttribute('data-modal'));
-    return false;
-  }
-  
-  // Check text content  
-  var text = e.target.textContent || '';
-  if (text.indexOf('Legal') !== -1 || text.indexOf('Terms') !== -1) {
-    console.log('FOUND by text: ' + text);
-    e.preventDefault();
-    alert('SUCCESS: Found by text - ' + text);
-    return false;
-  }
-});
-
-console.log('TEST READY: Click Legal or Terms to test');
-
 /* ── Supabase Auth (continuing with original code) ───────────────────────────────────────── */
 var IDX_URL = 'https://iysjxslzlbojoivxjrce.supabase.co';
 var IDX_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5c2p4c2x6bGJvam9pdnhqcmNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM0MzA2MDIsImV4cCI6MjA1OTAwNjYwMn0.AqbQqRs3AiGYhRGZw1SG2TNqlQQ1rPbICbzNBE3Uvj4';
