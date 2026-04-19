@@ -11615,6 +11615,7 @@ function sfRenderPagination(elId, totalPages) {
 }
 
 function changePage(p) {
+  // When search is active, count unfiltered matches across all creators (no genre gate)
   var totalPages = Math.ceil(
     (window.__sfSearch ? CREATORS.filter(cr => {
       var hay = (cr.name+' '+cr.handle+' '+cr.genre+' '+cr.platform+' '+(cr.bio||'')).toLowerCase();
@@ -12157,6 +12158,9 @@ function renderCreatorGrid(keepPage) {
         </div>
       </div>`;
     }).join('') || `<div style="padding:60px;text-align:center;color:var(--text-muted);font-family:Manrope,sans-serif;font-weight:500;font-size:11px">NO CREATORS FOUND FOR "${sq.toUpperCase()}"</div>`;
+    // Clear stale pagination from any previous browse-mode render
+    var _pcSearch = document.getElementById('sfPageControls');
+    if (_pcSearch) _pcSearch.innerHTML = '';
     return;
   }
 
