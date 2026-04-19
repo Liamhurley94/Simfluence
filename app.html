@@ -4124,7 +4124,7 @@ document.addEventListener('DOMContentLoaded', function() {
       <div class="page-header">
         <div>
           <div class="page-title">Creator <em>Discovery</em></div>
-          <div class="page-meta" id="discoveryMeta">ALL CREATORS · GAMING &amp; ESPORTS</div>
+          <div class="page-meta" id="discoveryMeta">ALL CREATORS · GAMING &amp; ESPORTS · DEBUG VERSION</div>
         </div>
         <div style="display:flex;gap:8px;align-items:center">
           <select id="sortModeSelect" style="font-family:Manrope,sans-serif;font-weight:500;font-size:10px;background:var(--bg3);border:1px solid var(--border);color:var(--text-dim);padding:6px 10px;border-radius:var(--radius)">
@@ -11594,6 +11594,7 @@ var currentPage = 1;
 var pageSize = 25;
 var activePlatforms = new Set(); // empty = show all
 var activeLanguages = new Set(); // empty = show all
+console.log('DEBUG: activeLanguages initialized as empty, size:', activeLanguages.size);
 
 function sfRenderPagination(elId, totalPages) {
   var el = document.getElementById(elId);
@@ -11976,6 +11977,7 @@ function renderCreatorGrid(keepPage) {
   // ── Language filter ──────────────────────────────────────────────
   var langEl = document.getElementById('langFilter');
   var selectedLang = langEl ? langEl.value : 'all';
+  console.log('DEBUG: selectedLang from dropdown:', selectedLang);
   // Language signal maps for inference when no language field set
   var LANG_SIGNALS = {
     'German':     ['german','deutsch','germany','deutschland','österreich','schweiz'],
@@ -12115,6 +12117,17 @@ function renderCreatorGrid(keepPage) {
       .filter(cr => {
         var hay = (cr.name + ' ' + cr.handle + ' ' + cr.genre + ' ' + cr.platform + ' ' + (cr.bio||'')).toLowerCase();
         if (hay.indexOf(sq) === -1) return false;
+        
+        // Debug MontanaBlack88 specifically
+        if (cr.name === 'MontanaBlack88') {
+          console.log('DEBUG MontanaBlack88 found in search!');
+          console.log('- Search term:', sq);
+          console.log('- Search string:', hay);
+          console.log('- activeLanguages size:', activeLanguages.size);
+          console.log('- activeLanguages contents:', Array.from(activeLanguages));
+          console.log('- Creator language:', cr.language);
+        }
+        
         // Also apply platform filter during search
         if (activePlatforms.size > 0) {
           var plats = cr.allPlatforms || [cr.platform];
@@ -12123,8 +12136,19 @@ function renderCreatorGrid(keepPage) {
         // Also apply language filter during search
         if (activeLanguages.size > 0) {
           var creatorLang = cr.language || 'English'; // Default to English if not specified
-          if (!activeLanguages.has(creatorLang)) return false;
+          if (!activeLanguages.has(creatorLang)) {
+            if (cr.name === 'MontanaBlack88') {
+              console.log('DEBUG: MontanaBlack88 filtered out by language filter!');
+              console.log('- Creator lang:', creatorLang, '- Active langs:', Array.from(activeLanguages));
+            }
+            return false;
+          }
         }
+        
+        if (cr.name === 'MontanaBlack88') {
+          console.log('DEBUG: MontanaBlack88 PASSED all filters!');
+        }
+        
         return true;
       })
       .map(cr => {
@@ -12237,7 +12261,11 @@ function renderCreatorGrid(keepPage) {
   function languageMatch(cr) {
     if (activeLanguages.size === 0) return true;
     var creatorLang = cr.language || 'English'; // Default to English if not specified
-    return activeLanguages.has(creatorLang);
+    var result = activeLanguages.has(creatorLang);
+    if (cr.name === 'MontanaBlack88') {
+      console.log('DEBUG languageMatch for MontanaBlack88:', result, 'creator lang:', creatorLang, 'active langs:', Array.from(activeLanguages));
+    }
+    return result;
   }
 
   const display = scored.length >= 3 ? scored.filter(s => platformMatch(s.cr) && languageMatch(s.cr)) : CREATORS
