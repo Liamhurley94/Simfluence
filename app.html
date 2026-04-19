@@ -11767,6 +11767,16 @@ function avgViewsLabel(cr) {
 function renderCreatorGrid(keepPage) {
   if (!keepPage) currentPage = 1;
   
+  // ── DEBUG DISPLAY ─────────────────────────────────────────────────
+  var debugDiv = document.getElementById('pageDebugOutput') || document.createElement('div');
+  if (!document.getElementById('pageDebugOutput')) {
+    debugDiv.id = 'pageDebugOutput';
+    debugDiv.style.cssText = 'position:fixed;top:10px;left:10px;background:black;color:lime;padding:8px;border-radius:4px;font-family:monospace;font-size:10px;max-width:300px;z-index:9999;';
+    document.body.appendChild(debugDiv);
+  }
+  const genre = getSelectedGenre();
+  debugDiv.innerHTML = '<strong>🔧 DEBUG</strong><br>Genre: ' + genre + '<br>Total creators: ' + CREATORS.length;
+  
   // ── AI SELECTION MODE ─────────────────────────────────────────────
   // If AI has made a selection, show only those creators
   if (window.aiSelectionMode && window.aiSelectedCreators) {
@@ -12253,6 +12263,15 @@ function renderCreatorGrid(keepPage) {
       if (!passedGfiFilter(cr)) return false;
       // Content targeting filter — applied before genre when active
       if (_contentFilterActive && !passedContentFilter(cr)) return false;
+      
+      // Debug MontanaBlack88 genre filtering
+      if (cr.name === 'MontanaBlack88') {
+        console.log('🎯 MontanaBlack88 in discovery mode!');
+        console.log('- Selected genre: ' + genre);
+        console.log('- Creator genre: ' + cr.genre);
+        console.log('- genreScore: ' + genreScore(cr));
+      }
+      
       if (genreScore(cr) < 0) return false;
       return true;
     })
