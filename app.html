@@ -2268,7 +2268,7 @@ function tierCan(feature) {
     'pdf_full': t>=3, 'pdf_summary': t>=1, 'pdf_unlimited': t>=2,
 
     // ── SAVED CAMPAIGNS ───────────────────────────────────────────
-    'saved_unlimited': t>=3, 'saved_10': t>=2, 'saved_3': t>=1,
+    'saved_unlimited': t>=3, 'saved_10': t>=2, 'saved_3': t>=1, 'saved_1': t>=0,
 
     // ── LIVE DATA ─────────────────────────────────────────────────
     'live_full': t>=2, 'live_genre': t>=1,
@@ -2349,6 +2349,7 @@ function showUpgradePrompt(feature, targetTier) {
     // AI Assistant
     'ai_assistant':           'Unlock the AI Campaign Assistant — create campaigns with natural language from Silver tier.',
     // Campaigns
+    'saved_1':                'Save 1 campaign draft — upgrade to Silver to save up to 3.',
     'saved_3':                'Save up to 3 recent campaigns for quick reference.',
     'saved_10':               'Save up to 10 campaigns and recall them instantly.',
     // Live data
@@ -2739,8 +2740,8 @@ function applyAllTierGates() {
     }
   }
 
-  // Saved campaigns — silver+
-  if (!tierCan('saved_3')) {
+  // Saved campaigns — bronze gets 1 draft, silver+ gets 3+
+  if (!tierCan('saved_1')) {
     var sp = document.getElementById('savedCampaignsPanel');
     if (sp) sp.style.display = 'none';
   }
@@ -15498,7 +15499,7 @@ function saveCampaignToHistory() {
   try {
     var saved = JSON.parse(localStorage.getItem(SAVE_KEY) || '[]');
     saved.unshift(entry);
-    var _sLimit = (function(){ var t=typeof getTierLevel==='function'?getTierLevel():0; return t>=3?999:t>=2?10:t>=1?3:0; })();
+    var _sLimit = (function(){ var t=typeof getTierLevel==='function'?getTierLevel():0; return t>=3?999:t>=2?10:t>=1?3:t>=0?1:0; })();
     if (_sLimit===0) { return; }
     if (saved.length > _sLimit) saved = saved.slice(0, _sLimit);
     localStorage.setItem(SAVE_KEY, JSON.stringify(saved));
@@ -15532,7 +15533,12 @@ function renderSavedCampaigns() {
     var saved = JSON.parse(localStorage.getItem(SAVE_KEY) || '[]');
     if (!saved.length) { el.style.display = 'none'; return; }
     el.style.display = 'block';
-    el.innerHTML = '<div style="font-family:\'Manrope\',sans-serif;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#0050FF;margin-bottom:12px">Recent Campaigns</div>'
+    el.innerHTML = (function(){
+        var t2 = typeof getTierLevel==='function'?getTierLevel():0;
+        var hdrLabel = t2===0 ? 'Draft Campaign (1 slot · upgrade to Silver for 3+)' : 'Recent Campaigns';
+        var hdrColor = t2===0 ? '#CD7F32' : '#0050FF';
+        return '<div style="font-family:\'Manrope\',sans-serif;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:'+hdrColor+';margin-bottom:12px">' + hdrLabel + '</div>';
+      })()
       + saved.map(function(s) {
         var fmtBudget = '$' + (s.budget >= 1000 ? (s.budget/1000).toFixed(0)+'K' : s.budget);
         var fmtImpr = s.p50 >= 1e6 ? (s.p50/1e6).toFixed(1)+'M' : s.p50 >= 1000 ? (s.p50/1000).toFixed(0)+'K' : s.p50;
