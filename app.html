@@ -3617,8 +3617,9 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="field">
           <label>Campaign Genre</label>
           <select id="genre" >
+            <option value="" selected>— All Creators —</option>
             <optgroup label="— Core Entertainment —">
-              <option selected>Gaming &amp; Esports</option>
+              <option>Gaming &amp; Esports</option>
               <option>Entertainment &amp; Comedy</option>
               <option>Music</option>
               <option>Theatre &amp; Performing Arts</option>
@@ -11364,7 +11365,8 @@ const GFI_WARN_THRESHOLD    = 50;
 const GFI_DANGER_THRESHOLD  = 35;
 
 function getSelectedGenre() {
-  return (document.getElementById('genre')||{value:'Gaming & Esports'}).value || 'Gaming & Esports';
+  var el = document.getElementById('genre');
+  return el ? el.value : '';  // '' means All Creators — no genre filter
 }
 
 
@@ -12093,6 +12095,7 @@ function renderCreatorGrid(keepPage) {
     }
 
     // ── NORMAL MODE ───────────────────────────────────────────────────
+    if (!genre) return 30; // No genre selected — show all creators, rank by CPI
     if (cr.genre === genre) return 30;
     const affinityRaw2 = (GENRE_AFFINITY[cr.genre]||{})[genre];
     const affinity = (affinityRaw2 !== undefined && affinityRaw2 !== null) ? affinityRaw2 : 0;
@@ -12224,7 +12227,17 @@ function renderCreatorGrid(keepPage) {
     .map(cr => ({ cr, total: cr.cpi }))
     .sort((a,b) => b.total - a.total);
 
-  const totalHidden = CREATORS.length - display.length;
+  // Only count creators hidden by active USER-SET filters (platform, language,
+  // budget, tier, CPI/GFI) — not genre affinity, which is expected behaviour.
+  const totalHidden = (activePlatforms.size > 0 || activeLanguages.size > 0 || _cpiMin > 0 || _gfiMin > 0)
+    ? CREATORS.filter(cr => {
+        if (activePlatforms.size > 0 && !platformMatch(cr)) return true;
+        if (activeLanguages.size > 0 && !languageMatch(cr)) return true;
+        if (_cpiMin > 0 && (cr.cpi || 0) < _cpiMin) return true;
+        if (_gfiMin > 0 && computeGFI(cr) < _gfiMin) return true;
+        return false;
+      }).length
+    : 0;
 
   // ── Highlight label: what objective is boosting rank? ────────────
   function getHighlightLabel(cr) {
@@ -12406,8 +12419,9 @@ function renderCreatorGrid(keepPage) {
     if (_cg && _cg.parentElement) _cg.parentElement.insertBefore(_nb, _cg.nextSibling);
   }
   var _sgLabel = activeSubGenre ? ' · ' + activeSubGenre.toUpperCase() : '';
+  var _genreLabel = genre ? genre.toUpperCase() : 'ALL GENRES';
   document.getElementById('discoveryMeta').textContent =
-    _display.length + ' CREATORS · ' + genre.toUpperCase() + ' · ' + tierLabel.toUpperCase() +
+    _display.length + ' CREATORS · ' + _genreLabel + ' · ' + tierLabel.toUpperCase() +
     _sgLabel + langLabel + (totalHidden > 0 ? ' · ' + totalHidden + ' FILTERED OUT' : '') + objLabel.toUpperCase();
 }
 
