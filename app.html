@@ -11771,11 +11771,24 @@ function renderCreatorGrid(keepPage) {
   var debugDiv = document.getElementById('pageDebugOutput') || document.createElement('div');
   if (!document.getElementById('pageDebugOutput')) {
     debugDiv.id = 'pageDebugOutput';
-    debugDiv.style.cssText = 'position:fixed;top:10px;left:10px;background:black;color:lime;padding:8px;border-radius:4px;font-family:monospace;font-size:10px;max-width:300px;z-index:9999;';
+    debugDiv.style.cssText = 'position:fixed;top:10px;left:10px;background:black;color:lime;padding:8px;border-radius:4px;font-family:monospace;font-size:10px;max-width:400px;z-index:9999;max-height:300px;overflow-y:auto;';
     document.body.appendChild(debugDiv);
   }
   const genre = getSelectedGenre();
-  debugDiv.innerHTML = '<strong>🔧 DEBUG</strong><br>Genre: ' + genre + '<br>Total creators: ' + CREATORS.length;
+  
+  // Test first 5 creators to see where they fail
+  var debugInfo = '<strong>🔧 DEBUG</strong><br>Genre: ' + genre + '<br>Total creators: ' + CREATORS.length + '<br><br>';
+  
+  for (let i = 0; i < Math.min(5, CREATORS.length); i++) {
+    const cr = CREATORS[i];
+    debugInfo += '<strong>' + cr.name + '</strong><br>';
+    debugInfo += '- Budget: ' + (passedBudgetFilter ? passedBudgetFilter(cr) : 'unknown') + '<br>';
+    debugInfo += '- Tier: ' + (passedTierFilter ? passedTierFilter(cr) : 'unknown') + '<br>';
+    debugInfo += '- Lang: ' + (passedLangFilter ? passedLangFilter(cr) : 'unknown') + '<br>';
+    debugInfo += '- Genre Score: ' + (genreScore ? genreScore(cr) : 'unknown') + '<br><br>';
+  }
+  
+  debugDiv.innerHTML = debugInfo;
   
   // ── AI SELECTION MODE ─────────────────────────────────────────────
   // If AI has made a selection, show only those creators
