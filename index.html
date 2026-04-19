@@ -1566,50 +1566,7 @@ document.addEventListener('click', function(e) {
 
 console.log('TEST READY: Click Legal or Terms to test');
 
-/* ── Original complex modal system (disabled for testing) ─────────────────────────────── */
-
-/* ── Original Modal + link delegation (disabled) ─────────────────────────────── */
-/* ── OLD HANDLER DISABLED ─────────────────────────────── 
-document.addEventListener('click', function(e) {
-  console.log('🖱️ Click detected on:', e.target);
-  
-  var el = e.target.closest('[data-modal]');
-  if (el) {
-    console.log('📋 Modal link clicked:', el.getAttribute('data-modal'));
-    e.preventDefault();
-    e.stopPropagation();
-    openFeatureModal(el.getAttribute('data-modal'));
-    return false;
-  }
-  
-  var mc = e.target.closest('[data-modal-close]');
-  if (mc) {
-    console.log('❌ Modal close clicked');
-    e.preventDefault();
-    closeFeatureModal();
-    return false;
-  }
-  
-  var sc = e.target.closest('[data-scrollto]');
-  if (sc) {
-    e.preventDefault();
-    var t = document.getElementById(sc.getAttribute('data-scrollto'));
-    if (t) t.scrollIntoView({behavior:'smooth'});
-    return false;
-  }
-  
-  var sp = e.target.closest('[data-scrollplan]');
-  if (sp) {
-    e.preventDefault();
-    scrollToPlan(sp.getAttribute('data-scrollplan'));
-    return false;
-  }
-});
-*/ 
-
-// NEW SIMPLE HANDLER ABOVE REPLACES THIS
-
-/* ── Supabase Auth ───────────────────────────────────────── */
+/* ── Supabase Auth (continuing with original code) ───────────────────────────────────────── */
 var IDX_URL = 'https://iysjxslzlbojoivxjrce.supabase.co';
 var IDX_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5c2p4c2x6bGJvam9pdnhqcmNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM0MzA2MDIsImV4cCI6MjA1OTAwNjYwMn0.AqbQqRs3AiGYhRGZw1SG2TNqlQQ1rPbICbzNBE3Uvj4';
 
