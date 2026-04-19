@@ -11594,7 +11594,22 @@ var currentPage = 1;
 var pageSize = 25;
 var activePlatforms = new Set(); // empty = show all
 var activeLanguages = new Set(); // empty = show all
-console.log('DEBUG: activeLanguages initialized as empty, size:', activeLanguages.size);
+// Create debug display
+var debugDiv = document.createElement('div');
+debugDiv.id = 'debugOutput';
+debugDiv.style.cssText = 'position:fixed;top:10px;right:10px;background:rgba(0,0,0,0.9);color:#00ff00;padding:10px;font-family:monospace;font-size:11px;border:1px solid #333;border-radius:4px;max-width:400px;max-height:300px;overflow-y:auto;z-index:9999';
+debugDiv.innerHTML = '<div style="color:#ffff00;font-weight:bold">DEBUG LOG</div>';
+document.body.appendChild(debugDiv);
+
+function console.log(msg) {
+  var debugDiv = document.getElementById('debugOutput');
+  if (debugDiv) {
+    debugDiv.innerHTML += '<div>' + msg + '</div>';
+    debugDiv.scrollTop = debugDiv.scrollHeight;
+  }
+}
+
+console.log('activeLanguages initialized as empty, size: ' + activeLanguages.size);
 
 function sfRenderPagination(elId, totalPages) {
   var el = document.getElementById(elId);
@@ -11977,7 +11992,7 @@ function renderCreatorGrid(keepPage) {
   // ── Language filter ──────────────────────────────────────────────
   var langEl = document.getElementById('langFilter');
   var selectedLang = langEl ? langEl.value : 'all';
-  console.log('DEBUG: selectedLang from dropdown:', selectedLang);
+  console.log('selectedLang from dropdown: ' + selectedLang);
   // Language signal maps for inference when no language field set
   var LANG_SIGNALS = {
     'German':     ['german','deutsch','germany','deutschland','österreich','schweiz'],
@@ -12120,12 +12135,11 @@ function renderCreatorGrid(keepPage) {
         
         // Debug MontanaBlack88 specifically
         if (cr.name === 'MontanaBlack88') {
-          console.log('DEBUG MontanaBlack88 found in search!');
-          console.log('- Search term:', sq);
-          console.log('- Search string:', hay);
-          console.log('- activeLanguages size:', activeLanguages.size);
-          console.log('- activeLanguages contents:', Array.from(activeLanguages));
-          console.log('- Creator language:', cr.language);
+          console.log('MontanaBlack88 found in search!');
+          console.log('- Search term: ' + sq);
+          console.log('- activeLanguages size: ' + activeLanguages.size);
+          console.log('- activeLanguages: [' + Array.from(activeLanguages).join(',') + ']');
+          console.log('- Creator language: ' + cr.language);
         }
         
         // Also apply platform filter during search
@@ -12138,15 +12152,15 @@ function renderCreatorGrid(keepPage) {
           var creatorLang = cr.language || 'English'; // Default to English if not specified
           if (!activeLanguages.has(creatorLang)) {
             if (cr.name === 'MontanaBlack88') {
-              console.log('DEBUG: MontanaBlack88 filtered out by language filter!');
-              console.log('- Creator lang:', creatorLang, '- Active langs:', Array.from(activeLanguages));
+              console.log('MontanaBlack88 FILTERED OUT by language!');
+              console.log('- Creator lang: ' + creatorLang + ' - Active: [' + Array.from(activeLanguages).join(',') + ']');
             }
             return false;
           }
         }
         
         if (cr.name === 'MontanaBlack88') {
-          console.log('DEBUG: MontanaBlack88 PASSED all filters!');
+          console.log('MontanaBlack88 PASSED all filters!');
         }
         
         return true;
@@ -12263,7 +12277,7 @@ function renderCreatorGrid(keepPage) {
     var creatorLang = cr.language || 'English'; // Default to English if not specified
     var result = activeLanguages.has(creatorLang);
     if (cr.name === 'MontanaBlack88') {
-      console.log('DEBUG languageMatch for MontanaBlack88:', result, 'creator lang:', creatorLang, 'active langs:', Array.from(activeLanguages));
+      console.log('languageMatch for MontanaBlack88: ' + result + ' creator lang: ' + creatorLang + ' active: [' + Array.from(activeLanguages).join(',') + ']');
     }
     return result;
   }
