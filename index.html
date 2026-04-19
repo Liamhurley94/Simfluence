@@ -1251,8 +1251,8 @@ function simShow(){
   <div class="f-bottom">
     <span class="f-copy">© 2025 Simfluence Ltd · Dubai, UAE · All rights reserved</span>
     <div class="f-legal">
-      <a href="#terms" onclick="alert('Terms clicked!'); return false;">Terms</a>
-      <a href="#legal" onclick="alert('Legal clicked!'); return false;">Legal</a>
+      <a href="#" onclick="showLegalModal('terms'); return false;">Terms</a>
+      <a href="#" onclick="showLegalModal('legal'); return false;">Legal</a>
       <a href="mailto:liam@simfluence.ai">Contact</a>
     </div>
   </div>
@@ -1272,7 +1272,7 @@ function simShow(){
     <!-- Step 1 -->
     <div id="sfS1">
       <div class="sf-title">Get started</div>
-      <div class="sf-desc">Tell us about your brand and we'll be in touch.</div>
+      <div class="sf-desc">Tell us about your brand and we will be in touch.</div>
       <label class="sf-label">Your name</label>
       <input id="sfName" type="text" class="sf-input" placeholder="e.g. Gareth Evans" autocomplete="name">
       <label class="sf-label">Company / Brand</label>
@@ -1318,7 +1318,7 @@ function simShow(){
       <div class="sf-title" style="margin-bottom:8px">You're in.</div>
       <div id="sfSuccessMsg" class="sf-desc"></div>
       <button onclick="sfLaunch()" class="sf-btn" style="background:#00C46A">Launch Simfluence →</button>
-      <div class="sf-note" style="margin-top:12px">We'll be in touch at <span id="sfConfirmEmail" style="color:rgba(255,255,255,0.4)"></span></div>
+      <div class="sf-note" style="margin-top:12px">We will be in touch at <span id="sfConfirmEmail" style="color:rgba(255,255,255,0.4)"></span></div>
     </div>
   </div>
 </div>
@@ -1459,10 +1459,10 @@ async function sfSave(){
     signed_up_at:new Date().toISOString()
   };
   var msgs={
-    bronze:'Bronze plan noted — we\'ll be in touch shortly.',
-    silver:'Silver plan noted — we\'ll be in touch shortly.',
-    gold:'Gold plan noted — we\'ll be in touch shortly.',
-    platinum:'Platinum plan noted — we\'ll be in touch shortly.',
+    bronze:'Bronze plan noted — we will be in touch shortly.',
+    silver:'Silver plan noted — we will be in touch shortly.',
+    gold:'Gold plan noted — we will be in touch shortly.',
+    platinum:'Platinum plan noted — we will be in touch shortly.',
     diamond:'Diamond enquiry received — expect to hear from us soon.'
   };
   document.getElementById('sfSuccessMsg').textContent='Thanks, '+sfNameVal+'. '+(msgs[sfPlan]||'');
@@ -1735,7 +1735,7 @@ function sfFreeSignup() {
       try { sessionStorage.setItem('sf_pending_email', userEmail); } catch(e) {}
       if(btn){btn.textContent='✓ CHECK YOUR EMAIL';btn.style.background='#00C46A';btn.disabled=true;}
       errEl.style.color='#00C46A';
-      errEl.textContent='Account created! Check your email to verify, then you'll be redirected to the platform.';
+      errEl.textContent='Account created! Check your email to verify, then you will be redirected to the platform.';
       errEl.style.display='block';
     }
   })
@@ -1891,6 +1891,19 @@ document.addEventListener('click', function(e) {
 }, true);
 */
 console.log('FIXED: Removed capture-phase handler that was blocking clicks');
+
+// Simple modal function that will work
+function showLegalModal(type) {
+  var content = '';
+  if (type === 'terms') {
+    content = 'Terms of Use\\n\\nEffective Date: 2025\\nJurisdiction: Dubai, UAE\\n\\nAccess to Simfluence is granted on a subscription basis. All creator data, scoring methodologies, forecasting models and platform outputs are proprietary to Simfluence Ltd.\\n\\nContact: Liam@Simfluence.AI';
+  } else if (type === 'legal') {
+    content = 'Legal Notice\\n\\nEntity: LLC | Registered: Dubai, UAE\\n\\nIntellectual Property: The Simfluence name, logo, platform design, CPI, GFI, scoring algorithms are exclusive IP of Simfluence Ltd. Unauthorized use prohibited.\\n\\nContact: Liam@Simfluence.AI';
+  }
+  alert(content);
+}
+
+console.log('Legal modal function added');
 </script>
 </body>
 </html>
