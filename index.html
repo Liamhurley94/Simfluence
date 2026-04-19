@@ -1540,16 +1540,124 @@ function scrollToPlan(planClass) {
   resize();init();draw();
 })();
 
+/* ── Modal Functions (Fixed) ─────────────────────────────────────── */
+var MODALS = {
+  terms:{c:'#6B9FFF',e:'Legal · Terms of Use',t:'Terms of Use',d:'By accessing or using the Simfluence platform, you agree to be bound by these Terms of Use. Simfluence is a subscription-based creator intelligence platform providing forecasting, scoring and campaign simulation tools to brands and marketing professionals.',s:[{n:'2025',l:'Effective date'},{n:'Dubai',l:'Jurisdiction'},{n:'30 days',l:'Notice period'},{n:'UAE',l:'Entity'}],p:['Access and Subscription: Access to Simfluence is granted on a subscription basis. Your subscription is personal to your organisation and may not be shared, resold or transferred to any third party.','Billing and Cancellation: Subscriptions are billed monthly or annually as agreed. All fees are non-refundable except where required by applicable law. Pricing may be updated with 30 days written notice.','Platform Data: All creator data, scoring methodologies, forecasting models and platform outputs are proprietary to Simfluence Ltd. You may not extract, reproduce or redistribute any platform data without written consent.','Forecasting Disclaimer: All campaign simulations are probabilistic models based on historical data. They are not guarantees of campaign performance. Simfluence accepts no liability for campaign outcomes based on platform outputs.','Acceptable Use: You agree to use the platform solely for lawful internal business purposes. You must not attempt to reverse-engineer, scrape or circumvent any aspect of the platform.','Governing Law: These terms are governed by the laws of the United Arab Emirates. Disputes shall be subject to the exclusive jurisdiction of the courts of Dubai, UAE.','Contact: For all legal queries contact Liam@Simfluence.AI']},
+  legal:{c:'#9B8FDD',e:'Legal · Legal Notice',t:'Legal Notice',d:'Simfluence Ltd is a technology company incorporated in Dubai, United Arab Emirates. This legal notice governs your use of the Simfluence platform and all associated intellectual property.',s:[{n:'LLC',l:'Entity type'},{n:'Dubai',l:'Registered office'},{n:'UAE',l:'Jurisdiction'},{n:'2025',l:'Incorporated'}],p:['Entity: Simfluence Ltd is registered as a Limited Liability Company in Dubai, UAE. All platform operations and commercial agreements are conducted under this entity.','Intellectual Property: The Simfluence name, logo, platform design, CPI, GFI, scoring algorithms and forecasting models are the exclusive intellectual property of Simfluence Ltd. Unauthorised use or reproduction is strictly prohibited.','Data and Privacy: Simfluence processes creator data from publicly available platforms including YouTube and Twitch. User data is handled in accordance with UAE data protection regulations. We do not sell or share user data with third parties.','Liability Limitation: Simfluence Ltd provides its platform on an as-is basis. To the fullest extent permitted by law, Simfluence excludes all liability for indirect or consequential losses arising from platform use.','Third Party Services: The platform integrates with YouTube Data API, Twitch API and Supabase. Simfluence accepts no liability for third party service disruptions or data loss.','Modifications: Simfluence reserves the right to modify these terms with 30 days written notice. Continued use of the platform constitutes acceptance of any modifications.','Contact: For all legal queries contact Liam@Simfluence.AI']}
+};
+
+function openFeatureModal(feature) {
+  console.log('🔍 Opening modal for:', feature);
+  var modal = document.getElementById('featureModal');
+  var content = MODALS[feature];
+  
+  if (!modal) {
+    console.error('❌ Modal element not found: #featureModal');
+    return;
+  }
+  
+  if (!content) {
+    console.error('❌ Content not found for feature:', feature);
+    return;
+  }
+  
+  // Update modal content
+  document.getElementById('fmBar').style.background = content.c;
+  document.getElementById('fmEye').textContent = content.e;
+  document.getElementById('fmTtl').textContent = content.t;
+  document.getElementById('fmDsc').textContent = content.d;
+  
+  // Build stats
+  var statsHtml = '';
+  if (content.s && content.s.length > 0) {
+    content.s.forEach(function(stat) {
+      statsHtml += '<div class="fm-stat"><div class="fm-stat-n">' + stat.n + '</div><div class="fm-stat-l">' + stat.l + '</div></div>';
+    });
+  }
+  document.getElementById('fmG').innerHTML = statsHtml;
+  
+  // Build points
+  var pointsHtml = '';
+  if (content.p && content.p.length > 0) {
+    content.p.forEach(function(point) {
+      pointsHtml += '<div class="fm-pt">• ' + point + '</div>';
+    });
+  }
+  document.getElementById('fmPts').innerHTML = pointsHtml;
+  
+  // Show modal
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  
+  console.log('✅ Modal displayed successfully');
+}
+
+function closeFeatureModal() {
+  console.log('🔍 Closing modal');
+  var modal = document.getElementById('featureModal');
+  if (modal) {
+    modal.style.display = 'none';
+    document.body.style.overflow = '';
+    console.log('✅ Modal closed');
+  }
+}
+
+// Initialize modal system after DOM loads
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('🚀 Modal system initializing...');
+  
+  // Close modal when clicking outside
+  document.addEventListener('click', function(e) {
+    if (e.target && e.target.id === 'featureModal') {
+      closeFeatureModal();
+    }
+  });
+  
+  // Close modal with Escape key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      closeFeatureModal();
+    }
+  });
+  
+  console.log('✅ Legal/Terms modal system ready');
+});
+
 /* ── Modal + link delegation ─────────────────────────────── */
 document.addEventListener('click', function(e) {
+  console.log('🖱️ Click detected on:', e.target);
+  
   var el = e.target.closest('[data-modal]');
-  if (el) { e.preventDefault(); openFeatureModal(el.getAttribute('data-modal')); return; }
+  if (el) {
+    console.log('📋 Modal link clicked:', el.getAttribute('data-modal'));
+    e.preventDefault();
+    e.stopPropagation();
+    openFeatureModal(el.getAttribute('data-modal'));
+    return false;
+  }
+  
   var mc = e.target.closest('[data-modal-close]');
-  if (mc) { closeFeatureModal(); return; }
+  if (mc) {
+    console.log('❌ Modal close clicked');
+    e.preventDefault();
+    closeFeatureModal();
+    return false;
+  }
+  
   var sc = e.target.closest('[data-scrollto]');
-  if (sc) { e.preventDefault(); var t=document.getElementById(sc.getAttribute('data-scrollto')); if(t)t.scrollIntoView({behavior:'smooth'}); return; }
+  if (sc) {
+    e.preventDefault();
+    var t = document.getElementById(sc.getAttribute('data-scrollto'));
+    if (t) t.scrollIntoView({behavior:'smooth'});
+    return false;
+  }
+  
   var sp = e.target.closest('[data-scrollplan]');
-  if (sp) { e.preventDefault(); scrollToPlan(sp.getAttribute('data-scrollplan')); return; }
+  if (sp) {
+    e.preventDefault();
+    scrollToPlan(sp.getAttribute('data-scrollplan'));
+    return false;
+  }
 });
 
 /* ── Supabase Auth ───────────────────────────────────────── */
@@ -1791,77 +1899,6 @@ if (document.readyState === 'loading') {
   </div>
 </div>
 
-<script>
-var MODALS = {
-  terms:{c:'#6B9FFF',e:'Legal · Terms of Use',t:'Terms of Use',d:'By accessing or using the Simfluence platform, you agree to be bound by these Terms of Use. Simfluence is a subscription-based creator intelligence platform providing forecasting, scoring and campaign simulation tools to brands and marketing professionals.',s:[{n:'2025',l:'Effective date'},{n:'Dubai',l:'Jurisdiction'},{n:'30 days',l:'Notice period'},{n:'UAE',l:'Entity'}],p:['Access and Subscription: Access to Simfluence is granted on a subscription basis. Your subscription is personal to your organisation and may not be shared, resold or transferred to any third party.','Billing and Cancellation: Subscriptions are billed monthly or annually as agreed. All fees are non-refundable except where required by applicable law. Pricing may be updated with 30 days written notice.','Platform Data: All creator data, scoring methodologies, forecasting models and platform outputs are proprietary to Simfluence Ltd. You may not extract, reproduce or redistribute any platform data without written consent.','Forecasting Disclaimer: All campaign simulations are probabilistic models based on historical data. They are not guarantees of campaign performance. Simfluence accepts no liability for campaign outcomes based on platform outputs.','Acceptable Use: You agree to use the platform solely for lawful internal business purposes. You must not attempt to reverse-engineer, scrape or circumvent any aspect of the platform.','Governing Law: These terms are governed by the laws of the United Arab Emirates. Disputes shall be subject to the exclusive jurisdiction of the courts of Dubai, UAE.','Contact: For all legal queries contact Liam@Simfluence.AI']},
-  legal:{c:'#9B8FDD',e:'Legal · Legal Notice',t:'Legal Notice',d:'Simfluence Ltd is a technology company incorporated in Dubai, United Arab Emirates. This legal notice governs your use of the Simfluence platform and all associated intellectual property.',s:[{n:'LLC',l:'Entity type'},{n:'Dubai',l:'Registered office'},{n:'UAE',l:'Jurisdiction'},{n:'2025',l:'Incorporated'}],p:['Entity: Simfluence Ltd is registered as a Limited Liability Company in Dubai, UAE. All platform operations and commercial agreements are conducted under this entity.','Intellectual Property: The Simfluence name, logo, platform design, CPI, GFI, scoring algorithms and forecasting models are the exclusive intellectual property of Simfluence Ltd. Unauthorised use or reproduction is strictly prohibited.','Data and Privacy: Simfluence processes creator data from publicly available platforms including YouTube and Twitch. User data is handled in accordance with UAE data protection regulations. We do not sell or share user data with third parties.','Liability Limitation: Simfluence Ltd provides its platform on an as-is basis. To the fullest extent permitted by law, Simfluence excludes all liability for indirect or consequential losses arising from platform use.','Third Party Services: The platform integrates with YouTube Data API, Twitch API and Supabase. Simfluence accepts no liability for third party service disruptions or data loss.','Modifications: Simfluence reserves the right to modify these terms with 30 days written notice. Continued use of the platform constitutes acceptance of any modifications.','Contact: For all legal queries contact Liam@Simfluence.AI']}
-};
-
-/* ── Modal Functions (Fixed) ─────────────────────────────────────── */
-function openFeatureModal(feature) {
-  var modal = document.getElementById('featureModal');
-  var content = MODALS[feature];
-  
-  if (!modal || !content) {
-    console.warn('Modal or content not found for:', feature);
-    return;
-  }
-  
-  // Update modal content
-  document.getElementById('fmBar').style.background = content.c;
-  document.getElementById('fmEye').textContent = content.e;
-  document.getElementById('fmTtl').textContent = content.t;
-  document.getElementById('fmDsc').textContent = content.d;
-  
-  // Build stats
-  var statsHtml = '';
-  if (content.s && content.s.length > 0) {
-    content.s.forEach(function(stat) {
-      statsHtml += '<div class="fm-stat"><div class="fm-stat-n">' + stat.n + '</div><div class="fm-stat-l">' + stat.l + '</div></div>';
-    });
-  }
-  document.getElementById('fmG').innerHTML = statsHtml;
-  
-  // Build points
-  var pointsHtml = '';
-  if (content.p && content.p.length > 0) {
-    content.p.forEach(function(point) {
-      pointsHtml += '<div class="fm-pt">• ' + point + '</div>';
-    });
-  }
-  document.getElementById('fmPts').innerHTML = pointsHtml;
-  
-  // Show modal
-  modal.style.display = 'flex';
-  document.body.style.overflow = 'hidden';
-  
-  console.log('✅ Modal opened:', feature);
-}
-
-function closeFeatureModal() {
-  var modal = document.getElementById('featureModal');
-  if (modal) {
-    modal.style.display = 'none';
-    document.body.style.overflow = '';
-    console.log('✅ Modal closed');
-  }
-}
-
-// Close modal when clicking outside
-document.addEventListener('click', function(e) {
-  if (e.target && e.target.id === 'featureModal') {
-    closeFeatureModal();
-  }
-});
-
-// Close modal with Escape key
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') {
-    closeFeatureModal();
-  }
-});
-
-console.log('✅ Legal/Terms modal system initialized');
 </script>
 
 <!-- ── Sign In Modal ─────────────────────────────────────── -->
