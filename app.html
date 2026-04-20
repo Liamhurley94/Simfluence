@@ -4417,6 +4417,82 @@ document.addEventListener('DOMContentLoaded', function() {
   </div>
 </div>
 
+<!-- CAMPAIGN BRIEF PANEL -->
+<div id="briefPanel">
+  <div class="brief-inner">
+
+    <!-- ROW 1: Creator chips + actions -->
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap">
+      <div style="flex:1;min-width:0">
+        <div class="brief-title">
+          <span id="briefCreatorCount">0</span> CREATORS SELECTED
+          &nbsp;·&nbsp; <span id="briefBudgetDisplay">$85K</span> TOTAL BUDGET
+        </div>
+        <div class="brief-creators" id="briefCreatorChips"></div>
+      </div>
+      <div class="brief-actions" style="flex-shrink:0">
+        <button class="brief-clear-btn" data-oc="clearSelection()">CLEAR ALL</button>
+        <button class="brief-run-btn" data-oc="runFromBrief()">▶ SIMULATE →</button>
+      </div>
+    </div>
+
+    <!-- ROW 2: Budget bar + stats -->
+    <div style="margin-top:14px;display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center">
+
+      <!-- Budget spend bar -->
+      <div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+          <div style="display:flex;gap:20px;align-items:baseline">
+            <div>
+              <span style="font-family:Manrope,sans-serif;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--text-muted)">COMMITTED &nbsp;</span>
+              <span id="briefSpent" style="font-family:Archivo Black,sans-serif;font-size:18px;font-weight:700;color:#FFD400">£0</span>
+            </div>
+            <div>
+              <span style="font-family:Manrope,sans-serif;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--text-muted)">REMAINING &nbsp;</span>
+              <span id="briefRemaining" style="font-family:Archivo Black,sans-serif;font-size:18px;font-weight:700;color:#00C46A">$85K</span>
+            </div>
+            <div>
+              <span style="font-family:Manrope,sans-serif;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--text-muted)">OVER/UNDER &nbsp;</span>
+              <span id="briefOverUnder" style="font-family:Archivo Black,sans-serif;font-size:18px;font-weight:700;color:var(--text-muted)">—</span>
+            </div>
+          </div>
+          <div id="briefPctLabel" style="font-family:Manrope,sans-serif;font-weight:500;font-size:11px;font-weight:700;color:var(--text-muted)">0% allocated</div>
+        </div>
+
+        <!-- The fuel gauge bar -->
+        <div style="height:8px;background:var(--bg3);border-radius:4px;overflow:hidden;border:1px solid var(--border)">
+          <div id="briefBar" style="height:100%;border-radius:4px;width:0%;background:#00C46A;transition:width .4s ease,background .3s ease"></div>
+        </div>
+
+        <!-- Creator cost breakdown pills -->
+        <div id="briefCostPills" style="display:flex;gap:4px;flex-wrap:wrap;margin-top:8px"></div>
+      </div>
+
+      <!-- Avg CPI / GFI / Reach stats -->
+      <div class="brief-stats" style="border-left:1px solid var(--border);padding-left:20px">
+        <div class="brief-stat">
+          <div class="brief-stat-val" id="briefAvgCPI">—</div>
+          <div class="brief-stat-label">Avg CPI</div>
+        </div>
+        <div class="brief-stat">
+          <div class="brief-stat-val" id="briefAvgGFI">—</div>
+          <div class="brief-stat-label">Avg GFI</div>
+        </div>
+        <div class="brief-stat">
+          <div class="brief-stat-val" id="briefEstReach">—</div>
+          <div class="brief-stat-label">Est. Reach</div>
+        </div>
+      </div>
+    </div>
+
+      <!-- Audience overlap warning — Platinum+ only, full width row -->
+      <div id="briefOverlapWarning" style="display:none;grid-column:1/-1;margin-top:6px;padding:10px 14px;background:rgba(255,122,0,0.08);border:1px solid rgba(255,122,0,0.3);border-radius:6px;font-family:Manrope,sans-serif;font-size:10px;color:#FF7A00"></div>
+
+  </div>
+
+</div>
+
+
 <script>
 // ═══════════════════════════════════════════════════════════════════════
 // ── YOUTUBE ENRICHMENT DATA ──────────────────────────────────────────
@@ -14194,19 +14270,14 @@ function updateBandDisplays() {
 
 // ── CAMPAIGN BRIEF PANEL ──────────────────────────────────────────────
 function updateBriefPanel() {
-  var panel = document.getElementById('briefPanel');
-  if (!panel) { console.error('[Brief] briefPanel element not found'); return; }
+  const panel = document.getElementById('briefPanel');
+  if (!panel) return;
 
   if (selectedCreators.size === 0) {
-    panel.style.transform = 'translateY(100%)';
     panel.classList.remove('open');
     return;
   }
-
-  // Force visible
-  panel.style.cssText = 'display:block!important;position:fixed!important;bottom:0!important;left:0!important;right:0!important;z-index:9999!important;background:var(--bg2);border-top:2px solid #0050FF;box-shadow:0 -8px 32px rgba(0,0,80,0.4);transform:translateY(0)!important;transition:transform 0.35s ease;';
   panel.classList.add('open');
-  console.log('[Brief] panel opened, creators:', selectedCreators.size);
 
   const selected  = CREATORS.filter(cr => selectedCreators.has(cr.id));
   const budget    = parseInt((document.getElementById('budget')||{value:'500000'}).value)||500000;
@@ -18143,83 +18214,6 @@ document.addEventListener('click', function(e) {
 
 console.log('🛡️ Simfluence Legal Protection System Active');
 </script>
-
-
-
-<!-- CAMPAIGN BRIEF PANEL -->
-<div id="briefPanel" style="display:block;transform:translateY(100%);position:fixed;bottom:0;left:0;right:0;z-index:9999;background:var(--bg2);border-top:2px solid #0050FF;box-shadow:0 -8px 32px rgba(0,0,80,0.4);transition:transform 0.35s cubic-bezier(0.4,0,0.2,1);">
-  <div class="brief-inner">
-
-    <!-- ROW 1: Creator chips + actions -->
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap">
-      <div style="flex:1;min-width:0">
-        <div class="brief-title">
-          <span id="briefCreatorCount">0</span> CREATORS SELECTED
-          &nbsp;·&nbsp; <span id="briefBudgetDisplay">$85K</span> TOTAL BUDGET
-        </div>
-        <div class="brief-creators" id="briefCreatorChips"></div>
-      </div>
-      <div class="brief-actions" style="flex-shrink:0">
-        <button class="brief-clear-btn" data-oc="clearSelection()">CLEAR ALL</button>
-        <button class="brief-run-btn" data-oc="runFromBrief()">▶ SIMULATE →</button>
-      </div>
-    </div>
-
-    <!-- ROW 2: Budget bar + stats -->
-    <div style="margin-top:14px;display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center">
-
-      <!-- Budget spend bar -->
-      <div>
-        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
-          <div style="display:flex;gap:20px;align-items:baseline">
-            <div>
-              <span style="font-family:Manrope,sans-serif;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--text-muted)">COMMITTED &nbsp;</span>
-              <span id="briefSpent" style="font-family:Archivo Black,sans-serif;font-size:18px;font-weight:700;color:#FFD400">£0</span>
-            </div>
-            <div>
-              <span style="font-family:Manrope,sans-serif;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--text-muted)">REMAINING &nbsp;</span>
-              <span id="briefRemaining" style="font-family:Archivo Black,sans-serif;font-size:18px;font-weight:700;color:#00C46A">$85K</span>
-            </div>
-            <div>
-              <span style="font-family:Manrope,sans-serif;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--text-muted)">OVER/UNDER &nbsp;</span>
-              <span id="briefOverUnder" style="font-family:Archivo Black,sans-serif;font-size:18px;font-weight:700;color:var(--text-muted)">—</span>
-            </div>
-          </div>
-          <div id="briefPctLabel" style="font-family:Manrope,sans-serif;font-weight:500;font-size:11px;font-weight:700;color:var(--text-muted)">0% allocated</div>
-        </div>
-
-        <!-- The fuel gauge bar -->
-        <div style="height:8px;background:var(--bg3);border-radius:4px;overflow:hidden;border:1px solid var(--border)">
-          <div id="briefBar" style="height:100%;border-radius:4px;width:0%;background:#00C46A;transition:width .4s ease,background .3s ease"></div>
-        </div>
-
-        <!-- Creator cost breakdown pills -->
-        <div id="briefCostPills" style="display:flex;gap:4px;flex-wrap:wrap;margin-top:8px"></div>
-      </div>
-
-      <!-- Avg CPI / GFI / Reach stats -->
-      <div class="brief-stats" style="border-left:1px solid var(--border);padding-left:20px">
-        <div class="brief-stat">
-          <div class="brief-stat-val" id="briefAvgCPI">—</div>
-          <div class="brief-stat-label">Avg CPI</div>
-        </div>
-        <div class="brief-stat">
-          <div class="brief-stat-val" id="briefAvgGFI">—</div>
-          <div class="brief-stat-label">Avg GFI</div>
-        </div>
-        <div class="brief-stat">
-          <div class="brief-stat-val" id="briefEstReach">—</div>
-          <div class="brief-stat-label">Est. Reach</div>
-        </div>
-      </div>
-    </div>
-
-      <!-- Audience overlap warning — Platinum+ only, full width row -->
-      <div id="briefOverlapWarning" style="display:none;grid-column:1/-1;margin-top:6px;padding:10px 14px;background:rgba(255,122,0,0.08);border:1px solid rgba(255,122,0,0.3);border-radius:6px;font-family:Manrope,sans-serif;font-size:10px;color:#FF7A00"></div>
-
-  </div>
-
-</div>
 
 </body>
 </html>
