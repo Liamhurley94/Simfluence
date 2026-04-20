@@ -13807,7 +13807,11 @@ function renderPersonaScreen() {
     return;
   }
 
-  gridEl.innerHTML = scored.map(function(item, idx) {
+  // Apply persona cap — slice to tier limit
+  var _capped = _personaCap === Infinity ? scored : scored.slice(0, _personaCap);
+  var _hasMore = scored.length > _capped.length;
+
+  gridEl.innerHTML = _capped.map(function(item, idx) {
     var p      = item.p;
     var score  = item.score;
     var isPrimary = idx === 0;
@@ -13872,6 +13876,20 @@ function renderPersonaScreen() {
         + '</div>' : '<div style="font-size:11px;color:var(--text-muted);text-align:center;padding:12px">No matched creators for this sub-mode</div>')
     + '</div>';
   }).join('');
+
+  // Append upgrade nudge for Silver (capped at 1 persona) when more exist
+  if (_hasMore) {
+    var _remainCount = scored.length - _capped.length;
+    var _nudgeTier = _personaCap === 1 ? 'Gold' : 'Platinum';
+    var _nudgeFeature = _personaCap === 1 ? 'personas_3' : 'personas_all';
+    gridEl.innerHTML += '<div onclick="showUpgradePrompt(\'' + _nudgeFeature + '\',\'' + _nudgeTier + '\')" '
+      + 'style="margin-top:12px;padding:16px 20px;background:rgba(255,212,0,0.05);border:1px dashed rgba(255,212,0,0.25);border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:space-between">'
+      + '<span style="font-family:Manrope,sans-serif;font-size:11px;color:rgba(255,212,0,0.8)">'
+        + '+' + _remainCount + ' more persona' + (_remainCount!==1?'s':'') + ' available'
+      + '</span>'
+      + '<span style="font-family:Manrope,sans-serif;font-size:9px;font-weight:700;color:#FFD400;letter-spacing:.08em">UPGRADE TO ' + _nudgeTier.toUpperCase() + ' \u2192</span>'
+      + '</div>';
+  }
 }
 
 function personaAutoSelect() {
