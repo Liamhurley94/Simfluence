@@ -2245,6 +2245,7 @@ function tierCan(feature) {
     'competitor_bench': t>=3,  // Platinum+: creator vs category benchmarking
     'overlap_detect': t>=3,    // Platinum+: audience overlap detection in brief
     'brief_pdf': t>=3,         // Platinum+: campaign brief PDF export
+    'roi_tracker': t>=3,       // Platinum+: log actual results vs forecast
 
     // ── SCORING ───────────────────────────────────────────────────
     'cpi_gfi_visible': t>=1, 'gfi_methodology': t>=2,
@@ -2339,6 +2340,7 @@ function showUpgradePrompt(feature, targetTier) {
     'competitor_bench':       'See how each creator ranks against their category average for CPI, engagement rate and GFI — available from Platinum.',
     'overlap_detect':         'Get warned when creators in your brief share audiences — reduces wasted reach and budget duplication. Available from Platinum.',
     'brief_pdf':              'Export a polished campaign brief PDF with creator scores, rate estimates and simulation forecasts — available from Platinum.',
+    'roi_tracker':            'Log actual campaign results and compare against your pre-campaign forecast — closes the intelligence loop. Available from Platinum.',
     'export_unlimited':       'Export unlimited creators with full rate data.',
     // Compare
     'compare_10':             'Run side-by-side creator comparisons to make faster shortlist decisions.',
@@ -3278,6 +3280,18 @@ document.getElementById('GBtn').addEventListener('click', GC);
         simResults = null;
         if (typeof computeSimResults === 'function') computeSimResults();
         if (typeof updateSimDisplay === 'function') updateSimDisplay();
+  // Save forecast to campaign for ROI comparison later
+  if (typeof simResults !== 'undefined' && simResults && cmp) {
+    cmp.forecast = {
+      p50Impressions: simResults.p50.impressions,
+      p10Impressions: simResults.p10.impressions,
+      p90Impressions: simResults.p90.impressions,
+      ctr:  simResults.ctr,
+      roas: simResults.roas,
+      cvr:  simResults.cvr,
+    };
+    _lsSet('sf_campaigns_ws', JSON.stringify(_campaigns));
+  }
         if (typeof renderBudgetAllocation === 'function') renderBudgetAllocation();
       }
     });
@@ -4216,6 +4230,38 @@ document.addEventListener('DOMContentLoaded', function() {
       <div id="agencyFeaturesPanel" style="display:none;margin-bottom:24px"></div>
 
       <div id="campaigns-list" style="display:flex;flex-direction:column;gap:12px;"></div>
+      <!-- ROI TRACKER MODAL — Platinum+ -->
+      <div id="roiModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:1000;align-items:center;justify-content:center;padding:32px 16px">
+        <div style="background:var(--bg2);border:1px solid var(--border-bright);border-radius:14px;padding:28px;max-width:480px;width:100%;position:relative">
+          <button onclick="closeRoiModal()" style="position:absolute;top:14px;right:16px;background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:18px">×</button>
+          <div style="font-family:Manrope,sans-serif;font-size:10px;letter-spacing:.1em;color:#00BFFF;margin-bottom:6px">PLATINUM · ROI TRACKER</div>
+          <div style="font-family:Archivo Black,sans-serif;font-size:20px;font-weight:700;margin-bottom:20px">Log Actual Results</div>
+          <div id="roiModalForecast" style="background:var(--bg3);border-radius:8px;padding:12px 16px;margin-bottom:20px;font-family:Manrope,sans-serif;font-size:11px;color:var(--text-muted)"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+            <div>
+              <label style="font-family:Manrope,sans-serif;font-size:10px;font-weight:600;letter-spacing:.06em;color:var(--text-muted);display:block;margin-bottom:4px">ACTUAL IMPRESSIONS</label>
+              <input id="roi-impressions" type="text" placeholder="e.g. 4.2M or 4200000" style="width:100%;font-family:Manrope,sans-serif;font-size:12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text);outline:none;box-sizing:border-box">
+            </div>
+            <div>
+              <label style="font-family:Manrope,sans-serif;font-size:10px;font-weight:600;letter-spacing:.06em;color:var(--text-muted);display:block;margin-bottom:4px">ACTUAL SPEND (£/$)</label>
+              <input id="roi-spend" type="text" placeholder="e.g. 45000" style="width:100%;font-family:Manrope,sans-serif;font-size:12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text);outline:none;box-sizing:border-box">
+            </div>
+            <div>
+              <label style="font-family:Manrope,sans-serif;font-size:10px;font-weight:600;letter-spacing:.06em;color:var(--text-muted);display:block;margin-bottom:4px">ACTUAL CTR (%)</label>
+              <input id="roi-ctr" type="text" placeholder="e.g. 2.4" style="width:100%;font-family:Manrope,sans-serif;font-size:12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text);outline:none;box-sizing:border-box">
+            </div>
+            <div>
+              <label style="font-family:Manrope,sans-serif;font-size:10px;font-weight:600;letter-spacing:.06em;color:var(--text-muted);display:block;margin-bottom:4px">CONVERSIONS / INSTALLS</label>
+              <input id="roi-conversions" type="text" placeholder="e.g. 1250" style="width:100%;font-family:Manrope,sans-serif;font-size:12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text);outline:none;box-sizing:border-box">
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;justify-content:flex-end">
+            <button onclick="closeRoiModal()" style="padding:8px 18px;background:transparent;border:1px solid var(--border);color:var(--text-dim);border-radius:6px;font-family:Manrope,sans-serif;font-size:12px;cursor:pointer">CANCEL</button>
+            <button onclick="saveRoiResults()" style="padding:8px 18px;background:#00BFFF;color:#000;border:none;border-radius:6px;font-family:Manrope,sans-serif;font-size:12px;font-weight:700;cursor:pointer">SAVE RESULTS</button>
+          </div>
+        </div>
+      </div>
+
       <div id="campaigns-empty" style="display:none;padding:80px 40px;text-align:center">
         <div style="font-size:48px;margin-bottom:16px">📋</div>
         <div style="font-family:Manrope,sans-serif;font-size:13px;font-weight:500;letter-spacing:.08em;color:var(--text-muted);margin-bottom:8px">NO CAMPAIGNS YET</div>
@@ -15679,6 +15725,114 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // 3. EXPORT CREATOR SHORTLIST as CSV
 
+
+// ── P5: ROI TRACKER ───────────────────────────────────────────────────
+var _roiTargetCampaignId = null;
+
+function openRoiModal(cid) {
+  if (!tierCan('roi_tracker')) { showUpgradePrompt('roi_tracker','Platinum'); return; }
+  _roiTargetCampaignId = cid;
+  var cmp = _campaigns.find(function(c){ return c.id === cid; });
+  if (!cmp) return;
+
+  // Pre-fill if results already logged
+  var roi = cmp.roi || {};
+  document.getElementById('roi-impressions').value = roi.impressions || '';
+  document.getElementById('roi-spend').value       = roi.spend || '';
+  document.getElementById('roi-ctr').value         = roi.ctr || '';
+  document.getElementById('roi-conversions').value = roi.conversions || '';
+
+  // Show forecast context if available
+  var forecastEl = document.getElementById('roiModalForecast');
+  if (forecastEl) {
+    if (cmp.forecast) {
+      var f = cmp.forecast;
+      var fmtN = function(n){ return n>=1e6?(n/1e6).toFixed(1)+'M':n>=1000?Math.round(n/1000)+'K':String(n); };
+      forecastEl.innerHTML = '<span style="font-weight:700;color:var(--text-dim)">Forecast (P50):</span> '
+        + fmtN(f.p50Impressions) + ' impressions &nbsp;·&nbsp; '
+        + f.ctr + '% CTR &nbsp;·&nbsp; '
+        + f.roas + '× ROAS';
+      forecastEl.style.display = 'block';
+    } else {
+      forecastEl.innerHTML = 'No simulation forecast saved for this campaign. Run a simulation first for comparison.';
+      forecastEl.style.display = 'block';
+    }
+  }
+
+  var modal = document.getElementById('roiModal');
+  if (modal) modal.style.display = 'flex';
+}
+
+function closeRoiModal() {
+  var modal = document.getElementById('roiModal');
+  if (modal) modal.style.display = 'none';
+  _roiTargetCampaignId = null;
+}
+
+function saveRoiResults() {
+  if (!_roiTargetCampaignId) return;
+  var cmp = _campaigns.find(function(c){ return c.id === _roiTargetCampaignId; });
+  if (!cmp) return;
+
+  var rawImpr = document.getElementById('roi-impressions').value.trim();
+  // Parse human-friendly numbers like 4.2M or 4200000
+  var parseHuman = function(s) {
+    if (!s) return null;
+    s = s.replace(/[$,£€]/g,'').trim();
+    if (/m$/i.test(s)) return Math.round(parseFloat(s) * 1e6);
+    if (/k$/i.test(s)) return Math.round(parseFloat(s) * 1e3);
+    return parseFloat(s) || null;
+  };
+
+  cmp.roi = {
+    impressions: parseHuman(rawImpr),
+    spend:       parseHuman(document.getElementById('roi-spend').value),
+    ctr:         parseFloat(document.getElementById('roi-ctr').value) || null,
+    conversions: parseHuman(document.getElementById('roi-conversions').value),
+    loggedAt:    new Date().toISOString(),
+  };
+
+  _lsSet('sf_campaigns_ws', JSON.stringify(_campaigns));
+  closeRoiModal();
+  renderCampaignsScreen();
+}
+
+function _renderRoiSummary(cmp) {
+  var roi = cmp.roi;
+  var f   = cmp.forecast;
+  if (!roi) return '';
+
+  var fmtN = function(n){ return n>=1e6?(n/1e6).toFixed(1)+'M':n>=1000?Math.round(n/1000)+'K':n?String(n):'—'; };
+  var delta = function(actual, forecast, suffix) {
+    if (!actual || !forecast) return '';
+    var pct = Math.round((actual - forecast) / forecast * 100);
+    var col = pct >= 0 ? '#00C46A' : '#FF3355';
+    return ' <span style=\"font-weight:700;color:' + col + '\">' + (pct>=0?'+':'') + pct + '% vs forecast</span>';
+  };
+
+  var rows = [];
+  if (roi.impressions) rows.push(['Impressions', fmtN(roi.impressions) + (f ? delta(roi.impressions, f.p50Impressions, '') : '')]);
+  if (roi.ctr)         rows.push(['CTR', roi.ctr + '%' + (f ? delta(roi.ctr, f.ctr, '%') : '')]);
+  if (roi.spend)       rows.push(['Spend', '$' + fmtN(roi.spend)]);
+  if (roi.conversions) rows.push(['Conversions', fmtN(roi.conversions)]);
+  if (roi.spend && roi.conversions) {
+    var cpa = Math.round(roi.spend / roi.conversions);
+    rows.push(['CPA', '$' + cpa]);
+  }
+
+  return '<div style=\"margin-top:12px;padding:12px 16px;background:rgba(0,191,255,0.06);border:1px solid rgba(0,191,255,0.2);border-radius:8px\">'
+    + '<div style=\"font-family:Manrope,sans-serif;font-size:9px;font-weight:700;letter-spacing:.08em;color:#00BFFF;margin-bottom:8px\">ACTUAL RESULTS</div>'
+    + '<div style=\"display:flex;gap:20px;flex-wrap:wrap\">'
+    + rows.map(function(r) {
+        return '<div>'
+          + '<div style=\"font-family:Manrope,sans-serif;font-size:8px;color:var(--text-muted);letter-spacing:.06em\">' + r[0] + '</div>'
+          + '<div style=\"font-size:13px;font-weight:700\">' + r[1] + '</div>'
+        + '</div>';
+      }).join('')
+    + '</div>'
+  + '</div>';
+}
+
 // ── P8: CAMPAIGN BRIEF PDF ────────────────────────────────────────────
 function exportBriefPDF() {
   if (!tierCan('brief_pdf')) { showUpgradePrompt('brief_pdf','Platinum'); return; }
@@ -16662,6 +16816,7 @@ function renderCampaignsScreen() {
           + '<button data-cid=\"' + cmp.id + '\" data-action=\"add-outreach-campaign\" style=\"padding:6px 12px;background:rgba(0,196,106,0.12);border:1px solid rgba(0,196,106,0.3);color:#00C46A;border-radius:5px;font-family:Manrope,sans-serif;font-size:11px;font-weight:600;cursor:pointer;letter-spacing:.05em\">+ ADD CREATOR</button>'
           + '<button data-cid=\"' + cmp.id + '\" data-action=\"simulate-campaign\" style=\"padding:6px 12px;background:rgba(0,80,255,0.12);border:1px solid rgba(0,80,255,0.35);color:#6B9FFF;border-radius:5px;font-family:Manrope,sans-serif;font-size:11px;font-weight:600;cursor:pointer;letter-spacing:.05em\">▶ SIMULATE</button>'
           + '<button data-cid=\"' + cmp.id + '\" data-action=\"delete-campaign\" style=\"padding:6px 10px;background:rgba(230,0,35,0.08);border:1px solid rgba(230,0,35,0.2);color:#E60023;border-radius:5px;font-family:Manrope,sans-serif;font-size:11px;font-weight:600;cursor:pointer\">✕</button>'
+          + (tierCan('roi_tracker') ? '<button data-cid="' + cmp.id + '" data-action="log-roi" style="padding:6px 12px;background:rgba(0,191,255,0.1);border:1px solid rgba(0,191,255,0.3);color:#00BFFF;border-radius:5px;font-family:Manrope,sans-serif;font-size:11px;font-weight:600;cursor:pointer;letter-spacing:.05em">' + (cmp.roi ? '✓ RESULTS LOGGED' : '📊 LOG RESULTS') + '</button>' : '')
         + '</div>'
       + '</div>'
       + (linked.length > 0
@@ -16670,6 +16825,7 @@ function renderCampaignsScreen() {
               + '<div style=\"display:flex;gap:14px;flex-wrap:wrap;\">' + creatorAvatars + '</div>'
             + '</div>'
           : '')
+      + (cmp.roi ? _renderRoiSummary(cmp) : '')
       + '<div style=\"margin-top:12px;padding-top:12px;border-top:1px solid var(--border);display:flex;gap:12px;align-items:center;flex-wrap:wrap\">'
         + (confirmed   ? '<span style=\"font-family:Manrope,sans-serif;font-size:11px;font-weight:600;color:#00C46A\">✓ ' + confirmed   + ' CONFIRMED</span>'   : '')
         + (negotiating ? '<span style=\"font-family:Manrope,sans-serif;font-size:11px;font-weight:600;color:#FF7A00\">⇄ ' + negotiating + ' NEGOTIATING</span>' : '')
@@ -17741,6 +17897,7 @@ document.addEventListener('click', function(e) {
       else if (action==='view-outreach-campaign' && cid) { showScreen('outreach',null); setTimeout(function(){ filterOutreachByCampaign(cid); },50); }
       else if (action==='delete-outreach' && oid) deleteOutreachEntry(oid);
       else if (action==='open-overlap') { var cid2=el.getAttribute('data-cid'); console.log('[Overlap] delegation: open-overlap fired, cid=', cid2); openOverlapModal(cid2); }
+      else if (action==='log-roi' && cid) { openRoiModal(cid); }
       else if (action==='close-overlap') closeOverlapModal();
       else if (action==='overlap-toggle-creator') { var ooid=el.getAttribute('data-oid'); if(ooid) overlapRemoveCreator(parseInt(ooid)); }
       else if (action==='overlap-add-search') overlapAddFromSearch();
