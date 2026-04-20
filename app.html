@@ -2265,7 +2265,7 @@ function tierCan(feature) {
 
     // ── PDF EXPORT ────────────────────────────────────────────────
     // Silver: 1 PDF summary/month, Gold+: unlimited summary, Platinum+: full
-    'pdf_full': t>=3, 'pdf_summary': t>=1, 'pdf_unlimited': t>=2,
+    'pdf_full': t>=3, 'pdf_summary': t>=1, 'pdf_unlimited': t>=1, // Silver+ gets unlimited summary PDFs; full report stays Platinum+
 
     // ── SAVED CAMPAIGNS ───────────────────────────────────────────
     'saved_unlimited': t>=3, 'saved_10': t>=2, 'saved_3': t>=1, 'saved_1': t>=0,
@@ -2344,7 +2344,7 @@ function showUpgradePrompt(feature, targetTier) {
     // Bands
     'bands_all':              'Unlock all three confidence bands — P10, P50 and P90 — for full risk modelling.',
     // PDF
-    'pdf_summary':            'Export a campaign summary PDF — 1 per month on Silver, unlimited on Gold+.',
+    'pdf_summary':            'Export unlimited campaign summary PDFs - available from Silver tier. Full per-creator breakdown on Platinum+.',
     'pdf_full':               'Export the full simulator report including per-creator P10/P50/P90 breakdown.',
     // AI Assistant
     'ai_assistant':           'Unlock the AI Campaign Assistant — create campaigns with natural language from Silver tier.',
@@ -2718,21 +2718,8 @@ function applyAllTierGates() {
       pdfBtn.style.cursor = 'not-allowed';
       pdfBtn.title = 'PDF export: Silver+ feature';
       pdfBtn.setAttribute('data-tier-blocked', '1');
-    } else if (!tierCan('pdf_unlimited')) {
-      // Silver: show button but with "1/month" label
-      pdfBtn.style.opacity = '';
-      pdfBtn.style.cursor = '';
-      pdfBtn.removeAttribute('data-tier-blocked');
-      pdfBtn.title = 'Silver: 1 PDF export per month';
-      // Add a small note next to button if not already there
-      if (!document.getElementById('pdfMonthlyNote')) {
-        var pdfNote = document.createElement('span');
-        pdfNote.id = 'pdfMonthlyNote';
-        pdfNote.style.cssText = 'font-family:Manrope,sans-serif;font-size:10px;font-weight:600;color:var(--text-muted);margin-left:8px';
-        pdfNote.textContent = '1/month';
-        pdfBtn.parentNode && pdfBtn.parentNode.insertBefore(pdfNote, pdfBtn.nextSibling);
-      }
     } else {
+      // Silver+: unlimited summary PDFs — no cap, no note
       pdfBtn.removeAttribute('data-tier-blocked');
       pdfBtn.style.opacity = '';
       pdfBtn.style.cursor = '';
