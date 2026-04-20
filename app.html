@@ -2243,6 +2243,7 @@ function tierCan(feature) {
     'campaign_notes': t>=2,    // Gold+: campaign notes field
     'multi_genre': t>=3,       // Platinum+: secondary genre targeting
     'competitor_bench': t>=3,  // Platinum+: creator vs category benchmarking
+    'overlap_detect': t>=3,    // Platinum+: audience overlap detection in brief
 
     // ── SCORING ───────────────────────────────────────────────────
     'cpi_gfi_visible': t>=1, 'gfi_methodology': t>=2,
@@ -2335,6 +2336,7 @@ function showUpgradePrompt(feature, targetTier) {
     'campaign_notes':         'Add detailed campaign notes, objectives and briefing context — available from Gold tier.',
     'multi_genre':            'Target up to 2 secondary genres alongside your primary — surfaces crossover creators and expands your brief reach. Available from Platinum.',
     'competitor_bench':       'See how each creator ranks against their category average for CPI, engagement rate and GFI — available from Platinum.',
+    'overlap_detect':         'Get warned when creators in your brief share audiences — reduces wasted reach and budget duplication. Available from Platinum.',
     'export_unlimited':       'Export unlimited creators with full rate data.',
     // Compare
     'compare_10':             'Run side-by-side creator comparisons to make faster shortlist decisions.',
@@ -14299,6 +14301,51 @@ function updateBriefPanel() {
   set('briefAvgCPI',   avgCpi);
   set('briefAvgGFI',   avgGfi + '%');
   set('briefEstReach', fmtNum(reach));
+
+  // ── Audience overlap detection (Platinum+) ────────────────────────
+  var overlapEl = document.getElementById('briefOverlapWarning');
+  if (overlapEl) {
+    var isPlatinum = typeof tierCan === 'function' && tierCan('overlap_detect');
+    if (!isPlatinum || selected.length < 2) {
+      overlapEl.style.display = 'none';
+    } else {
+      var overlaps = [];
+      for (var _oi = 0; _oi < selected.length; _oi++) {
+        for (var _oj = _oi + 1; _oj < selected.length; _oj++) {
+          var _ca = selected[_oi];
+          var _cb = selected[_oj];
+          var _reasons = [];
+          // Same platform = same audience pool
+          if (_ca.platform === _cb.platform) _reasons.push('same platform (' + _ca.platform + ')');
+          // Same genre = strong content/audience overlap
+          if (_ca.genre === _cb.genre) _reasons.push('same genre (' + _ca.genre + ')');
+          // Same language = same linguistic audience
+          if (_ca.language && _cb.language && _ca.language === _cb.language) _reasons.push('same language (' + _ca.language + ')');
+          // Similar subscriber size (within 2x) on same platform = likely same cohort
+          var _subsA = parseSubs(_ca.subs);
+          var _subsB = parseSubs(_cb.subs);
+          var _subsRatio = _subsA > 0 && _subsB > 0 ? Math.max(_subsA,_subsB)/Math.min(_subsA,_subsB) : 99;
+          if (_subsRatio <= 2.5 && _ca.platform === _cb.platform && _ca.genre === _cb.genre) {
+            _reasons.push('similar audience size');
+          }
+          // Flag if 2+ overlap signals
+          if (_reasons.length >= 2) {
+            overlaps.push({ a: _ca.name, b: _cb.name, reasons: _reasons });
+          }
+        }
+      }
+      if (overlaps.length > 0) {
+        var _msgs = overlaps.map(function(o) {
+          return '⚠️ <strong>' + o.a + '</strong> & <strong>' + o.b + '</strong> may share audiences — ' + o.reasons.join(', ') + '.';
+        });
+        overlapEl.innerHTML = '<div style="font-weight:700;letter-spacing:.05em;margin-bottom:6px;color:#FF7A00">AUDIENCE OVERLAP DETECTED</div>'
+          + _msgs.join('<br style="margin:4px 0">');
+        overlapEl.style.display = 'block';
+      } else {
+        overlapEl.style.display = 'none';
+      }
+    }
+  }
 }
 
 function runFromBrief() {
@@ -15485,6 +15532,10 @@ document.addEventListener('DOMContentLoaded', () => {
     </div>
 
   </div>
+
+  <!-- Audience overlap warning — Platinum+ only -->
+  <div id="briefOverlapWarning" style="display:none;margin-top:10px;padding:10px 14px;background:rgba(255,122,0,0.08);border:1px solid rgba(255,122,0,0.3);border-radius:6px;font-family:Manrope,sans-serif;font-size:10px;color:#FF7A00"></div>
+
 </div>
 
 
