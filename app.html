@@ -4419,6 +4419,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <!-- CAMPAIGN BRIEF PANEL -->
 <div id="briefPanel">
+  <!-- Collapse X button -->
+  <button id="briefCollapseBtn" onclick="collapseBriefPanel()" style="position:absolute;top:8px;right:12px;background:transparent;border:none;color:var(--text-muted);font-size:18px;cursor:pointer;line-height:1;padding:4px 8px;border-radius:4px;z-index:1" title="Collapse brief (keeps selection)">×</button>
   <div class="brief-inner">
 
     <!-- ROW 1: Creator chips + actions -->
@@ -11823,6 +11825,11 @@ function toggleCreator(id) {
 
 function clearSelection() {
   selectedCreators.clear();
+  // Reset collapsed state
+  var panel = document.getElementById('briefPanel');
+  if (panel) panel._collapsed = false;
+  var pill = document.getElementById('briefResumePill');
+  if (pill) pill.style.display = 'none';
   renderCreatorGrid();
   updateSelectedBar();
   updateBriefPanel();
@@ -14269,6 +14276,44 @@ function updateBandDisplays() {
 
 
 // ── CAMPAIGN BRIEF PANEL ──────────────────────────────────────────────
+function collapseBriefPanel() {
+  var panel = document.getElementById('briefPanel');
+  if (panel) {
+    panel.classList.remove('open');
+    panel._collapsed = true;
+  }
+  // Show a small "resume brief" pill so they can get back
+  var pill = document.getElementById('briefResumePill');
+  if (!pill) {
+    pill = document.createElement('div');
+    pill.id = 'briefResumePill';
+    pill.style.cssText = 'position:fixed;bottom:12px;right:16px;z-index:9998;background:#0050FF;color:#fff;font-family:Manrope,sans-serif;font-size:11px;font-weight:700;padding:8px 16px;border-radius:20px;cursor:pointer;box-shadow:0 4px 16px rgba(0,80,255,0.4);letter-spacing:.04em;display:flex;align-items:center;gap:8px';
+    pill.innerHTML = '<span id="briefPillCount">0</span> IN BRIEF &nbsp;·&nbsp; TAP TO EXPAND';
+    pill.addEventListener('click', function() { expandBriefPanel(); });
+    document.body.appendChild(pill);
+  }
+  pill.style.display = 'flex';
+  var cnt = document.getElementById('briefPillCount');
+  if (cnt) cnt.textContent = selectedCreators.size;
+}
+
+function expandBriefPanel() {
+  var panel = document.getElementById('briefPanel');
+  if (panel) {
+    // Don't re-open if user explicitly collapsed it
+  if (!panel._collapsed) panel.classList.add('open');
+  // Update resume pill count if visible
+  var _pill = document.getElementById('briefResumePill');
+  if (_pill && _pill.style.display !== 'none') {
+    var _pc = document.getElementById('briefPillCount');
+    if (_pc) _pc.textContent = selectedCreators.size;
+  }
+    panel._collapsed = false;
+  }
+  var pill = document.getElementById('briefResumePill');
+  if (pill) pill.style.display = 'none';
+}
+
 function updateBriefPanel() {
   const panel = document.getElementById('briefPanel');
   if (!panel) return;
