@@ -14199,9 +14199,12 @@ function updateBriefPanel() {
 
   if (selectedCreators.size === 0) {
     panel.classList.remove('open');
+    panel.style.transform = 'translateY(100%)';
     return;
   }
   panel.classList.add('open');
+  panel.style.transform = 'translateY(0)';
+  panel.style.display = 'block';
 
   const selected  = CREATORS.filter(cr => selectedCreators.has(cr.id));
   const budget    = parseInt((document.getElementById('budget')||{value:'500000'}).value)||500000;
@@ -18142,7 +18145,7 @@ console.log('🛡️ Simfluence Legal Protection System Active');
 
 
 <!-- CAMPAIGN BRIEF PANEL -->
-<div id="briefPanel">
+<div id="briefPanel" style="display:block;transform:translateY(100%);position:fixed;bottom:0;left:0;right:0;z-index:9999;background:var(--bg2);border-top:2px solid #0050FF;box-shadow:0 -8px 32px rgba(0,0,80,0.4);transition:transform 0.35s cubic-bezier(0.4,0,0.2,1);">
   <div class="brief-inner">
 
     <!-- ROW 1: Creator chips + actions -->
