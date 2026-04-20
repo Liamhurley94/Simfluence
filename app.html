@@ -2240,6 +2240,7 @@ function tierCan(feature) {
     // ── EXPORT ────────────────────────────────────────────────────
     'export_unlimited': t>=3, 'export_10': t>=2, 'export_5': t>=1,  // Silver: 5 creators
     'shortlist_share': t>=2,  // Gold+: shareable read-only link
+    'campaign_notes': t>=2,    // Gold+: campaign notes field
 
     // ── SCORING ───────────────────────────────────────────────────
     'cpi_gfi_visible': t>=1, 'gfi_methodology': t>=2,
@@ -2329,6 +2330,7 @@ function showUpgradePrompt(feature, targetTier) {
     'export_5':               'Export up to 5 creators as a CSV — available from Silver tier.',
     'export_10':              'Export your creator shortlist as a CSV to share with clients.',
     'shortlist_share':        'Generate a read-only share link for your creator shortlist — available from Gold tier.',
+    'campaign_notes':         'Add detailed campaign notes, objectives and briefing context — available from Gold tier.',
     'export_unlimited':       'Export unlimited creators with full rate data.',
     // Compare
     'compare_10':             'Run side-by-side creator comparisons to make faster shortlist decisions.',
@@ -2658,6 +2660,39 @@ function applyAllTierGates() {
     var durLabel = document.getElementById('durationLabel');
     if (durLabel) { durLabel.textContent = '4 weeks (Gold+)'; durLabel.style.color = 'var(--text-muted)'; }
     durSlider.addEventListener('click', function(){ showUpgradePrompt('duration_slider','Gold'); });
+  }
+
+  // Campaign notes field — Gold+
+  var notesEl = document.getElementById('cm-notes');
+  if (notesEl) {
+    if (!tierCan('campaign_notes')) {
+      notesEl.disabled = true;
+      notesEl.style.opacity = '0.35';
+      notesEl.style.cursor = 'not-allowed';
+      notesEl.placeholder = 'Campaign notes — Gold+ feature';
+      notesEl.title = 'Upgrade to Gold to add campaign notes';
+      // Remove existing listener then add upgrade prompt on click
+      var _notesClone = notesEl.cloneNode(true);
+      notesEl.parentNode.replaceChild(_notesClone, notesEl);
+      _notesClone.addEventListener('click', function(){ showUpgradePrompt('campaign_notes','Gold'); });
+      // Add a small Gold+ badge next to the label if not already there
+      var notesLabel = _notesClone.parentNode.querySelector('label');
+      if (notesLabel && !notesLabel.querySelector('.notes-tier-badge')) {
+        var _nb = document.createElement('span');
+        _nb.className = 'notes-tier-badge';
+        _nb.style.cssText = 'margin-left:6px;font-size:8px;font-weight:700;letter-spacing:.06em;padding:1px 6px;border-radius:3px;background:rgba(255,212,0,0.1);border:1px solid rgba(255,212,0,0.25);color:#FFD400;vertical-align:middle';
+        _nb.textContent = 'GOLD+';
+        notesLabel.appendChild(_nb);
+      }
+    } else {
+      notesEl.disabled = false;
+      notesEl.style.opacity = '';
+      notesEl.style.cursor = '';
+      notesEl.placeholder = 'Campaign objectives, key messages, target region, special instructions...';
+      // Remove Gold+ badge if present
+      var notesLabel2 = notesEl.parentNode.querySelector('label');
+      if (notesLabel2) { var nb2 = notesLabel2.querySelector('.notes-tier-badge'); if (nb2) nb2.remove(); }
+    }
   }
 
   // P10/P90 confidence bands
