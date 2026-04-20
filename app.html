@@ -2241,6 +2241,8 @@ function tierCan(feature) {
     'export_unlimited': t>=3, 'export_10': t>=2, 'export_5': t>=1,  // Silver: 5 creators
     'shortlist_share': t>=2,  // Gold+: shareable read-only link
     'campaign_notes': t>=2,    // Gold+: campaign notes field
+    'multi_genre': t>=3,       // Platinum+: secondary genre targeting
+    'competitor_bench': t>=3,  // Platinum+: creator vs category benchmarking
 
     // ── SCORING ───────────────────────────────────────────────────
     'cpi_gfi_visible': t>=1, 'gfi_methodology': t>=2,
@@ -2331,6 +2333,8 @@ function showUpgradePrompt(feature, targetTier) {
     'export_10':              'Export your creator shortlist as a CSV to share with clients.',
     'shortlist_share':        'Generate a read-only share link for your creator shortlist — available from Gold tier.',
     'campaign_notes':         'Add detailed campaign notes, objectives and briefing context — available from Gold tier.',
+    'multi_genre':            'Target up to 2 secondary genres alongside your primary — surfaces crossover creators and expands your brief reach. Available from Platinum.',
+    'competitor_bench':       'See how each creator ranks against their category average for CPI, engagement rate and GFI — available from Platinum.',
     'export_unlimited':       'Export unlimited creators with full rate data.',
     // Compare
     'compare_10':             'Run side-by-side creator comparisons to make faster shortlist decisions.',
@@ -3681,6 +3685,20 @@ document.addEventListener('DOMContentLoaded', function() {
               <option>Education &amp; Self-Development</option>
             </optgroup>
           </select>
+        </div>
+
+        <!-- Secondary genres — Platinum+ only -->
+        <div class="field" id="secondaryGenreField" style="display:none">
+          <label style="display:flex;align-items:center;gap:8px">Secondary Genres
+            <span style="font-size:8px;font-weight:700;letter-spacing:.06em;padding:1px 6px;border-radius:3px;background:rgba(0,191,255,0.1);border:1px solid rgba(0,191,255,0.25);color:#00BFFF">PLATINUM</span>
+            <span style="font-size:9px;color:var(--text-muted);font-weight:400">optional · up to 2</span>
+          </label>
+          <div id="secondaryGenreChips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px"></div>
+          <div id="secondaryGenreAdd" style="margin-top:6px;display:flex;gap:6px;align-items:center">
+            <select id="secondaryGenreSelect" style="flex:1;font-family:Manrope,sans-serif;font-weight:600;font-size:11px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text-dim);outline:none">
+              <option value="">+ Add secondary genre...</option>
+            </select>
+          </div>
         </div>
 
         <div class="field" id="subModeField">
@@ -11584,6 +11602,29 @@ function computeGFI(creator) {
     gfi = genreAffinity * 30;
   }
 
+  // Secondary genre boost (Platinum+) — if creator matches a secondary genre,
+  // apply a 40% weighted boost on top of primary GFI
+  var _secondary = (typeof getSecondaryGenres === 'function') ? getSecondaryGenres() : [];
+  if (_secondary.length > 0 && creator.genre !== campaignGenre) {
+    for (var _si = 0; _si < _secondary.length; _si++) {
+      var _sg = _secondary[_si];
+      if (creator.genre === _sg) {
+        // Native match for secondary genre — apply 40% weight crossover boost
+        var _sgAff = 1.0;
+        var _sgBoost = subMode ? Math.max(0, ((computeSubModeAlignment(creator, subMode) - 8) / 87) * 28) : 0;
+        var _sgGfi = Math.round(clamp((70 + _sgBoost) * 0.40, 5, 40));
+        gfi = Math.round(clamp(gfi + _sgGfi, 5, 98));
+        break;
+      }
+      // Related to secondary genre
+      var _sgAffRaw = (GENRE_AFFINITY[creator.genre]||{})[_sg] || 0;
+      if (_sgAffRaw >= 0.5) {
+        gfi = Math.round(clamp(gfi + Math.round(_sgAffRaw * 15), 5, 98));
+        break;
+      }
+    }
+  }
+
   return Math.round(clamp(gfi, 5, 98));
 }
 
@@ -11664,6 +11705,9 @@ function setSortMode(v) { sortMode=v; renderCreatorGrid(); }
 
 // ── SELECTED CREATORS ─────────────────────────────────────────────────
 const selectedCreators = new Set();
+
+// Secondary genres for multi-genre briefs (Platinum+)
+window.__secondaryGenres = [];
 
 function toggleCreator(id) {
   if (selectedCreators.has(id)) {
@@ -12785,6 +12829,77 @@ function openProfileOverlay(id) {
         <div style="font-family:Manrope,sans-serif;font-weight:500;font-size:8px;color:var(--text-muted);margin-top:8px;opacity:.6">Geo and demographic estimates derived from channel country, language and genre benchmarks. Verified audience analytics coming in a future release.</div>
       </div>
 
+      <!-- COMPETITOR BENCHMARKING — Platinum+ -->
+      ${(function(){
+        var _bt = typeof getTierLevel==='function'?getTierLevel():4;
+        if (_bt < 3) return ''; // Only Platinum+
+        var _bGenre = c.genre || 'Gaming & Esports';
+        var _bench = (typeof GENRE_BENCHMARKS!=='undefined') ? (GENRE_BENCHMARKS[_bGenre] || GENRE_BENCHMARKS['Gaming & Esports']) : {};
+        // Compute category averages from CREATORS array
+        var _catCreators = (typeof CREATORS!=='undefined') ? CREATORS.filter(function(x){ return x.genre === _bGenre; }) : [];
+        if (!_catCreators.length) return '';
+        var _catAvgCPI = Math.round(_catCreators.reduce(function(a,x){return a+(x.cpi||50);},0)/_catCreators.length);
+        var _catAvgEng = Math.round(_catCreators.reduce(function(a,x){return a+(parseFloat(x.eng)||2);},0)/_catCreators.length*10)/10;
+        var _catGFIs   = _catCreators.map(function(x){ return typeof computeGFI==='function'?computeGFI(x):70; });
+        var _catAvgGFI = Math.round(_catGFIs.reduce(function(a,b){return a+b;},0)/_catGFIs.length);
+        // Creator's percentile ranks
+        var _cpiRank   = Math.round((1 - _catCreators.filter(function(x){return(x.cpi||50)>c.cpi;}).length/_catCreators.length)*100);
+        var _engVal    = parseFloat(c.eng)||0;
+        var _engRank   = Math.round((1 - _catCreators.filter(function(x){return(parseFloat(x.eng)||0)>_engVal;}).length/_catCreators.length)*100);
+        var _cpiDelta  = c.cpi - _catAvgCPI;
+        var _engDelta  = Math.round((_engVal - _catAvgEng)*10)/10;
+        var _gfiVal    = typeof computeGFI==='function'?computeGFI(c):70;
+        var _gfiDelta  = _gfiVal - _catAvgGFI;
+        var _fmtDelta  = function(d,suffix){ return (d>=0?'+':'')+d+(suffix||''); };
+        var _rankCol   = function(r){ return r>=75?'#00C46A':r>=50?'#FFD400':'#FF7A00'; };
+        var _deltaCol  = function(d){ return d>0?'#00C46A':d<0?'#FF3355':'#888'; };
+        return '<div style="padding:20px 24px;border-top:1px solid var(--border)">'
+          + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">'
+            + '<div style="font-family:Manrope,sans-serif;font-size:12px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:#00BFFF">Category Benchmarking</div>'
+            + '<span style="font-size:8px;font-weight:700;letter-spacing:.06em;padding:2px 8px;border-radius:3px;background:rgba(0,191,255,0.1);border:1px solid rgba(0,191,255,0.25);color:#00BFFF">PLATINUM</span>'
+          + '</div>'
+          + '<div style="font-family:Manrope,sans-serif;font-size:9px;color:var(--text-muted);margin-bottom:12px;letter-spacing:.04em">'
+            + c.name + ' vs ' + _bGenre + ' category average (' + _catCreators.length + ' creators)'
+          + '</div>'
+          + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">'
+            // CPI
+            + '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:14px;position:relative">'
+              + '<div style="font-family:Manrope,sans-serif;font-size:8px;color:var(--text-muted);letter-spacing:.06em;margin-bottom:8px">CPI vs CATEGORY</div>'
+              + '<div style="font-size:26px;font-weight:700;color:' + _rankCol(_cpiRank) + '">' + c.cpi + '</div>'
+              + '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">Category avg: ' + _catAvgCPI + '</div>'
+              + '<div style="font-size:11px;font-weight:700;color:' + _deltaCol(_cpiDelta) + ';margin-top:4px">' + _fmtDelta(_cpiDelta) + ' pts</div>'
+              + '<div style="margin-top:8px;background:var(--bg2);border-radius:3px;height:4px">'
+                + '<div style="height:100%;background:' + _rankCol(_cpiRank) + ';border-radius:3px;width:' + _cpiRank + '%"></div>'
+              + '</div>'
+              + '<div style="font-family:Manrope,sans-serif;font-size:9px;color:' + _rankCol(_cpiRank) + ';margin-top:4px">Top ' + (100-_cpiRank) + '% in category</div>'
+            + '</div>'
+            // Engagement
+            + '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:14px">'
+              + '<div style="font-family:Manrope,sans-serif;font-size:8px;color:var(--text-muted);letter-spacing:.06em;margin-bottom:8px">ENG RATE vs CATEGORY</div>'
+              + '<div style="font-size:26px;font-weight:700;color:' + _rankCol(_engRank) + '">' + _engVal.toFixed(1) + '%</div>'
+              + '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">Category avg: ' + _catAvgEng + '%</div>'
+              + '<div style="font-size:11px;font-weight:700;color:' + _deltaCol(_engDelta) + ';margin-top:4px">' + _fmtDelta(_engDelta,'%') + '</div>'
+              + '<div style="margin-top:8px;background:var(--bg2);border-radius:3px;height:4px">'
+                + '<div style="height:100%;background:' + _rankCol(_engRank) + ';border-radius:3px;width:' + _engRank + '%"></div>'
+              + '</div>'
+              + '<div style="font-family:Manrope,sans-serif;font-size:9px;color:' + _rankCol(_engRank) + ';margin-top:4px">Top ' + (100-_engRank) + '% in category</div>'
+            + '</div>'
+            // GFI vs category
+            + '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:14px">'
+              + '<div style="font-family:Manrope,sans-serif;font-size:8px;color:var(--text-muted);letter-spacing:.06em;margin-bottom:8px">GFI vs CATEGORY</div>'
+              + '<div style="font-size:26px;font-weight:700;color:' + (_gfiVal>=70?'#00C46A':_gfiVal>=50?'#FF7A00':'#E60023') + '">' + _gfiVal + '%</div>'
+              + '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">Category avg: ' + _catAvgGFI + '%</div>'
+              + '<div style="font-size:11px;font-weight:700;color:' + _deltaCol(_gfiDelta) + ';margin-top:4px">' + _fmtDelta(_gfiDelta,'%') + '</div>'
+              + '<div style="margin-top:8px;background:var(--bg2);border-radius:3px;height:4px">'
+                + '<div style="height:100%;background:' + (_gfiVal>=70?'#00C46A':_gfiVal>=50?'#FF7A00':'#E60023') + ';border-radius:3px;width:' + _gfiVal + '%"></div>'
+              + '</div>'
+              + '<div style="font-family:Manrope,sans-serif;font-size:9px;color:var(--text-muted);margin-top:4px">vs avg ' + _catAvgGFI + '% in ' + _bGenre + '</div>'
+            + '</div>'
+          + '</div>'
+          + '<div style="font-family:Manrope,sans-serif;font-size:8px;color:var(--text-muted);margin-top:10px;opacity:.7">Based on ' + _catCreators.length + ' creators in ' + _bGenre + ' · Percentile vs full category database</div>'
+        + '</div>';
+      })()}
+
       <!-- TWITCH CONTEXT PANEL -->
       ${c.platform==='Twitch' ? getTwitchPanel(c) : ''}
 
@@ -13368,6 +13483,82 @@ var sfContentMustInclude  = []; // [{label, keywords}]
 var sfContentMustExclude  = []; // [{label, keywords}]
 var sfContentUntapped     = false;
 
+
+// ── SECONDARY GENRE SYSTEM (Platinum+) ────────────────────────────────
+var ALL_GENRES = [
+  'Gaming & Esports','Entertainment & Comedy','Music','Talk & Entertainment',
+  'Sports & Athletics','Animals & Pets','ASMR & Relaxation','Health & Fitness',
+  'Beauty & Skincare','Food & Cooking','Drinks & Beverages','Travel & Adventure',
+  'Lifestyle & Vlogs','Tech & Gadgets','Gaming Setup & Peripherals','Unboxing',
+  'Automotive','Finance & Investing','Trading Cards (TCG)','Kids & Family / Toys',
+  'Education & Self-Development','Art & Creative','Theatre & Performing Arts'
+];
+
+function renderSecondaryGenreField() {
+  var field = document.getElementById('secondaryGenreField');
+  var chipsEl = document.getElementById('secondaryGenreChips');
+  var selectEl = document.getElementById('secondaryGenreSelect');
+  if (!field || !chipsEl || !selectEl) return;
+
+  var isPlatinum = typeof tierCan === 'function' && tierCan('multi_genre');
+  field.style.display = isPlatinum ? 'block' : 'none';
+  if (!isPlatinum) return;
+
+  var primaryGenre = getSelectedGenre();
+  var secondary = window.__secondaryGenres || [];
+
+  // Render chips for selected secondary genres
+  // Render chips for selected secondary genres
+  chipsEl.innerHTML = secondary.map(function(g, gi) {
+    return '<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:rgba(0,191,255,0.1);border:1px solid rgba(0,191,255,0.3);border-radius:12px;font-family:Manrope,sans-serif;font-size:10px;font-weight:600;color:#00BFFF">'
+      + g
+      + '<span data-rsg="' + gi + '" style="cursor:pointer;opacity:0.7;font-size:12px;line-height:1">×</span>'
+      + '</span>';
+  }).join('');
+  // Wire remove buttons
+  chipsEl.querySelectorAll('[data-rsg]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var _gi = parseInt(btn.getAttribute('data-rsg'));
+      var _g = (window.__secondaryGenres || [])[_gi];
+      if (_g !== undefined) removeSecondaryGenre(_g);
+    });
+  });
+  // Rebuild select with available genres (exclude primary + already selected)
+  var available = ALL_GENRES.filter(function(g) {
+    return g !== primaryGenre && secondary.indexOf(g) === -1;
+  });
+  selectEl.innerHTML = '<option value="">+ Add secondary genre...</option>'
+    + available.map(function(g) {
+        return '<option value="' + g + '">' + g + '</option>';
+      }).join('');
+
+  // Disable select if already at 2
+  selectEl.disabled = secondary.length >= 2;
+  selectEl.style.opacity = secondary.length >= 2 ? '0.4' : '';
+}
+
+function addSecondaryGenre(g) {
+  if (!g) return;
+  var secondary = window.__secondaryGenres || [];
+  if (secondary.length >= 2 || secondary.indexOf(g) > -1) return;
+  secondary.push(g);
+  window.__secondaryGenres = secondary;
+  renderSecondaryGenreField();
+  renderCreatorGrid();
+  updateBriefPanel();
+}
+
+function removeSecondaryGenre(g) {
+  window.__secondaryGenres = (window.__secondaryGenres || []).filter(function(x){ return x !== g; });
+  renderSecondaryGenreField();
+  renderCreatorGrid();
+  updateBriefPanel();
+}
+
+function getSecondaryGenres() {
+  return window.__secondaryGenres || [];
+}
+
 function onGenreChange() {
   const genre = getSelectedGenre();
   const modes = GENRE_SUBMODES[genre] || [];
@@ -13377,10 +13568,13 @@ function onGenreChange() {
   if (field) field.style.display = modes.length ? 'block' : 'none';
   activeSubMode  = modes[0] || '';
   activeSubGenre = ''; // reset sub-genre on genre change
+  // Clear secondary genres when primary changes
+  window.__secondaryGenres = [];
   container.innerHTML = modes.map((m,i) =>
     `<button class="chip ${i===0?'active':''}" data-oc="setSubMode('${m.replace(/'/g,"\'")}',currentTarget)">${m}</button>`
   ).join('');
   renderSubGenreDropdown(activeSubMode);
+  renderSecondaryGenreField();
   renderCreatorGrid();
   updateBriefPanel();
   if (window.__livePanelOpen) renderLivePanel();
@@ -17569,6 +17763,15 @@ document.addEventListener('DOMContentLoaded', function() {
       if (el) el.addEventListener('change', fn);
     }
     wire('genre',        function() { if(typeof onGenreChange==='function') onGenreChange(); });
+    // Wire secondary genre select
+    var _sgSel = document.getElementById('secondaryGenreSelect');
+    if (_sgSel) {
+      _sgSel.addEventListener('change', function() {
+        if (this.value) { addSecondaryGenre(this.value); this.value = ''; }
+      });
+    }
+    // Init secondary genre field visibility
+    if (typeof renderSecondaryGenreField === 'function') renderSecondaryGenreField();
     wire('format',       function() { if(typeof updateTierLabel==='function') updateTierLabel((document.getElementById('budget')||{value:'85000'}).value); if(typeof renderCreatorGrid==='function') renderCreatorGrid(); });
     wire('tierMix',      function() { if(typeof renderCreatorGrid==='function') renderCreatorGrid(); if(typeof updateSim==='function') updateSim(); });
     wire('langFilter',   function() { if(typeof renderCreatorGrid==='function') renderCreatorGrid(); });
