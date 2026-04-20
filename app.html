@@ -2351,6 +2351,7 @@ function showUpgradePrompt(feature, targetTier) {
     // Campaigns
     'saved_1':                'Save 1 campaign draft — upgrade to Silver to save up to 3.',
     'rate_estimate':          'Unlock full rate estimates for every creator — available from Silver tier.',
+    'personas_bronze':        'Unlock all persona fields including Purchase Behaviour, Brand Fit, CTA and creator matches — available from Silver tier.',
     'saved_3':                'Save up to 3 recent campaigns for quick reference.',
     'saved_10':               'Save up to 10 campaigns and recall them instantly.',
     // Live data
@@ -13661,8 +13662,73 @@ function renderPersonaScreen() {
     if(t>=4) return Infinity; if(t>=3) return Infinity; if(t>=2) return 3; if(t>=1) return 1; return 0;
   })();
   if (_personaCap === 0) {
+    // Bronze: show top persona as a teaser — name, icon, demo and desc visible,
+    // deeper sections (purchase, brands, CTA, creators) blurred with upgrade prompt.
     var _pGrid = document.getElementById('personaGrid');
-    if (_pGrid) _pGrid.innerHTML = '<div style="padding:60px;text-align:center"><div style="font-size:32px;margin-bottom:16px">&#128274;</div><div style="font-family:\'Manrope\',sans-serif;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,212,0,0.8);margin-bottom:8px">SILVER+ FEATURE</div><div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:20px">AI Persona Matching is available from Silver tier.</div><button onclick="showUpgradePrompt(\'personas_1\',\'Silver\')" style="padding:10px 24px;background:#FFD400;color:#000;border:none;border-radius:6px;font-family:\'Manrope\',sans-serif;font-size:10px;cursor:pointer;font-weight:700">UPGRADE</button></div>';
+    if (!_pGrid || !personas.length) return;
+    var _tp = personas[0]; // top persona for this genre
+    var _tScore = scorePersona(_tp);
+    var _tScoreCol = _tScore >= 80 ? '#00C46A' : _tScore >= 60 ? '#FF7A00' : '#FF3355';
+    var _blurStyle = 'filter:blur(5px);user-select:none;pointer-events:none';
+    _pGrid.innerHTML =
+      // Teaser header
+      '<div style="margin-bottom:16px;padding:10px 14px;background:rgba(255,212,0,0.06);border:1px dashed rgba(255,212,0,0.25);border-radius:8px;display:flex;align-items:center;justify-content:space-between">'
+      + '<span style="font-family:\'Manrope\',sans-serif;font-size:9px;letter-spacing:.1em;color:rgba(255,212,0,0.8)">🔒 PERSONA PREVIEW · UPGRADE TO SILVER TO UNLOCK ALL PERSONAS</span>'
+      + '<button onclick="showUpgradePrompt(\'personas_1\',\'Silver\')" style="padding:5px 14px;background:#FFD400;color:#000;border:none;border-radius:4px;font-family:\'Manrope\',sans-serif;font-size:9px;font-weight:700;cursor:pointer">UPGRADE →</button>'
+      + '</div>'
+      // Single persona card — top visible fields, deeper fields blurred
+      + '<div style="background:var(--bg2);border:2px solid ' + _tp.color + ';border-radius:12px;padding:24px;position:relative;overflow:hidden">'
+        // Match badge
+        + '<div style="position:absolute;top:16px;right:16px;font-family:\'Manrope\',sans-serif;font-size:8px;letter-spacing:.08em;padding:3px 8px;border-radius:3px;background:' + _tScoreCol + '22;color:' + _tScoreCol + ';border:1px solid ' + _tScoreCol + '44">TOP PERSONA</div>'
+        // Icon + Name — VISIBLE
+        + '<div style="font-size:32px;margin-bottom:12px">' + _tp.icon + '</div>'
+        + '<div style="font-family:\'Space Grotesk\',sans-serif;font-size:18px;font-weight:700;color:' + _tp.color + ';margin-bottom:4px">' + _tp.name + '</div>'
+        + '<div style="font-family:\'Manrope\',sans-serif;font-size:9px;color:var(--text-muted);letter-spacing:.06em;margin-bottom:12px">' + _tp.demo + '</div>'
+        + '<div style="font-size:12px;color:var(--text-dim);line-height:1.6;margin-bottom:16px">' + _tp.desc + '</div>'
+        // Match score bar — VISIBLE
+        + '<div style="margin-bottom:16px">'
+          + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'
+            + '<span style="font-family:\'Manrope\',sans-serif;font-size:9px;color:var(--text-muted);letter-spacing:.06em">CAMPAIGN MATCH</span>'
+            + '<span style="font-family:\'Manrope\',sans-serif;font-size:11px;font-weight:700;color:' + _tScoreCol + '">' + _tScore + '%</span>'
+          + '</div>'
+          + '<div style="height:4px;background:var(--bg3);border-radius:2px;overflow:hidden">'
+            + '<div style="height:100%;width:' + _tScore + '%;background:' + _tScoreCol + ';border-radius:2px"></div>'
+          + '</div>'
+        + '</div>'
+        // Purchase + Brands — BLURRED
+        + '<div style="position:relative;margin-bottom:12px">'
+          + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;' + _blurStyle + '">'
+            + '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:10px">'
+              + '<div style="font-size:8px;color:var(--text-muted);letter-spacing:.06em;margin-bottom:4px">PURCHASE BEHAVIOUR</div>'
+              + '<div style="font-size:11px;color:var(--text-dim)">' + _tp.purchase + '</div>'
+            + '</div>'
+            + '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:10px">'
+              + '<div style="font-size:8px;color:var(--text-muted);letter-spacing:.06em;margin-bottom:4px">BRAND FIT</div>'
+              + '<div style="font-size:11px;color:var(--text-dim)">' + _tp.brands + '</div>'
+            + '</div>'
+          + '</div>'
+          + '<div onclick="showUpgradePrompt(\'personas_1\',\'Silver\')" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:6px;background:rgba(0,0,0,0.2)">'
+            + '<span style="font-family:\'Manrope\',sans-serif;font-size:9px;font-weight:700;color:#FFD400;letter-spacing:.08em">🔒 SILVER+ TO UNLOCK</span>'
+          + '</div>'
+        + '</div>'
+        // CTA — BLURRED
+        + '<div style="position:relative;margin-bottom:12px">'
+          + '<div style="background:' + _tp.color + '15;border:1px solid ' + _tp.color + '33;border-radius:6px;padding:10px 14px;' + _blurStyle + '">'
+            + '<div style="font-size:8px;color:' + _tp.color + ';letter-spacing:.08em;margin-bottom:2px">SUGGESTED CTA</div>'
+            + '<div style="font-size:13px;font-weight:600;color:' + _tp.color + '">' + _tp.cta + '</div>'
+          + '</div>'
+          + '<div onclick="showUpgradePrompt(\'personas_1\',\'Silver\')" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:6px">'
+            + '<span style="font-family:\'Manrope\',sans-serif;font-size:9px;font-weight:700;color:#FFD400;letter-spacing:.08em">🔒 SILVER+ TO UNLOCK</span>'
+          + '</div>'
+        + '</div>'
+        // Creators — locked placeholder
+        + '<div style="padding:16px;background:var(--bg3);border-radius:6px;text-align:center">'
+          + '<div style="font-family:\'Manrope\',sans-serif;font-size:9px;color:var(--text-muted);letter-spacing:.06em;margin-bottom:8px">MATCHED CREATORS</div>'
+          + '<div style="font-size:24px;margin-bottom:6px">🔒</div>'
+          + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:10px">Upgrade to Silver to see creator matches for this persona</div>'
+          + '<button onclick="showUpgradePrompt(\'personas_1\',\'Silver\')" style="padding:7px 18px;background:#FFD400;color:#000;border:none;border-radius:4px;font-family:\'Manrope\',sans-serif;font-size:9px;font-weight:700;cursor:pointer">UPGRADE TO SILVER →</button>'
+        + '</div>'
+      + '</div>';
     return;
   }
 
