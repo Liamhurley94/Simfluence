@@ -2350,6 +2350,7 @@ function showUpgradePrompt(feature, targetTier) {
     'ai_assistant':           'Unlock the AI Campaign Assistant — create campaigns with natural language from Silver tier.',
     // Campaigns
     'saved_1':                'Save 1 campaign draft — upgrade to Silver to save up to 3.',
+    'rate_estimate':          'Unlock full rate estimates for every creator — available from Silver tier.',
     'saved_3':                'Save up to 3 recent campaigns for quick reference.',
     'saved_10':               'Save up to 10 campaigns and recall them instantly.',
     // Live data
@@ -11807,8 +11808,13 @@ function renderCreatorGrid(keepPage) {
         </div>
         
         <div style="margin-top:12px;margin-bottom:16px;font-size:10px;color:var(--text-muted);display:flex;justify-content:space-between">
-          <span style="color:var(--text-dim);font-weight:600;font-size:11px">Int: <strong style="color:#FFD400">${costEst.fmt(costEst.ranges.int[0])}–${costEst.fmt(costEst.ranges.int[1])}</strong></span>
-          <span style="color:var(--text-dim);font-weight:600;font-size:11px">Ded: <strong style="color:#FFD400">${costEst.fmt(costEst.ranges.ded[0])}–${costEst.fmt(costEst.ranges.ded[1])}</strong></span>
+          ${(function(){
+            var _t3 = typeof getTierLevel==='function'?getTierLevel():4;
+            if (_t3 === 0) {
+              return '<span onclick="showUpgradePrompt(\'rate_estimate\',\'Silver\')" style="color:var(--text-dim);font-weight:600;font-size:11px;cursor:pointer">Est. Rate: <strong style="color:#FFD400;filter:blur(4px);user-select:none">$8K–$32K</strong> <span style="font-size:9px;color:#6B9FFF">🔒</span></span>';
+            }
+            return '<span style="color:var(--text-dim);font-weight:600;font-size:11px">Int: <strong style="color:#FFD400">' + costEst.fmt(costEst.ranges.int[0]) + '–' + costEst.fmt(costEst.ranges.int[1]) + '</strong></span><span style="color:var(--text-dim);font-weight:600;font-size:11px">Ded: <strong style="color:#FFD400">' + costEst.fmt(costEst.ranges.ded[0]) + '–' + costEst.fmt(costEst.ranges.ded[1]) + '</strong></span>';
+          })()}
         </div>
         
         <div style="display:flex;gap:8px;margin-top:auto">
@@ -12153,8 +12159,13 @@ function renderCreatorGrid(keepPage) {
           ${multiPlatformCpiHtml(cr)}
         </div>
         <div style="margin-top:8px;font-size:10px;color:var(--text-muted);display:flex;justify-content:space-between">
-          <span style="color:var(--text-dim);font-weight:600;font-size:11px">Int: <strong style="color:#FFD400">${e.fmt(e.ranges.int[0])}–${e.fmt(e.ranges.int[1])}</strong></span>
-          <span style="color:var(--text-dim);font-weight:600;font-size:11px">Ded: <strong style="color:#FFD400">${e.fmt(e.ranges.ded[0])}–${e.fmt(e.ranges.ded[1])}</strong></span>
+          ${(function(){
+            var _t2 = typeof getTierLevel==="function"?getTierLevel():4;
+            if (_t2 === 0) {
+              return '<span onclick="showUpgradePrompt(\'rate_estimate\',\'Silver\')" style="color:var(--text-dim);font-weight:600;font-size:11px;cursor:pointer">Est. Rate: <strong style="color:#FFD400;filter:blur(4px);user-select:none">$8K\u2013$32K</strong> <span style="font-size:9px;color:#6B9FFF">\ud83d\udd12 Silver+</span></span>';
+            }
+            return '<span style="color:var(--text-dim);font-weight:600;font-size:11px">Int: <strong style="color:#FFD400">' + e.fmt(e.ranges.int[0]) + '\u2013' + e.fmt(e.ranges.int[1]) + '</strong></span><span style="color:var(--text-dim);font-weight:600;font-size:11px">Ded: <strong style="color:#FFD400">' + e.fmt(e.ranges.ded[0]) + '\u2013' + e.fmt(e.ranges.ded[1]) + '</strong></span>';
+          })()}
         </div>
       </div>`;
     }).join('') || `<div style="padding:60px;text-align:center;color:var(--text-muted);font-family:Manrope,sans-serif;font-weight:500;font-size:11px">NO CREATORS FOUND FOR "${sq.toUpperCase()}"</div>`;
@@ -12336,25 +12347,30 @@ function renderCreatorGrid(keepPage) {
             return e.isTwitchCCV ? '2HR STREAM' : format==='Integrated' ? 'INTEGRATED' : format==='Mixed' ? 'MIXED' : 'DEDICATED';
           })()
         }</span>
-        <span style="font-weight:700;font-size:13px;color:#FFD400">${
-          (function(){
-            var isYT = (cr.platform === 'YouTube' || (activePlatforms.size > 0 && activePlatforms.has('YouTube') && !activePlatforms.has('Twitch')));
-            if (isYT) {
-              return format==='Dedicated'
-                ? e.fmt(e.ranges.ded[0])+'–'+e.fmt(e.ranges.ded[1])
-                : format==='Mixed'
-                  ? e.fmt(e.ranges.mix[0])+'–'+e.fmt(e.ranges.mix[1])
-                  : e.fmt(e.ranges.int[0])+'–'+e.fmt(e.ranges.int[1]);
-            }
-            return e.isTwitchCCV
+        ${(function(){
+          var _t = typeof getTierLevel==='function'?getTierLevel():4;
+          if (_t === 0) {
+            return '<span onclick="showUpgradePrompt(\'rate_estimate\',\'Silver\')" title="Upgrade to Silver to see rate estimates" style="font-weight:700;font-size:13px;color:#FFD400;filter:blur(5px);user-select:none;cursor:pointer;letter-spacing:.02em">$12K–$48K</span>';
+          }
+          var isYT = (cr.platform === 'YouTube' || (activePlatforms.size > 0 && activePlatforms.has('YouTube') && !activePlatforms.has('Twitch')));
+          var rateStr;
+          if (isYT) {
+            rateStr = format==='Dedicated'
+              ? e.fmt(e.ranges.ded[0])+'–'+e.fmt(e.ranges.ded[1])
+              : format==='Mixed'
+                ? e.fmt(e.ranges.mix[0])+'–'+e.fmt(e.ranges.mix[1])
+                : e.fmt(e.ranges.int[0])+'–'+e.fmt(e.ranges.int[1]);
+          } else {
+            rateStr = e.isTwitchCCV
               ? e.fmt(e.ranges.int[0])+'–'+e.fmt(e.ranges.int[1])
               : format==='Integrated'
                 ? e.fmt(e.ranges.int[0])+'–'+e.fmt(e.ranges.int[1])
                 : format==='Mixed'
                   ? e.fmt(e.ranges.mix[0])+'–'+e.fmt(e.ranges.mix[1])
                   : e.fmt(e.ranges.ded[0])+'–'+e.fmt(e.ranges.ded[1]);
-          })()
-        }</span>
+          }
+          return '<span style="font-weight:700;font-size:13px;color:#FFD400">'+rateStr+'</span>';
+        })()}
       </div>
     </div>`;
   }).join('') || `<div style="padding:60px;text-align:center;color:var(--text-muted);font-family:Manrope,sans-serif;font-size:13px;font-weight:500;letter-spacing:.08em">
