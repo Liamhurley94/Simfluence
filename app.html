@@ -4231,30 +4231,42 @@ document.addEventListener('DOMContentLoaded', function() {
 
       <div id="campaigns-list" style="display:flex;flex-direction:column;gap:12px;"></div>
       <!-- ROI TRACKER MODAL — Platinum+ -->
-      <div id="roiModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:1000;align-items:center;justify-content:center;padding:32px 16px">
-        <div style="background:var(--bg2);border:1px solid var(--border-bright);border-radius:14px;padding:28px;max-width:480px;width:100%;position:relative">
+      <div id="roiModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:1000;align-items:flex-start;justify-content:center;padding:24px 16px;overflow-y:auto">
+        <div style="background:var(--bg2);border:1px solid var(--border-bright);border-radius:14px;padding:28px;max-width:680px;width:100%;position:relative;margin:auto">
           <button onclick="closeRoiModal()" style="position:absolute;top:14px;right:16px;background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:18px">×</button>
           <div style="font-family:Manrope,sans-serif;font-size:10px;letter-spacing:.1em;color:#00BFFF;margin-bottom:6px">PLATINUM · ROI TRACKER</div>
           <div style="font-family:Archivo Black,sans-serif;font-size:20px;font-weight:700;margin-bottom:20px">Log Actual Results</div>
-          <div id="roiModalForecast" style="background:var(--bg3);border-radius:8px;padding:12px 16px;margin-bottom:20px;font-family:Manrope,sans-serif;font-size:11px;color:var(--text-muted)"></div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+
+          <!-- Forecast context -->
+          <div id="roiModalForecast" style="display:none;background:var(--bg3);border-radius:8px;padding:12px 16px;margin-bottom:20px;font-family:Manrope,sans-serif;font-size:11px;color:var(--text-muted)"></div>
+
+          <!-- OVERALL RESULTS -->
+          <div style="font-family:Manrope,sans-serif;font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--text-muted);margin-bottom:10px">OVERALL CAMPAIGN</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px">
             <div>
-              <label style="font-family:Manrope,sans-serif;font-size:10px;font-weight:600;letter-spacing:.06em;color:var(--text-muted);display:block;margin-bottom:4px">ACTUAL IMPRESSIONS</label>
-              <input id="roi-impressions" type="text" placeholder="e.g. 4.2M or 4200000" style="width:100%;font-family:Manrope,sans-serif;font-size:12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text);outline:none;box-sizing:border-box">
+              <label style="font-family:Manrope,sans-serif;font-size:10px;font-weight:600;letter-spacing:.06em;color:var(--text-muted);display:block;margin-bottom:4px">TOTAL IMPRESSIONS</label>
+              <input id="roi-impressions" type="text" placeholder="e.g. 4.2M" style="width:100%;font-family:Manrope,sans-serif;font-size:12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text);outline:none;box-sizing:border-box">
             </div>
             <div>
-              <label style="font-family:Manrope,sans-serif;font-size:10px;font-weight:600;letter-spacing:.06em;color:var(--text-muted);display:block;margin-bottom:4px">ACTUAL SPEND (£/$)</label>
+              <label style="font-family:Manrope,sans-serif;font-size:10px;font-weight:600;letter-spacing:.06em;color:var(--text-muted);display:block;margin-bottom:4px">TOTAL SPEND (£/$)</label>
               <input id="roi-spend" type="text" placeholder="e.g. 45000" style="width:100%;font-family:Manrope,sans-serif;font-size:12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text);outline:none;box-sizing:border-box">
             </div>
             <div>
-              <label style="font-family:Manrope,sans-serif;font-size:10px;font-weight:600;letter-spacing:.06em;color:var(--text-muted);display:block;margin-bottom:4px">ACTUAL CTR (%)</label>
+              <label style="font-family:Manrope,sans-serif;font-size:10px;font-weight:600;letter-spacing:.06em;color:var(--text-muted);display:block;margin-bottom:4px">OVERALL CTR (%)</label>
               <input id="roi-ctr" type="text" placeholder="e.g. 2.4" style="width:100%;font-family:Manrope,sans-serif;font-size:12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text);outline:none;box-sizing:border-box">
             </div>
             <div>
-              <label style="font-family:Manrope,sans-serif;font-size:10px;font-weight:600;letter-spacing:.06em;color:var(--text-muted);display:block;margin-bottom:4px">CONVERSIONS / INSTALLS</label>
+              <label style="font-family:Manrope,sans-serif;font-size:10px;font-weight:600;letter-spacing:.06em;color:var(--text-muted);display:block;margin-bottom:4px">TOTAL CONVERSIONS / SALES</label>
               <input id="roi-conversions" type="text" placeholder="e.g. 1250" style="width:100%;font-family:Manrope,sans-serif;font-size:12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text);outline:none;box-sizing:border-box">
             </div>
           </div>
+
+          <!-- PER-CREATOR BREAKDOWN -->
+          <div style="font-family:Manrope,sans-serif;font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--text-muted);margin-bottom:10px">PER-CREATOR BREAKDOWN <span style="font-weight:400;color:var(--text-muted);font-size:9px">(optional)</span></div>
+          <div id="roiCreatorRows" style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px">
+            <!-- populated by openRoiModal -->
+          </div>
+
           <div style="display:flex;gap:10px;justify-content:flex-end">
             <button onclick="closeRoiModal()" style="padding:8px 18px;background:transparent;border:1px solid var(--border);color:var(--text-dim);border-radius:6px;font-family:Manrope,sans-serif;font-size:12px;cursor:pointer">CANCEL</button>
             <button onclick="saveRoiResults()" style="padding:8px 18px;background:#00BFFF;color:#000;border:none;border-radius:6px;font-family:Manrope,sans-serif;font-size:12px;font-weight:700;cursor:pointer">SAVE RESULTS</button>
@@ -15735,14 +15747,14 @@ function openRoiModal(cid) {
   var cmp = _campaigns.find(function(c){ return c.id === cid; });
   if (!cmp) return;
 
-  // Pre-fill if results already logged
+  // Pre-fill overall fields
   var roi = cmp.roi || {};
   document.getElementById('roi-impressions').value = roi.impressions || '';
   document.getElementById('roi-spend').value       = roi.spend || '';
   document.getElementById('roi-ctr').value         = roi.ctr || '';
   document.getElementById('roi-conversions').value = roi.conversions || '';
 
-  // Show forecast context if available
+  // Show forecast context
   var forecastEl = document.getElementById('roiModalForecast');
   if (forecastEl) {
     if (cmp.forecast) {
@@ -15754,8 +15766,39 @@ function openRoiModal(cid) {
         + f.roas + '× ROAS';
       forecastEl.style.display = 'block';
     } else {
-      forecastEl.innerHTML = 'No simulation forecast saved for this campaign. Run a simulation first for comparison.';
+      forecastEl.innerHTML = 'No simulation forecast saved. Run a simulation first for forecast vs actual comparison.';
       forecastEl.style.display = 'block';
+    }
+  }
+
+  // Build per-creator rows
+  var linked = _outreach.filter(function(o){ return o.campaign === cid; });
+  var crRowsEl = document.getElementById('roiCreatorRows');
+  if (crRowsEl) {
+    if (!linked.length) {
+      crRowsEl.innerHTML = '<div style="font-family:Manrope,sans-serif;font-size:11px;color:var(--text-muted);padding:10px 0">No creators linked to this campaign yet. Add creators via the Outreach tab.</div>';
+    } else {
+      var crRoi = (roi.creators || {});
+      crRowsEl.innerHTML = linked.map(function(o) {
+        var cr = CREATORS.find(function(x){ return x.name.toLowerCase()===o.name.toLowerCase()||((o.handle&&x.handle.toLowerCase()===o.handle.toLowerCase())); });
+        var color = cr ? cr.color : '#6B9FFF';
+        var saved = crRoi[o.name] || {};
+        var inputStyle = 'font-family:Manrope,sans-serif;font-size:11px;background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:6px 10px;color:var(--text);outline:none;width:100%;box-sizing:border-box';
+        var labelStyle = 'font-family:Manrope,sans-serif;font-size:9px;font-weight:600;letter-spacing:.06em;color:var(--text-muted);display:block;margin-bottom:3px';
+        return '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px 14px">'
+          + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">'
+            + '<div style="width:24px;height:24px;border-radius:50%;background:'+color+'33;border:1.5px solid '+color+';color:'+color+';font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">' + o.name.charAt(0) + '</div>'
+            + '<div style="font-family:Manrope,sans-serif;font-size:12px;font-weight:700">' + o.name + '</div>'
+            + (cr ? '<div style="font-family:Manrope,sans-serif;font-size:9px;color:var(--text-muted)">' + cr.platform + ' &nbsp;·&nbsp; ' + cr.subs + '</div>' : '')
+          + '</div>'
+          + '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">'
+            + '<div><label style="'+labelStyle+'">IMPRESSIONS</label><input data-creator="'+o.name+'" data-field="impressions" type="text" placeholder="e.g. 800K" value="'+(saved.impressions||'')+'" style="'+inputStyle+'"></div>'
+            + '<div><label style="'+labelStyle+'">CTR (%)</label><input data-creator="'+o.name+'" data-field="ctr" type="text" placeholder="e.g. 2.1" value="'+(saved.ctr||'')+'" style="'+inputStyle+'"></div>'
+            + '<div><label style="'+labelStyle+'">SALES</label><input data-creator="'+o.name+'" data-field="sales" type="text" placeholder="e.g. 320" value="'+(saved.sales||'')+'" style="'+inputStyle+'"></div>'
+            + '<div><label style="'+labelStyle+'">SPEND (£/$)</label><input data-creator="'+o.name+'" data-field="spend" type="text" placeholder="e.g. 8000" value="'+(saved.spend||'')+'" style="'+inputStyle+'"></div>'
+          + '</div>'
+        + '</div>';
+      }).join('');
     }
   }
 
@@ -15774,21 +15817,31 @@ function saveRoiResults() {
   var cmp = _campaigns.find(function(c){ return c.id === _roiTargetCampaignId; });
   if (!cmp) return;
 
-  var rawImpr = document.getElementById('roi-impressions').value.trim();
-  // Parse human-friendly numbers like 4.2M or 4200000
   var parseHuman = function(s) {
     if (!s) return null;
-    s = s.replace(/[$,£€]/g,'').trim();
+    s = String(s).replace(/[$,£€]/g,'').trim();
     if (/m$/i.test(s)) return Math.round(parseFloat(s) * 1e6);
     if (/k$/i.test(s)) return Math.round(parseFloat(s) * 1e3);
     return parseFloat(s) || null;
   };
 
+  // Collect per-creator breakdown
+  var crData = {};
+  var crInputs = document.querySelectorAll('#roiCreatorRows input[data-creator]');
+  crInputs.forEach(function(inp) {
+    var name  = inp.getAttribute('data-creator');
+    var field = inp.getAttribute('data-field');
+    if (!name || !field || !inp.value.trim()) return;
+    if (!crData[name]) crData[name] = {};
+    crData[name][field] = field === 'ctr' ? (parseFloat(inp.value)||null) : parseHuman(inp.value);
+  });
+
   cmp.roi = {
-    impressions: parseHuman(rawImpr),
+    impressions: parseHuman(document.getElementById('roi-impressions').value),
     spend:       parseHuman(document.getElementById('roi-spend').value),
     ctr:         parseFloat(document.getElementById('roi-ctr').value) || null,
     conversions: parseHuman(document.getElementById('roi-conversions').value),
+    creators:    crData,
     loggedAt:    new Date().toISOString(),
   };
 
@@ -15803,33 +15856,63 @@ function _renderRoiSummary(cmp) {
   if (!roi) return '';
 
   var fmtN = function(n){ return n>=1e6?(n/1e6).toFixed(1)+'M':n>=1000?Math.round(n/1000)+'K':n?String(n):'—'; };
-  var delta = function(actual, forecast, suffix) {
+  var delta = function(actual, forecast) {
     if (!actual || !forecast) return '';
     var pct = Math.round((actual - forecast) / forecast * 100);
     var col = pct >= 0 ? '#00C46A' : '#FF3355';
-    return ' <span style=\"font-weight:700;color:' + col + '\">' + (pct>=0?'+':'') + pct + '% vs forecast</span>';
+    return ' <span style=\"font-size:10px;font-weight:700;color:' + col + '\">' + (pct>=0?'+':'') + pct + '% vs fcst</span>';
   };
 
+  // Overall metrics
   var rows = [];
-  if (roi.impressions) rows.push(['Impressions', fmtN(roi.impressions) + (f ? delta(roi.impressions, f.p50Impressions, '') : '')]);
-  if (roi.ctr)         rows.push(['CTR', roi.ctr + '%' + (f ? delta(roi.ctr, f.ctr, '%') : '')]);
-  if (roi.spend)       rows.push(['Spend', '$' + fmtN(roi.spend)]);
-  if (roi.conversions) rows.push(['Conversions', fmtN(roi.conversions)]);
-  if (roi.spend && roi.conversions) {
-    var cpa = Math.round(roi.spend / roi.conversions);
-    rows.push(['CPA', '$' + cpa]);
-  }
+  if (roi.impressions) rows.push(['Total Impressions', fmtN(roi.impressions) + (f ? delta(roi.impressions, f.p50Impressions) : '')]);
+  if (roi.ctr)         rows.push(['Overall CTR', roi.ctr + '%' + (f ? delta(roi.ctr, f.ctr) : '')]);
+  if (roi.spend)       rows.push(['Total Spend', '$' + fmtN(roi.spend)]);
+  if (roi.conversions) rows.push(['Total Sales', fmtN(roi.conversions)]);
+  if (roi.spend && roi.conversions) rows.push(['CPA', '$' + Math.round(roi.spend / roi.conversions)]);
 
-  return '<div style=\"margin-top:12px;padding:12px 16px;background:rgba(0,191,255,0.06);border:1px solid rgba(0,191,255,0.2);border-radius:8px\">'
-    + '<div style=\"font-family:Manrope,sans-serif;font-size:9px;font-weight:700;letter-spacing:.08em;color:#00BFFF;margin-bottom:8px\">ACTUAL RESULTS</div>'
-    + '<div style=\"display:flex;gap:20px;flex-wrap:wrap\">'
+  var overallHtml = '<div style=\"display:flex;gap:20px;flex-wrap:wrap;margin-bottom:' + (roi.creators && Object.keys(roi.creators).length ? '14' : '0') + 'px\">'
     + rows.map(function(r) {
         return '<div>'
           + '<div style=\"font-family:Manrope,sans-serif;font-size:8px;color:var(--text-muted);letter-spacing:.06em\">' + r[0] + '</div>'
           + '<div style=\"font-size:13px;font-weight:700\">' + r[1] + '</div>'
         + '</div>';
       }).join('')
-    + '</div>'
+  + '</div>';
+
+  // Per-creator breakdown
+  var crHtml = '';
+  if (roi.creators && Object.keys(roi.creators).length) {
+    crHtml += '<div style=\"font-family:Manrope,sans-serif;font-size:9px;font-weight:700;letter-spacing:.08em;color:var(--text-muted);margin-bottom:8px\">PER CREATOR</div>';
+    crHtml += '<div style=\"display:flex;flex-direction:column;gap:6px\">';
+    Object.keys(roi.creators).forEach(function(name) {
+      var cr = CREATORS.find(function(x){ return x.name.toLowerCase()===name.toLowerCase(); });
+      var color = cr ? cr.color : '#6B9FFF';
+      var d = roi.creators[name];
+      var cols = [];
+      if (d.impressions) cols.push(['Impr', fmtN(d.impressions)]);
+      if (d.ctr)         cols.push(['CTR', d.ctr + '%']);
+      if (d.sales)       cols.push(['Sales', fmtN(d.sales)]);
+      if (d.spend)       cols.push(['Spend', '$' + fmtN(d.spend)]);
+      if (d.spend && d.sales) cols.push(['CPA', '$' + Math.round(d.spend / d.sales)]);
+      crHtml += '<div style=\"display:flex;align-items:center;gap:12px;padding:8px 10px;background:var(--bg2);border-radius:6px;flex-wrap:wrap\">'
+        + '<div style=\"width:20px;height:20px;border-radius:50%;background:' + color + '33;border:1.5px solid ' + color + ';color:' + color + ';font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0\">' + name.charAt(0) + '</div>'
+        + '<div style=\"font-family:Manrope,sans-serif;font-size:11px;font-weight:700;min-width:100px\">' + name + '</div>'
+        + cols.map(function(c) {
+            return '<div style=\"text-align:center\">'
+              + '<div style=\"font-family:Manrope,sans-serif;font-size:8px;color:var(--text-muted)\">' + c[0] + '</div>'
+              + '<div style=\"font-size:12px;font-weight:700;color:#00BFFF\">' + c[1] + '</div>'
+            + '</div>';
+          }).join('')
+      + '</div>';
+    });
+    crHtml += '</div>';
+  }
+
+  return '<div style=\"margin-top:12px;padding:14px 16px;background:rgba(0,191,255,0.06);border:1px solid rgba(0,191,255,0.2);border-radius:8px\">'
+    + '<div style=\"font-family:Manrope,sans-serif;font-size:9px;font-weight:700;letter-spacing:.08em;color:#00BFFF;margin-bottom:10px\">ACTUAL RESULTS</div>'
+    + overallHtml
+    + crHtml
   + '</div>';
 }
 
