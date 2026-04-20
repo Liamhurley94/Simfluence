@@ -12550,23 +12550,26 @@ function openProfileOverlay(id) {
           <div id="cpi-breakdown-${c.id}" style="display:none;position:absolute;left:50%;transform:translateX(-50%);top:100%;z-index:20;width:260px;background:var(--bg);border:1px solid var(--border-bright);border-radius:8px;padding:16px;text-align:left;box-shadow:0 8px 32px rgba(0,0,0,0.4)">
             <div style="font-family:Manrope,sans-serif;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#0050FF;margin-bottom:10px">CPI BREAKDOWN · ${c.name}</div>
             ${(function(){
+              var _bdt = typeof getTierLevel==='function'?getTierLevel():4;
               var eng   = parseFloat(c.eng) || 0;
               var subs  = parseSubs(c.subs);
               var views = parseViews(c.avgViews);
               var vsr   = subs > 0 ? Math.round((views / subs) * 100) : 0;
               var sf    = (YT_ENRICHMENT[c.id] && YT_ENRICHMENT[c.id].sponsorFreq) || 0;
-              // Score components (must sum to 100)
               var engScore  = Math.round(Math.min(eng / 0.20 * 35, 35));
               var vsrScore  = Math.round(Math.min(vsr / 25 * 30, 30));
               var sfScore   = Math.round(Math.max(0, (1 - sf/100) * 15));
               var sizeScore = Math.round(Math.min(parseSubs(c.subs) / 2e6 * 20, 20));
-              var rows = [
+              var allRows = [
                 ['Engagement rate', c.eng, engScore, 35, 'vs 0.2% baseline'],
                 ['View-to-sub ratio', vsr+'%', vsrScore, 30, 'avg views ÷ subscribers'],
                 ['Sponsor frequency', sf > 0 ? '~'+sf+'%' : 'Low', sfScore, 15, 'lower = more authentic'],
                 ['Channel authority', c.subs, sizeScore, 20, 'reach & longevity signal'],
               ];
-              return rows.map(function(r){
+              // Silver+: show all 4. Bronze/locked: show 2 visible + 2 blurred
+              var visibleRows = _bdt >= 2 ? allRows : allRows.slice(0, 2);
+              var lockedRows  = _bdt >= 2 ? [] : allRows.slice(2);
+              var renderRow = function(r) {
                 var pct = r[3] > 0 ? Math.round(r[2]/r[3]*100) : 0;
                 var col = pct >= 70 ? '#00C46A' : pct >= 40 ? '#FF7A00' : '#FF3355';
                 return '<div style="margin-bottom:10px">'
@@ -12577,9 +12580,20 @@ function openProfileOverlay(id) {
                   + '<div style="height:4px;background:var(--bg3);border-radius:2px;overflow:hidden">'
                     + '<div style="height:100%;width:' + pct + '%;background:' + col + ';border-radius:2px"></div>'
                   + '</div>'
-                  + '<div style="font-size:9px;color:var(--text-muted);margin-top:2px">' + r[1] + ' &nbsp;·&nbsp; ' + r[4] + '</div>'
+                  + '<div style="font-size:9px;color:var(--text-muted);margin-top:2px">' + r[1] + ' &nbsp;\xb7&nbsp; ' + r[4] + '</div>'
                 + '</div>';
-              }).join('');
+              };
+              var html = visibleRows.map(renderRow).join('');
+              if (lockedRows.length > 0) {
+                html += '<div style="position:relative;margin-top:4px">'
+                  + '<div style="filter:blur(4px);user-select:none;pointer-events:none">' + lockedRows.map(renderRow).join('') + '</div>'
+                  + '<div onclick="showUpgradePrompt(\'cpi_breakdown\',\'Gold\')" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;gap:6px">'
+                    + '<span style="font-size:10px;font-weight:700;color:#FFD400">\uD83D\uDD12 2 more factors</span>'
+                    + '<span style="font-size:9px;color:var(--text-muted)">Upgrade to Gold to unlock</span>'
+                  + '</div>'
+                + '</div>';
+              }
+              return html;
             })()}
             <div style="border-top:1px solid var(--border);margin-top:8px;padding-top:8px;font-size:9px;color:var(--text-muted)">CPI combines engagement quality, content consistency, audience authenticity and commercial track record.</div>
           </div>
@@ -15562,8 +15576,12 @@ function saveCampaignToHistory() {
     budget: budget,
     creators: crNames,
     p50: simResults.p50.impressions,
+    p10: simResults.p10.impressions,
+    p90: simResults.p90.impressions,
     ctr: simResults.ctr,
-    roas: simResults.roas
+    roas: simResults.roas,
+    cvr: simResults.cvr,
+    cpM: simResults.cpM
   };
   try {
     var saved = JSON.parse(localStorage.getItem(SAVE_KEY) || '[]');
@@ -15602,12 +15620,40 @@ function renderSavedCampaigns() {
     var saved = JSON.parse(localStorage.getItem(SAVE_KEY) || '[]');
     if (!saved.length) { el.style.display = 'none'; return; }
     el.style.display = 'block';
-    el.innerHTML = (function(){
-        var t2 = typeof getTierLevel==='function'?getTierLevel():0;
-        var hdrLabel = t2===0 ? 'Draft Campaign (1 slot · upgrade to Silver for 3+)' : 'Recent Campaigns';
-        var hdrColor = t2===0 ? '#CD7F32' : '#0050FF';
-        return '<div style="font-family:\'Manrope\',sans-serif;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:'+hdrColor+';margin-bottom:12px">' + hdrLabel + '</div>';
-      })()
+    var _rt = typeof getTierLevel==='function'?getTierLevel():0;
+    var _hdrLabel = _rt===0 ? 'Draft Campaign (1 slot · upgrade to Silver for 3+)' : 'Simulation History';
+    var _hdrColor = _rt===0 ? '#CD7F32' : '#0050FF';
+    var _compStrip = '';
+    // Silver+: show comparison strip when 2 or 3 runs exist
+    if (_rt >= 1 && saved.length >= 2) {
+      var _fmtI = function(n) { return n >= 1e6 ? (n/1e6).toFixed(1)+'M' : n >= 1000 ? Math.round(n/1000)+'K' : n; };
+      var _cols = saved.slice(0, 3).map(function(s, si) {
+        var _isLatest = si === 0;
+        var _p50Delta = si > 0 ? Math.round((s.p50 - saved[0].p50) / saved[0].p50 * 100) : null;
+        var _roasDelta = si > 0 ? Math.round((s.roas - saved[0].roas) * 10) / 10 : null;
+        var _deltaCol = _p50Delta !== null ? (_p50Delta > 0 ? '#00C46A' : '#FF3355') : null;
+        return '<div style="flex:1;background:var(--bg3);border:1px solid ' + (_isLatest ? '#0050FF' : 'var(--border)') + ';border-radius:6px;padding:10px;min-width:0">'
+          + '<div style="font-family:Manrope,sans-serif;font-size:8px;color:' + (_isLatest ? '#0050FF' : 'var(--text-muted)') + ';letter-spacing:.06em;margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'
+            + (_isLatest ? 'LATEST RUN' : 'RUN -' + si) + ' · ' + s.date
+          + '</div>'
+          + '<div style="font-size:15px;font-weight:700;color:#FFD400;margin-bottom:2px">' + _fmtI(s.p50) + '</div>'
+          + '<div style="font-family:Manrope,sans-serif;font-size:8px;color:var(--text-muted);margin-bottom:6px">P50 IMPRESSIONS</div>'
+          + '<div style="display:flex;gap:8px">'
+            + '<span style="font-family:Manrope,sans-serif;font-size:9px;color:#00C46A">' + s.ctr + '% CTR</span>'
+            + '<span style="font-family:Manrope,sans-serif;font-size:9px;color:#FFD400">' + s.roas + '× ROAS</span>'
+          + '</div>'
+          + (_p50Delta !== null ? '<div style="margin-top:6px;font-family:Manrope,sans-serif;font-size:9px;font-weight:700;color:' + _deltaCol + '">'
+            + (_p50Delta > 0 ? '↑' : '↓') + ' ' + Math.abs(_p50Delta) + '% vs latest'
+            + '</div>' : '')
+        + '</div>';
+      }).join('');
+      _compStrip = '<div style="margin-bottom:12px">'
+        + '<div style="font-family:Manrope,sans-serif;font-size:9px;letter-spacing:.08em;color:#0050FF;margin-bottom:6px">RUN COMPARISON</div>'
+        + '<div style="display:flex;gap:6px">' + _cols + '</div>'
+        + '</div>';
+    }
+    el.innerHTML = '<div style="font-family:Manrope,sans-serif;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:'+_hdrColor+';margin-bottom:8px">' + _hdrLabel + '</div>'
+      + _compStrip
       + saved.map(function(s) {
         var fmtBudget = '$' + (s.budget >= 1000 ? (s.budget/1000).toFixed(0)+'K' : s.budget);
         var fmtImpr = s.p50 >= 1e6 ? (s.p50/1e6).toFixed(1)+'M' : s.p50 >= 1000 ? (s.p50/1000).toFixed(0)+'K' : s.p50;
