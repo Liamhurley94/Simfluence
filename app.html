@@ -2244,6 +2244,7 @@ function tierCan(feature) {
     'multi_genre': t>=3,       // Platinum+: secondary genre targeting
     'competitor_bench': t>=3,  // Platinum+: creator vs category benchmarking
     'overlap_detect': t>=3,    // Platinum+: audience overlap detection in brief
+    'brief_pdf': t>=3,         // Platinum+: campaign brief PDF export
 
     // ── SCORING ───────────────────────────────────────────────────
     'cpi_gfi_visible': t>=1, 'gfi_methodology': t>=2,
@@ -2337,6 +2338,7 @@ function showUpgradePrompt(feature, targetTier) {
     'multi_genre':            'Target up to 2 secondary genres alongside your primary — surfaces crossover creators and expands your brief reach. Available from Platinum.',
     'competitor_bench':       'See how each creator ranks against their category average for CPI, engagement rate and GFI — available from Platinum.',
     'overlap_detect':         'Get warned when creators in your brief share audiences — reduces wasted reach and budget duplication. Available from Platinum.',
+    'brief_pdf':              'Export a polished campaign brief PDF with creator scores, rate estimates and simulation forecasts — available from Platinum.',
     'export_unlimited':       'Export unlimited creators with full rate data.',
     // Compare
     'compare_10':             'Run side-by-side creator comparisons to make faster shortlist decisions.',
@@ -2666,6 +2668,12 @@ function applyAllTierGates() {
     var durLabel = document.getElementById('durationLabel');
     if (durLabel) { durLabel.textContent = '4 weeks (Gold+)'; durLabel.style.color = 'var(--text-muted)'; }
     durSlider.addEventListener('click', function(){ showUpgradePrompt('duration_slider','Gold'); });
+  }
+
+  // Brief PDF button — Platinum+
+  var briefPdfBtn = document.getElementById('briefPdfBtn');
+  if (briefPdfBtn) {
+    briefPdfBtn.style.display = tierCan('brief_pdf') ? 'inline-block' : 'none';
   }
 
   // Campaign notes field — Gold+
@@ -4121,6 +4129,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <button id="reRunSimBtn" style="padding:10px 20px;background:#FF7A00;color:#fff;border:none;border-radius:var(--radius);font-family:Manrope,sans-serif;font-weight:600;font-size:13px;cursor:pointer;letter-spacing:.05em;font-weight:700">▶ RE-RUN</button>
         <button id="saveToCampaignsBtn" style="padding:10px 20px;background:#00C46A;color:#fff;border:none;border-radius:var(--radius);font-family:Manrope,sans-serif;font-weight:600;font-size:13px;cursor:pointer;letter-spacing:.05em;font-weight:700">＋ SAVE TO CAMPAIGNS</button>
         <button id="saveCampaignBtn" style="padding:10px 20px;background:#0050FF;color:#fff;border:none;border-radius:var(--radius);font-family:Manrope,sans-serif;font-weight:600;font-size:13px;cursor:pointer;letter-spacing:.05em;font-weight:700">⬇ SAVE AS PDF</button>
+        <button id="briefPdfBtn" data-oc="exportBriefPDF()" style="padding:10px 20px;background:rgba(0,191,255,0.15);color:#00BFFF;border:1px solid rgba(0,191,255,0.35);border-radius:var(--radius);font-family:Manrope,sans-serif;font-weight:600;font-size:13px;cursor:pointer;letter-spacing:.05em;display:none">📄 BRIEF PDF</button>
       </div>
 
       <!-- SAVED CAMPAIGNS -->
@@ -15669,6 +15678,139 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // 3. EXPORT CREATOR SHORTLIST as CSV
+
+// ── P8: CAMPAIGN BRIEF PDF ────────────────────────────────────────────
+function exportBriefPDF() {
+  if (!tierCan('brief_pdf')) { showUpgradePrompt('brief_pdf','Platinum'); return; }
+
+  var genre   = getSelectedGenre() || 'Gaming & Esports';
+  var format  = (document.getElementById('format')||{value:'Integrated'}).value;
+  var budget  = parseInt((document.getElementById('budget')||{value:'85000'}).value)||85000;
+  var fmtBudget = '$' + (budget>=1000?(budget/1000).toFixed(0)+'K':budget);
+  var selected = CREATORS.filter(function(cr){ return selectedCreators.has(cr.id); });
+  var secondary = getSecondaryGenres();
+  var today = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+
+  // Sim results if available
+  var hasSimResults = typeof simResults !== 'undefined' && simResults;
+  var p50 = hasSimResults ? simResults.p50 : null;
+  var p10 = hasSimResults ? simResults.p10 : null;
+  var p90 = hasSimResults ? simResults.p90 : null;
+  var fmtNum = function(n){ return n>=1e6?(n/1e6).toFixed(1)+'M':n>=1000?Math.round(n/1000)+'K':String(n); };
+
+  // Build creator rows
+  var creatorRows = selected.map(function(cr) {
+    var e = computeCostEstimate(cr);
+    var gfi = computeGFI(cr);
+    var gfiCol = gfi>=80?'#00C46A':gfi>=60?'#FF7A00':'#E60023';
+    var cpiCol = cr.cpi>=80?'#00C46A':cr.cpi>=60?'#FF7A00':'#E60023';
+    var rateStr = e.fmt(e.ranges.int[0]) + '–' + e.fmt(e.ranges.int[1]);
+    return '<tr>'
+      + '<td style="padding:10px 12px;border-bottom:1px solid #e5e7eb;font-weight:600;font-size:13px">' + cr.name + '</td>'
+      + '<td style="padding:10px 12px;border-bottom:1px solid #e5e7eb;color:#555;font-size:12px">' + cr.platform + '</td>'
+      + '<td style="padding:10px 12px;border-bottom:1px solid #e5e7eb;color:#555;font-size:12px">' + cr.subs + '</td>'
+      + '<td style="padding:10px 12px;border-bottom:1px solid #e5e7eb;font-weight:700;color:' + cpiCol + ';font-size:14px">' + cr.cpi + '</td>'
+      + '<td style="padding:10px 12px;border-bottom:1px solid #e5e7eb;font-weight:700;color:' + gfiCol + ';font-size:14px">' + gfi + '%</td>'
+      + '<td style="padding:10px 12px;border-bottom:1px solid #e5e7eb;font-weight:600;color:#1a1a2e;font-size:13px">' + rateStr + '</td>'
+    + '</tr>';
+  }).join('');
+
+  // Simulation block
+  var simBlock = '';
+  if (p50) {
+    simBlock = '<div style="margin-top:32px">'
+      + '<h2 style="font-size:14px;font-weight:700;letter-spacing:.08em;color:#0050FF;text-transform:uppercase;margin:0 0 16px">Simulation Forecast</h2>'
+      + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">'
+        + _simBand('P10 — WORST CASE', p10, '#E60023')
+        + _simBand('P50 — BASE CASE', p50, '#FF7A00')
+        + _simBand('P90 — BEST CASE', p90, '#00C46A')
+      + '</div>'
+      + '<p style="font-size:10px;color:#888;margin-top:10px">Forecast generated by Simfluence campaign intelligence engine. P10/P50/P90 represent worst-case, base-case and best-case probabilistic outcomes.</p>'
+    + '</div>';
+  }
+
+  var html = '<!DOCTYPE html><html><head><meta charset="UTF-8">'
+    + '<title>Campaign Brief — Simfluence</title>'
+    + '<style>'
+      + 'body{font-family:Arial,sans-serif;margin:0;padding:40px;color:#1a1a2e;background:#fff;}'
+      + 'h1{font-size:28px;font-weight:900;margin:0;letter-spacing:-.02em;}'
+      + 'h2{font-size:14px;font-weight:700;letter-spacing:.08em;color:#0050FF;text-transform:uppercase;margin:0 0 12px;}'
+      + 'table{width:100%;border-collapse:collapse;}'
+      + 'th{background:#f3f4f6;padding:8px 12px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.08em;color:#555;text-transform:uppercase;border-bottom:2px solid #e5e7eb;}'
+      + '.section{margin-top:32px;}'
+      + '.chip{display:inline-block;padding:3px 10px;background:#f3f4f6;border-radius:12px;font-size:11px;font-weight:600;margin-right:6px;}'
+      + '.meta-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:16px;}'
+      + '.meta-box{background:#f8f9fa;border-radius:8px;padding:14px;}'
+      + '.meta-label{font-size:9px;font-weight:700;letter-spacing:.1em;color:#888;text-transform:uppercase;margin-bottom:4px;}'
+      + '.meta-val{font-size:20px;font-weight:900;color:#0050FF;}'
+      + '.footer{margin-top:40px;padding-top:16px;border-top:1px solid #e5e7eb;font-size:10px;color:#aaa;display:flex;justify-content:space-between;}'
+      + '@media print{body{padding:20px;}button{display:none!important;}}'
+    + '</style></head><body>'
+
+    // Header
+    + '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">'
+      + '<div>'
+        + '<div style="font-size:11px;font-weight:700;letter-spacing:.15em;color:#0050FF;margin-bottom:6px">SIMFLUENCE · CAMPAIGN BRIEF</div>'
+        + '<h1>' + genre + ' Campaign</h1>'
+        + (secondary.length ? '<div style="margin-top:6px">' + secondary.map(function(g){ return '<span class="chip">+' + g + '</span>'; }).join('') + '</div>' : '')
+      + '</div>'
+      + '<div style="text-align:right">'
+        + '<div style="font-size:11px;color:#888;">' + today + '</div>'
+        + '<button onclick="window.print()" style="margin-top:8px;padding:8px 20px;background:#0050FF;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;">PRINT / SAVE PDF</button>'
+      + '</div>'
+    + '</div>'
+
+    // Brief meta
+    + '<div class="meta-grid">'
+      + '<div class="meta-box"><div class="meta-label">Budget</div><div class="meta-val">' + fmtBudget + '</div></div>'
+      + '<div class="meta-box"><div class="meta-label">Format</div><div class="meta-val" style="font-size:16px">' + format + '</div></div>'
+      + '<div class="meta-box"><div class="meta-label">Creators</div><div class="meta-val">' + selected.length + '</div></div>'
+      + '<div class="meta-box"><div class="meta-label">Genre</div><div class="meta-val" style="font-size:14px">' + genre + '</div></div>'
+    + '</div>'
+
+    // Creators table
+    + '<div class="section">'
+      + '<h2>Selected Creators</h2>'
+      + '<table>'
+        + '<thead><tr>'
+          + '<th>Creator</th><th>Platform</th><th>Subscribers</th>'
+          + '<th>CPI Score</th><th>GFI Score</th><th>Est. Rate (' + format + ')</th>'
+        + '</tr></thead>'
+        + '<tbody>' + creatorRows + '</tbody>'
+      + '</table>'
+    + '</div>'
+
+    // Simulation
+    + simBlock
+
+    // Footer
+    + '<div class="footer">'
+      + '<span>Generated by Simfluence &mdash; simfluence.ai</span>'
+      + '<span>Confidential &mdash; for internal use only</span>'
+    + '</div>'
+
+    + '</body></html>';
+
+  var win = window.open('', '_blank');
+  if (win) {
+    win.document.write(html);
+    win.document.close();
+  } else {
+    alert('Pop-up blocked. Please allow pop-ups for simfluence.ai to use Brief PDF export.');
+  }
+}
+
+function _simBand(label, data, col) {
+  if (!data) return '';
+  var fmtN = function(n){ return n>=1e6?(n/1e6).toFixed(1)+'M':n>=1000?Math.round(n/1000)+'K':String(n); };
+  return '<div style="background:#f8f9fa;border-radius:8px;padding:16px;border-left:4px solid ' + col + '">'
+    + '<div style="font-size:9px;font-weight:700;letter-spacing:.1em;color:' + col + ';margin-bottom:8px">' + label + '</div>'
+    + '<div style="font-size:28px;font-weight:900;color:#1a1a2e">' + fmtN(data.impressions) + '</div>'
+    + '<div style="font-size:10px;color:#888;margin-top:2px">impressions</div>'
+    + '<div style="margin-top:8px;font-size:12px;font-weight:600;color:#555">CTR ' + data.ctr + '% &nbsp;&middot;&nbsp; ROAS ' + data.roas + '&times;</div>'
+  + '</div>';
+}
+
 // ── G1: SHORTLIST SHARE LINK ─────────────────────────────────────────
 function generateShareLink() {
   if (!tierCan('shortlist_share')) { showUpgradePrompt('shortlist_share','Gold'); return; }
