@@ -13151,6 +13151,8 @@ function computeSimResults() {
 function updateSimDisplay() {
   if (!simResults) { computeSimResults(); }
   if (!simResults) return;
+  // If we only have the zero placeholder, don't render yet — wait for API response
+  if (simResults.impressions === 0 && (!simResults.bench || !simResults.bench.ctrBase)) return;
   const r = simResults;
   const budget  = parseInt((document.getElementById('budget') || {value:'85000'}).value) || 85000;
   const format  = (document.getElementById('format') || {value:'Integrated'}).value;
@@ -13324,7 +13326,7 @@ function updateSimDisplay() {
 
   // Benchmark comparison — bench data comes from simulation API response
   const pvaEl = document.getElementById('pvaPanel');
-  const _bench = (r && r.bench) || bench || {};
+  const _bench = (r && r.bench && r.bench.ctrBase) ? r.bench : bench;
   if (pvaEl && _bench.ctrBase) {
     pvaEl.innerHTML = '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border-radius:4px;overflow:hidden;margin-top:8px">' +
       [['CTR', r.ctr+'%', _bench.ctrBase+'%'], ['ROAS', r.roas+'×', _bench.roasBase+'×'], ['CVR', r.cvr+'%', _bench.cvrBase+'%'], ['ENG', r.engRate+'%', _bench.engBase+'%']].map(function(item) {
