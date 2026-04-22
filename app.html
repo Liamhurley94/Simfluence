@@ -13317,13 +13317,18 @@ function updateSimDisplay() {
   }
 
 
-  // Benchmark comparison
+  // Benchmark comparison — bench data comes from simulation API response
   const pvaEl = document.getElementById('pvaPanel');
-  if (pvaEl) pvaEl.innerHTML = '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border-radius:4px;overflow:hidden;margin-top:8px">' +
-    [['CTR', r.ctr+'%', bench.ctrBase+'%'], ['ROAS', r.roas+'×', bench.roasBase+'×'], ['CVR', r.cvr+'%', bench.cvrBase+'%'], ['ENG', r.engRate+'%', bench.engBase+'%']].map(function(item) {
-      return '<div style="background:var(--bg3);padding:14px;text-align:center"><div style="font-family:\'Manrope\',sans-serif;font-size:9px;color:var(--text-muted);margin-bottom:4px">' + item[0] + '</div><div style="font-size:18px;font-weight:700;color:#FFD400">' + item[1] + '</div><div style="font-size:10px;color:var(--text-muted);margin-top:4px">vs ' + item[2] + ' industry avg</div></div>';
-    }).join('') +
-  '</div>';
+  const _bench = (r && r.bench) || bench || {};
+  if (pvaEl && _bench.ctrBase) {
+    pvaEl.innerHTML = '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border-radius:4px;overflow:hidden;margin-top:8px">' +
+      [['CTR', r.ctr+'%', _bench.ctrBase+'%'], ['ROAS', r.roas+'×', _bench.roasBase+'×'], ['CVR', r.cvr+'%', _bench.cvrBase+'%'], ['ENG', r.engRate+'%', _bench.engBase+'%']].map(function(item) {
+        return '<div style="background:var(--bg3);padding:14px;text-align:center"><div style="font-family:\'Manrope\',sans-serif;font-size:9px;color:var(--text-muted);margin-bottom:4px">' + item[0] + '</div><div style="font-size:18px;font-weight:700;color:#FFD400">' + item[1] + '</div><div style="font-size:10px;color:var(--text-muted);margin-top:4px">vs ' + item[2] + ' industry avg</div></div>';
+      }).join('') +
+    '</div>';
+  } else if (pvaEl) {
+    pvaEl.innerHTML = '<div style="padding:14px;text-align:center;font-size:11px;color:var(--text-muted)">Run a simulation to see genre benchmarks.</div>';
+  }
 
   updateBandDisplays();
 }
@@ -13557,7 +13562,11 @@ function setSubMode(m, btn) {
 function renderScoringScreen() {
   const genre     = getSelectedGenre() || 'Gaming & Esports';
   const subMode   = activeSubMode || '';
-  const benchmark = GENRE_BENCHMARKS[genre] || GENRE_BENCHMARKS['Gaming & Esports'];
+  // Benchmark data comes from simulation API response — not stored client-side
+  const _simBench = simResults && simResults.bench;
+  const benchmark = _simBench && _simBench.ctrBase ? _simBench : {
+    ctrBase: 2.0, cpmBase: 8, cvrBase: 1.5, roasBase: 2.0, engBase: 5.0
+  };
   const hasBrief  = selectedCreators.size > 0;
 
   // What are we scoring?
