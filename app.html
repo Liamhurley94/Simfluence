@@ -1921,7 +1921,7 @@ function setCachedGFI(creatorId, score) {
 function batchScoreGFI(creatorSubset, campaignGenre, subMode, secondaryGenres, callback) {
   var token = '';
   try { token = localStorage.getItem('sf_access_token') || ''; } catch(e) {}
-  if (!token) { if (callback) callback({}); return; }
+  var gfiAuthHeader = token ? ('Bearer ' + token) : ('Bearer ' + SF_KEY);
 
   var payload = {
     creators:       creatorSubset.map(function(c) { return {
@@ -1941,7 +1941,7 @@ function batchScoreGFI(creatorSubset, campaignGenre, subMode, secondaryGenres, c
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + token,
+      'Authorization': authHeader,
       'apikey': SF_KEY,
     },
     body: JSON.stringify(payload),
@@ -1972,10 +1972,8 @@ function batchScoreGFI(creatorSubset, campaignGenre, subMode, secondaryGenres, c
 function callSimulationAPI(creators, budget, format, genre, objectives, subMode, callback) {
   var token = '';
   try { token = localStorage.getItem('sf_access_token') || ''; } catch(e) {}
-  if (!token) {
-    if (callback) callback(null);
-    return;
-  }
+  // Fall back to anon key if no access token (e.g. existing session before token storage was added)
+  var authHeader = token ? ('Bearer ' + token) : ('Bearer ' + SF_KEY);
 
   var payload = {
     creators: creators.map(function(c) { return {
@@ -2001,13 +1999,14 @@ function callSimulationAPI(creators, budget, format, genre, objectives, subMode,
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + token,
+      'Authorization': gfiAuthHeader,
       'apikey': SF_KEY,
     },
     body: JSON.stringify(payload),
   })
   .then(function(r) { return r.json(); })
   .then(function(data) {
+    console.log('[Simfluence] Simulation API response:', JSON.stringify(data).slice(0,200));
     if (data.error) {
       console.warn('[Simfluence] Simulation API error:', data.error);
       if (callback) callback(null);
@@ -2017,7 +2016,7 @@ function callSimulationAPI(creators, budget, format, genre, objectives, subMode,
     if (callback) callback(data);
   })
   .catch(function(err) {
-    console.warn('[Simfluence] Simulation API failed, using local fallback:', err);
+    console.warn('[Simfluence] Simulation API failed:', err);
     if (callback) callback(null);
   });
 }
