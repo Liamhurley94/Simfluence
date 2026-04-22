@@ -12770,7 +12770,7 @@ function openProfileOverlay(id) {
         var _bt = typeof getTierLevel==='function'?getTierLevel():4;
         if (_bt < 3) return ''; // Only Platinum+
         var _bGenre = c.genre || 'Gaming & Esports';
-        var _bench = (typeof GENRE_BENCHMARKS!=='undefined') ? (GENRE_BENCHMARKS[_bGenre] || GENRE_BENCHMARKS['Gaming & Esports']) : {};
+        var _bench = (simResults && simResults.bench && simResults.bench.ctrBase) ? simResults.bench : { ctrBase:2.0, cpmBase:8, cvrBase:1.5, roasBase:2.0, engBase:5.0 };
         // Compute category averages from CREATORS array
         var _catCreators = (typeof CREATORS!=='undefined') ? CREATORS.filter(function(x){ return x.genre === _bGenre; }) : [];
         if (!_catCreators.length) return '';
@@ -13819,7 +13819,7 @@ function renderPersonaScreen() {
   var budget     = parseInt((document.getElementById('budget') || {value:'85000'}).value) || 85000;
   var format     = (document.getElementById('format') || {value:'Integrated'}).value;
   var objectives = typeof getSelectedObjectives === 'function' ? getSelectedObjectives() : [];
-  var bench      = (typeof GENRE_BENCHMARKS !== 'undefined') ? (GENRE_BENCHMARKS[genre] || GENRE_BENCHMARKS['Gaming & Esports']) : {};
+  var bench      = (simResults && simResults.bench && simResults.bench.ctrBase) ? simResults.bench : { ctrBase:2.0, cpmBase:8, cvrBase:1.5, roasBase:2.0, engBase:5.0 };
 
   // Get personas for this genre + sub-mode
   var genreData  = (typeof GENRE_PERSONAS !== 'undefined') ? (GENRE_PERSONAS[genre] || GENRE_PERSONAS['default'] || {}) : {};
@@ -14218,7 +14218,7 @@ function updateBriefPanel() {
   const format    = (document.getElementById('format')||{value:'Integrated'}).value;
   const formatKey = format==='Dedicated'?'ded':format==='Mixed'?'mix':'int';
   const genre     = getSelectedGenre();
-  const bench     = GENRE_BENCHMARKS[genre] || GENRE_BENCHMARKS['Gaming & Esports'];
+  const bench     = (simResults && simResults.bench && simResults.bench.ctrBase) ? simResults.bench : { ctrBase:2.0, cpmBase:8, cvrBase:1.5, roasBase:2.0, engBase:5.0 };
 
   // ── Compute estimated spend per creator (midpoint of rate range) ──
   const crCosts = selected.map(cr => {
@@ -14306,7 +14306,7 @@ function updateBriefPanel() {
   // ── CPI / GFI / Reach stats ────────────────────────────────────────
   const avgCpi = Math.round(selected.reduce((a,cr) => a + cr.cpi, 0) / selected.length);
   const avgGfi = Math.round(selected.reduce((a,cr) => a + (cr.gfi||75), 0) / selected.length);
-  const reach  = Math.round((budget / Math.max(bench.cpmBase,1)) * 1000);
+  const reach  = Math.round((budget / Math.max((bench && bench.cpmBase) || 8, 1)) * 1000);
 
   set('briefAvgCPI',   avgCpi);
   set('briefAvgGFI',   avgGfi + '%');
