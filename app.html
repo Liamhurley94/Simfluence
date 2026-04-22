@@ -13101,57 +13101,70 @@ function computeSimResults() {
     return;
   }
 
-  // Call Edge Function for simulation — coefficients and benchmarks are server-side
+  // ── LOCAL CALCULATION — runs immediately for instant display ──────────
+  var _fk  = format === 'Dedicated' ? 'ded' : format === 'Mixed' ? 'mix' : 'int';
+  var _crD = toSim.filter(function(cr){return cr&&cr.id;}).map(function(cr){
+    var e = computeCostEstimate(cr);
+    return { cr:cr, e:e, midRate:(e.ranges[_fk][0]+e.ranges[_fk][1])/2 };
+  });
+  var _ni   = NICHE_SPONSOR_CPM[genre] || DEFAULT_CPM;
+  var _cb   = _ni.med * (format==='Dedicated' ? _ni.dedMult : 1.0);
+  var _acp  = toSim.reduce(function(a,cr){return a+cr.cpi;},0) / toSim.length / 100;
+  var _ca   = _cb * Math.max(0.6, _acp);
+  var _fm   = format==='Dedicated' ? 1.4 : format==='Mixed' ? 1.15 : 1.0;
+  var _sm   = activeSubMode ? 1.08 : 1.0;
+  var _im   = Math.round((budget / Math.max(_ca,1)) * 1000 * _sm * _fm);
+  var _ct   = Math.min(2.0 * _acp * _fm, 15);
+  var _cv   = Math.min(1.5 * _acp, 20);
+  var _cl   = Math.round(_im * _ct / 100);
+  var _co   = Math.round(_cl * _cv / 100);
+  var _ro   = budget > 0 ? (_co * 30 / budget) : 0;
+
+  simResults = {
+    impressions: _im,
+    ctr:    Math.round(_ct * 10) / 10,
+    cpM:    Math.round(_ca * 100) / 100,
+    cvr:    Math.round(_cv * 10) / 10,
+    conversions: _co,
+    roas:   Math.round(_ro * 10) / 10,
+    engRate: Math.round(4.5 * _acp * 10) / 10,
+    clicks: _cl,
+    budget: budget,
+    crData: _crD,
+    creatorBreakdowns: [],
+    p10: { impressions:Math.round(_im*0.68), ctr:Math.round(_ct*0.68*10)/10, roas:Math.round(_ro*0.65*10)/10 },
+    p50: { impressions:_im, ctr:Math.round(_ct*10)/10, roas:Math.round(_ro*10)/10 },
+    p90: { impressions:Math.round(_im*1.42), ctr:Math.round(_ct*1.42*10)/10, roas:Math.round(_ro*1.45*10)/10 },
+    bench: null,
+  };
+
+  // ── EDGE FUNCTION — enriches results with precise coefficients ──────
   callSimulationAPI(toSim, budget, format, genre, objectives, activeSubMode || '', function(data) {
-    if (data) {
-      // Map server response back to simResults format the UI expects
-      var fmtKey = format === 'Dedicated' ? 'ded' : format === 'Mixed' ? 'mix' : 'int';
-      var crData = toSim.filter(function(cr) { return cr && cr.id; }).map(function(cr) {
-        var bd = (data.creatorBreakdowns || []).find(function(b) { return String(b.id) === String(cr.id); });
-        var e = { ranges: bd ? bd.rates : computeCostEstimate(cr).ranges, fmt: fmtMoney };
-        return { cr: cr, e: e, midRate: bd ? (bd.rates[fmtKey][0] + bd.rates[fmtKey][1]) / 2 : 0 };
+    if (data && data.impressions > 0) {
+      var fk2 = format === 'Dedicated' ? 'ded' : format === 'Mixed' ? 'mix' : 'int';
+      var crD2 = toSim.filter(function(cr){return cr&&cr.id;}).map(function(cr){
+        var bd = (data.creatorBreakdowns||[]).find(function(b){return String(b.id)===String(cr.id);});
+        var e2 = bd ? {ranges:bd.rates,fmt:fmtMoney} : computeCostEstimate(cr);
+        return {cr:cr,e:e2,midRate:bd?(bd.rates[fk2][0]+bd.rates[fk2][1])/2:0};
       });
       simResults = {
-        impressions:  data.impressions,
-        ctr:          data.ctr,
-        cpM:          data.cpM,
-        cvr:          data.cvr,
-        conversions:  data.conversions,
-        roas:         data.roas,
-        engRate:      data.engRate,
-        clicks:       data.clicks,
-        budget:       budget,
-        crData:       crData,
-        creatorBreakdowns: data.creatorBreakdowns || [],
-        p10: data.p10,
-        p50: data.p50,
-        p90: data.p90,
-        bench: data.bench || {},
+        impressions:data.impressions, ctr:data.ctr, cpM:data.cpM, cvr:data.cvr,
+        conversions:data.conversions, roas:data.roas, engRate:data.engRate, clicks:data.clicks,
+        budget:budget, crData:crD2, creatorBreakdowns:data.creatorBreakdowns||[],
+        p10:data.p10, p50:data.p50, p90:data.p90, bench:data.bench||null,
       };
-      if (typeof updateSimDisplay === 'function') updateSimDisplay();
+      if (typeof updateSimDisplay==='function') updateSimDisplay();
+      if (typeof updateBandDisplays==='function') updateBandDisplays();
+      if (typeof renderEfficiencyCurve==='function') renderEfficiencyCurve();
+      var _rb=document.getElementById('reRunSimBtn');
+      if(_rb){_rb.textContent='▶ RE-RUN';_rb.style.background='#FF7A00';_rb.style.color='#fff';_rb.disabled=false;}
     }
   });
-
-  // Set a placeholder while the API call is in flight
-  // so the UI shows immediately with cached or zero values
-  if (!simResults) {
-    simResults = {
-      impressions: 0, ctr: 0, cpM: 0, cvr: 0,
-      conversions: 0, roas: 0, engRate: 0, clicks: 0,
-      budget, crData: [], creatorBreakdowns: [],
-      p10: { impressions:0, ctr:0, roas:0 },
-      p50: { impressions:0, ctr:0, roas:0 },
-      p90: { impressions:0, ctr:0, roas:0 },
-      bench: {},
-    };
-  }
 }
 
 function updateSimDisplay() {
   if (!simResults) { computeSimResults(); }
   if (!simResults) return;
-  // If we only have the zero placeholder, don't render yet — wait for API response
-  if (simResults.impressions === 0 && (!simResults.bench || !simResults.bench.ctrBase)) return;
   const r = simResults;
   const budget  = parseInt((document.getElementById('budget') || {value:'85000'}).value) || 85000;
   const format  = (document.getElementById('format') || {value:'Integrated'}).value;
