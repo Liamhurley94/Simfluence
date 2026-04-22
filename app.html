@@ -11463,6 +11463,47 @@ function getSelectedGenre() {
 // Compute sub-mode alignment score for a creator (0-100)
 
 
+// Genre and keyword lookups — filtering only, no scoring weights
+// Scoring logic is server-side in the score-creator Edge Function
+const GENRE_AFFINITY = {
+  'Gaming & Esports':             { 'Gaming & Esports':1.0,'Gaming Setup & Peripherals':0.85,'Entertainment & Comedy':0.5,'Talk & Entertainment':0.45 },
+  'Gaming Setup & Peripherals':   { 'Gaming Setup & Peripherals':1.0,'Gaming & Esports':0.85,'Tech & Gadgets':0.6 },
+  'Tech & Gadgets':               { 'Tech & Gadgets':1.0,'Gaming Setup & Peripherals':0.65,'Education & Self-Development':0.5,'Finance & Investing':0.4,'Unboxing':0.55 },
+  'Health & Fitness':             { 'Health & Fitness':1.0,'Food & Cooking':0.6,'Lifestyle & Vlogs':0.55,'Beauty & Skincare':0.4,'Travel & Adventure':0.35,'Sports & Athletics':0.6 },
+  'Food & Cooking':               { 'Food & Cooking':1.0,'Lifestyle & Vlogs':0.6,'Health & Fitness':0.5,'Travel & Adventure':0.45,'Drinks & Beverages':0.65 },
+  'Travel & Adventure':           { 'Travel & Adventure':1.0,'Lifestyle & Vlogs':0.65,'Food & Cooking':0.45,'Health & Fitness':0.35,'Sports & Athletics':0.35 },
+  'Lifestyle & Vlogs':            { 'Lifestyle & Vlogs':1.0,'Beauty & Skincare':0.55,'Health & Fitness':0.5,'Food & Cooking':0.5,'Travel & Adventure':0.55,'Entertainment & Comedy':0.45 },
+  'Entertainment & Comedy':       { 'Entertainment & Comedy':1.0,'Talk & Entertainment':0.7,'Lifestyle & Vlogs':0.5,'Music':0.4 },
+  'Talk & Entertainment':         { 'Talk & Entertainment':1.0,'Entertainment & Comedy':0.7,'Lifestyle & Vlogs':0.45 },
+  'Music':                        { 'Music':1.0,'Entertainment & Comedy':0.5,'Lifestyle & Vlogs':0.45 },
+  'Beauty & Skincare':            { 'Beauty & Skincare':1.0,'Lifestyle & Vlogs':0.65,'Health & Fitness':0.45,'Travel & Adventure':0.3 },
+  'Finance & Investing':          { 'Finance & Investing':1.0,'Education & Self-Development':0.75,'Tech & Gadgets':0.4 },
+  'Education & Self-Development': { 'Education & Self-Development':1.0,'Finance & Investing':0.65,'Tech & Gadgets':0.45,'Lifestyle & Vlogs':0.4,'Health & Fitness':0.35 },
+  'Sports & Athletics':           { 'Sports & Athletics':1.0,'Health & Fitness':0.65,'Lifestyle & Vlogs':0.35 },
+  'Automotive':                   { 'Automotive':1.0,'Tech & Gadgets':0.45,'Lifestyle & Vlogs':0.3 },
+  'Unboxing':                     { 'Unboxing':1.0,'Tech & Gadgets':0.55,'Kids & Family / Toys':0.6,'Gaming & Esports':0.35 },
+  'ASMR & Relaxation':            { 'ASMR & Relaxation':1.0,'Health & Fitness':0.35 },
+  'Animals & Pets':               { 'Animals & Pets':1.0,'Lifestyle & Vlogs':0.4 },
+  'Trading Cards (TCG)':          { 'Trading Cards (TCG)':1.0,'Gaming & Esports':0.5,'Entertainment & Comedy':0.35 },
+  'Drinks & Beverages':           { 'Drinks & Beverages':1.0,'Food & Cooking':0.65,'Lifestyle & Vlogs':0.45 },
+  'Kids & Family / Toys':         { 'Kids & Family / Toys':1.0,'Unboxing':0.55,'Entertainment & Comedy':0.4 },
+  'Theatre & Performing Arts':    { 'Theatre & Performing Arts':1.0,'Entertainment & Comedy':0.45,'Music':0.4 },
+  'Art & Creative':               { 'Art & Creative':1.0,'Lifestyle & Vlogs':0.5,'Education & Self-Development':0.4 },
+};
+
+const SUBMODE_KEYWORDS = {
+  'RPG / Open World':['rpg','open world','elden ring','witcher','skyrim','diablo','final fantasy','mmorpg','wow'],
+  'FPS / Tactical':['fps','counter-strike','cs2','valorant','overwatch','rainbow six','battlefield','halo'],
+  'Battle Royale':['battle royale','fortnite','pubg','apex legends','warzone','call of duty'],
+  'MOBA':['moba','league of legends','lol','dota','smite'],
+  'Sports Games':['fifa','football','nba','madden','f1','rocket league'],
+  'Survival':['survival','minecraft','rust','valheim','ark','terraria','palworld'],
+  'Horror':['horror','resident evil','dead by daylight','silent hill','phasmophobia'],
+  'Indie':['indie','roguelike','hades','stardew','hollow knight','celeste'],
+  'Strategy':['strategy','civilization','age of empires','starcraft','total war'],
+  'Retro / Classics':['retro','pokemon','runescape','nostalgia','old school'],
+};
+
 // Safe client-side wrapper — reads from server cache only
 function computeGFI(creator) {
   if (!creator) return 50;
