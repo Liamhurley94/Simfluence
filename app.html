@@ -13033,8 +13033,11 @@ function updateSim() {
   const screen = document.getElementById('screen-simulator');
   if (screen && screen.classList.contains('active')) {
     computeSimResults();
-    updateSimDisplay();
-    renderEfficiencyCurve();
+    // computeSimResults sets simResults synchronously via local calc before returning
+    if (simResults) {
+      updateSimDisplay();
+      renderEfficiencyCurve();
+    }
   }
 }
 
@@ -13144,7 +13147,8 @@ function computeSimResults() {
       var fk2 = format === 'Dedicated' ? 'ded' : format === 'Mixed' ? 'mix' : 'int';
       var crD2 = toSim.filter(function(cr){return cr&&cr.id;}).map(function(cr){
         var bd = (data.creatorBreakdowns||[]).find(function(b){return String(b.id)===String(cr.id);});
-        var e2 = bd ? {ranges:bd.rates,fmt:fmtMoney} : computeCostEstimate(cr);
+        var _fmt = function(v){return v>=1000?'$'+(v/1000).toFixed(v>=10000?0:1)+'K':'$'+v;};
+        var e2 = bd ? {ranges:bd.rates,fmt:_fmt} : computeCostEstimate(cr);
         return {cr:cr,e:e2,midRate:bd?(bd.rates[fk2][0]+bd.rates[fk2][1])/2:0};
       });
       simResults = {
