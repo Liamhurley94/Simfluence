@@ -13138,7 +13138,7 @@ function computeSimResults() {
     p10: { impressions:Math.round(_im*0.68), ctr:Math.round(_ct*0.68*10)/10, roas:Math.round(_ro*0.65*10)/10 },
     p50: { impressions:_im, ctr:Math.round(_ct*10)/10, roas:Math.round(_ro*10)/10 },
     p90: { impressions:Math.round(_im*1.42), ctr:Math.round(_ct*1.42*10)/10, roas:Math.round(_ro*1.45*10)/10 },
-    bench: null,
+    bench: { ctrBase:2.0, cpmBase:8, cvrBase:1.5, roasBase:2.0, engBase:5.0 },
   };
 
   // ── EDGE FUNCTION — enriches results with precise coefficients ──────
@@ -13155,7 +13155,7 @@ function computeSimResults() {
         impressions:data.impressions, ctr:data.ctr, cpM:data.cpM, cvr:data.cvr,
         conversions:data.conversions, roas:data.roas, engRate:data.engRate, clicks:data.clicks,
         budget:budget, crData:crD2, creatorBreakdowns:data.creatorBreakdowns||[],
-        p10:data.p10, p50:data.p50, p90:data.p90, bench:data.bench||null,
+        p10:data.p10, p50:data.p50, p90:data.p90, bench:data.bench||{ ctrBase:2.0, cpmBase:8, cvrBase:1.5, roasBase:2.0, engBase:5.0 },
       };
       if (typeof updateSimDisplay==='function') updateSimDisplay();
       if (typeof updateBandDisplays==='function') updateBandDisplays();
