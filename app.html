@@ -3846,6 +3846,43 @@ document.addEventListener('DOMContentLoaded', function() {
           </select>
         </div>
 
+        <!-- CONVERSION TYPE — drives ROAS model -->
+        <div class="field" id="convTypeField">
+          <label style="display:flex;align-items:center;gap:6px">Conversion Type
+            <span style="font-size:9px;color:var(--text-muted);font-weight:400">· affects ROAS calculation</span>
+          </label>
+          <select id="convType" style="width:100%">
+            <option value="purchase">Purchase / Sale</option>
+            <option value="app_install">App Install</option>
+            <option value="lead">Lead Generation</option>
+            <option value="subscription">Subscription Sign-up</option>
+            <option value="awareness">Awareness Only (no ROAS)</option>
+          </select>
+        </div>
+
+        <!-- AOV — shown for purchase/subscription, hidden for others -->
+        <div class="field" id="aovField">
+          <label style="display:flex;align-items:center;gap:6px">
+            <span id="aovLabel">Average Order Value</span>
+            <span style="font-size:9px;color:var(--text-muted);font-weight:400" id="aovHint">· per conversion</span>
+          </label>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="color:var(--text-muted);font-size:14px;font-family:Manrope,sans-serif">$</span>
+            <input id="aovInput" type="number" min="0.01" step="0.01" value="30"
+              style="flex:1;padding:7px 10px;background:var(--bg3);border:1px solid rgba(255,212,0,0.3);border-radius:5px;color:#FFD400;font-family:Manrope,sans-serif;font-size:13px;font-weight:600;outline:none;box-sizing:border-box"
+              placeholder="e.g. 49.99">
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px" id="aovQuickPicks">
+            <button class="aov-pick" data-val="4.99"   style="padding:3px 8px;font-size:9px;font-family:Manrope,sans-serif;font-weight:600;border:1px solid var(--border);border-radius:4px;background:var(--bg3);color:var(--text-muted);cursor:pointer">$4.99</button>
+            <button class="aov-pick" data-val="14.99"  style="padding:3px 8px;font-size:9px;font-family:Manrope,sans-serif;font-weight:600;border:1px solid var(--border);border-radius:4px;background:var(--bg3);color:var(--text-muted);cursor:pointer">$14.99</button>
+            <button class="aov-pick" data-val="29.99"  style="padding:3px 8px;font-size:9px;font-family:Manrope,sans-serif;font-weight:600;border:1px solid var(--border);border-radius:4px;background:var(--bg3);color:var(--text-muted);cursor:pointer">$29.99</button>
+            <button class="aov-pick" data-val="49.99"  style="padding:3px 8px;font-size:9px;font-family:Manrope,sans-serif;font-weight:600;border:1px solid var(--border);border-radius:4px;background:var(--bg3);color:var(--text-muted);cursor:pointer">$49.99</button>
+            <button class="aov-pick" data-val="99.99"  style="padding:3px 8px;font-size:9px;font-family:Manrope,sans-serif;font-weight:600;border:1px solid var(--border);border-radius:4px;background:var(--bg3);color:var(--text-muted);cursor:pointer">$99.99</button>
+            <button class="aov-pick" data-val="199"    style="padding:3px 8px;font-size:9px;font-family:Manrope,sans-serif;font-weight:600;border:1px solid var(--border);border-radius:4px;background:var(--bg3);color:var(--text-muted);cursor:pointer">$199</button>
+            <button class="aov-pick" data-val="499"    style="padding:3px 8px;font-size:9px;font-family:Manrope,sans-serif;font-weight:600;border:1px solid var(--border);border-radius:4px;background:var(--bg3);color:var(--text-muted);cursor:pointer">$499</button>
+          </div>
+        </div>
+
         <div class="field">
           <label>Budget</label>
           <div style="margin-bottom:6px">
@@ -13043,6 +13080,74 @@ function applyObjectiveSortHint() {
 }
 
 // ── SIMULATION ────────────────────────────────────────────────────────
+// ── ROAS ENGINE HELPERS ───────────────────────────────────────────────
+
+function getConvType() {
+  var el = document.getElementById('convType');
+  return el ? el.value : 'purchase';
+}
+
+function getAOV() {
+  var convType = getConvType();
+  // For awareness-only campaigns, AOV is irrelevant
+  if (convType === 'awareness') return 0;
+  // For app installs, use a realistic average revenue per install by genre
+  if (convType === 'app_install') {
+    var genre = getSelectedGenre() || 'Gaming & Esports';
+    var appARPU = {
+      'Gaming & Esports': 2.50,
+      'Kids & Family / Toys': 1.80,
+      'Entertainment & Comedy': 1.20,
+      'Education & Self-Development': 4.50,
+      'Health & Fitness': 3.20,
+      'Finance & Investing': 8.00,
+      'Lifestyle & Vlogs': 1.50,
+    };
+    return appARPU[genre] || 2.00;
+  }
+  // For lead generation — use a sensible default if no AOV entered
+  if (convType === 'lead') {
+    var el = document.getElementById('aovInput');
+    var entered = el ? parseFloat(el.value) : 0;
+    return entered > 0 ? entered : 50; // default $50 lead value if not set
+  }
+  // Purchase / Subscription — use the AOV input directly
+  var el = document.getElementById('aovInput');
+  var val = el ? parseFloat(el.value) : 30;
+  return (val && val > 0) ? val : 30;
+}
+
+// CVR adjustments per conversion type — different events convert differently
+function getConvTypeCVRMult() {
+  var convType = getConvType();
+  switch(convType) {
+    case 'app_install':    return 2.8;  // App installs convert ~3x more than purchases (lower friction)
+    case 'lead':           return 1.6;  // Lead forms convert ~1.5x more than purchases
+    case 'subscription':   return 0.7;  // Subscription sign-ups are higher friction than one-off purchase
+    case 'awareness':      return 0;    // No conversion event
+    default:               return 1.0;  // Purchase — baseline
+  }
+}
+
+// ROAS confidence descriptor based on conversion type and data available
+function getROASConfidence(convType, aov) {
+  if (convType === 'awareness') return null; // No ROAS for awareness
+  if (convType === 'app_install') return { level: 'HIGH', reason: 'App install ARPU uses verified genre benchmarks' };
+  if (aov > 0 && aov !== 30) return { level: 'HIGH', reason: 'Based on your actual product value ($' + aov.toFixed(2) + ')' };
+  return { level: 'ESTIMATED', reason: 'Using default $30 AOV — enter your actual product value for accuracy' };
+}
+
+// Brand Value Score for awareness campaigns (replaces ROAS)
+// Combines CPM efficiency, creator quality, and audience reach
+function computeBrandValueScore(impressions, avgCPI, budget, gfiAvg) {
+  if (budget <= 0) return 0;
+  var cpmEfficiency = Math.min(impressions / (budget / 1000), 200); // impressions per $1000
+  var qualityScore  = avgCPI; // 0–1
+  var fitScore      = (gfiAvg || 70) / 100;
+  var bvs = (cpmEfficiency / 200) * qualityScore * fitScore * 100;
+  return Math.round(Math.min(bvs, 99));
+}
+
 let simScenario = 'base';
 let simResults  = null;
 
@@ -13140,27 +13245,48 @@ function computeSimResults() {
   const ctrMult    = avgCPI * (1 + awarenessW * 0.15 - salesW * 0.05) * fmtCtrAdj;
   const ctr        = Math.min(bench.ctrBase * ctrMult, 15);
   const cvr        = Math.min(bench.cvrBase * (1 + salesW * 0.3 - awarenessW * 0.1) * avgCPI * fmtCvrAdj, 20);
-  const clicks     = Math.round(impressions * ctr / 100);
-  const conversions = Math.round(clicks * cvr / 100);
-  const revenue    = conversions * 30;
-  const roas       = budget > 0 ? revenue / budget : 0;
-  const engRate    = Math.min(bench.engBase * (1 + engagementW * 0.2) * avgCPI, 20);
+  // ── FLEXIBLE ROAS ENGINE ──────────────────────────────────────────────
+  var convType    = getConvType();
+  var aov         = getAOV();
+  var cvrTypeMult = getConvTypeCVRMult();
+
+  // CVR adjusted by conversion type — app installs convert much higher than purchases
+  const cvrAdjusted = convType === 'awareness' ? 0
+    : Math.min(cvr * cvrTypeMult, convType === 'app_install' ? 40 : 20);
+
+  const clicks      = Math.round(impressions * ctr / 100);
+  const conversions = convType === 'awareness' ? 0 : Math.round(clicks * cvrAdjusted / 100);
+  const revenue     = conversions * aov;
+  const roas        = (convType === 'awareness' || budget <= 0) ? null : Math.round((revenue / budget) * 10) / 10;
+  const engRate     = Math.min(bench.engBase * (1 + engagementW * 0.2) * avgCPI, 20);
+
+  // Brand Value Score for awareness campaigns (replaces ROAS)
+  var avgGFI = toSim.reduce(function(a, cr) { return a + (cr.gfi || computeGFI(cr)); }, 0) / toSim.length;
+  var bvs    = convType === 'awareness'
+    ? computeBrandValueScore(impressions, avgCPI, budget, avgGFI)
+    : null;
+
+  var roasConf = getROASConfidence(convType, aov);
 
   simResults = {
     impressions,
-    ctr:    Math.round(ctr * 10) / 10,
-    cpM:    Math.round(cpmActual * 100) / 100,
-    cvr:    Math.round(cvr * 10) / 10,
+    ctr:          Math.round(ctr * 10) / 10,
+    cpM:          Math.round(cpmActual * 100) / 100,
+    cvr:          Math.round(cvrAdjusted * 10) / 10,
     conversions,
-    roas:   Math.round(roas * 10) / 10,
-    engRate: Math.round(engRate * 10) / 10,
+    roas,
+    bvs,
+    roasConf,
+    convType,
+    aov,
+    engRate:      Math.round(engRate * 10) / 10,
     clicks,
     budget,
     crData,
     bench,
-    p10: { impressions: Math.round(impressions * 0.68), ctr: Math.round(ctr * 0.68 * 10) / 10, roas: Math.round(roas * 0.65 * 10) / 10 },
-    p50: { impressions, ctr: Math.round(ctr * 10) / 10, roas: Math.round(roas * 10) / 10 },
-    p90: { impressions: Math.round(impressions * 1.42), ctr: Math.round(ctr * 1.42 * 10) / 10, roas: Math.round(roas * 1.45 * 10) / 10 },
+    p10: { impressions: Math.round(impressions * 0.68), ctr: Math.round(ctr * 0.68 * 10) / 10, roas: roas !== null ? Math.round(roas * 0.65 * 10) / 10 : null },
+    p50: { impressions, ctr: Math.round(ctr * 10) / 10, roas },
+    p90: { impressions: Math.round(impressions * 1.42), ctr: Math.round(ctr * 1.42 * 10) / 10, roas: roas !== null ? Math.round(roas * 1.45 * 10) / 10 : null },
   };
 }
 
@@ -13185,17 +13311,42 @@ function updateSimDisplay() {
     const impEl = document.getElementById(b.el);
     const subEl = document.getElementById(b.sub);
     if (impEl) impEl.textContent = fmtNum(b.data.impressions);
-    if (subEl) subEl.innerHTML = 'CTR <strong style="color:' + b.col + '">' + b.data.ctr + '%</strong> &nbsp; ROAS <strong style="color:' + b.col + '">' + b.data.roas + '×</strong>';
+    if (subEl) {
+      var roasPart = b.data.roas !== null && b.data.roas !== undefined
+        ? ' &nbsp; ROAS <strong style="color:' + b.col + '">' + b.data.roas + '×</strong>'
+        : (r && r.bvs !== null && r.bvs !== undefined ? ' &nbsp; BVS <strong style="color:' + b.col + '">' + r.bvs + '</strong>' : '');
+      subEl.innerHTML = 'CTR <strong style="color:' + b.col + '">' + b.data.ctr + '%</strong>' + roasPart;
+    }
   });
 
-  // Core metric cards
+  // Core metric cards — ROAS is dynamic based on conversion type
+  var _convLabel = r.convType === 'app_install' ? 'Est. Installs'
+    : r.convType === 'lead' ? 'Est. Leads'
+    : r.convType === 'subscription' ? 'Est. Sign-ups'
+    : r.convType === 'awareness' ? 'Audience Reached'
+    : 'Est. Conversions';
+
+  var _roasLabel = r.convType === 'awareness' ? 'Brand Value Score'
+    : r.roasConf && r.roasConf.level === 'ESTIMATED' ? 'ROAS (est.)'
+    : 'ROAS';
+  var _roasVal   = r.convType === 'awareness'
+    ? (r.bvs || 0) + '/100'
+    : r.roas !== null ? r.roas + '×' : 'N/A';
+  var _roasSub   = r.convType === 'awareness'
+    ? 'Brand value index'
+    : r.roasConf ? r.roasConf.reason
+    : 'Return on ad spend';
+  var _roasColor = r.convType === 'awareness' ? '#0050FF'
+    : r.roas === null ? '#888888'
+    : r.roas >= 3 ? '#00C46A' : r.roas >= 1.5 ? '#FF7A00' : '#FF3355';
+
   const metrics = [
-    { label:'Est. Impressions', val:fmtNum(r.impressions), sub:'Total reach',        color:'#0050FF' },
-    { label:'CTR',              val:r.ctr+'%',            sub:'Click-through rate',  color:'#00C46A' },
-    { label:'CPM',              val:'$'+r.cpM,            sub:'Cost per 1,000 imps', color:'#FF7A00' },
-    { label:'CVR',              val:r.cvr+'%',            sub:'Conversion rate',     color:'#9C27B0' },
-    { label:'Est. Conversions', val:fmtNum(r.conversions),sub:'Installs / leads',    color:'#E91E63' },
-    { label:'ROAS',             val:r.roas+'×',           sub:'Return on ad spend',  color:'#FFD400' },
+    { label:'Est. Impressions', val:fmtNum(r.impressions), sub:'Total reach',         color:'#0050FF' },
+    { label:'CTR',              val:r.ctr+'%',             sub:'Click-through rate',  color:'#00C46A' },
+    { label:'CPM',              val:'$'+r.cpM,             sub:'Cost per 1,000 imps', color:'#FF7A00' },
+    { label:'CVR',              val: r.convType === 'awareness' ? '—' : r.cvr+'%', sub: r.convType === 'awareness' ? 'Awareness campaign' : 'Conversion rate', color:'#9C27B0' },
+    { label:_convLabel,         val:r.convType === 'awareness' ? fmtNum(r.impressions) : fmtNum(r.conversions), sub: r.convType === 'awareness' ? 'Unique impressions' : 'Based on ' + (r.aov > 0 ? '$'+r.aov+' AOV' : 'est. AOV'), color:'#E91E63' },
+    { label:_roasLabel,         val:_roasVal,              sub:_roasSub,              color:_roasColor },
   ];
   const simEl = document.getElementById('simResults');
   if (simEl) simEl.innerHTML = metrics.map(function(m) {
@@ -13239,20 +13390,23 @@ function updateSimDisplay() {
       var crCtr      = Math.round(bench.ctrBase * (cr.cpi/100) * (crGfi/100 + 0.5) * 10) / 10;
       var crClicks   = Math.round(crImpr * crCtr / 100);
       // Use real campaign CVR if available, else genre benchmark scaled by CPI
+      var _crConvTypeMult = getConvTypeCVRMult();
+      var _crConvType    = getConvType();
+      var _crAOV         = getAOV();
       var crCvr      = cr.realCVR !== undefined
         ? Math.round(cr.realCVR * 10) / 10
-        : Math.round(bench.cvrBase * (cr.cpi/100) * 10) / 10;
-      var crConv     = Math.round(crClicks * crCvr / 100);
-      // Use real CPA for ROAS if available
-      var _crCPA = cr.realCPA !== undefined ? cr.realCPA : (crConv > 0 ? budgetShare / crConv : 999);
-      var crRoas     = Math.round((crConv * 30 / Math.max(budgetShare, 1)) * 10) / 10;
+        : Math.round(Math.min(bench.cvrBase * (cr.cpi/100) * _crConvTypeMult, _crConvType === 'app_install' ? 40 : 20) * 10) / 10;
+      var crConv     = _crConvType === 'awareness' ? 0 : Math.round(crClicks * crCvr / 100);
+      var _crCPA     = cr.realCPA !== undefined ? cr.realCPA : (crConv > 0 ? budgetShare / crConv : 999);
+      var crRoas     = _crConvType === 'awareness' ? null
+        : Math.round((crConv * _crAOV / Math.max(budgetShare, 1)) * 10) / 10;
       var gfiCol     = crGfi >= 80 ? '#00C46A' : crGfi >= 60 ? '#FF7A00' : '#FF3355';
       var crRate     = crEst.ranges[fmtKey];
       var cardId     = 'crbd-' + cr.id;
 
-      var p10 = { impr: Math.round(crImpr*0.68), ctr: Math.round(crCtr*0.68*10)/10, clicks: Math.round(crClicks*0.68), conv: Math.round(crConv*0.68), roas: Math.round(crRoas*0.65*10)/10 };
+      var p10 = { impr: Math.round(crImpr*0.68), ctr: Math.round(crCtr*0.68*10)/10, clicks: Math.round(crClicks*0.68), conv: Math.round(crConv*0.68), roas: crRoas !== null ? Math.round(crRoas*0.65*10)/10 : null };
       var p50 = { impr: crImpr, ctr: crCtr, clicks: crClicks, conv: crConv, roas: crRoas };
-      var p90 = { impr: Math.round(crImpr*1.42), ctr: Math.round(crCtr*1.42*10)/10, clicks: Math.round(crClicks*1.42), conv: Math.round(crConv*1.42), roas: Math.round(crRoas*1.45*10)/10 };
+      var p90 = { impr: Math.round(crImpr*1.42), ctr: Math.round(crCtr*1.42*10)/10, clicks: Math.round(crClicks*1.42), conv: Math.round(crConv*1.42), roas: crRoas !== null ? Math.round(crRoas*1.45*10)/10 : null };
 
       var metrics = [
         ['EST. IMPRESSIONS', fmtNum(crImpr), '#0050FF'],
@@ -13274,7 +13428,7 @@ function updateSimDisplay() {
         return '<div id="' + id + '-' + band + '" style="display:none;background:' + bgCol + ';padding:16px">'
           + '<div style="font-size:10px;font-weight:700;color:' + col + ';margin-bottom:12px;letter-spacing:.06em">' + label + '</div>'
           + '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px">'
-          + [['Impressions',fmtNum(data.impr)],['CTR',data.ctr+'%'],['Est. Clicks',fmtNum(data.clicks)],['ROAS',data.roas+'×']].map(function(x) {
+          + [['Impressions',fmtNum(data.impr)],['CTR',data.ctr+'%'],['Est. Clicks',fmtNum(data.clicks)],['ROAS', data.roas !== null && data.roas !== undefined ? data.roas+'×' : (simResults && simResults.convType === 'awareness' ? 'N/A' : '—')]].map(function(x) {
               return '<div style="background:rgba(0,0,0,0.2);border-radius:5px;padding:10px;text-align:center">'
                 + '<div style="font-size:8px;color:' + col + '88;margin-bottom:4px">' + x[0] + '</div>'
                 + '<div style="font-size:18px;font-weight:700;color:' + col + '">' + x[1] + '</div>'
@@ -16242,16 +16396,18 @@ function computeCreatorForecast(cr, allocBudget, genre) {
   var impressions = Math.round((allocBudget / cpmActual) * 1000);
   var ctr = Math.min(bench.ctrBase * cpiW * gfiW * 1.4, 15);
   var cvr = Math.min(bench.cvrBase * cpiW * 1.1, 20);
+  var _fcAOV  = typeof getAOV === 'function' ? getAOV() : 30;
+  var _fcConv = typeof getConvType === 'function' ? getConvType() : 'purchase';
   var clicks = Math.round(impressions * ctr / 100);
-  var conversions = Math.round(clicks * cvr / 100);
-  var revenue = conversions * 30;
-  var roas = allocBudget > 0 ? revenue / allocBudget : 0;
+  var conversions = _fcConv === 'awareness' ? 0 : Math.round(clicks * cvr / 100);
+  var revenue = conversions * _fcAOV;
+  var roas = (_fcConv === 'awareness' || allocBudget <= 0) ? null : Math.round((revenue / allocBudget) * 10) / 10;
   return {
     impressions: impressions,
     ctr: Math.round(ctr * 10) / 10,
     clicks: clicks,
     conversions: conversions,
-    roas: Math.round(roas * 10) / 10,
+    roas: roas,
     gfi: gfi,
   };
 }
@@ -18203,6 +18359,77 @@ document.addEventListener('DOMContentLoaded', function() {
   // Simulation
   wire('runSimBtn',            function() { if(typeof runSimulation==='function') runSimulation(); });
   wire('reRunSimBtn',          function() { if(typeof runSimulation==='function') runSimulation(); });
+
+  // ── CONVERSION TYPE WIRING ────────────────────────────────────────
+  var convTypeEl = document.getElementById('convType');
+  var aovFieldEl = document.getElementById('aovField');
+  var aovLabelEl = document.getElementById('aovLabel');
+  var aovHintEl  = document.getElementById('aovHint');
+  var aovInputEl = document.getElementById('aovInput');
+
+  function updateConvTypeUI() {
+    var convType = convTypeEl ? convTypeEl.value : 'purchase';
+    if (!aovFieldEl) return;
+
+    if (convType === 'awareness') {
+      aovFieldEl.style.display = 'none';
+    } else if (convType === 'app_install') {
+      aovFieldEl.style.display = 'none'; // auto-calculated by genre
+    } else {
+      aovFieldEl.style.display = 'block';
+      if (aovLabelEl) {
+        aovLabelEl.textContent = convType === 'lead' ? 'Lead Value'
+          : convType === 'subscription' ? 'Subscription Value (annual)'
+          : 'Average Order Value';
+      }
+      if (aovHintEl) {
+        aovHintEl.textContent = convType === 'lead' ? '· est. revenue per lead'
+          : convType === 'subscription' ? '· annual subscription revenue'
+          : '· per purchase';
+      }
+    }
+    // Re-run simulation if already run
+    if (typeof simResults !== 'undefined' && simResults) {
+      if (typeof computeSimResults === 'function') {
+        computeSimResults();
+        if (typeof updateSimDisplay === 'function') updateSimDisplay();
+        if (typeof updateBandDisplays === 'function') updateBandDisplays();
+      }
+    }
+  }
+
+  if (convTypeEl) convTypeEl.addEventListener('change', updateConvTypeUI);
+  updateConvTypeUI(); // init
+
+  // AOV quick picks
+  document.querySelectorAll('.aov-pick').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      if (aovInputEl) {
+        aovInputEl.value = btn.dataset.val;
+        // Re-run sim if active
+        if (typeof simResults !== 'undefined' && simResults) {
+          if (typeof computeSimResults === 'function') {
+            computeSimResults();
+            if (typeof updateSimDisplay === 'function') updateSimDisplay();
+            if (typeof updateBandDisplays === 'function') updateBandDisplays();
+          }
+        }
+      }
+    });
+  });
+
+  if (aovInputEl) {
+    aovInputEl.addEventListener('change', function() {
+      if (typeof simResults !== 'undefined' && simResults) {
+        if (typeof computeSimResults === 'function') {
+          computeSimResults();
+          if (typeof updateSimDisplay === 'function') updateSimDisplay();
+          if (typeof updateBandDisplays === 'function') updateBandDisplays();
+        }
+      }
+    });
+  }
+
 
   // Navigation buttons
   wire('scoreSelectedBtn',     function() { if(typeof showScreen==='function') showScreen('scoring',   document.querySelector('[data-screen="scoring"]')); });
