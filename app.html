@@ -2244,8 +2244,13 @@ function getTierLevel() {
     var level = (typeof TIER_LEVELS !== 'undefined') ? TIER_LEVELS[t.toLowerCase().trim()] : undefined;
     if (level !== undefined) return level;
   }
-  // No tier found — user is not authenticated or session expired.
-  // Return free (-1) so no premium features are accessible.
+  // No tier found — check if user has a valid auth session
+  // If authenticated (sf_auth set), default to free tier access
+  // If not authenticated, gate will handle it
+  try {
+    var auth = localStorage.getItem('sf_auth') || sessionStorage.getItem('sf_auth') || window._sf_auth_mem;
+    if (auth === '1') return -1; // authenticated free user
+  } catch(e) {}
   return -1;
 }
 function getTierName() {
@@ -3265,8 +3270,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }, 400);
 });
 
-document.getElementById('GP').focus();
-document.getElementById('GBtn').addEventListener('click', GC);
+// GP and GBtn removed with code auth tab
 // Free signup button + enter key
 (function() {
   var fb = document.getElementById('GFBtn');
