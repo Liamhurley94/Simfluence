@@ -13100,8 +13100,11 @@ function computeSimResults() {
     })());
 
   if (toSim.length === 0) {
-    simResults = null;
-    return;
+    // Fallback — take top creators by CPI regardless of genre filter
+    var _fallback = [...CREATORS].filter(function(cr){return cr;})
+      .sort(function(a,b){return (b.cpi||0)-(a.cpi||0);}).slice(0,10);
+    if (_fallback.length === 0) { simResults = null; return; }
+    toSim.push.apply(toSim, _fallback);
   }
 
   // ── LOCAL CALCULATION — runs immediately for instant display ──────────
