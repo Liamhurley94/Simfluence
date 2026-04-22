@@ -3376,6 +3376,11 @@ document.addEventListener('DOMContentLoaded', function() {
         simResults = null;
         if (typeof computeSimResults === 'function') computeSimResults();
         if (typeof updateSimDisplay === 'function') updateSimDisplay();
+      if (typeof updateBandDisplays === 'function') updateBandDisplays();
+      if (typeof renderEfficiencyCurve === 'function') renderEfficiencyCurve();
+      // Restore run button
+      var _rrb2 = document.getElementById('reRunSimBtn');
+      if (_rrb2) { _rrb2.textContent = '▶ RE-RUN'; _rrb2.style.background = '#FF7A00'; _rrb2.style.color = '#fff'; _rrb2.disabled = false; }
   // Save forecast to campaign for ROI comparison later
   if (typeof simResults !== 'undefined' && simResults && cmp) {
     cmp.forecast = {
@@ -13359,19 +13364,17 @@ function runSimulation() {
   }
 
   simResults = null; // force fresh compute
-  computeSimResults();
 
-  // Only navigate to simulator screen if not already on it
+  // Navigate to simulator screen if needed
   var simScreen = document.getElementById('screen-simulator');
   if (simScreen && !simScreen.classList.contains('active')) {
     showScreen('simulator', document.querySelector('.nav-tab[data-screen="simulator"]'));
-  } else {
-    updateSimDisplay();
-    updateBandDisplays();
-    renderEfficiencyCurve();
   }
 
-  // Restore button
+  // computeSimResults calls the Edge Function async — display updates in its callback
+  computeSimResults();
+
+  // Restore button after API roundtrip (allow ~3s)
   setTimeout(function() {
     if (_rrb) {
       _rrb.textContent = '▶ RE-RUN';
@@ -13379,7 +13382,13 @@ function runSimulation() {
       _rrb.style.color = '#fff';
       _rrb.disabled = false;
     }
-  }, 600);
+    // Refresh displays in case callback already fired
+    if (simResults && simResults.impressions > 0) {
+      updateSimDisplay();
+      updateBandDisplays();
+      if (typeof renderEfficiencyCurve === 'function') renderEfficiencyCurve();
+    }
+  }, 3000);
 }
 
 function renderEfficiencyCurve() {
