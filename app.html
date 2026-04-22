@@ -13385,8 +13385,15 @@ function runSimulation() {
     showScreen('simulator', document.querySelector('.nav-tab[data-screen="simulator"]'));
   }
 
-  // computeSimResults calls the Edge Function async — display updates in its callback
+  // computeSimResults runs local calculation immediately, then calls API for enrichment
   computeSimResults();
+
+  // Update display immediately with local results
+  if (simResults) {
+    updateSimDisplay();
+    updateBandDisplays();
+    renderEfficiencyCurve();
+  }
 
   // Restore button after API roundtrip (allow ~3s)
   setTimeout(function() {
