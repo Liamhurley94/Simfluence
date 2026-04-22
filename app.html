@@ -11444,7 +11444,6 @@ if (typeof CREATORS !== 'undefined') {
     if (!CREATORS[_ci] || !CREATORS[_ci].id || !CREATORS[_ci].name) CREATORS.splice(_ci, 1);
   }
 }
-// GENRE_AFFINITY — moved server-side to Edge Function
 // ── GFI CONFIG ────────────────────────────────────────────────────────
 const GFI_WARN_THRESHOLD    = 50;
 const GFI_DANGER_THRESHOLD  = 35;
@@ -11457,13 +11456,8 @@ function getSelectedGenre() {
 
 // ── SUB-MODE KEYWORD MAP ──────────────────────────────────────────────
 // Maps each sub-mode to bio/content keywords that indicate a creator covers it
-// SUBMODE_KEYWORDS — moved server-side to Edge Function
 // Compute sub-mode alignment score for a creator (0-100)
-// computeSubModeAlignment — moved server-side
 
-// computeGFI — moved server-side to Edge Function score-creator
-// Scores are fetched via batchScoreGFI() and cached in window.__gfiCache
-// Use getCachedGFI(creatorId) to read scores
 
 // Safe client-side wrapper — reads from server cache only
 function computeGFI(creator) {
@@ -12561,7 +12555,7 @@ function openProfileOverlay(id) {
               var campaignGenre = getSelectedGenre() || 'Gaming & Esports';
               var subMode = activeSubMode || '';
               var ga = c.genre === campaignGenre ? 1.0 : ((GENRE_AFFINITY[c.genre]||{})[campaignGenre] || 0.05);
-              var sma = 50; // Sub-mode alignment computed server-side
+              var sma = 50;
               var items = [
                 ['Genre affinity', c.genre + ' → ' + campaignGenre, Math.round(ga*100)+'%'],
                 ['Sub-mode signal', subMode || 'none set', Math.round(sma)+'%'],
@@ -13509,8 +13503,7 @@ function renderScoringScreen() {
             const words = sel.replace(/[\/\-&]/g,' ').split(' ').filter(w => w.length > 2);
             if (words.some(w => crBio.indexOf(w) !== -1 || crSub.indexOf(w) !== -1)) return true;
             // computeSubModeAlignment as fallback — include if at least partial fit
-            // Sub-mode alignment computed server-side
-            return true;
+                      return true;
             return false;
           }
           return true;
@@ -13581,7 +13574,7 @@ function renderScoringScreen() {
   tableEl.innerHTML = sorted.map(({cr, gfi}) => {
     const gfiCol  = gfi >= 70 ? '#00C46A' : gfi >= 45 ? '#FF7A00' : '#E60023';
     const e       = computeCostEstimate(cr);
-    const subAlign = 50; // Computed server-side
+    const subAlign = 50;
     const subAlignCol = subAlign >= 60 ? '#00C46A' : subAlign >= 35 ? '#FF7A00' : '#E60023';
     const subAlignLabel = subAlign >= 60 ? '✓ Strong fit' : subAlign >= 35 ? '~ Partial fit' : '✗ Weak fit';
 
