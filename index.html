@@ -1,0 +1,1990 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simfluence — Know before you spend [CLEAN VERSION - NO POPUP]</title>
+<meta name="description" content="AI-powered campaign intelligence. Predict your CTR, CPM, CVR and ROAS before a single penny is committed.">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+:root{
+  --gold:#FFD400;--blue:#0050FF;--green:#00C46A;--orange:#FF7A00;
+  --bg:#050508;--bg2:#0A0A10;--border:rgba(255,255,255,0.06);
+  --text:#fff;--muted:rgba(255,255,255,0.45);--dim:rgba(255,255,255,0.25);
+}
+body{background:var(--bg);color:var(--text);font-family:"Inter",sans-serif;overflow-x:hidden;}
+body.light{--bg:#F8F8F6;--bg2:#fff;--border:rgba(0,0,0,0.08);--text:#0A0A0F;--muted:rgba(0,0,0,0.55);--dim:rgba(0,0,0,0.35);--gold:#B8960A;--blue:#0040CC;}
+body.light nav{background:rgba(248,248,246,0.92);}
+body.light #heroCanvas{opacity:0.1;}
+body.light .stats-bar{background:#fff;}
+body.light .ticker{background:#F0F0ED;}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:0 48px;height:68px;background:rgba(5,5,8,0.85);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);}
+.nav-logo{font-family:"Space Grotesk",sans-serif;font-size:22px;font-weight:600;color:var(--gold);text-decoration:none;letter-spacing:-0.01em;}
+.nav-logo em{font-style:italic;font-weight:300;}
+.nav-center{display:flex;gap:36px;list-style:none;position:absolute;left:50%;transform:translateX(-50%);}
+.nav-center a{font-family:"DM Mono",monospace;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color 0.2s;}
+.nav-center a:hover{color:var(--text);}
+.nav-right{display:flex;gap:12px;align-items:center;}
+.nav-login{font-family:"DM Mono",monospace;font-size:11px;letter-spacing:0.06em;color:var(--muted);text-decoration:none;}
+.nav-login:hover{color:var(--text);}
+.nav-cta{padding:10px 22px;background:var(--blue);color:#fff;border:none;border-radius:6px;font-family:"DM Mono",monospace;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;text-decoration:none;transition:all 0.2s;}
+.nav-cta:hover{background:#003FCC;}
+.theme-toggle{width:36px;height:36px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:16px;transition:all 0.2s;display:flex;align-items:center;justify-content:center;}
+
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:68px 48px 0;position:relative;overflow:hidden;}
+#heroCanvas{position:absolute;inset:0;width:100%;height:100%;opacity:0.35;pointer-events:none;}
+.hero-inner{position:relative;z-index:2;max-width:1100px;margin:0 auto;}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(0,80,255,0.12);border:1px solid rgba(0,80,255,0.3);border-radius:20px;padding:6px 16px;font-family:"DM Mono",monospace;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:#6B9FFF;margin-bottom:40px;opacity:0;animation:fadeUp 0.8s ease 0.2s forwards;}
+.hero-badge-dot{width:6px;height:6px;border-radius:50%;background:var(--blue);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.5;transform:scale(0.8);}}
+.hero-h1{font-family:"Space Grotesk",sans-serif;font-size:clamp(60px,8.5vw,112px);font-weight:600;line-height:0.94;letter-spacing:-0.04em;margin-bottom:36px;opacity:0;animation:fadeUp 0.9s ease 0.35s forwards;}
+.hero-h1 .gold{color:var(--gold);font-style:italic;font-weight:300;}
+.hero-sub{font-size:clamp(17px,2.2vw,22px);color:var(--muted);max-width:620px;line-height:1.6;margin:0 auto 48px;font-weight:300;opacity:0;animation:fadeUp 0.9s ease 0.5s forwards;}
+.hero-actions{display:flex;gap:16px;justify-content:center;align-items:center;opacity:0;animation:fadeUp 0.9s ease 0.65s forwards;}
+/* scroll indicator removed */
+@keyframes fadeUp{from{opacity:0;transform:translateY(28px);}to{opacity:1;transform:translateY(0);}}
+
+.btn-xl{padding:18px 40px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-family:"DM Mono",monospace;font-size:13px;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;text-decoration:none;transition:all 0.2s;}
+.btn-xl:hover{background:#003FCC;transform:translateY(-2px);}
+.btn-xl-ghost{padding:18px 40px;background:transparent;color:var(--muted);border:1px solid rgba(255,255,255,0.15);border-radius:8px;font-family:"DM Mono",monospace;font-size:13px;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;text-decoration:none;transition:all 0.2s;}
+.btn-xl-ghost:hover{border-color:rgba(255,255,255,0.4);color:var(--text);}
+
+.stats-bar{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:var(--bg2);}
+.stat-cell{padding:44px 40px;border-right:1px solid var(--border);}
+.stat-cell:last-child{border-right:none;}
+.stat-n{font-family:"Space Grotesk",sans-serif;font-size:clamp(44px,5vw,64px);font-weight:600;line-height:1;letter-spacing:-0.03em;margin-bottom:10px;}
+.stat-l{font-family:"DM Mono",monospace;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);line-height:1.5;}
+
+/* ticker removed */
+
+.section-problem{padding:140px 48px;max-width:1300px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:100px;align-items:center;}
+.section-eyebrow{font-family:"DM Mono",monospace;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:var(--blue);margin-bottom:24px;display:block;}
+.section-h2{font-family:"Space Grotesk",sans-serif;font-size:clamp(42px,5.2vw,68px);font-weight:600;line-height:0.97;letter-spacing:-0.035em;margin-bottom:28px;}
+.section-h2 em{font-style:italic;font-weight:300;color:var(--gold);}
+.section-body{font-size:18px;color:var(--muted);line-height:1.75;margin-bottom:18px;font-weight:300;}
+.problem-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:28px 32px;display:flex;gap:24px;align-items:flex-start;margin-bottom:12px;}
+.problem-n{font-family:"Space Grotesk",sans-serif;font-size:40px;font-weight:600;line-height:1;letter-spacing:-0.03em;flex-shrink:0;min-width:90px;}
+.problem-desc{font-size:14px;color:var(--muted);line-height:1.7;padding-top:4px;}
+
+.section-how{padding:140px 48px;background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
+.section-how-inner{max-width:1300px;margin:0 auto;}
+.steps-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.step-card{background:var(--bg2);padding:40px 32px;}
+.step-num{font-family:"DM Mono",monospace;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--blue);margin-bottom:24px;}
+.step-title{font-family:"Space Grotesk",sans-serif;font-size:22px;font-weight:600;margin-bottom:14px;letter-spacing:-0.01em;}
+.step-desc{font-size:15px;color:var(--muted);line-height:1.7;font-weight:300;}
+
+.section-features{padding:140px 48px;max-width:1300px;margin:0 auto;}
+.features-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.feature-block{background:var(--bg2);padding:52px 48px;}
+.feat-icon{width:48px;height:48px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:28px;}
+.feat-title{font-family:"Space Grotesk",sans-serif;font-size:28px;font-weight:600;letter-spacing:-0.02em;margin-bottom:16px;line-height:1.1;}
+.feat-desc{font-size:16px;color:var(--muted);line-height:1.75;font-weight:300;margin-bottom:24px;}
+.feat-tag{font-family:"DM Mono",monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;padding:5px 12px;border-radius:4px;display:inline-block;}
+
+.section-accuracy{padding:140px 48px;background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
+.accuracy-inner{max-width:1300px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:100px;align-items:center;}
+.accuracy-table{border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.acc-header{display:grid;grid-template-columns:1fr 1fr 1fr;background:rgba(255,255,255,0.03);border-bottom:1px solid var(--border);padding:14px 24px;}
+.acc-hcell{font-family:"DM Mono",monospace;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--dim);}
+.acc-row{display:grid;grid-template-columns:1fr 1fr 1fr;padding:16px 24px;border-bottom:1px solid var(--border);}
+.acc-row:last-child{border-bottom:none;}
+.acc-metric{font-family:"DM Mono",monospace;font-size:12px;color:var(--muted);}
+.acc-forecast{font-size:14px;color:var(--muted);}
+.acc-actual{font-size:14px;font-weight:600;color:var(--green);display:flex;align-items:center;gap:8px;}
+
+/* ══ PRICING ══════════════════════════════════════════════ */
+.section-pricing{padding:140px 48px;max-width:1500px;margin:0 auto;}
+.pricing-header{text-align:center;margin-bottom:32px;}
+
+/* Billing toggle */
+.billing-toggle{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:64px;cursor:pointer;user-select:none;}
+.toggle-label{font-family:"DM Mono",monospace;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);transition:color 0.2s;}
+.toggle-label.active{color:var(--text);}
+.toggle-track{width:48px;height:26px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:13px;position:relative;cursor:pointer;transition:background 0.2s;}
+.toggle-track.annual{background:rgba(0,80,255,0.25);border-color:rgba(0,80,255,0.4);}
+.toggle-thumb{width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:2px;left:3px;transition:transform 0.25s cubic-bezier(0.4,0,0.2,1);}
+.toggle-track.annual .toggle-thumb{transform:translateX(22px);}
+.toggle-saving-badge{font-family:"DM Mono",monospace;font-size:10px;letter-spacing:0.06em;padding:4px 12px;border-radius:20px;background:rgba(0,196,106,0.12);border:1px solid rgba(0,196,106,0.3);color:#00C46A;transition:opacity 0.3s;}
+
+/* Cards grid */
+.pricing-cards{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;align-items:stretch;}
+
+.p-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:26px 20px;display:flex;flex-direction:column;transition:border-color 0.25s,transform 0.25s;position:relative;overflow:hidden;}
+.p-card::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;opacity:0;transition:opacity 0.25s;}
+.p-card:hover{transform:translateY(-5px);}
+.p-card:hover::after{opacity:1;}
+
+.p-card.bronze{border-color:rgba(205,127,50,0.2);}
+.p-card.bronze::after{background:linear-gradient(90deg,#8B4513,#CD7F32,#E8A060);}
+.p-card.bronze:hover{border-color:rgba(205,127,50,0.45);}
+
+.p-card.silver{border-color:rgba(192,192,192,0.2);}
+.p-card.silver::after{background:linear-gradient(90deg,#888,#C0C0C0,#E8E8E8);}
+.p-card.silver:hover{border-color:rgba(192,192,192,0.45);}
+
+.p-card.gold-tier{border-color:rgba(255,212,0,0.4);background:rgba(255,212,0,0.025);}
+.p-card.gold-tier::after{background:linear-gradient(90deg,#B8960A,#FFD400,#FFE566);opacity:1;}
+.p-card.gold-tier:hover{border-color:rgba(255,212,0,0.7);transform:translateY(-5px);}
+
+.p-card.platinum{border-color:rgba(229,228,226,0.2);}
+.p-card.platinum::after{background:linear-gradient(90deg,#888,#C8C8C6,#E5E4E2);}
+.p-card.platinum:hover{border-color:rgba(229,228,226,0.45);}
+
+.p-card.diamond{border-color:rgba(185,242,255,0.18);}
+.p-card.diamond::after{background:linear-gradient(90deg,#5BC8E0,#B9F2FF,#5BC8E0);}
+.p-card.diamond:hover{border-color:rgba(185,242,255,0.4);}
+
+.p-popular{font-family:"DM Mono",monospace;font-size:9px;letter-spacing:0.08em;text-transform:uppercase;padding:3px 10px;border-radius:3px;background:rgba(255,212,0,0.12);color:#FFD400;display:inline-block;margin-bottom:8px;}
+.p-popular-spacer{display:block;height:22px;margin-bottom:8px;}
+.p-medal{font-size:24px;margin-bottom:8px;line-height:1;}
+.p-tier-name{font-family:"DM Mono",monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:14px;font-weight:500;}
+.p-price{font-family:"Space Grotesk",sans-serif;font-size:38px;font-weight:600;line-height:1;letter-spacing:-0.03em;}
+.p-price-sub{font-size:14px;font-weight:300;color:var(--muted);}
+.p-annual-line{font-family:"DM Mono",monospace;font-size:10px;color:var(--dim);margin-top:4px;min-height:15px;}
+.p-saving-line{font-family:"DM Mono",monospace;font-size:9px;min-height:14px;margin-top:3px;margin-bottom:18px;}
+.p-divider{height:1px;background:var(--border);margin-bottom:16px;}
+.p-features{flex:1;margin-bottom:18px;display:flex;flex-direction:column;gap:0;}
+.p-feat{font-size:12px;color:var(--muted);padding:5px 0;display:flex;gap:8px;align-items:flex-start;line-height:1.5;border-bottom:1px solid rgba(255,255,255,0.04);}
+.p-feat:last-child{border-bottom:none;}
+.p-feat-dash{flex-shrink:0;font-family:"DM Mono",monospace;font-size:9px;color:var(--dim);margin-top:2px;}
+.p-btn{display:block;text-align:center;text-decoration:none;padding:11px;border-radius:8px;font-family:"DM Mono",monospace;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border:1px solid transparent;transition:all 0.2s;width:100%;}
+
+.p-btn-bronze  {background:rgba(205,127,50,0.1); color:#CD7F32;border-color:rgba(205,127,50,0.3);}
+.p-btn-bronze:hover{background:rgba(205,127,50,0.2);}
+.p-btn-silver  {background:rgba(192,192,192,0.08);color:#C0C0C0;border-color:rgba(192,192,192,0.22);}
+.p-btn-silver:hover{background:rgba(192,192,192,0.16);}
+.p-btn-gold    {background:#FFD400;color:#000;border-color:transparent;}
+.p-btn-gold:hover{background:#FFE433;}
+.p-btn-platinum{background:rgba(229,228,226,0.08);color:#E5E4E2;border-color:rgba(229,228,226,0.22);}
+.p-btn-platinum:hover{background:rgba(229,228,226,0.16);}
+.p-btn-diamond {background:rgba(185,242,255,0.07);color:#B9F2FF;border-color:rgba(185,242,255,0.22);}
+.p-btn-diamond:hover{background:rgba(185,242,255,0.14);}
+
+/* Savings callout bar */
+.pricing-callout{margin-top:40px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:24px 32px;display:grid;grid-template-columns:repeat(4,1fr);gap:0;}
+.pcb-cell{padding:0 24px;border-right:1px solid var(--border);text-align:center;}
+.pcb-cell:first-child{padding-left:8px;}
+.pcb-cell:last-child{border-right:none;}
+.pcb-label{font-family:"DM Mono",monospace;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--dim);margin-bottom:6px;}
+.pcb-val{font-family:"Space Grotesk",sans-serif;font-size:20px;font-weight:600;letter-spacing:-0.02em;line-height:1.1;}
+.pcb-note{font-family:"DM Mono",monospace;font-size:9px;color:var(--dim);margin-top:4px;line-height:1.5;}
+
+.section-cta{padding:160px 48px;text-align:center;border-top:1px solid var(--border);position:relative;overflow:hidden;background:var(--bg2);}
+.cta-glow{position:absolute;width:700px;height:400px;background:radial-gradient(ellipse,rgba(0,80,255,0.1) 0%,transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;}
+.cta-h2{font-family:"Space Grotesk",sans-serif;font-size:clamp(48px,7vw,96px);font-weight:600;line-height:0.92;letter-spacing:-0.04em;margin-bottom:28px;position:relative;z-index:1;}
+.cta-h2 em{color:var(--gold);font-style:italic;font-weight:300;}
+.cta-sub{font-size:20px;color:var(--muted);font-weight:300;margin-bottom:52px;position:relative;z-index:1;}
+.cta-btns{display:flex;gap:16px;justify-content:center;position:relative;z-index:1;}
+.cta-note{font-family:"DM Mono",monospace;font-size:10px;letter-spacing:0.08em;color:var(--dim);margin-top:20px;position:relative;z-index:1;}
+
+footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px;background:var(--bg);}
+.f-logo{font-family:"Space Grotesk",sans-serif;font-size:20px;font-weight:600;color:var(--gold);text-decoration:none;display:block;margin-bottom:12px;letter-spacing:-0.01em;}
+.f-logo em{font-style:italic;font-weight:300;}
+.f-tag{font-size:14px;color:var(--muted);line-height:1.7;max-width:260px;margin-bottom:16px;font-weight:300;}
+.f-email{font-family:"DM Mono",monospace;font-size:11px;color:var(--dim);}
+.f-email a{color:#6B9FFF;text-decoration:none;}
+.f-col-title{font-family:"DM Mono",monospace;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--blue);margin-bottom:20px;}
+.f-links{display:flex;flex-direction:column;gap:12px;}
+.f-link{font-size:14px;color:var(--muted);text-decoration:none;background:none;border:none;cursor:pointer;text-align:left;padding:0;font-family:"Inter",sans-serif;transition:color 0.15s,opacity 0.15s;font-weight:300;}
+.f-link:hover{color:var(--text);opacity:0.9;text-decoration:underline;text-underline-offset:3px;}
+.f-bottom{grid-column:1/-1;border-top:1px solid var(--border);padding-top:24px;display:flex;justify-content:space-between;align-items:center;}
+.f-copy{font-family:"DM Mono",monospace;font-size:10px;color:var(--dim);letter-spacing:0.04em;}
+.f-legal{display:flex;gap:24px;}
+.f-legal a{font-family:"DM Mono",monospace;font-size:10px;color:var(--dim);text-decoration:none;}
+
+.reveal{opacity:1;}
+.reveal-delay-1,.reveal-delay-2,.reveal-delay-3{}
+
+/* SIGNUP MODAL */
+#sfModal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.9);z-index:9999;overflow-y:auto;}
+.sf-box{background:#0A0A10;border:1px solid rgba(255,255,255,0.12);border-radius:16px;padding:40px;width:100%;max-width:460px;margin:60px auto;position:relative;}
+.sf-logo{font-family:"Space Grotesk",sans-serif;font-size:20px;font-weight:600;color:#FFD400;margin-bottom:2px;}
+.sf-logo em{font-style:italic;font-weight:300;}
+.sf-sub-label{font-family:"DM Mono",monospace;font-size:9px;letter-spacing:.12em;color:rgba(255,255,255,0.2);margin-bottom:28px;text-transform:uppercase;}
+.sf-progress{display:flex;gap:6px;margin-bottom:28px;}
+.sf-prog-bar{height:4px;flex:1;border-radius:2px;background:rgba(255,255,255,0.1);transition:all .3s;}
+.sf-title{font-family:"Space Grotesk",sans-serif;font-size:24px;font-weight:600;margin-bottom:6px;letter-spacing:-.02em;}
+.sf-desc{font-size:14px;color:rgba(255,255,255,0.4);margin-bottom:24px;font-weight:300;}
+.sf-label{font-family:"DM Mono",monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,0.3);display:block;margin-bottom:6px;}
+.sf-input{width:100%;padding:13px 16px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#fff;font-size:14px;outline:none;transition:border-color 0.2s;box-sizing:border-box;font-family:"Inter",sans-serif;margin-bottom:14px;}
+.sf-input:focus{border-color:rgba(0,80,255,0.6);}
+.sf-btn{width:100%;padding:15px;background:#0050FF;color:#fff;border:none;border-radius:8px;font-family:"DM Mono",monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:background .2s;}
+.sf-btn:hover{background:#003FCC;}
+.sf-err{font-family:"DM Mono",monospace;font-size:10px;color:#ff5555;display:none;margin-bottom:12px;}
+.sf-note{text-align:center;font-family:"DM Mono",monospace;font-size:10px;color:rgba(255,255,255,0.2);margin-top:14px;}
+.sf-note a{color:rgba(100,180,255,0.7);text-decoration:none;}
+.plan-opt{padding:13px 16px;border:1px solid rgba(255,255,255,0.08);border-radius:8px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,0.02);margin-bottom:7px;transition:all .15s;}
+.plan-opt:hover{background:rgba(255,255,255,0.04);}
+.plan-name{font-family:"DM Mono",monospace;font-size:11px;margin-bottom:2px;}
+.plan-desc{font-size:11px;color:rgba(255,255,255,0.3);}
+.plan-price{font-family:"Space Grotesk",sans-serif;font-size:18px;font-weight:600;white-space:nowrap;flex-shrink:0;margin-left:8px;}
+.success-icon{width:64px;height:64px;border-radius:50%;background:rgba(0,196,106,0.12);border:1px solid rgba(0,196,106,0.3);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;}
+
+@media(max-width:1200px){
+  .pricing-cards{grid-template-columns:repeat(3,1fr);}
+  .p-card.gold-tier:hover{transform:translateY(-5px);}
+  .pricing-callout{grid-template-columns:1fr 1fr;gap:16px;}
+  .pcb-cell{border-right:none;padding:0 0 16px 0;border-bottom:1px solid var(--border);}
+  .pcb-cell:nth-child(3),.pcb-cell:last-child{border-bottom:none;padding-bottom:0;}
+}
+@media(max-width:960px){
+  nav{padding:0 24px;}
+  .nav-center{display:none;}
+  .hero{padding:68px 24px 0;}
+  .stats-bar{grid-template-columns:repeat(2,1fr);}
+  .stat-cell{padding:32px 24px;}
+  .section-problem{grid-template-columns:1fr;padding:80px 24px;gap:48px;}
+  .section-how{padding:80px 24px;}
+  .steps-grid{grid-template-columns:1fr 1fr;}
+  .section-features{padding:80px 24px;}
+  .features-grid{grid-template-columns:1fr;}
+  .section-accuracy{padding:80px 24px;}
+  .accuracy-inner{grid-template-columns:1fr;gap:48px;}
+  .section-pricing{padding:80px 24px;}
+  .pricing-cards{grid-template-columns:1fr 1fr;}
+  .section-cta{padding:100px 24px;}
+  footer{grid-template-columns:1fr 1fr;padding:48px 24px 24px;}
+}
+@media(max-width:600px){
+  .pricing-cards{grid-template-columns:1fr;}
+}
+</style>
+
+<script>
+// Handle Supabase email verification redirect
+// After clicking the verify link, Supabase redirects back with hash params
+(function() {
+  var hash = window.location.hash;
+  var search = window.location.search;
+
+  // Check for Supabase verification token in URL hash
+  if (hash && hash.includes('access_token')) {
+    var params = {};
+    hash.replace('#','').split('&').forEach(function(p) {
+      var kv = p.split('=');
+      params[kv[0]] = decodeURIComponent(kv[1]||'');
+    });
+    if (params.access_token && (params.type === 'signup' || params.type === 'recovery')) {
+      // Email verified — set session and redirect to app
+      var pendingEmail = '';
+      try { pendingEmail = sessionStorage.getItem('sf_pending_email') || ''; } catch(e) {}
+      try {
+        sessionStorage.setItem('sf_auth',   '1');
+        sessionStorage.setItem('sf_tier',   'free');
+        sessionStorage.setItem('sf_client', 'Free');
+        sessionStorage.setItem('sf_email',  pendingEmail);
+      } catch(e) {}
+      window.location.href = 'app.html?authed=1';
+    }
+  }
+
+  // Also check query param (some Supabase configs use this)
+  if (search && search.includes('type=signup')) {
+    try {
+      sessionStorage.setItem('sf_auth',   '1');
+      sessionStorage.setItem('sf_tier',   'free');
+      sessionStorage.setItem('sf_client', 'Free');
+    } catch(e) {}
+    window.location.href = 'app.html?authed=1';
+  }
+})();
+</script>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">Sim<em>fluence</em></a>
+  <ul class="nav-center">
+    <li><a href="#how">How it works</a></li>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+    <li><a href="app.html">See the platform</a></li>
+  </ul>
+  <div class="nav-right">
+    <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn" title="Toggle mode">🌙</button>
+    
+    <a id="navTryFreeBtn" class="nav-cta" href="app.html">Try Free</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <canvas id="heroCanvas"></canvas>
+  <div class="hero-inner">
+    <div class="hero-badge"><div class="hero-badge-dot"></div>AI-powered campaign intelligence</div>
+    <h1 class="hero-h1">Know<br>before you<br><span class="gold">spend.</span></h1>
+    <p class="hero-sub">Predict your CTR, CPM, CVR and ROAS before a single penny is committed. Model your campaign. Know your outcome. Launch with certainty.</p>
+    <div class="hero-actions">
+      <a href="mailto:liam@simfluence.ai" class="btn-xl">Book a live demo</a>
+    </div>
+  </div></div>
+</section>
+
+<!-- ══ PLATFORM DEMO ════════════════════════════════════════════════ -->
+<section style="padding:140px 48px;background:var(--bg);border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
+  <div style="max-width:1300px;margin:0 auto;">
+    <div style="margin-bottom:60px;">
+      <span class="section-eyebrow">See it in action</span>
+      <h2 class="section-h2" style="margin-top:16px;">The platform,<br><em>animated.</em></h2>
+      <p style="font-size:18px;color:var(--muted);font-weight:300;max-width:520px;margin-top:16px;">Watch the platform discover a creator and open their full profile — CPI breakdown, engagement quality, genre fit and campaign simulation.</p>
+    </div>
+    <div style="background:#050508;border-radius:16px;padding:24px;font-family:DM Mono,monospace;border:1px solid rgba(255,255,255,0.06);position:relative;overflow:hidden;">
+      <div style="font-size:9px;letter-spacing:.1em;color:rgba(255,255,255,0.3);margin-bottom:14px;">CREATOR DISCOVERY · GAMING & ESPORTS · MID-TIER</div>
+
+      <!-- Creator cards grid -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;position:relative;" id="sf-demo-grid">
+
+        <div class="sf-demo-card" id="sf-card0" style="background:#0A0A10;border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:16px;cursor:pointer;transition:border-color 0.2s,transform 0.2s;position:relative;">
+          <div style="display:inline-block;font-size:8px;letter-spacing:.06em;padding:2px 7px;border-radius:3px;margin-bottom:8px;background:rgba(0,80,255,0.12);color:#6B9FFF;">Mid-tier</div>
+          <div style="width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;margin-bottom:10px;font-family:sans-serif;background:rgba(255,122,0,0.15);color:#FF7A00;">G</div>
+          <div style="font-family:sans-serif;font-size:14px;font-weight:700;color:#fff;margin-bottom:2px;">General Sam</div>
+          <div style="font-size:9px;letter-spacing:.06em;color:rgba(255,255,255,0.35);margin-bottom:10px;">@generalsam · YouTube · Gaming</div>
+          <div style="height:1px;background:rgba(255,255,255,0.06);margin-bottom:10px;"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;">
+            <div><div style="font-size:8px;letter-spacing:.08em;color:rgba(255,255,255,0.3);margin-bottom:2px;">SUBS</div><div style="font-size:13px;font-weight:700;color:#fff;">1.5M</div></div>
+            <div><div style="font-size:8px;letter-spacing:.08em;color:rgba(255,255,255,0.3);margin-bottom:2px;">AVG VIEWS</div><div style="font-size:13px;font-weight:700;color:#fff;">720K</div></div>
+            <div><div style="font-size:8px;letter-spacing:.08em;color:rgba(255,255,255,0.3);margin-bottom:2px;">ENG RATE</div><div style="font-size:13px;font-weight:700;color:#00C46A;">15.0%</div></div>
+            <div><div style="font-size:8px;letter-spacing:.08em;color:rgba(255,255,255,0.3);margin-bottom:2px;">EST. RATE</div><div style="font-size:11px;font-weight:700;color:#FFD400;">$18K–$36K</div></div>
+          </div>
+          <div style="margin-bottom:4px;"><div style="font-size:8px;letter-spacing:.06em;color:rgba(255,255,255,0.3);display:flex;justify-content:space-between;margin-bottom:3px;"><span>CPI</span><span>88</span></div><div style="height:3px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;"><div style="height:100%;width:88%;border-radius:2px;background:#00C46A;"></div></div></div>
+          <div><div style="font-size:8px;letter-spacing:.06em;color:rgba(255,255,255,0.3);display:flex;justify-content:space-between;margin-bottom:3px;"><span>GFI</span><span>83%</span></div><div style="height:3px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;"><div style="height:100%;width:83%;border-radius:2px;background:#00C46A;"></div></div></div>
+        </div>
+
+        <div class="sf-demo-card" id="sf-card1" style="background:#0A0A10;border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:16px;cursor:pointer;transition:border-color 0.2s,transform 0.2s;position:relative;">
+          <div style="display:inline-block;font-size:8px;letter-spacing:.06em;padding:2px 7px;border-radius:3px;margin-bottom:8px;background:rgba(155,89,182,0.12);color:#9B59B6;">Mid-tier</div>
+          <div style="width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;margin-bottom:10px;font-family:sans-serif;background:rgba(155,89,182,0.15);color:#9B59B6;">P</div>
+          <div style="font-family:sans-serif;font-size:14px;font-weight:700;color:#fff;margin-bottom:2px;">Palsteron</div>
+          <div style="font-size:9px;letter-spacing:.06em;color:rgba(255,255,255,0.35);margin-bottom:10px;">@palsteron · YouTube · Gaming</div>
+          <div style="height:1px;background:rgba(255,255,255,0.06);margin-bottom:10px;"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;">
+            <div><div style="font-size:8px;letter-spacing:.08em;color:rgba(255,255,255,0.3);margin-bottom:2px;">SUBS</div><div style="font-size:13px;font-weight:700;color:#fff;">103K</div></div>
+            <div><div style="font-size:8px;letter-spacing:.08em;color:rgba(255,255,255,0.3);margin-bottom:2px;">AVG VIEWS</div><div style="font-size:13px;font-weight:700;color:#00C46A;">78K</div></div>
+            <div><div style="font-size:8px;letter-spacing:.08em;color:rgba(255,255,255,0.3);margin-bottom:2px;">ENG RATE</div><div style="font-size:13px;font-weight:700;color:#00C46A;">15.0%</div></div>
+            <div><div style="font-size:8px;letter-spacing:.08em;color:rgba(255,255,255,0.3);margin-bottom:2px;">EST. RATE</div><div style="font-size:11px;font-weight:700;color:#FFD400;">$1.2K–$2.4K</div></div>
+          </div>
+          <div style="margin-bottom:4px;"><div style="font-size:8px;letter-spacing:.06em;color:rgba(255,255,255,0.3);display:flex;justify-content:space-between;margin-bottom:3px;"><span>CPI</span><span>96</span></div><div style="height:3px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;"><div style="height:100%;width:96%;border-radius:2px;background:#00C46A;"></div></div></div>
+          <div><div style="font-size:8px;letter-spacing:.06em;color:rgba(255,255,255,0.3);display:flex;justify-content:space-between;margin-bottom:3px;"><span>GFI</span><span>75%</span></div><div style="height:3px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;"><div style="height:100%;width:75%;border-radius:2px;background:#FF7A00;"></div></div></div>
+        </div>
+
+        <div class="sf-demo-card" id="sf-card2" style="background:#0A0A10;border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:16px;cursor:pointer;transition:border-color 0.2s,transform 0.2s;position:relative;">
+          <div style="display:inline-block;font-size:8px;letter-spacing:.06em;padding:2px 7px;border-radius:3px;margin-bottom:8px;background:rgba(0,196,106,0.1);color:#00C46A;">Mid-tier</div>
+          <div style="width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;margin-bottom:10px;font-family:sans-serif;background:rgba(0,196,106,0.15);color:#00C46A;">G</div>
+          <div style="font-family:sans-serif;font-size:14px;font-weight:700;color:#fff;margin-bottom:2px;">GhazzyTV</div>
+          <div style="font-size:9px;letter-spacing:.06em;color:rgba(255,255,255,0.35);margin-bottom:10px;">@ghazzytv · YouTube · Gaming</div>
+          <div style="height:1px;background:rgba(255,255,255,0.06);margin-bottom:10px;"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;">
+            <div><div style="font-size:8px;letter-spacing:.08em;color:rgba(255,255,255,0.3);margin-bottom:2px;">SUBS</div><div style="font-size:13px;font-weight:700;color:#fff;">149K</div></div>
+            <div><div style="font-size:8px;letter-spacing:.08em;color:rgba(255,255,255,0.3);margin-bottom:2px;">AVG VIEWS</div><div style="font-size:13px;font-weight:700;color:#fff;">42K</div></div>
+            <div><div style="font-size:8px;letter-spacing:.08em;color:rgba(255,255,255,0.3);margin-bottom:2px;">ENG RATE</div><div style="font-size:13px;font-weight:700;color:#00C46A;">11.2%</div></div>
+            <div><div style="font-size:8px;letter-spacing:.08em;color:rgba(255,255,255,0.3);margin-bottom:2px;">EST. RATE</div><div style="font-size:11px;font-weight:700;color:#FFD400;">$2.4K–$4.8K</div></div>
+          </div>
+          <div style="margin-bottom:4px;"><div style="font-size:8px;letter-spacing:.06em;color:rgba(255,255,255,0.3);display:flex;justify-content:space-between;margin-bottom:3px;"><span>CPI</span><span>89</span></div><div style="height:3px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;"><div style="height:100%;width:89%;border-radius:2px;background:#00C46A;"></div></div></div>
+          <div><div style="font-size:8px;letter-spacing:.06em;color:rgba(255,255,255,0.3);display:flex;justify-content:space-between;margin-bottom:3px;"><span>GFI</span><span>96%</span></div><div style="height:3px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;"><div style="height:100%;width:96%;border-radius:2px;background:#00C46A;"></div></div></div>
+        </div>
+
+      </div>
+
+      <!-- Profile panel — expands BELOW the grid, full width -->
+      <div id="sf-overlay" style="max-height:0;overflow:hidden;opacity:0;transition:max-height 0.5s cubic-bezier(.23,1,.32,1),opacity 0.35s ease,margin-top 0.35s ease;margin-top:0;border-radius:12px;background:#0D0D16;border:1px solid rgba(255,255,255,0.1);">
+        <div id="sf-overlay-inner" style="padding:20px;"><!-- populated by JS --></div>
+      </div>
+
+      <!-- Animated cursor -->
+      <div id="sf-cursor" style="position:absolute;width:18px;height:18px;border-radius:50%;background:rgba(255,212,0,0.5);pointer-events:none;transition:left 0.7s cubic-bezier(.23,1,.32,1),top 0.7s cubic-bezier(.23,1,.32,1),opacity 0.3s ease;z-index:10;display:flex;align-items:center;justify-content:center;left:50px;top:50px;opacity:0;">
+        <div style="width:6px;height:6px;border-radius:50%;background:#FFD400;"></div>
+      </div>
+      <div id="sf-ring" style="position:absolute;width:18px;height:18px;border-radius:50%;border:2px solid #FFD400;pointer-events:none;opacity:0;z-index:10;left:50px;top:50px;"></div>
+    </div>
+  </div>
+</section>
+<style>
+@keyframes sf-ring-pop{0%{opacity:1;transform:scale(1);}100%{opacity:0;transform:scale(2.8);}}
+.sf-ring-anim{animation:sf-ring-pop 0.4s ease forwards;}
+.sf-demo-card.sf-active{border-color:#FFD400 !important;transform:translateY(-2px);box-shadow:0 6px 20px rgba(255,212,0,0.12);}
+</style>
+
+<script>
+(function(){
+  var ov=document.getElementById('sf-overlay');
+  var cur=document.getElementById('sf-cursor');
+  var ring=document.getElementById('sf-ring');
+  var wrap=document.getElementById('sf-demo-grid').parentElement;
+
+  var CREATORS=[
+    {
+      id:'sf-card0',
+      avatar:'G', avatarBg:'rgba(255,122,0,0.15)', avatarColor:'#FF7A00',
+      name:'General Sam', handle:'@generalsam · YouTube · Gaming & Esports · Survival',
+      cpi:88, gfi:83, bar1:82, bar2:22, bar3:83,
+      bar1lbl:'Engagement quality', bar1r:'High',
+      bar2lbl:'Sponsor frequency', bar2r:'Low — authentic',
+      bar3lbl:'Genre fit · Gaming / Survival', bar3r:'83%',
+      bar1c:'#00C46A', bar2c:'#FFD400', bar3c:'#6B9FFF',
+      subs:'1.5M', views:'720K', eng:'15.0%', rate:'$18K–$36K',
+      p10:'1.4M', p50:'2.1M', p90:'3.3M',
+      budget:'$25K BUDGET', cpiColor:'#00C46A', gfiColor:'#00C46A'
+    },
+    {
+      id:'sf-card1',
+      avatar:'P', avatarBg:'rgba(155,89,182,0.15)', avatarColor:'#9B59B6',
+      name:'Palsteron', handle:'@palsteron · YouTube · Gaming & Esports · ARPG',
+      cpi:96, gfi:75, bar1:90, bar2:15, bar3:75,
+      bar1lbl:'Engagement quality', bar1r:'Exceptional',
+      bar2lbl:'Sponsor frequency', bar2r:'Very low — rare',
+      bar3lbl:'Genre fit · Gaming / ARPG', bar3r:'75%',
+      bar1c:'#00C46A', bar2c:'#FFD400', bar3c:'#6B9FFF',
+      subs:'103K', views:'78K', eng:'15.0%', rate:'$1.2K–$2.4K',
+      p10:'420K', p50:'680K', p90:'1.1M',
+      budget:'$8K BUDGET', cpiColor:'#00C46A', gfiColor:'#FF7A00'
+    },
+    {
+      id:'sf-card2',
+      avatar:'G', avatarBg:'rgba(0,196,106,0.15)', avatarColor:'#00C46A',
+      name:'GhazzyTV', handle:'@ghazzytv · YouTube · Gaming & Esports · ARPG',
+      cpi:89, gfi:96, bar1:74, bar2:30, bar3:96,
+      bar1lbl:'Engagement quality', bar1r:'Strong',
+      bar2lbl:'Sponsor frequency', bar2r:'Moderate',
+      bar3lbl:'Genre fit · Gaming / ARPG', bar3r:'96%',
+      bar1c:'#00C46A', bar2c:'#FFD400', bar3c:'#6B9FFF',
+      subs:'149K', views:'42K', eng:'11.2%', rate:'$2.4K–$4.8K',
+      p10:'580K', p50:'910K', p90:'1.5M',
+      budget:'$10K BUDGET', cpiColor:'#00C46A', gfiColor:'#00C46A'
+    }
+  ];
+
+  var currentIdx=0;
+
+  function moveCursor(x,y,delay,cb){
+    cur.style.opacity='1';
+    setTimeout(function(){
+      cur.style.left=x+'px'; cur.style.top=y+'px';
+      if(cb) setTimeout(cb,700);
+    },delay);
+  }
+
+  function clickAt(x,y,cb){
+    ring.style.left=x+'px'; ring.style.top=y+'px';
+    ring.classList.remove('sf-ring-anim'); void ring.offsetWidth;
+    ring.classList.add('sf-ring-anim');
+    if(cb) setTimeout(cb,200);
+  }
+
+  function countUp(el,target,suffix,ms){
+    var s=null;
+    function step(ts){
+      if(!s)s=ts;
+      var p=Math.min((ts-s)/ms,1);
+      el.textContent=Math.round(p*target)+(suffix||'');
+      if(p<1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  function populateOverlay(cr){
+    var inner=document.getElementById('sf-overlay-inner');
+    inner.innerHTML=
+      '<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,0.07);">'
+      +'<div style="width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;font-family:sans-serif;background:'+cr.avatarBg+';color:'+cr.avatarColor+';">'+cr.avatar+'</div>'
+      +'<div><div style="font-family:sans-serif;font-size:17px;font-weight:700;color:#fff;">'+cr.name+'</div>'
+      +'<div style="font-size:9px;letter-spacing:.06em;color:rgba(255,255,255,0.35);">'+cr.handle+'</div></div></div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">'
+      +'<div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">'
+      +'<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:12px;"><div style="font-family:sans-serif;font-size:28px;font-weight:700;line-height:1;color:'+cr.cpiColor+';" id="sf-cpi-n">0</div><div style="font-size:8px;letter-spacing:.08em;color:rgba(255,255,255,0.3);margin-top:4px;">CPI SCORE</div></div>'
+      +'<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:12px;"><div style="font-family:sans-serif;font-size:28px;font-weight:700;line-height:1;color:'+cr.gfiColor+';" id="sf-gfi-n">0%</div><div style="font-size:8px;letter-spacing:.08em;color:rgba(255,255,255,0.3);margin-top:4px;">GFI SCORE</div></div>'
+      +'</div>'
+      +'<div style="margin-bottom:8px;"><div style="font-size:8px;letter-spacing:.06em;color:rgba(255,255,255,0.3);display:flex;justify-content:space-between;margin-bottom:4px;"><span>'+cr.bar1lbl+'</span><span>'+cr.bar1r+'</span></div><div style="height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;"><div id="sf-bar1" style="height:100%;width:0;border-radius:2px;background:'+cr.bar1c+';transition:width 0.8s cubic-bezier(.23,1,.32,1);"></div></div></div>'
+      +'<div style="margin-bottom:8px;"><div style="font-size:8px;letter-spacing:.06em;color:rgba(255,255,255,0.3);display:flex;justify-content:space-between;margin-bottom:4px;"><span>'+cr.bar2lbl+'</span><span>'+cr.bar2r+'</span></div><div style="height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;"><div id="sf-bar2" style="height:100%;width:0;border-radius:2px;background:'+cr.bar2c+';transition:width 0.8s cubic-bezier(.23,1,.32,1);"></div></div></div>'
+      +'<div style="margin-bottom:0;"><div style="font-size:8px;letter-spacing:.06em;color:rgba(255,255,255,0.3);display:flex;justify-content:space-between;margin-bottom:4px;"><span>'+cr.bar3lbl+'</span><span>'+cr.bar3r+'</span></div><div style="height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;"><div id="sf-bar3" style="height:100%;width:0;border-radius:2px;background:'+cr.bar3c+';transition:width 0.8s cubic-bezier(.23,1,.32,1);"></div></div></div>'
+      +'</div>'
+      +'<div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px;">'
+      +'<div style="background:rgba(255,255,255,0.025);border-radius:6px;padding:10px;"><div style="font-size:8px;letter-spacing:.06em;color:rgba(255,255,255,0.3);margin-bottom:4px;">SUBSCRIBERS</div><div style="font-size:13px;font-weight:700;color:#FFD400;">'+cr.subs+'</div></div>'
+      +'<div style="background:rgba(255,255,255,0.025);border-radius:6px;padding:10px;"><div style="font-size:8px;letter-spacing:.06em;color:rgba(255,255,255,0.3);margin-bottom:4px;">AVG VIEWS</div><div style="font-size:13px;font-weight:700;color:#FFD400;">'+cr.views+'</div></div>'
+      +'<div style="background:rgba(255,255,255,0.025);border-radius:6px;padding:10px;"><div style="font-size:8px;letter-spacing:.06em;color:rgba(255,255,255,0.3);margin-bottom:4px;">ENG RATE</div><div style="font-size:13px;font-weight:700;color:#00C46A;">'+cr.eng+'</div></div>'
+      +'<div style="background:rgba(255,255,255,0.025);border-radius:6px;padding:10px;"><div style="font-size:8px;letter-spacing:.06em;color:rgba(255,255,255,0.3);margin-bottom:4px;">EST. RATE (INT)</div><div style="font-size:13px;font-weight:700;color:#FFD400;">'+cr.rate+'</div></div>'
+      +'</div>'
+      +'<div style="background:rgba(0,80,255,0.06);border:1px solid rgba(0,80,255,0.2);border-radius:8px;padding:16px;">'
+      +'<div style="font-size:8px;letter-spacing:.08em;color:#6B9FFF;margin-bottom:12px;">CAMPAIGN SIMULATION · '+cr.budget+'</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;text-align:center;">'
+      +'<div><div style="font-family:sans-serif;font-size:22px;font-weight:700;color:#E60023;" id="sf-p10">—</div><div style="font-size:7px;letter-spacing:.06em;color:rgba(255,255,255,0.3);margin-top:4px;">P10</div></div>'
+      +'<div><div style="font-family:sans-serif;font-size:22px;font-weight:700;color:#FFD400;" id="sf-p50">—</div><div style="font-size:7px;letter-spacing:.06em;color:rgba(255,255,255,0.3);margin-top:4px;">P50</div></div>'
+      +'<div><div style="font-family:sans-serif;font-size:22px;font-weight:700;color:#00C46A;" id="sf-p90">—</div><div style="font-size:7px;letter-spacing:.06em;color:rgba(255,255,255,0.3);margin-top:4px;">P90</div></div>'
+      +'</div></div>'
+      +'</div>'
+      +'</div>';
+  }
+
+  function openProfile(cr, cardEl){
+    populateOverlay(cr);
+    ov.style.maxHeight='500px';
+    ov.style.marginTop='16px';
+    ov.style.opacity='1';
+    cardEl.classList.add('sf-active');
+    setTimeout(function(){
+      countUp(document.getElementById('sf-cpi-n'),cr.cpi,'',600);
+      countUp(document.getElementById('sf-gfi-n'),cr.gfi,'%',600);
+      document.getElementById('sf-bar1').style.width=cr.bar1+'%';
+      document.getElementById('sf-bar2').style.width=cr.bar2+'%';
+      document.getElementById('sf-bar3').style.width=cr.bar3+'%';
+      setTimeout(function(){
+        document.getElementById('sf-p10').textContent=cr.p10;
+        document.getElementById('sf-p50').textContent=cr.p50;
+        document.getElementById('sf-p90').textContent=cr.p90;
+      },700);
+    },300);
+  }
+
+  function closeProfile(cardEl){
+    ov.style.maxHeight='0';
+    ov.style.marginTop='0';
+    ov.style.opacity='0';
+    if(cardEl) cardEl.classList.remove('sf-active');
+  }
+
+  function runSequence(){
+    var cr=CREATORS[currentIdx];
+    var cardEl=document.getElementById(cr.id);
+    var rect=wrap.getBoundingClientRect();
+    var cRect=cardEl.getBoundingClientRect();
+    var ox=cRect.left-rect.left+16;
+    var oy=cRect.top-rect.top+16;
+    var cx=ox+55; var cy=oy+55;
+
+    moveCursor(ox+10,oy+10,200,function(){
+      moveCursor(cx,cy,0,function(){
+        clickAt(cx,cy,function(){ openProfile(cr,cardEl); });
+      });
+    });
+
+    setTimeout(function(){
+      closeProfile(cardEl);
+      currentIdx=(currentIdx+1)%CREATORS.length;
+      setTimeout(runSequence, 1200);
+    }, 6000);
+  }
+
+  setTimeout(runSequence,1000);
+})();
+</script>
+
+
+
+<section id="how">
+  <div class="section-problem reveal">
+    <div>
+      <span class="section-eyebrow">The problem</span>
+      <h2 class="section-h2">Brands spend<br>before they <em>know.</em></h2>
+      <p class="section-body">The influencer marketing industry runs on gut feel and hope. Brands commit six-figure budgets to creators they believe will perform — and find out weeks later whether they were right.</p>
+      <p class="section-body">There has never been a tool that tells you what will happen before you spend. Until now.</p>
+    </div>
+    <div>
+      <div class="problem-card reveal reveal-delay-1"><div class="problem-n" style="color:#E60023">68%</div><div class="problem-desc">of influencer campaigns underperform against forecast. Not because the creators were wrong — because nobody ran the numbers before launch.</div></div>
+      <div class="problem-card reveal reveal-delay-2"><div class="problem-n" style="color:var(--gold)">$340K</div><div class="problem-desc">wasted per year by the average publisher on influencer campaigns that miss their targets.</div></div>
+      <div class="problem-card reveal reveal-delay-3"><div class="problem-n" style="color:var(--green)">0</div><div class="problem-desc">platforms offered predictive campaign simulation before Simfluence. You were flying blind. Now you don't have to.</div></div>
+    </div>
+  </div>
+  <div class="section-how">
+    <div class="section-how-inner">
+      <div class="how-header reveal">
+        <span class="section-eyebrow">How it works</span>
+        <h2 class="section-h2">Brief to forecast<br>in <em>under 2 minutes.</em></h2>
+      </div>
+      <div class="steps-grid reveal">
+        <div class="step-card"><div class="step-num">01 —</div><div class="step-title">Input your brief</div><div class="step-desc">Genre, sub-mode, region, platforms, budget and campaign objectives. Sixty seconds. No lengthy onboarding.</div></div>
+        <div class="step-card"><div class="step-num">02 —</div><div class="step-title">Discover creators</div><div class="step-desc">Browse by CPI and GFI score. Filter by tier, region and persona. The right creators rise to the top.</div></div>
+        <div class="step-card"><div class="step-num">03 —</div><div class="step-title">Run the simulation</div><div class="step-desc">Click run. Get probabilistic CTR, CPM, CVR and ROAS forecasts with P10, P50 and P90 confidence bands.</div></div>
+        <div class="step-card"><div class="step-num">04 —</div><div class="step-title">Launch with certainty</div><div class="step-desc">You know what to expect before you spend. Brief your team. Set your benchmark. Every result sharpens the next forecast.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="features" data-scoring="true">
+  <div class="section-features">
+    <div class="features-header reveal">
+      <span class="section-eyebrow">Platform</span>
+      <h2 class="section-h2">Four tools.<br><em>Zero guesswork.</em></h2>
+    </div>
+    <div class="features-grid reveal">
+      <div class="feature-block">
+        <div class="feat-icon" style="background:rgba(0,80,255,0.12)"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="9" cy="9" r="6" stroke="#6B9FFF" stroke-width="1.6"/><path d="M13.5 13.5L18 18" stroke="#6B9FFF" stroke-width="1.6" stroke-linecap="round"/><path d="M7 9h4M9 7v4" stroke="#6B9FFF" stroke-width="1.4" stroke-linecap="round"/></svg></div>
+        <div class="feat-title">Creator Discovery</div>
+        <div class="feat-desc">Find creators by what they will deliver, not by how many follow them. Thousands of creators across YouTube, Twitch, Instagram, TikTok and more — continuously updated across every genre, platform and region.</div>
+        <span class="feat-tag" style="background:rgba(0,80,255,0.1);color:#6B9FFF">18 genres · 53 sub-modes · YouTube &amp; Twitch</span>
+      </div>
+      <div class="feature-block">
+        <div class="feat-icon" style="background:rgba(100,80,200,0.12)"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="2" y="13" width="4" height="7" rx="1.5" fill="#9B8FDD"/><rect x="9" y="8" width="4" height="12" rx="1.5" fill="#9B8FDD" opacity=".7"/><rect x="16" y="2" width="4" height="18" rx="1.5" fill="#9B8FDD" opacity=".4"/></svg></div>
+        <div class="feat-title">CPI &amp; GFI Scoring</div>
+        <div class="feat-desc">Two scores that do what follower count never could. The Creator Performance Index predicts commercial outcomes. The Genre Fit Index measures audience alignment to your campaign territory.</div>
+        <span class="feat-tag" style="background:rgba(100,80,200,0.1);color:#9B8FDD">0–100 scale · 90% confidence · live data</span>
+      </div>
+      <div class="feature-block">
+        <div class="feat-icon" style="background:rgba(0,196,106,0.1)"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="8" r="4.5" stroke="#00C46A" stroke-width="1.6"/><path d="M3 20c0-4.418 3.582-7 8-7s8 2.582 8 7" stroke="#00C46A" stroke-width="1.6" stroke-linecap="round"/></svg></div>
+        <div class="feat-title">AI Persona Matching</div>
+        <div class="feat-desc">Every creator carries an audience archetype. Simfluence maps 100+ genre-native personas to your brand narrative so your message lands with the right psychology, not just the right demographic.</div>
+        <span class="feat-tag" style="background:rgba(0,196,106,0.08);color:#00C46A">100+ archetypes · CTA mapped · genre-native</span>
+      </div>
+      <div class="feature-block">
+        <div class="feat-icon" style="background:rgba(255,122,0,0.1)"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M2 18L7 11l5 5 4-8 5 9" stroke="#FF7A00" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="7" cy="11" r="1.8" fill="#FF7A00"/><circle cx="12" cy="16" r="1.8" fill="#FF7A00"/><circle cx="16" cy="8" r="1.8" fill="#FF7A00"/></svg></div>
+        <div class="feat-title">Campaign Simulator</div>
+        <div class="feat-desc">Before any budget moves, see your predicted CTR, CPM, CVR and ROAS — with P10, P50 and P90 confidence bands. Swap creators, adjust budget, run what-if scenarios.</div>
+        <span class="feat-tag" style="background:rgba(255,122,0,0.08);color:#FF7A00">under 2 min · P10–P90 · 4 core metrics</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section>
+  <div class="section-accuracy">
+    <div class="accuracy-inner">
+      <div class="reveal">
+        <span class="section-eyebrow">Accuracy</span>
+        <h2 class="section-h2">Forecasts that<br><em>hold up.</em></h2>
+        <p class="section-body">Every campaign run through Simfluence gets compared against its actuals. The model learns. The forecasts tighten. The longer you use it, the more accurate it becomes.</p>
+        <p style="font-family:DM Mono,monospace;font-size:11px;color:var(--dim);line-height:1.6">Example: Gaming publisher · RPG open-world<br>$85K budget · 3 mid-tier YouTubers · Dedicated format</p>
+      </div>
+      <div class="accuracy-table reveal">
+        <div class="acc-header"><div class="acc-hcell">Metric</div><div class="acc-hcell">Forecast range</div><div class="acc-hcell">Actual result</div></div>
+        <div class="acc-row"><div class="acc-metric">Impressions</div><div class="acc-forecast">4.2M – 5.8M</div><div class="acc-actual">5.1M ✓</div></div>
+        <div class="acc-row"><div class="acc-metric">CTR</div><div class="acc-forecast">2.4% – 3.1%</div><div class="acc-actual">2.7% ✓</div></div>
+        <div class="acc-row"><div class="acc-metric">CPM</div><div class="acc-forecast">$11.20</div><div class="acc-actual">$11.60 ✓</div></div>
+        <div class="acc-row"><div class="acc-metric">Installs</div><div class="acc-forecast">310 – 420</div><div class="acc-actual">388 ✓</div></div>
+        <div class="acc-row"><div class="acc-metric">ROAS</div><div class="acc-forecast">3.0× – 3.6×</div><div class="acc-actual">3.4× ✓</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══ FEATURE ANIMATIONS ═════════════════════════════════════════════ -->
+
+<!-- Creator Discovery -->
+<section id="section-discovery" style="padding:120px 48px;background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
+  <div style="max-width:1300px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;">
+    <div class="reveal">
+      <span class="section-eyebrow">Creator Discovery</span>
+      <h2 class="section-h2" style="margin-top:16px;">Find creators by<br><em>what they deliver.</em></h2>
+      <p class="section-body" style="margin-top:20px;">Thousands of creators across YouTube and Twitch — searchable by genre, sub-mode, tier, language, budget and objective. Every profile shows real engagement data and proprietary CPI scores, not just follower counts. Search by name, handle, genre or platform and the right creators surface instantly.</p>
+      <div style="display:flex;gap:16px;margin-top:32px;flex-wrap:wrap;">
+        <div style="font-family:DM Mono,monospace;font-size:11px;color:var(--dim);">3,680+ creators indexed</div>
+        <div style="font-family:DM Mono,monospace;font-size:11px;color:var(--dim);">18 content genres</div>
+        <div style="font-family:DM Mono,monospace;font-size:11px;color:var(--dim);">Updated daily</div>
+      </div>
+    </div>
+    <div class="reveal" style="background:#050508;border-radius:16px;padding:24px;border:1px solid rgba(255,255,255,0.06);overflow:hidden;">
+      <div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:8px 14px;margin-bottom:16px;font-family:DM Mono,monospace;font-size:11px;color:rgba(255,255,255,0.3);letter-spacing:.04em;">
+        <span style="color:rgba(255,255,255,0.2);">SEARCH</span>
+        <span id="cd-searchText"></span><span style="display:inline-block;width:1px;height:12px;background:#FFD400;animation:sfblink 1s step-end infinite;vertical-align:middle;margin-left:2px;"></span>
+      </div>
+      <div style="font-size:9px;letter-spacing:.1em;color:rgba(255,255,255,0.25);margin-bottom:12px;font-family:DM Mono,monospace;" id="cd-meta">3,680 CREATORS · ALL GENRES</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;" id="cd-grid"></div>
+    </div>
+  </div>
+</section>
+
+<!-- AI Persona Matching -->
+<section id="section-persona" style="padding:120px 48px;background:var(--bg);border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
+  <div style="max-width:1300px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;">
+    <div class="reveal" style="background:#050508;border-radius:16px;padding:24px;border:1px solid rgba(255,255,255,0.06);overflow:hidden;">
+      <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;">
+        <div style="padding:5px 12px;border-radius:4px;font-size:9px;letter-spacing:.08em;background:rgba(236,72,153,0.1);border:1px solid rgba(236,72,153,0.25);color:#EC4899;font-family:DM Mono,monospace;">Beauty & Lifestyle</div>
+        <div style="padding:5px 12px;border-radius:4px;font-size:9px;letter-spacing:.08em;background:rgba(255,212,0,0.1);border:1px solid rgba(255,212,0,0.3);color:#FFD400;font-family:DM Mono,monospace;">$30K budget</div>
+        <div style="padding:5px 12px;border-radius:4px;font-size:9px;letter-spacing:.08em;background:rgba(0,80,255,0.12);border:1px solid rgba(0,80,255,0.25);color:#6B9FFF;font-family:DM Mono,monospace;">Female 18–35</div>
+      </div>
+      <div style="font-size:9px;letter-spacing:.1em;color:rgba(255,255,255,0.25);margin-bottom:12px;font-family:DM Mono,monospace;" id="pm-lbl">MATCHING AUDIENCE PERSONAS...</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;" id="pm-grid"></div>
+      <div style="font-size:9px;letter-spacing:.1em;color:rgba(255,255,255,0.25);margin-bottom:10px;font-family:DM Mono,monospace;opacity:0;transition:opacity 0.4s;" id="pm-creator-lbl">TOP MATCHED CREATORS</div>
+      <div id="pm-creators" style="display:flex;flex-direction:column;gap:6px;"></div>
+    </div>
+    <div class="reveal">
+      <span class="section-eyebrow">AI Persona Matching</span>
+      <h2 class="section-h2" style="margin-top:16px;">Know exactly<br><em>who you're reaching.</em></h2>
+      <p class="section-body" style="margin-top:20px;">Every creator audience is mapped to detailed buyer personas — demographics, purchase behaviour and brand fit signals. Match your message to the right psychology, not just the right age bracket. Simfluence automatically identifies which of 53 personas dominate a creator's audience and ranks them by campaign relevance.</p>
+      <div style="display:flex;gap:16px;margin-top:32px;flex-wrap:wrap;">
+        <div style="font-family:DM Mono,monospace;font-size:11px;color:var(--dim);">53 persona archetypes</div>
+        <div style="font-family:DM Mono,monospace;font-size:11px;color:var(--dim);">18 genre territories</div>
+        <div style="font-family:DM Mono,monospace;font-size:11px;color:var(--dim);">Auto-matched</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Campaign Simulator -->
+<section id="section-simulator" style="padding:120px 48px;background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
+  <div style="max-width:1300px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;">
+    <div class="reveal">
+      <span class="section-eyebrow">Campaign Simulator</span>
+      <h2 class="section-h2" style="margin-top:16px;">See your ROAS<br><em>before you spend.</em></h2>
+      <p class="section-body" style="margin-top:20px;">Select creators, set your budget and format, and Simfluence models probabilistic outcomes across CTR, CPM, CVR and ROAS — with P10, P50 and P90 confidence bands. Swap creators or adjust budget and the model recalculates instantly. Know your floor, your base case and your ceiling before a single penny is committed.</p>
+      <div style="display:flex;gap:16px;margin-top:32px;flex-wrap:wrap;">
+        <div style="font-family:DM Mono,monospace;font-size:11px;color:var(--dim);">Under 2 minutes</div>
+        <div style="font-family:DM Mono,monospace;font-size:11px;color:var(--dim);">P10 / P50 / P90 bands</div>
+        <div style="font-family:DM Mono,monospace;font-size:11px;color:var(--dim);">4 core metrics</div>
+      </div>
+    </div>
+    <div class="reveal" style="background:#050508;border-radius:16px;padding:24px;border:1px solid rgba(255,255,255,0.06);overflow:hidden;">
+      <div style="background:#0A0A10;border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:14px;margin-bottom:14px;">
+        <div style="font-size:9px;letter-spacing:.1em;color:rgba(0,80,255,0.8);margin-bottom:10px;font-family:DM Mono,monospace;">CAMPAIGN BRIEF · GAMING LAUNCH</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <div style="font-size:8px;letter-spacing:.06em;padding:4px 10px;border-radius:3px;background:rgba(255,212,0,0.08);border:1px solid rgba(255,212,0,0.25);color:#FFD400;font-family:DM Mono,monospace;">$50,000 budget</div>
+          <div style="font-size:8px;letter-spacing:.06em;padding:4px 10px;border-radius:3px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.5);font-family:DM Mono,monospace;">Gaming & Esports</div>
+          <div style="font-size:8px;letter-spacing:.06em;padding:4px 10px;border-radius:3px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.5);font-family:DM Mono,monospace;">60-day campaign</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:6px;background:#0A0A10;border:1px solid rgba(255,255,255,0.08);border-radius:6px;padding:6px 10px;">
+          <div style="width:22px;height:22px;border-radius:50%;background:rgba(255,122,0,0.15);color:#FF7A00;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;font-family:sans-serif;">G</div>
+          <span style="font-size:9px;color:#fff;font-family:DM Mono,monospace;">General Sam</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;background:#0A0A10;border:1px solid rgba(255,255,255,0.08);border-radius:6px;padding:6px 10px;">
+          <div style="width:22px;height:22px;border-radius:50%;background:rgba(155,89,182,0.15);color:#9B59B6;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;font-family:sans-serif;">P</div>
+          <span style="font-size:9px;color:#fff;font-family:DM Mono,monospace;">Palsteron</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;background:#0A0A10;border:1px solid rgba(255,255,255,0.08);border-radius:6px;padding:6px 10px;">
+          <div style="width:22px;height:22px;border-radius:50%;background:rgba(0,196,106,0.15);color:#00C46A;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;font-family:sans-serif;">G</div>
+          <span style="font-size:9px;color:#fff;font-family:DM Mono,monospace;">GhazzyTV</span>
+        </div>
+      </div>
+      <div style="font-size:9px;letter-spacing:.08em;color:rgba(255,255,255,0.3);margin-bottom:12px;font-family:DM Mono,monospace;min-height:14px;" id="sim-status"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;">
+        <div style="background:#0A0A10;border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:12px;text-align:center;opacity:0;transition:all 0.4s;" id="sim-bc0">
+          <div style="font-size:8px;letter-spacing:.1em;color:rgba(255,255,255,0.3);margin-bottom:6px;font-family:DM Mono,monospace;">P10 · FLOOR</div>
+          <div style="font-family:sans-serif;font-size:22px;font-weight:700;color:#E60023;" id="sim-bv0">—</div>
+          <div style="font-size:7px;color:rgba(255,255,255,0.2);font-family:DM Mono,monospace;">worst case</div>
+        </div>
+        <div style="background:#0A0A10;border:1px solid rgba(255,212,0,0.15);border-radius:10px;padding:12px;text-align:center;opacity:0;transition:all 0.4s;" id="sim-bc1">
+          <div style="font-size:8px;letter-spacing:.1em;color:rgba(255,255,255,0.3);margin-bottom:6px;font-family:DM Mono,monospace;">P50 · BASE</div>
+          <div style="font-family:sans-serif;font-size:22px;font-weight:700;color:#FFD400;" id="sim-bv1">—</div>
+          <div style="font-size:7px;color:rgba(255,255,255,0.2);font-family:DM Mono,monospace;">expected</div>
+        </div>
+        <div style="background:#0A0A10;border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:12px;text-align:center;opacity:0;transition:all 0.4s;" id="sim-bc2">
+          <div style="font-size:8px;letter-spacing:.1em;color:rgba(255,255,255,0.3);margin-bottom:6px;font-family:DM Mono,monospace;">P90 · CEILING</div>
+          <div style="font-family:sans-serif;font-size:22px;font-weight:700;color:#00C46A;" id="sim-bv2">—</div>
+          <div style="font-size:7px;color:rgba(255,255,255,0.2);font-family:DM Mono,monospace;">best case</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;">
+        <div style="background:#0A0A10;border:1px solid rgba(255,255,255,0.05);border-radius:8px;padding:10px;opacity:0;transition:all 0.4s;" id="sim-mc0"><div style="font-size:7px;letter-spacing:.08em;color:rgba(255,255,255,0.25);margin-bottom:6px;font-family:DM Mono,monospace;">CTR</div><div style="font-size:7px;color:rgba(255,255,255,0.3);font-family:DM Mono,monospace;">P50 <span style="color:#FFD400;font-size:11px;font-weight:700;" id="sim-ctr">—</span></div></div>
+        <div style="background:#0A0A10;border:1px solid rgba(255,255,255,0.05);border-radius:8px;padding:10px;opacity:0;transition:all 0.4s;" id="sim-mc1"><div style="font-size:7px;letter-spacing:.08em;color:rgba(255,255,255,0.25);margin-bottom:6px;font-family:DM Mono,monospace;">CPM</div><div style="font-size:7px;color:rgba(255,255,255,0.3);font-family:DM Mono,monospace;">P50 <span style="color:#FFD400;font-size:11px;font-weight:700;" id="sim-cpm">—</span></div></div>
+        <div style="background:#0A0A10;border:1px solid rgba(255,255,255,0.05);border-radius:8px;padding:10px;opacity:0;transition:all 0.4s;" id="sim-mc2"><div style="font-size:7px;letter-spacing:.08em;color:rgba(255,255,255,0.25);margin-bottom:6px;font-family:DM Mono,monospace;">CVR</div><div style="font-size:7px;color:rgba(255,255,255,0.3);font-family:DM Mono,monospace;">P50 <span style="color:#FFD400;font-size:11px;font-weight:700;" id="sim-cvr">—</span></div></div>
+        <div style="background:#0A0A10;border:1px solid rgba(255,255,255,0.05);border-radius:8px;padding:10px;opacity:0;transition:all 0.4s;" id="sim-mc3"><div style="font-size:7px;letter-spacing:.08em;color:rgba(255,255,255,0.25);margin-bottom:6px;font-family:DM Mono,monospace;">ROAS</div><div style="font-size:7px;color:rgba(255,255,255,0.3);font-family:DM Mono,monospace;">P50 <span style="color:#FFD400;font-size:11px;font-weight:700;" id="sim-roas">—</span></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+@keyframes sfblink{0%,100%{opacity:1;}50%{opacity:0;}}
+</style>
+
+<script>
+(function(){
+
+// ── CREATOR DISCOVERY ANIMATION ──────────────────────────────────────
+var CD_CREATORS=[
+  {av:'M',avBg:'rgba(255,55,55,0.15)',avC:'#FF5555',name:'MrBeast',meta:'@mrbeast · YouTube',subs:'476M',cpi:72,gfi:80,cpiC:'#FF7A00',highlight:true},
+  {av:'M',avBg:'rgba(255,55,55,0.12)',avC:'#FF7A00',name:'MrBeast2',meta:'@mrbeast2 · YouTube',subs:'41M',cpi:68,gfi:74,cpiC:'#FF7A00',highlight:false},
+  {av:'M',avBg:'rgba(155,89,182,0.15)',avC:'#9B59B6',name:'MrBeast Gaming',meta:'@mrbeastgaming · YouTube',subs:'42M',cpi:74,gfi:82,cpiC:'#FF7A00',highlight:false},
+];
+
+var cdGrid=document.getElementById('cd-grid');
+var cdMeta=document.getElementById('cd-meta');
+
+CD_CREATORS.forEach(function(cr,idx){
+  var d=document.createElement('div');
+  d.id='cdc-'+idx;
+  d.style.cssText='background:#0A0A10;border:1px solid '+(cr.highlight?'#FFD400':'rgba(255,255,255,0.06)')+';border-radius:10px;padding:12px;opacity:0;transition:opacity 0.4s;';
+  d.innerHTML='<div style="display:inline-block;font-size:7px;letter-spacing:.06em;padding:2px 6px;border-radius:3px;margin-bottom:6px;background:rgba(255,212,0,0.12);color:#FFD400;font-family:DM Mono,monospace;">Megastar</div>'
+    +'<div style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;font-family:sans-serif;margin-bottom:6px;background:'+cr.avBg+';color:'+cr.avC+'">'+cr.av+'</div>'
+    +'<div style="font-family:sans-serif;font-size:12px;font-weight:700;color:#fff;margin-bottom:2px;">'+cr.name+'</div>'
+    +'<div style="font-size:7px;letter-spacing:.05em;color:rgba(255,255,255,0.3);margin-bottom:6px;font-family:DM Mono,monospace;">'+cr.meta+'</div>'
+    +'<div style="font-size:7px;letter-spacing:.07em;color:rgba(255,255,255,0.25);margin-bottom:2px;font-family:DM Mono,monospace;">SUBS</div>'
+    +'<div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:6px;font-family:sans-serif;">'+cr.subs+'</div>'
+    +'<div style="margin-bottom:3px;"><div style="font-size:7px;letter-spacing:.05em;color:rgba(255,255,255,0.25);display:flex;justify-content:space-between;margin-bottom:2px;font-family:DM Mono,monospace;"><span>CPI</span><span>'+cr.cpi+'</span></div><div style="height:2px;background:rgba(255,255,255,0.06);border-radius:1px;overflow:hidden;"><div id="cd-cpib-'+idx+'" style="height:100%;width:0;border-radius:1px;background:'+cr.cpiC+';transition:width 0.8s cubic-bezier(.23,1,.32,1);"></div></div></div>'
+    +'<div><div style="font-size:7px;letter-spacing:.05em;color:rgba(255,255,255,0.25);display:flex;justify-content:space-between;margin-bottom:2px;font-family:DM Mono,monospace;"><span>GFI</span><span>'+cr.gfi+'%</span></div><div style="height:2px;background:rgba(255,255,255,0.06);border-radius:1px;overflow:hidden;"><div id="cd-gfib-'+idx+'" style="height:100%;width:0;border-radius:1px;background:#6B9FFF;transition:width 0.8s cubic-bezier(.23,1,.32,1);"></div></div></div>';
+  cdGrid.appendChild(d);
+});
+
+function cdShowCards(){
+  CD_CREATORS.forEach(function(_,i){
+    setTimeout(function(){
+      var el=document.getElementById('cdc-'+i);
+      if(el){el.style.opacity='1';}
+      setTimeout(function(){
+        var cb=document.getElementById('cd-cpib-'+i);
+        var gb=document.getElementById('cd-gfib-'+i);
+        if(cb)cb.style.width=CD_CREATORS[i].cpi+'%';
+        if(gb)gb.style.width=CD_CREATORS[i].gfi+'%';
+      },200);
+    },i*100);
+  });
+}
+
+function cdHideCards(){
+  CD_CREATORS.forEach(function(_,i){
+    var el=document.getElementById('cdc-'+i);
+    if(el){el.style.opacity='0';}
+    var cb=document.getElementById('cd-cpib-'+i);
+    var gb=document.getElementById('cd-gfib-'+i);
+    if(cb)cb.style.width='0';
+    if(gb)gb.style.width='0';
+  });
+}
+
+function cdTypeText(text,cb){
+  var el=document.getElementById('cd-searchText');
+  el.textContent='';
+  var i=0;
+  var t=setInterval(function(){
+    el.textContent=text.slice(0,++i);
+    if(i>=text.length){clearInterval(t);if(cb)setTimeout(cb,300);}
+  },80);
+}
+
+function cdClearText(cb){
+  var el=document.getElementById('cd-searchText');
+  if(!el.textContent){if(cb)cb();return;}
+  var t=setInterval(function(){
+    if(!el.textContent.length){clearInterval(t);if(cb)cb();return;}
+    el.textContent=el.textContent.slice(0,-1);
+  },40);
+}
+
+function cdLoop(){
+  cdHideCards();
+  cdMeta.textContent='3,680 CREATORS · ALL GENRES';
+  document.getElementById('cd-searchText').textContent='';
+  setTimeout(function(){
+    cdTypeText('mrbeast',function(){
+      cdMeta.textContent='3 RESULTS FOR "MRBEAST" · ACROSS ALL 3,680 CREATORS';
+      cdShowCards();
+      setTimeout(function(){
+        cdHideCards();
+        cdClearText(function(){(function(){
+  var _cdActive=false;
+  var _cdObs=new IntersectionObserver(function(e){
+    if(e[0].isIntersecting && !_cdActive){_cdActive=true;setTimeout(cdLoop,400);}
+    if(!e[0].isIntersecting){_cdActive=false;}
+  },{threshold:0.2});
+  var el=document.getElementById('cd-grid');
+  if(el)_cdObs.observe(el.closest('[id^="section"]')||el);
+  // Also stop the loop when invisible by wrapping cdLoop
+  var _origCdLoop=cdLoop;
+  cdLoop=function(){
+    if(!_cdActive)return;
+    _origCdLoop();
+  };
+})();});
+      },5500);
+    });
+  },1000);
+}
+(function(){
+  var _cdActive=false;
+  var _cdObs=new IntersectionObserver(function(e){
+    if(e[0].isIntersecting && !_cdActive){_cdActive=true;setTimeout(cdLoop,400);}
+    if(!e[0].isIntersecting){_cdActive=false;}
+  },{threshold:0.2});
+  var el=document.getElementById('cd-grid');
+  if(el)_cdObs.observe(el.closest('[id^="section"]')||el);
+  // Also stop the loop when invisible by wrapping cdLoop
+  var _origCdLoop=cdLoop;
+  cdLoop=function(){
+    if(!_cdActive)return;
+    _origCdLoop();
+  };
+})();
+
+// ── PERSONA MATCHING ANIMATION ───────────────────────────────────────
+var PM_PERSONAS=[
+  {icon:'GC',iconBg:'rgba(236,72,153,0.15)',iconC:'#EC4899',name:'The Glam Creator',demo:'18–32 · 90% female · YouTube/Instagram',pct:81,label:'81% match',matchBg:'rgba(236,72,153,0.12)',matchC:'#EC4899',barC:'#EC4899',cls:'match'},
+  {icon:'LA',iconBg:'rgba(255,212,0,0.15)',iconC:'#FFD400',name:'The Lifestyle Aspirant',demo:'24–38 · 80% female · YouTube/TikTok',pct:96,label:'96% match — Primary',matchBg:'rgba(255,212,0,0.12)',matchC:'#FFD400',barC:'#FFD400',cls:'strong'},
+  {icon:'VS',iconBg:'rgba(0,196,106,0.15)',iconC:'#00C46A',name:'The Value Seeker',demo:'22–40 · 70% female · All platforms',pct:74,label:'74% match',matchBg:'rgba(0,196,106,0.1)',matchC:'#00C46A',barC:'#00C46A',cls:'match'},
+];
+var PM_CREATORS=[
+  {av:'N',avBg:'rgba(236,72,153,0.15)',avC:'#EC4899',name:'NikkieTutorials',meta:'@nikkietutorials · YouTube · Beauty',badge:'Lifestyle Aspirant',badgeC:'#FFD400',badgeBorder:'rgba(255,212,0,0.3)',badgeBg:'rgba(255,212,0,0.08)',cpi:83,gfi:96},
+  {av:'J',avBg:'rgba(255,122,0,0.15)',avC:'#FF7A00',name:'JenNyan',meta:'@jennyan · YouTube · Lifestyle',badge:'Glam Creator',badgeC:'#EC4899',badgeBorder:'rgba(236,72,153,0.3)',badgeBg:'rgba(236,72,153,0.08)',cpi:80,gfi:88},
+  {av:'L',avBg:'rgba(0,196,106,0.15)',avC:'#00C46A',name:'LaynaLazar',meta:'@laynalazar · YouTube · Lifestyle',badge:'Value Seeker',badgeC:'#00C46A',badgeBorder:'rgba(0,196,106,0.3)',badgeBg:'rgba(0,196,106,0.08)',cpi:78,gfi:82},
+];
+
+var pmGrid=document.getElementById('pm-grid');
+var pmCreatorsEl=document.getElementById('pm-creators');
+
+PM_PERSONAS.forEach(function(p,i){
+  var d=document.createElement('div');
+  d.id='pm-pc-'+i;
+  d.style.cssText='background:#0A0A10;border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:12px;opacity:0;transition:opacity 0.4s;';
+  d.innerHTML='<div style="width:28px;height:28px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:sans-serif;font-size:11px;font-weight:700;background:'+p.iconBg+';color:'+p.iconC+'">'+p.icon+'</div>'
+    +'<div style="font-family:sans-serif;font-size:11px;font-weight:700;color:#fff;margin:6px 0 2px;">'+p.name+'</div>'
+    +'<div style="font-size:7px;letter-spacing:.05em;color:rgba(255,255,255,0.3);margin-bottom:8px;font-family:DM Mono,monospace;line-height:1.5;">'+p.demo+'</div>'
+    +'<div id="pm-badge-'+i+'" style="font-size:7px;letter-spacing:.06em;padding:3px 7px;border-radius:3px;display:inline-block;margin-bottom:6px;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.3);font-family:DM Mono,monospace;">Matching...</div>'
+    +'<div style="height:3px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;"><div id="pm-bar-'+i+'" style="height:100%;border-radius:2px;width:0;background:'+p.barC+';transition:width 0.9s cubic-bezier(.23,1,.32,1);"></div></div>';
+  pmGrid.appendChild(d);
+});
+
+PM_CREATORS.forEach(function(cr,i){
+  var d=document.createElement('div');
+  d.id='pm-cr-'+i;
+  d.style.cssText='background:#0A0A10;border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:10px;opacity:0;transition:opacity 0.4s;';
+  d.innerHTML='<div style="width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;font-family:sans-serif;flex-shrink:0;background:'+cr.avBg+';color:'+cr.avC+'">'+cr.av+'</div>'
+    +'<div style="flex:1;min-width:0;"><div style="font-family:sans-serif;font-size:12px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+cr.name+'</div><div style="font-size:7px;letter-spacing:.05em;color:rgba(255,255,255,0.3);font-family:DM Mono,monospace;">'+cr.meta+'</div></div>'
+    +'<div style="font-size:7px;letter-spacing:.05em;padding:2px 7px;border-radius:10px;border:1px solid '+cr.badgeBorder+';background:'+cr.badgeBg+';color:'+cr.badgeC+';flex-shrink:0;font-family:DM Mono,monospace;">'+cr.badge+'</div>'
+    +'<div style="display:flex;gap:10px;text-align:right;flex-shrink:0;"><div><div style="font-family:sans-serif;font-size:14px;font-weight:700;color:#00C46A;">'+cr.cpi+'</div><div style="font-size:7px;letter-spacing:.06em;color:rgba(255,255,255,0.3);font-family:DM Mono,monospace;">CPI</div></div><div><div style="font-family:sans-serif;font-size:14px;font-weight:700;color:#00C46A;">'+cr.gfi+'%</div><div style="font-size:7px;letter-spacing:.06em;color:rgba(255,255,255,0.3);font-family:DM Mono,monospace;">GFI</div></div></div>';
+  pmCreatorsEl.appendChild(d);
+});
+
+function pmReset(){
+  PM_PERSONAS.forEach(function(_,i){
+    var pc=document.getElementById('pm-pc-'+i);
+    var badge=document.getElementById('pm-badge-'+i);
+    var bar=document.getElementById('pm-bar-'+i);
+    if(pc){pc.style.opacity='0';pc.style.border='1px solid rgba(255,255,255,0.06)';pc.style.background='#0A0A10';}
+    if(badge){badge.style.background='rgba(255,255,255,0.05)';badge.style.color='rgba(255,255,255,0.3)';badge.textContent='Matching...';}
+    if(bar)bar.style.width='0';
+  });
+  PM_CREATORS.forEach(function(_,i){
+    var el=document.getElementById('pm-cr-'+i);
+    if(el)el.style.opacity='0';
+  });
+  document.getElementById('pm-creator-lbl').style.opacity='0';
+  document.getElementById('pm-lbl').textContent='MATCHING AUDIENCE PERSONAS...';
+}
+
+function pmRun(){
+  pmReset();
+  PM_PERSONAS.forEach(function(p,i){
+    setTimeout(function(){
+      var pc=document.getElementById('pm-pc-'+i);
+      if(pc){pc.style.opacity='1';}
+      setTimeout(function(){
+        var bar=document.getElementById('pm-bar-'+i);
+        var badge=document.getElementById('pm-badge-'+i);
+        if(bar)bar.style.width=p.pct+'%';
+        if(badge){badge.style.background=p.matchBg;badge.style.color=p.matchC;badge.textContent=p.label;}
+        if(pc&&p.cls==='strong'){pc.style.border='1px solid #FFD400';pc.style.background='#0A0A08';}
+        else if(pc){pc.style.border='1px solid #00C46A';}
+      },400);
+    },300+(i*200));
+  });
+  setTimeout(function(){
+    document.getElementById('pm-lbl').textContent='3 PERSONAS MATCHED · LIFESTYLE ASPIRANT IS PRIMARY';
+    document.getElementById('pm-creator-lbl').style.opacity='1';
+    PM_CREATORS.forEach(function(_,i){
+      setTimeout(function(){
+        var el=document.getElementById('pm-cr-'+i);
+        if(el)el.style.opacity='1';
+      },i*120);
+    });
+  },1800);
+  setTimeout(pmRun,7000);
+}
+(function(){
+  var _pmActive=false;
+  var _pmObs=new IntersectionObserver(function(e){
+    if(e[0].isIntersecting && !_pmActive){_pmActive=true;setTimeout(pmRun,400);}
+    if(!e[0].isIntersecting){_pmActive=false;}
+  },{threshold:0.2});
+  var el=document.getElementById('pm-grid');
+  if(el)_pmObs.observe(el.closest('[id^="section"]')||el);
+  var _origPmRun=pmRun;
+  pmRun=function(){
+    if(!_pmActive)return;
+    _origPmRun();
+  };
+})();
+
+// ── CAMPAIGN SIMULATOR ANIMATION ─────────────────────────────────────
+function simReset(){
+  ['sim-bc0','sim-bc1','sim-bc2','sim-mc0','sim-mc1','sim-mc2','sim-mc3'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el)el.style.opacity='0';
+  });
+  ['sim-bv0','sim-bv1','sim-bv2'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el)el.textContent='—';
+  });
+  ['sim-ctr','sim-cpm','sim-cvr','sim-roas'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el)el.textContent='—';
+  });
+  document.getElementById('sim-status').textContent='';
+}
+
+function simRun(){
+  simReset();
+  var steps=['INITIALISING MODEL...','SCORING 3 CREATORS...','RUNNING SIMULATIONS...','COMPUTING BANDS...','DONE'];
+  var si=0;
+  var t=setInterval(function(){
+    document.getElementById('sim-status').textContent=steps[si++];
+    if(si>=steps.length){clearInterval(t);simShow();}
+  },400);
+}
+
+function simShow(){
+  var bands=[['sim-bc0','sim-bv0','2.1M'],['sim-bc1','sim-bv1','3.8M'],['sim-bc2','sim-bv2','6.2M']];
+  bands.forEach(function(b,i){
+    setTimeout(function(){
+      var bc=document.getElementById(b[0]);
+      if(bc)bc.style.opacity='1';
+      document.getElementById(b[1]).textContent=b[2];
+    },i*150);
+  });
+  setTimeout(function(){
+    [['sim-mc0','sim-ctr','3.2%'],['sim-mc1','sim-cpm','$12'],['sim-mc2','sim-cvr','1.7%'],['sim-mc3','sim-roas','2.6x']].forEach(function(m,i){
+      setTimeout(function(){
+        var el=document.getElementById(m[0]);
+        if(el)el.style.opacity='1';
+        document.getElementById(m[1]).textContent=m[2];
+      },i*100);
+    });
+  },600);
+  setTimeout(simRun,6500);
+}
+(function(){
+  var _simActive=false;
+  var _simObs=new IntersectionObserver(function(e){
+    if(e[0].isIntersecting && !_simActive){_simActive=true;setTimeout(simRun,400);}
+    if(!e[0].isIntersecting){_simActive=false;}
+  },{threshold:0.2});
+  var el=document.getElementById('sim-bc0');
+  if(el)_simObs.observe(el.closest('[id^="section"]')||el);
+  var _origSimRun=simRun;
+  simRun=function(){
+    if(!_simActive)return;
+    _origSimRun();
+  };
+})();
+
+})();
+</script>
+
+<!-- ══ PRICING SECTION ══════════════════════════════════════════════ -->
+<section id="pricing">
+  <div class="section-pricing">
+
+    <div class="pricing-header">
+      <span class="section-eyebrow" style="display:inline-block">Pricing</span>
+      <h2 class="section-h2" style="margin-top:16px;font-size:clamp(52px,7vw,96px)">Simple.<br><em>Transparent.</em><br>No surprises.</h2>
+      <p style="font-size:18px;color:var(--muted);margin-top:20px;font-weight:300;max-width:520px;margin-left:auto;margin-right:auto">Five tiers built for every scale of brand. Annual billing saves you up to 35%.</p>
+    </div>
+
+    <!-- Monthly / Annual toggle -->
+    <button class="billing-toggle" onclick="toggleBilling()" style="cursor:pointer;background:none;border:none;padding:0;">
+      <span class="toggle-label active" id="labelMonthly">Monthly</span>
+      <div class="toggle-track" id="billingToggle">
+        <div class="toggle-thumb"></div>
+      </div>
+      <span class="toggle-label" id="labelAnnual">Annual</span>
+      <span class="toggle-saving-badge" id="savingBadge" style="opacity:0;pointer-events:none">Save up to 35%</span>
+    </button>
+
+    <!-- 5 Tier cards — features match app tier gates exactly -->
+    <div class="pricing-cards">
+
+      <!-- BRONZE — entry access, blurred scores, 25 creator cap, 3 sims/mo -->
+      <div class="p-card bronze">
+        <div class="p-popular-spacer"></div>
+        <div class="p-medal">🥉</div>
+        <div class="p-tier-name" style="color:#CD7F32">Bronze</div>
+        <div>
+          <span class="p-price" id="bronzePrice" style="color:#CD7F32">$1,500</span><span class="p-price-sub">/mo</span>
+        </div>
+        <div class="p-annual-line" id="bronzeAnnual">&nbsp;</div>
+        <div class="p-saving-line" id="bronzeSaving">&nbsp;</div>
+        <div class="p-divider"></div>
+        <div class="p-features">
+          <div class="p-feat"><span class="p-feat-dash">—</span>25 creator results per search · genre, platform &amp; tier filters</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>CPI &amp; GFI scores on every creator card</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>3 campaign simulations per month · confidence bands available at Silver</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Live Twitch panel — see who is streaming right now (10 channels)</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Creator outreach tracker — log up to 3 creators with status &amp; notes</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Email support</div>
+        </div>
+        <a href="preview.html?plan=bronze#request-access" class="p-btn p-btn-bronze">Get started</a>
+      </div>
+
+      <!-- SILVER — 100 creators, visible scores, 1 persona, 10 sims/mo, P50 only -->
+      <div class="p-card silver">
+        <div class="p-popular-spacer"></div>
+        <div class="p-medal">🥈</div>
+        <div class="p-tier-name" style="color:#C0C0C0">Silver</div>
+        <div>
+          <span class="p-price" id="silverPrice" style="color:#C0C0C0">$3,500</span><span class="p-price-sub">/mo</span>
+        </div>
+        <div class="p-annual-line" id="silverAnnual">&nbsp;</div>
+        <div class="p-saving-line" id="silverSaving" style="color:#00C46A">&nbsp;</div>
+        <div class="p-divider"></div>
+        <div class="p-features">
+          <div class="p-feat"><span class="p-feat-dash">—</span>100 creator results · language &amp; sub-genre filters · live Twitch CPI scoring</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Full CPI &amp; GFI scores · 1 AI audience persona per campaign</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>10 simulations per month · base case forecast · P10/P90 range at Gold</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Live Twitch panel — 20 channels · real-time viewer data &amp; genre fit</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Outreach tracker — 5 creators · subscriber count &amp; contact email included</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>3 saved campaign briefs · priority support</div>
+        </div>
+        <a href="preview.html?plan=silver#request-access" class="p-btn p-btn-silver">Get started</a>
+      </div>
+
+      <!-- GOLD — unlimited creators, full profiles, 3 personas, unlimited sims, PDF summary -->
+      <div class="p-card gold-tier">
+        <div class="p-popular">Most popular</div>
+        <div class="p-medal">🥇</div>
+        <div class="p-tier-name" style="color:#FFD400">Gold</div>
+        <div>
+          <span class="p-price" id="goldPrice" style="color:#FFD400">$7,500</span><span class="p-price-sub">/mo</span>
+        </div>
+        <div class="p-annual-line" id="goldAnnual">&nbsp;</div>
+        <div class="p-saving-line" id="goldSaving" style="color:#00C46A">&nbsp;</div>
+        <div class="p-divider"></div>
+        <div class="p-features">
+          <div class="p-feat"><span class="p-feat-dash">—</span>Unlimited creator database · full profiles · CPI breakdown · audience intelligence</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>GFI methodology · all region &amp; sub-genre targeting · unlimited simulations · P10/P50/P90</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>3 AI audience personas · top creator match per persona · 1–12 week campaign duration</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Campaigns workspace — manage 1 active brief · live Twitch panel (50 channels)</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Outreach tracker — 15 creators · CPI score included · estimated rates at Platinum</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Budget split view · PDF summary · 10 saved briefs · CSV shortlist · compare 2 creators</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Direct line to Simfluence founder</div>
+        </div>
+        <a href="preview.html?plan=gold#request-access" class="p-btn p-btn-gold">Get started</a>
+      </div>
+
+      <!-- PLATINUM — editable budget allocation, compare 4, top 3 persona creators, full PDF, unlimited saved -->
+      <div class="p-card platinum">
+        <div class="p-popular-spacer"></div>
+        <div class="p-medal">🏆</div>
+        <div class="p-tier-name" style="color:#E5E4E2">Platinum</div>
+        <div>
+          <span class="p-price" id="platinumPrice" style="color:#E5E4E2">$15,000</span><span class="p-price-sub">/mo</span>
+        </div>
+        <div class="p-annual-line" id="platinumAnnual">&nbsp;</div>
+        <div class="p-saving-line" id="platinumSaving" style="color:#00C46A">&nbsp;</div>
+        <div class="p-divider"></div>
+        <div class="p-features">
+          <div class="p-feat"><span class="p-feat-dash">—</span>Unlimited creator database · full profiles · CPI &amp; GFI breakdown · audience intelligence</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>All AI persona archetypes · top 3 creator matches · sub-genre targeting</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Unlimited campaign briefs · outreach CRM for your full roster · estimated rates included</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Audience overlap engine — know exactly how much of your budget reaches new eyes</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Live Twitch panel — unlimited channels · editable budget split · compare creators</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Full P10/P50/P90 PDF report · unlimited CSV export · unlimited saved briefs · API access</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Direct line to Simfluence founder</div>
+        </div>
+        <a href="preview.html?plan=platinum#request-access" class="p-btn p-btn-platinum">Get started</a>
+      </div>
+
+      <!-- DIAMOND — all Platinum + white-label PDF, custom personas, enterprise -->
+      <div class="p-card diamond">
+        <div class="p-popular-spacer"></div>
+        <div class="p-medal">💎</div>
+        <div class="p-tier-name" style="color:#B9F2FF">Diamond</div>
+        <div>
+          <span class="p-price" style="color:#B9F2FF;font-size:26px;line-height:1.3">Talk<br>to us</span>
+        </div>
+        <div class="p-annual-line">&nbsp;</div>
+        <div class="p-saving-line">&nbsp;</div>
+        <div class="p-divider"></div>
+        <div class="p-features">
+          <div class="p-feat"><span class="p-feat-dash">—</span>Weekly 1-to-1 &amp; daily WhatsApp with Simfluence founder — your campaign, your call</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Custom audience personas built around your specific brand, category &amp; objectives</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>White-label PDF reports — your branding, ready to send straight to clients</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Top 3 creator picks per persona, packaged as a ready-to-brief shortlist</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>SSO, role-based access &amp; enterprise-grade security</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Input on the product roadmap — help shape what gets built next</div>
+          <div class="p-feat"><span class="p-feat-dash">—</span>Bespoke contract, dedicated onboarding &amp; a named SLA</div>
+        </div>
+        <a href="mailto:liam@simfluence.ai" class="p-btn p-btn-diamond">Contact us</a>
+      </div>
+
+    </div><!-- /pricing-cards -->
+
+  </div>
+</section>
+
+<section class="section-cta reveal">
+  <div class="cta-glow"></div>
+  <h2 class="cta-h2">Your next campaign<br>already has<br>a <em>forecast.</em></h2>
+  <p class="cta-sub">Run your brief. See your numbers. Launch knowing what to expect.</p>
+  <div class="cta-btns">
+    <a href="mailto:liam@simfluence.ai" class="btn-xl">Book a live demo</a>
+  </div>
+</section>
+
+<footer>
+  <div>
+    <a href="index.html" class="f-logo">Sim<em>fluence</em></a>
+    <p class="f-tag">AI-powered campaign intelligence. Know your CTR, CPM, CVR and ROAS before a single dollar is spent.</p>
+    <p class="f-email">Contact: <a href="mailto:liam@simfluence.ai">liam@simfluence.ai</a></p>
+  </div>
+  <div>
+    <div class="f-col-title">Platform</div>
+    <div class="f-links">
+      <a href="#section-discovery" class="f-link" data-scrollto="section-discovery">Creator Discovery</a>
+      <a href="#features" class="f-link" data-scrollto="features">CPI &amp; GFI Scoring</a>
+      <a href="#section-persona" class="f-link" data-scrollto="section-persona">AI Persona Matching</a>
+      <a href="#section-simulator" class="f-link" data-scrollto="section-simulator">Campaign Simulator</a>
+    </div>
+  </div>
+  <div>
+    <div class="f-col-title">Company</div>
+    <div class="f-links">
+      <a href="preview.html" class="f-link">About Simfluence</a>
+      <a href="mailto:liam@simfluence.ai" class="f-link">Contact Us</a>
+      <a href="#" class="f-link" onclick="showLegalModal('terms'); return false;">Terms of Use</a>
+      <a href="#" class="f-link" onclick="showLegalModal('legal'); return false;">Legal Notice</a>
+    </div>
+  </div>
+  <div>
+    <div class="f-col-title">Plans</div>
+    <div class="f-links">
+      <a href="#pricing" class="f-link" style="color:#CD7F32" data-scrollplan="bronze">Bronze — $1,500/mo</a>
+      <a href="#pricing" class="f-link" style="color:#C0C0C0" data-scrollplan="silver">Silver — $3,500/mo</a>
+      <a href="#pricing" class="f-link" style="color:#FFD400" data-scrollplan="gold">Gold — $7,500/mo</a>
+      <a href="#pricing" class="f-link" style="color:#E5E4E2" data-scrollplan="platinum">Platinum — $15,000/mo</a>
+      <a href="mailto:liam@simfluence.ai" class="f-link" style="color:#B9F2FF">Diamond — Talk to us</a>
+    </div>
+  </div>
+  <div class="f-bottom">
+    <span class="f-copy">© 2025 Simfluence Ltd · Dubai, UAE · All rights reserved</span>
+    <div class="f-legal">
+      <a href="#" onclick="showLegalModal('terms'); return false;">Terms</a>
+      <a href="#" onclick="showLegalModal('legal'); return false;">Legal</a>
+      <a href="mailto:liam@simfluence.ai">Contact</a>
+    </div>
+  </div>
+</footer>
+
+<!-- ══ SIGNUP MODAL ══════════════════════════════════════════════════ -->
+<div id="sfModal">
+  <div class="sf-box">
+    <button onclick="sfClose()" style="position:absolute;top:14px;right:14px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:rgba(255,255,255,0.5);cursor:pointer;padding:5px 10px;font-size:13px;font-family:'DM Mono',monospace">✕</button>
+    <div class="sf-logo">Sim<em>fluence</em></div>
+    <div class="sf-sub-label">Campaign Intelligence Platform</div>
+    <div class="sf-progress">
+      <div class="sf-prog-bar" id="sfP1" style="background:#0050FF"></div>
+      <div class="sf-prog-bar" id="sfP2"></div>
+      <div class="sf-prog-bar" id="sfP3"></div>
+    </div>
+    <!-- Step 1 -->
+    <div id="sfS1">
+      <div class="sf-title">Get started</div>
+      <div class="sf-desc">Tell us about your brand and we will be in touch.</div>
+      <label class="sf-label">Your name</label>
+      <input id="sfName" type="text" class="sf-input" placeholder="e.g. Gareth Evans" autocomplete="name">
+      <label class="sf-label">Company / Brand</label>
+      <input id="sfCompany" type="text" class="sf-input" placeholder="e.g. Ubisoft MENA" autocomplete="organization">
+      <label class="sf-label">Work email</label>
+      <input id="sfEmail" type="email" class="sf-input" placeholder="you@company.com" autocomplete="email">
+      <div id="sfE1" class="sf-err">Please fill in all fields with a valid email.</div>
+      <button onclick="sfStep1()" class="sf-btn">Continue →</button>
+      <div class="sf-note">Already using Simfluence? <a href="#" onclick="openSignIn();return false;">Sign in</a></div>
+    </div>
+    <!-- Step 2 — Plan select -->
+    <div id="sfS2" style="display:none">
+      <div class="sf-title">Choose your plan</div>
+      <div class="sf-desc">All plans billed in USD. Annual billing saves up to 35%.</div>
+      <div id="sfPlans">
+        <div onclick="sfPick(this,'bronze')" class="plan-opt" style="border-color:rgba(205,127,50,0.2)">
+          <div><div class="plan-name" style="color:#CD7F32">🥉 Bronze</div><div class="plan-desc">Creator discovery · CPI &amp; GFI scores</div></div>
+          <div class="plan-price" style="color:#CD7F32">$1,500<span style="font-size:11px;font-weight:300">/mo</span></div>
+        </div>
+        <div onclick="sfPick(this,'silver')" class="plan-opt" style="border-color:rgba(192,192,192,0.2)">
+          <div><div class="plan-name" style="color:#C0C0C0">🥈 Silver</div><div class="plan-desc">Simulator · AI personas · Confidence bands</div></div>
+          <div class="plan-price" style="color:#C0C0C0">$3,500<span style="font-size:11px;font-weight:300">/mo</span></div>
+        </div>
+        <div onclick="sfPick(this,'gold')" class="plan-opt" style="border-color:rgba(255,212,0,0.3);background:rgba(255,212,0,0.03)">
+          <div><div class="plan-name" style="color:#FFD400">🥇 Gold <span style="font-size:8px;background:rgba(255,212,0,0.15);padding:2px 6px;border-radius:3px;letter-spacing:0.05em">POPULAR</span></div><div class="plan-desc">Feedback loop · White-label reports</div></div>
+          <div class="plan-price" style="color:#FFD400">$7,500<span style="font-size:11px;font-weight:300">/mo</span></div>
+        </div>
+        <div onclick="sfPick(this,'platinum')" class="plan-opt" style="border-color:rgba(229,228,226,0.2)">
+          <div><div class="plan-name" style="color:#E5E4E2">💎 Platinum</div><div class="plan-desc">Unlimited campaigns · API · Multi-brand</div></div>
+          <div class="plan-price" style="color:#E5E4E2">$15,000<span style="font-size:11px;font-weight:300">/mo</span></div>
+        </div>
+        <div onclick="sfPick(this,'diamond')" class="plan-opt" style="border-color:rgba(185,242,255,0.18)">
+          <div><div class="plan-name" style="color:#B9F2FF">✨ Diamond</div><div class="plan-desc">Enterprise · Bespoke pricing &amp; terms</div></div>
+          <div class="plan-price" style="color:#B9F2FF;font-size:13px;font-weight:400;margin-top:4px">Talk to us</div>
+        </div>
+      </div>
+      <div id="sfE2" class="sf-err" style="margin-top:8px">Please select a plan.</div>
+      <button onclick="sfStep2()" class="sf-btn" style="margin-top:12px">Submit →</button>
+    </div>
+    <!-- Step 3 — Success -->
+    <div id="sfS3" style="display:none;text-align:center">
+      <div class="success-icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M6 14L11.5 19.5L22 9" stroke="#00C46A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="sf-title" style="margin-bottom:8px">You're in.</div>
+      <div id="sfSuccessMsg" class="sf-desc"></div>
+      <button onclick="sfLaunch()" class="sf-btn" style="background:#00C46A">Launch Simfluence →</button>
+      <div class="sf-note" style="margin-top:12px">We will be in touch at <span id="sfConfirmEmail" style="color:rgba(255,255,255,0.4)"></span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── Pricing data ────────────────────────────────────────── */
+var PRICES = {
+  bronze:   { monthly:1500,  annual:1500,  annualTotal:18000,  discount:0  },
+  silver:   { monthly:3500,  annual:2625,  annualTotal:31500,  discount:25 },
+  gold:     { monthly:7500,  annual:5250,  annualTotal:63000,  discount:30 },
+  platinum: { monthly:15000, annual:9750,  annualTotal:117000, discount:35 }
+};
+var isAnnual = false;
+
+function fmt(n){ return '$' + n.toLocaleString('en-US'); }
+
+function updatePricing(){
+  var track = document.getElementById('billingToggle');
+  var badge = document.getElementById('savingBadge');
+  var lm    = document.getElementById('labelMonthly');
+  var la    = document.getElementById('labelAnnual');
+
+  if(isAnnual){
+    track.classList.add('annual');
+    badge.style.opacity = '1';
+    lm.classList.remove('active');
+    la.classList.add('active');
+  } else {
+    track.classList.remove('annual');
+    badge.style.opacity = '0';
+    lm.classList.add('active');
+    la.classList.remove('active');
+  }
+
+  Object.keys(PRICES).forEach(function(tier){
+    var d         = PRICES[tier];
+    var priceEl   = document.getElementById(tier+'Price');
+    var annualEl  = document.getElementById(tier+'Annual');
+    var savingEl  = document.getElementById(tier+'Saving');
+    if(!priceEl) return;
+
+    if(isAnnual){
+      priceEl.textContent = fmt(d.annual);
+      annualEl.textContent = fmt(d.annualTotal) + '/yr billed annually';
+      if(d.discount > 0){
+        savingEl.textContent = 'Save ' + d.discount + '% — ' + fmt((d.monthly - d.annual)*12) + '/yr';
+      } else {
+        savingEl.innerHTML = '<span style="color:var(--dim)">No annual discount at this tier</span>';
+      }
+    } else {
+      priceEl.textContent  = fmt(d.monthly);
+      annualEl.textContent = '\u00a0';
+      savingEl.textContent = '\u00a0';
+    }
+  });
+}
+
+function toggleBilling(){
+  isAnnual = !isAnnual;
+  updatePricing();
+}
+
+/* ── Signup modal ────────────────────────────────────────── */
+var SF_CONFIG = {
+  supabaseUrl: 'https://iysjxslzlbojoivxjrce.supabase.co',
+  supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5c2p4c2x6bGJvam9pdnhqcmNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0OTkyNjksImV4cCI6MjA5MTA3NTI2OX0.gGW_qclPJZT4x3eevXg6PFllq5CQWVifJUEaI3rqKnw'
+};
+var sfPlan='', sfNameVal='', sfEmailVal='', sfCompanyVal='';
+
+function openSignup(preselect){
+  var m = document.getElementById('sfModal');
+  if(!m) return;
+  sfShowStep(1);
+  sfPlan = preselect || '';
+  document.querySelectorAll('#sfPlans .plan-opt').forEach(function(d){ d.style.outline=''; d.style.boxShadow=''; });
+  if(sfPlan){
+    var el = document.querySelector('#sfPlans .plan-opt[onclick*="\''+sfPlan+'\'"]');
+    if(el){ el.style.outline='2px solid #0050FF'; el.style.boxShadow='0 0 0 4px rgba(0,80,255,0.15)'; }
+  }
+  ['sfName','sfCompany','sfEmail'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+  m.style.cssText='display:block;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.9);z-index:9999;overflow-y:auto';
+  document.body.style.overflow='hidden';
+  setTimeout(function(){ var el=document.getElementById('sfName'); if(el) el.focus(); },150);
+}
+
+function sfClose(){
+  var m=document.getElementById('sfModal');
+  if(m) m.style.display='none';
+  document.body.style.overflow='';
+}
+
+function sfShowStep(n){
+  [1,2,3].forEach(function(i){
+    var s=document.getElementById('sfS'+i);
+    var p=document.getElementById('sfP'+i);
+    if(s) s.style.display=i===n?'block':'none';
+    if(p) p.style.background=i<=n?'#0050FF':'rgba(255,255,255,0.1)';
+  });
+  if(n===3) document.getElementById('sfP3').style.background='#00C46A';
+}
+
+function sfStep1(){
+  var name=document.getElementById('sfName').value.trim();
+  var company=document.getElementById('sfCompany').value.trim();
+  var email=document.getElementById('sfEmail').value.trim();
+  var err=document.getElementById('sfE1');
+  if(!name||!company||!email||!email.includes('@')||!email.includes('.')){err.style.display='block';return;}
+  err.style.display='none';
+  sfNameVal=name; sfCompanyVal=company; sfEmailVal=email;
+  sfShowStep(2);
+}
+
+function sfPick(el, plan){
+  document.querySelectorAll('#sfPlans .plan-opt').forEach(function(d){ d.style.outline=''; d.style.boxShadow=''; });
+  el.style.outline='2px solid #0050FF';
+  el.style.boxShadow='0 0 0 4px rgba(0,80,255,0.15)';
+  sfPlan=plan;
+  document.getElementById('sfE2').style.display='none';
+}
+
+function sfStep2(){
+  if(!sfPlan){ document.getElementById('sfE2').style.display='block'; return; }
+  sfSave();
+}
+
+async function sfSave(){
+  var planLabels={
+    bronze:   'Bronze — $1,500/mo',
+    silver:   'Silver — $3,500/mo',
+    gold:     'Gold — $7,500/mo',
+    platinum: 'Platinum — $15,000/mo',
+    diamond:  'Diamond — Bespoke'
+  };
+  var payload={
+    name:sfNameVal, company:sfCompanyVal, email:sfEmailVal,
+    plan:sfPlan, plan_label:planLabels[sfPlan]||sfPlan,
+    billing:isAnnual?'annual':'monthly',
+    signed_up_at:new Date().toISOString()
+  };
+  var msgs={
+    bronze:'Bronze plan noted — we will be in touch shortly.',
+    silver:'Silver plan noted — we will be in touch shortly.',
+    gold:'Gold plan noted — we will be in touch shortly.',
+    platinum:'Platinum plan noted — we will be in touch shortly.',
+    diamond:'Diamond enquiry received — expect to hear from us soon.'
+  };
+  document.getElementById('sfSuccessMsg').textContent='Thanks, '+sfNameVal+'. '+(msgs[sfPlan]||'');
+  document.getElementById('sfConfirmEmail').textContent=sfEmailVal;
+  sfShowStep(3);
+  try{
+    var res=await fetch(SF_CONFIG.supabaseUrl+'/rest/v1/signups',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':SF_CONFIG.supabaseKey,'Authorization':'Bearer '+SF_CONFIG.supabaseKey,'Prefer':'return=minimal'},
+      body:JSON.stringify(payload)
+    });
+    if(res.ok) console.log('%c Signup saved ✓','background:#00C46A;color:#fff;padding:4px 10px;border-radius:4px');
+    else console.error('Supabase error:',res.status,await res.text());
+  }catch(e){console.error('Network error:',e);}
+}
+
+function sfLaunch(){
+  window.location.href = 'app.html';
+}
+
+document.addEventListener('click',function(e){ if(e.target&&e.target.id==='sfModal') sfClose(); });
+
+/* ── Theme ───────────────────────────────────────────────── */
+function toggleTheme(){
+  var isLight=document.body.classList.toggle('light');
+  var btn=document.getElementById('themeBtn');
+  if(btn) btn.textContent=isLight?'🌑':'🌙';
+  try{localStorage.setItem('sf_theme',isLight?'light':'dark');}catch(e){}
+}
+(function(){ try{if(localStorage.getItem('sf_theme')==='light'){document.body.classList.add('light');}}catch(e){} })();
+
+/* ── Scroll reveal ───────────────────────────────────────── */
+function initReveal(){
+  var els=document.querySelectorAll('.reveal');
+  els.forEach(function(el){ el.classList.add('visible'); });
+}
+if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',initReveal);}else{initReveal();}
+
+/* ── Scroll to pricing plan ─────────────────────────────── */
+function scrollToPlan(planClass) {
+  var card = document.querySelector('.p-card.'+planClass);
+  if (!card) {
+    var pricing = document.getElementById('pricing');
+    if (pricing) pricing.scrollIntoView({behavior:'smooth'});
+    return;
+  }
+  // Scroll the card into view with a little top offset
+  var top = card.getBoundingClientRect().top + window.pageYOffset - 100;
+  window.scrollTo({top: top, behavior: 'smooth'});
+  // Flash highlight
+  setTimeout(function(){
+    card.style.transition = 'box-shadow 0.3s ease, transform 0.3s ease';
+    card.style.boxShadow = '0 0 0 3px rgba(255,212,0,0.7), 0 8px 32px rgba(255,212,0,0.15)';
+    card.style.transform = 'translateY(-4px)';
+    setTimeout(function(){
+      card.style.boxShadow = '';
+      card.style.transform = '';
+    }, 2000);
+  }, 500);
+}
+
+/* ── Hero canvas ─────────────────────────────────────────── */
+(function(){
+  var canvas=document.getElementById('heroCanvas');
+  if(!canvas) return;
+  var ctx=canvas.getContext('2d');
+  var W,H,particles=[];
+  function resize(){W=canvas.width=canvas.offsetWidth;H=canvas.height=canvas.offsetHeight;}
+  function init(){particles=[];for(var i=0;i<60;i++)particles.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.4,vy:(Math.random()-.5)*.4,r:Math.random()*1.5+.5,o:Math.random()*.3+.1});}
+  var _rafId=null,_paused=false;
+  function draw(){if(_paused){_rafId=requestAnimationFrame(draw);return;}ctx.clearRect(0,0,W,H);particles.forEach(function(p){p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>W)p.vx*=-1;if(p.y<0||p.y>H)p.vy*=-1;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle='rgba(255,255,255,'+p.o+')';ctx.fill();});_rafId=requestAnimationFrame(draw);}
+  var _io=new IntersectionObserver(function(e){_paused=!e[0].isIntersecting;},{threshold:0});
+  _io.observe(canvas);
+  window.addEventListener('resize',function(){resize();init();});
+  resize();init();draw();
+})();
+
+/* ── Supabase Auth (continuing with original code) ───────────────────────────────────────── */
+var IDX_URL = 'https://iysjxslzlbojoivxjrce.supabase.co';
+var IDX_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5c2p4c2x6bGJvam9pdnhqcmNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM0MzA2MDIsImV4cCI6MjA1OTAwNjYwMn0.AqbQqRs3AiGYhRGZw1SG2TNqlQQ1rPbICbzNBE3Uvj4';
+
+// Auth handled server-side via Edge Function — no passwords in client code
+
+function openSignIn() {
+  window.location.href = 'app.html';
+}
+function sfSignInClose() {
+  var m = document.getElementById('sfSignInModal');
+  if (m) m.style.display = 'none';
+  document.body.style.overflow = '';
+}
+function openFreeSignup() {
+  var m = document.getElementById('sfFreeModal');
+  if (!m) return;
+  m.style.display = 'block';
+  document.body.style.overflow = 'hidden';
+  setTimeout(function(){ var e=document.getElementById('freeEmail'); if(e) e.focus(); }, 150);
+}
+function sfFreeClose() {
+  var m = document.getElementById('sfFreeModal');
+  if (m) m.style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function sfSignIn() {
+  var email = document.getElementById('siEmail') ? document.getElementById('siEmail').value.trim() : '';
+  var pass  = document.getElementById('siPass').value;
+  var errEl = document.getElementById('siErr');
+  var btn   = document.querySelector('#sfSignInModal button[onclick="sfSignIn()"]');
+  if (!email || !pass) { errEl.style.display='block'; setTimeout(function(){errEl.style.display='none';},3000); return; }
+  if (btn) { btn.textContent='SIGNING IN...'; btn.disabled=true; }
+
+  // Step 1: Try Edge Function password validation (agency/demo accounts)
+  fetch('https://iysjxslzlbojoivxjrce.supabase.co/functions/v1/validate-password', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password: pass })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.success) {
+      try {
+        sessionStorage.setItem('sf_auth',   '1');
+        sessionStorage.setItem('sf_tier',   data.tier);
+        sessionStorage.setItem('sf_client', data.client);
+        sessionStorage.setItem('sf_email',  email);
+      } catch(e) {}
+      window.location.href = 'app.html?authed=1';
+      return;
+    }
+    // Step 2: Fall through to Supabase Auth for registered users
+    sfSupabaseSignIn(email, pass, errEl, btn);
+  })
+  .catch(function() { sfSupabaseSignIn(email, pass, errEl, btn); });
+}
+
+function sfSupabaseSignIn(email, pass, errEl, btn) {
+  // Step 2: Supabase Auth for registered users (email + password)
+  fetch(IDX_URL + '/auth/v1/token?grant_type=password', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json','apikey':IDX_KEY},
+    body: JSON.stringify({email:email, password:pass, options:{emailRedirectTo:'https://simfluence.ai/'}})
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    if (data.error || !data.access_token) {
+      errEl.style.display='block';
+      setTimeout(function(){errEl.style.display='none';},3000);
+      if(btn){btn.textContent='SIGN IN →';btn.disabled=false;}
+      return;
+    }
+    // Step 3: Fetch tier from profiles table
+    fetch(IDX_URL + '/rest/v1/profiles?email=eq.' + encodeURIComponent(email.toLowerCase()) + '&select=tier,client', {
+      headers: {'apikey':IDX_KEY, 'Authorization':'Bearer '+data.access_token}
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(profile){
+      var tier   = ((profile && profile[0] && profile[0].tier)   || 'free').trim();
+      var client = ((profile && profile[0] && profile[0].client) || 'Free');
+      try {
+        sessionStorage.setItem('sf_auth',   '1');
+        sessionStorage.setItem('sf_tier',   tier);
+        sessionStorage.setItem('sf_client', client);
+        sessionStorage.setItem('sf_email',  email);
+      } catch(e) {}
+      window.location.href = 'app.html?authed=1';
+    })
+    .catch(function(){
+      // Profile fetch failed — log in as free tier
+      try {
+        sessionStorage.setItem('sf_auth',   '1');
+        sessionStorage.setItem('sf_tier',   'free');
+        sessionStorage.setItem('sf_client', 'Free');
+        sessionStorage.setItem('sf_email',  email);
+      } catch(e) {}
+      window.location.href = 'app.html?authed=1';
+    });
+  })
+  .catch(function(){
+    errEl.style.display='block';
+    setTimeout(function(){errEl.style.display='none';},3000);
+    if(btn){btn.textContent='SIGN IN →';btn.disabled=false;}
+  });
+}
+
+function sfForgotPassword() {
+  var email = document.getElementById('siEmail').value.trim();
+  var okEl  = document.getElementById('siForgotOk');
+  var errEl = document.getElementById('siErr');
+  if (!email || !email.includes('@')) {
+    errEl.textContent = 'Enter your email above first.';
+    errEl.style.display='block';
+    setTimeout(function(){errEl.style.display='none'; errEl.textContent='Incorrect email or password. Try again.';},3000);
+    return;
+  }
+  fetch(IDX_URL + '/auth/v1/recover', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json','apikey':IDX_KEY},
+    body: JSON.stringify({email:email})
+  }).then(function(){ okEl.style.display='block'; setTimeout(function(){okEl.style.display='none';},5000); })
+    .catch(function(){ okEl.style.display='block'; });
+}
+
+function sfFreeSignup() {
+  var email = document.getElementById('freeEmail').value.trim();
+  var pass  = document.getElementById('freePass').value;
+  var errEl = document.getElementById('freeErr');
+  var btn   = document.getElementById('freeBtn');
+  if (!email || !email.includes('@') || !email.includes('.') || pass.length < 8) {
+    errEl.style.display='block';
+    setTimeout(function(){errEl.style.display='none';},3000);
+    return;
+  }
+  if(btn){btn.textContent='CREATING ACCOUNT...';btn.disabled=true;}
+  fetch(IDX_URL + '/auth/v1/signup', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json','apikey':IDX_KEY},
+    body: JSON.stringify({email:email, password:pass, options:{emailRedirectTo:'https://simfluence.ai/'}})
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    if (data.error) {
+      var msg = (data.error && data.error.message) || 'Sign up failed.';
+      if (msg.toLowerCase().includes('already')) msg = 'Email already registered — sign in instead.';
+      errEl.textContent = msg;
+      errEl.style.display='block';
+      setTimeout(function(){errEl.style.display='none';},4000);
+      if(btn){btn.textContent='CREATE FREE ACCOUNT →';btn.disabled=false;}
+      return;
+    }
+    // Success — check if email confirmation required or session immediate
+    var userEmail = document.getElementById('freeEmail').value.trim();
+    if (data.access_token) {
+      // Supabase returned a session immediately — redirect straight to app
+      try {
+        sessionStorage.setItem('sf_auth',   '1');
+        sessionStorage.setItem('sf_tier',   'free');
+        sessionStorage.setItem('sf_client', 'Free');
+        sessionStorage.setItem('sf_email',  userEmail);
+      } catch(e) {}
+      window.location.href = 'app.html?authed=1';
+    } else {
+      // Email confirmation required — show message and store email for after verification
+      try { sessionStorage.setItem('sf_pending_email', userEmail); } catch(e) {}
+      if(btn){btn.textContent='✓ CHECK YOUR EMAIL';btn.style.background='#00C46A';btn.disabled=true;}
+      errEl.style.color='#00C46A';
+      errEl.textContent='Account created! Check your email to verify, then you will be redirected to the platform.';
+      errEl.style.display='block';
+    }
+  })
+  .catch(function(){
+    errEl.textContent='Connection error. Please try again.';
+    errEl.style.display='block';
+    setTimeout(function(){errEl.style.display='none';},3000);
+    if(btn){btn.textContent='CREATE FREE ACCOUNT →';btn.disabled=false;}
+  });
+}
+
+// Close modals on overlay click
+document.addEventListener('click', function(e) {
+  if (e.target && e.target.id === 'sfSignInModal') sfSignInClose();
+  if (e.target && e.target.id === 'sfFreeModal')   sfFreeClose();
+});
+
+
+// Wire nav buttons — handles both before and after DOMContentLoaded
+function wireNavButtons() {
+  var signinBtn = document.getElementById('navSignInBtn');
+  if (signinBtn) signinBtn.addEventListener('click', function(e) { e.preventDefault(); openSignIn(); });
+  var freeBtn = document.getElementById('navTryFreeBtn');
+  if (freeBtn) freeBtn.addEventListener('click', function(e) { e.preventDefault(); window.location.href='app.html'; });
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', wireNavButtons);
+} else {
+  wireNavButtons();
+}
+
+</script>
+
+<!-- ══ FEATURE MODALS ════════════════════════════════════════════════ -->
+<style>
+#featureModal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.88);z-index:9998;overflow-y:auto;}
+.fm-box{background:#0D0D14;border:1px solid rgba(255,255,255,0.1);border-radius:20px;width:calc(100% - 40px);max-width:560px;margin:60px auto;position:relative;}
+.fm-bar{height:3px;border-radius:20px 20px 0 0;}
+.fm-body{padding:36px 40px 40px;}
+.fm-x{position:absolute;top:14px;right:14px;width:30px;height:30px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:7px;cursor:pointer;font-size:13px;color:rgba(255,255,255,0.5);display:flex;align-items:center;justify-content:center;font-family:"DM Mono",monospace;}
+.fm-eye{font-family:"DM Mono",monospace;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;margin-bottom:12px;}
+.fm-ttl{font-family:"Space Grotesk",sans-serif;font-size:28px;font-weight:600;line-height:1.05;letter-spacing:-0.02em;margin-bottom:12px;}
+.fm-dsc{font-size:14px;color:rgba(255,255,255,0.48);line-height:1.75;font-weight:300;margin-bottom:24px;}
+.fm-g{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:22px;}
+.fm-sc{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:14px 16px;}
+.fm-sn{font-family:"Space Grotesk",sans-serif;font-size:24px;font-weight:600;line-height:1;margin-bottom:4px;}
+.fm-sl{font-family:"DM Mono",monospace;font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:rgba(255,255,255,0.3);}
+.fm-pts{display:flex;flex-direction:column;gap:7px;margin-bottom:24px;}
+.fm-pt{display:flex;gap:10px;font-size:13px;color:rgba(255,255,255,0.5);line-height:1.6;}
+.fm-dot{width:5px;height:5px;border-radius:50%;margin-top:7px;flex-shrink:0;}
+.fm-btn{display:block;text-align:center;padding:12px;border:1px solid rgba(255,255,255,0.12);border-radius:8px;font-family:"DM Mono",monospace;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:rgba(255,255,255,0.45);text-decoration:none;}
+.fm-btn:hover{background:rgba(255,255,255,0.06);color:#fff;}
+</style>
+
+<div id="featureModal">
+  <div class="fm-box">
+    <div class="fm-bar" id="fmBar"></div>
+    <div class="fm-body">
+      <div class="fm-x" id="fmX" data-modal-close="1" style="cursor:pointer">✕</div>
+      <div class="fm-eye" id="fmEye"></div>
+      <div class="fm-ttl" id="fmTtl"></div>
+      <div class="fm-dsc" id="fmDsc"></div>
+      <div class="fm-g"  id="fmG"></div>
+      <div class="fm-pts" id="fmPts"></div>
+      <a href="preview.html" class="fm-btn">See it in action →</a>
+    </div>
+  </div>
+</div>
+
+</script>
+
+<!-- ── Sign In Modal ─────────────────────────────────────── -->
+<div id="sfSignInModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.9);z-index:9999;overflow-y:auto;align-items:center;justify-content:center;">
+  <div style="background:#0D0D18;border:1px solid rgba(0,80,255,0.3);border-radius:16px;padding:40px;max-width:400px;width:90%;margin:60px auto;text-align:center;box-sizing:border-box;">
+    <div style="font-size:24px;font-weight:700;color:#FFD400;margin-bottom:4px;font-family:'Space Grotesk',sans-serif">Sim<em style="font-style:italic;font-weight:300">fluence</em></div>
+    <div style="font-family:'DM Mono',monospace;font-size:10px;color:rgba(255,255,255,0.3);letter-spacing:.1em;margin-bottom:32px">SIGN IN TO YOUR ACCOUNT</div>
+    <input id="siEmail" type="email" placeholder="Email address" autocomplete="email"
+      style="width:100%;padding:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:#fff;font-size:14px;outline:none;box-sizing:border-box;margin-bottom:10px;font-family:sans-serif;">
+    <input id="siPass" type="password" placeholder="Access password" autocomplete="current-password"
+      onkeydown="if(event.key==='Enter')sfSignIn()"
+      style="width:100%;padding:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:#fff;font-size:14px;outline:none;box-sizing:border-box;margin-bottom:16px;font-family:sans-serif;">
+    <button id="sfSignInBtn" onclick="sfSignIn()" style="width:100%;padding:13px;background:#0050FF;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-weight:700;font-family:'DM Mono',monospace;letter-spacing:.06em;">SIGN IN →</button>
+    <div id="siErr" style="color:#ff5555;font-size:11px;margin-top:10px;display:none;">Incorrect email or password. Contact liam@simfluence.ai for access.</div>
+    <div id="siForgotOk" style="display:none;"></div>
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.08);">
+      <span style="font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,255,255,0.3);">No account? </span>
+      <button id="sfModalToSignup" style="background:none;border:none;font-family:'DM Mono',monospace;font-size:9px;color:#6B9FFF;cursor:pointer;padding:0;">SIGN UP FREE →</button>
+    </div>
+    <button id="sfSignInCloseBtn" style="margin-top:16px;background:none;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.3);border-radius:6px;padding:6px 16px;font-family:'DM Mono',monospace;font-size:9px;cursor:pointer;">CLOSE</button>
+  </div>
+</div>
+
+<!-- ── Free Signup Modal ──────────────────────────────────── -->
+<div id="sfFreeModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.9);z-index:9999;overflow-y:auto;">
+  <div style="background:#0D0D18;border:1px solid rgba(0,80,255,0.3);border-radius:16px;padding:40px;max-width:400px;width:90%;margin:60px auto;text-align:center;box-sizing:border-box;">
+    <div style="font-size:24px;font-weight:700;color:#FFD400;margin-bottom:4px;font-family:'Space Grotesk',sans-serif">Sim<em style="font-style:italic;font-weight:300">fluence</em></div>
+    <div style="font-family:'DM Mono',monospace;font-size:10px;color:rgba(255,255,255,0.3);letter-spacing:.1em;margin-bottom:8px">CREATE FREE ACCOUNT</div>
+    <div style="font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,255,255,0.3);margin-bottom:28px;line-height:1.6">10 creators · simulator · AI personas<br>No card required.</div>
+    <input id="freeEmail" type="email" placeholder="Work email" autocomplete="email"
+      style="width:100%;padding:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:#fff;font-size:14px;outline:none;box-sizing:border-box;margin-bottom:10px;font-family:sans-serif;">
+    <input id="freePass" type="password" placeholder="Create password (min 8 chars)" autocomplete="new-password"
+      style="width:100%;padding:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:#fff;font-size:14px;outline:none;box-sizing:border-box;margin-bottom:16px;font-family:sans-serif;">
+    <button onclick="sfFreeSignup()" id="freeBtn" style="width:100%;padding:13px;background:#0050FF;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-weight:700;font-family:'DM Mono',monospace;letter-spacing:.06em;">CREATE FREE ACCOUNT →</button>
+    <div id="freeErr" style="color:#ff5555;font-size:11px;margin-top:10px;display:none;">Please enter a valid email and password (8+ chars).</div>
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.08);">
+      <span style="font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,255,255,0.3);">Already have an account? </span>
+      <button onclick="sfFreeClose();openSignIn();" style="background:none;border:none;font-family:'DM Mono',monospace;font-size:9px;color:#6B9FFF;cursor:pointer;padding:0;">SIGN IN →</button>
+    </div>
+    <button onclick="sfFreeClose()" style="margin-top:16px;background:none;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.3);border-radius:6px;padding:6px 16px;font-family:'DM Mono',monospace;font-size:9px;cursor:pointer;">CLOSE</button>
+  </div>
+</div>
+
+
+<script>
+// ── CAPTURE-PHASE HANDLERS DISABLED (was blocking Legal/Terms links) ───────────────
+/*
+document.addEventListener('click', function(e) {
+  var el = e.target;
+  while (el && el !== document) {
+    var id = el.id;
+    if (id === 'sfSignInBtn') {
+      e.stopImmediatePropagation();
+      e.preventDefault();
+      if (typeof sfSignIn === 'function') sfSignIn();
+      return;
+    }
+    if (id === 'sfSignInCloseBtn') {
+      e.stopImmediatePropagation();
+      e.preventDefault();
+      if (typeof sfSignInClose === 'function') sfSignInClose();
+      return;
+    }
+    if (id === 'sfModalToSignup') {
+      e.stopImmediatePropagation();
+      e.preventDefault();
+      window.location.href = 'app.html';
+      return;
+    }
+    if (id === 'navSignInBtn') {
+      e.stopImmediatePropagation();
+      e.preventDefault();
+      if (typeof openSignIn === 'function') openSignIn();
+      return;
+    }
+    if (id === 'navTryFreeBtn') {
+      e.stopImmediatePropagation();
+      e.preventDefault();
+      window.location.href = 'app.html';
+      return;
+    }
+    el = el.parentElement;
+  }
+}, true);
+*/
+console.log('FIXED: Removed capture-phase handler that was blocking clicks');
+
+// Simple modal function that will work
+function showLegalModal(type) {
+  var content = '';
+  var title = '';
+  
+  if (type === 'terms') {
+    title = 'Terms of Use';
+    content = `
+      <h3 style="color:#6B9FFF; margin-bottom:20px;">Terms of Use</h3>
+      <p><strong>Effective Date:</strong> 2025 | <strong>Jurisdiction:</strong> Dubai, UAE</p>
+      
+      <h4 style="color:#FFD400; margin-top:25px;">Access and Subscription</h4>
+      <p>Access to Simfluence is granted on a subscription basis. Your subscription is personal to your organisation and may not be shared, resold or transferred to any third party.</p>
+      
+      <h4 style="color:#FFD400; margin-top:25px;">Platform Data</h4>
+      <p>All creator data, scoring methodologies, forecasting models and platform outputs are proprietary to Simfluence Ltd. You may not extract, reproduce or redistribute any platform data without written consent.</p>
+      
+      <h4 style="color:#FFD400; margin-top:25px;">Billing and Cancellation</h4>
+      <p>Subscriptions are billed monthly or annually as agreed. All fees are non-refundable except where required by applicable law. Pricing may be updated with 30 days written notice.</p>
+      
+      <h4 style="color:#FFD400; margin-top:25px;">Governing Law</h4>
+      <p>These terms are governed by the laws of the United Arab Emirates. Disputes shall be subject to the exclusive jurisdiction of the courts of Dubai, UAE.</p>
+      
+      <p style="margin-top:25px;"><strong>Contact:</strong> <a href="mailto:liam@simfluence.ai" style="color:#FFD400;">Liam@Simfluence.AI</a></p>
+    `;
+  } else if (type === 'legal') {
+    title = 'Legal Notice';
+    content = `
+      <h3 style="color:#9B8FDD; margin-bottom:20px;">Legal Notice</h3>
+      <p><strong>Entity:</strong> LLC | <strong>Registered:</strong> Dubai, UAE | <strong>Incorporated:</strong> 2025</p>
+      
+      <h4 style="color:#FFD400; margin-top:25px;">Entity Information</h4>
+      <p>Simfluence Ltd is registered as a Limited Liability Company in Dubai, UAE. All platform operations and commercial agreements are conducted under this entity.</p>
+      
+      <h4 style="color:#FFD400; margin-top:25px;">Intellectual Property</h4>
+      <p>The Simfluence name, logo, platform design, CPI, GFI, scoring algorithms and forecasting models are the exclusive intellectual property of Simfluence Ltd. Unauthorised use or reproduction is strictly prohibited.</p>
+      
+      <h4 style="color:#FFD400; margin-top:25px;">Data and Privacy</h4>
+      <p>Simfluence processes creator data from publicly available platforms including YouTube and Twitch. User data is handled in accordance with UAE data protection regulations. We do not sell or share user data with third parties.</p>
+      
+      <h4 style="color:#FFD400; margin-top:25px;">Liability Limitation</h4>
+      <p>Simfluence Ltd provides its platform on an as-is basis. To the fullest extent permitted by law, Simfluence excludes all liability for indirect or consequential losses arising from platform use.</p>
+      
+      <p style="margin-top:25px;"><strong>Contact:</strong> <a href="mailto:liam@simfluence.ai" style="color:#FFD400;">Liam@Simfluence.AI</a></p>
+    `;
+  }
+  
+  // Create modal HTML
+  var modalHTML = `
+    <div id="legalModal" style="
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.9);
+      z-index: 99999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      box-sizing: border-box;
+    ">
+      <div style="
+        background: #1A1A1A;
+        border: 2px solid #FFD700;
+        border-radius: 12px;
+        padding: 30px;
+        max-width: 600px;
+        max-height: 80vh;
+        overflow-y: auto;
+        position: relative;
+        color: white;
+        font-family: Inter, sans-serif;
+        line-height: 1.6;
+      ">
+        <button onclick="closeLegalModal()" style="
+          position: absolute;
+          top: 15px;
+          right: 15px;
+          background: #333;
+          border: none;
+          color: white;
+          width: 30px;
+          height: 30px;
+          border-radius: 50%;
+          cursor: pointer;
+          font-size: 16px;
+        ">×</button>
+        
+        <div>${content}</div>
+      </div>
+    </div>
+  `;
+  
+  // Remove any existing modal
+  var existingModal = document.getElementById('legalModal');
+  if (existingModal) {
+    existingModal.remove();
+  }
+  
+  // Add modal to page
+  document.body.insertAdjacentHTML('beforeend', modalHTML);
+  document.body.style.overflow = 'hidden';
+}
+
+function closeLegalModal() {
+  var modal = document.getElementById('legalModal');
+  if (modal) {
+    modal.remove();
+    document.body.style.overflow = '';
+  }
+}
+
+// Close modal with Escape key
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    closeLegalModal();
+  }
+});
+
+console.log('Legal modal function added');
+</script>
+</body>
+</html>
