@@ -4875,9 +4875,26 @@ function renderCostPanel(creator) {
 }
 
 // ── GENRE BENCHMARKS ─────────────────────────────────────────────────
-// GENRE_BENCHMARKS — moved server-side to run-simulation Edge Function
-// Benchmark display values returned in simulation response
-const GENRE_BENCHMARKS = {};
+const GENRE_BENCHMARKS = {
+  'Gaming & Esports':             { ctrBase:2.4,  cpmBase:8,  cvrBase:0.35, roasBase:1.2, engBase:4.2 },
+  'Health & Fitness':             { ctrBase:2.1,  cpmBase:12, cvrBase:2.2,  roasBase:3.2, engBase:5.1 },
+  'Beauty & Skincare':            { ctrBase:1.9,  cpmBase:9,  cvrBase:2.8,  roasBase:3.6, engBase:6.3 },
+  'Food & Cooking':               { ctrBase:1.6,  cpmBase:8,  cvrBase:1.4,  roasBase:2.4, engBase:5.8 },
+  'Travel & Adventure':           { ctrBase:1.4,  cpmBase:10, cvrBase:1.1,  roasBase:2.0, engBase:4.7 },
+  'Finance & Investing':          { ctrBase:3.1,  cpmBase:30, cvrBase:3.4,  roasBase:5.2, engBase:3.8 },
+  'Tech & Gadgets':               { ctrBase:2.8,  cpmBase:16, cvrBase:2.6,  roasBase:3.8, engBase:4.1 },
+  'Lifestyle & Vlogs':            { ctrBase:1.5,  cpmBase:6,  cvrBase:1.2,  roasBase:2.2, engBase:5.5 },
+  'Entertainment & Comedy':       { ctrBase:1.3,  cpmBase:5,  cvrBase:0.9,  roasBase:1.8, engBase:7.2 },
+  'Education & Self-Development': { ctrBase:2.6,  cpmBase:18, cvrBase:2.9,  roasBase:4.1, engBase:4.4 },
+  'Drinks & Beverages':           { ctrBase:1.7,  cpmBase:7,  cvrBase:1.5,  roasBase:2.5, engBase:5.0 },
+  'Unboxing':                     { ctrBase:2.2,  cpmBase:7,  cvrBase:1.9,  roasBase:2.6, engBase:5.6 },
+  'Gaming Setup & Peripherals':   { ctrBase:2.6,  cpmBase:11, cvrBase:2.3,  roasBase:3.2, engBase:4.8 },
+  'Automotive':                   { ctrBase:2.0,  cpmBase:14, cvrBase:1.6,  roasBase:2.8, engBase:3.9 },
+  'Trading Cards (TCG)':          { ctrBase:2.9,  cpmBase:12, cvrBase:2.5,  roasBase:3.5, engBase:6.1 },
+  'Music':                        { ctrBase:1.2,  cpmBase:6,  cvrBase:0.8,  roasBase:1.6, engBase:6.8 },
+  'Kids & Family / Toys':         { ctrBase:1.8,  cpmBase:7,  cvrBase:1.6,  roasBase:2.4, engBase:4.5 },
+  'Theatre & Performing Arts':    { ctrBase:1.5,  cpmBase:8,  cvrBase:1.3,  roasBase:2.1, engBase:5.2 },
+};
 // ── GENRE SUB-MODES ───────────────────────────────────────────────────
 // ── CONTENT TARGETING CLUSTERS ───────────────────────────────────────────
 // Maps title/keyword → related keywords for bio/subMode matching
@@ -13033,11 +13050,8 @@ function updateSim() {
   const screen = document.getElementById('screen-simulator');
   if (screen && screen.classList.contains('active')) {
     computeSimResults();
-    // computeSimResults sets simResults synchronously via local calc before returning
-    if (simResults) {
-      updateSimDisplay();
-      renderEfficiencyCurve();
-    }
+    updateSimDisplay();
+    renderEfficiencyCurve();
   }
 }
 
@@ -13079,7 +13093,8 @@ function computeSimResults() {
   const budget   = parseInt((document.getElementById('budget') || {value:'85000'}).value) || 85000;
   const format   = (document.getElementById('format') || {value:'Integrated'}).value;
   const genre    = getSelectedGenre() || 'Gaming & Esports';
-  const objectives = typeof getSelectedObjectives === 'function' ? getSelectedObjectives() : [];
+  const bench    = GENRE_BENCHMARKS[genre] || GENRE_BENCHMARKS['Gaming & Esports'];
+  const { awarenessW, salesW, engagementW } = getObjWeights();
 
   const _snapSim = new Set(selectedCreators);
   const toSim = _snapSim.size > 0
@@ -13100,73 +13115,53 @@ function computeSimResults() {
     })());
 
   if (toSim.length === 0) {
-    // Fallback — take top creators by CPI regardless of genre filter
-    var _fallback = [...CREATORS].filter(function(cr){return cr;})
-      .sort(function(a,b){return (b.cpi||0)-(a.cpi||0);}).slice(0,10);
-    if (_fallback.length === 0) { simResults = null; return; }
-    toSim.push.apply(toSim, _fallback);
+    simResults = null;
+    return;
   }
 
-  // ── LOCAL CALCULATION — runs immediately for instant display ──────────
-  var _fk  = format === 'Dedicated' ? 'ded' : format === 'Mixed' ? 'mix' : 'int';
-  var _crD = toSim.filter(function(cr){return cr&&cr.id;}).map(function(cr){
-    var e = computeCostEstimate(cr);
-    return { cr:cr, e:e, midRate:(e.ranges[_fk][0]+e.ranges[_fk][1])/2 };
+  const formatKey  = format === 'Dedicated' ? 'ded' : format === 'Mixed' ? 'mix' : 'int';
+  const formatMult = format === 'Dedicated' ? 1.4 : format === 'Mixed' ? 1.15 : 1.0;
+  const subModeMult = activeSubMode ? 1.08 : 1.0;
+
+  const crData = toSim.filter(cr => cr && cr.id).map(cr => {
+    const e       = computeCostEstimate(cr);
+    const midRate = (e.ranges[formatKey][0] + e.ranges[formatKey][1]) / 2;
+    return { cr, e, midRate };
   });
-  var _ni   = NICHE_SPONSOR_CPM[genre] || DEFAULT_CPM;
-  var _cb   = _ni.med * (format==='Dedicated' ? _ni.dedMult : 1.0);
-  var _acp  = toSim.reduce(function(a,cr){return a+cr.cpi;},0) / toSim.length / 100;
-  var _ca   = _cb * Math.max(0.6, _acp);
-  var _fm   = format==='Dedicated' ? 1.4 : format==='Mixed' ? 1.15 : 1.0;
-  var _sm   = activeSubMode ? 1.08 : 1.0;
-  var _im   = Math.round((budget / Math.max(_ca,1)) * 1000 * _sm * _fm);
-  var _ct   = Math.min(2.0 * _acp * _fm, 15);
-  var _cv   = Math.min(1.5 * _acp, 20);
-  var _cl   = Math.round(_im * _ct / 100);
-  var _co   = Math.round(_cl * _cv / 100);
-  var _ro   = budget > 0 ? (_co * 30 / budget) : 0;
+
+  const niche      = NICHE_SPONSOR_CPM[genre] || DEFAULT_CPM;
+  const cpmBase    = niche.med * (format === 'Dedicated' ? niche.dedMult : 1.0);
+  const avgCPI     = toSim.reduce((a, cr) => a + cr.cpi, 0) / toSim.length / 100;
+  const cpmActual  = cpmBase * Math.max(0.6, avgCPI);
+  const impressions = Math.round((budget / Math.max(cpmActual, 1)) * 1000 * subModeMult * formatMult);
+
+  var fmtCtrAdj = format==='Dedicated' ? 1.35 : format==='Mixed' ? 1.12 : 1.0;
+  var fmtCvrAdj = format==='Dedicated' ? 0.80 : format==='Mixed' ? 0.95 : 1.15;
+  const ctrMult    = avgCPI * (1 + awarenessW * 0.15 - salesW * 0.05) * fmtCtrAdj;
+  const ctr        = Math.min(bench.ctrBase * ctrMult, 15);
+  const cvr        = Math.min(bench.cvrBase * (1 + salesW * 0.3 - awarenessW * 0.1) * avgCPI * fmtCvrAdj, 20);
+  const clicks     = Math.round(impressions * ctr / 100);
+  const conversions = Math.round(clicks * cvr / 100);
+  const revenue    = conversions * 30;
+  const roas       = budget > 0 ? revenue / budget : 0;
+  const engRate    = Math.min(bench.engBase * (1 + engagementW * 0.2) * avgCPI, 20);
 
   simResults = {
-    impressions: _im,
-    ctr:    Math.round(_ct * 10) / 10,
-    cpM:    Math.round(_ca * 100) / 100,
-    cvr:    Math.round(_cv * 10) / 10,
-    conversions: _co,
-    roas:   Math.round(_ro * 10) / 10,
-    engRate: Math.round(4.5 * _acp * 10) / 10,
-    clicks: _cl,
-    budget: budget,
-    crData: _crD,
-    creatorBreakdowns: [],
-    p10: { impressions:Math.round(_im*0.68), ctr:Math.round(_ct*0.68*10)/10, roas:Math.round(_ro*0.65*10)/10 },
-    p50: { impressions:_im, ctr:Math.round(_ct*10)/10, roas:Math.round(_ro*10)/10 },
-    p90: { impressions:Math.round(_im*1.42), ctr:Math.round(_ct*1.42*10)/10, roas:Math.round(_ro*1.45*10)/10 },
-    bench: { ctrBase:2.0, cpmBase:8, cvrBase:1.5, roasBase:2.0, engBase:5.0 },
+    impressions,
+    ctr:    Math.round(ctr * 10) / 10,
+    cpM:    Math.round(cpmActual * 100) / 100,
+    cvr:    Math.round(cvr * 10) / 10,
+    conversions,
+    roas:   Math.round(roas * 10) / 10,
+    engRate: Math.round(engRate * 10) / 10,
+    clicks,
+    budget,
+    crData,
+    bench,
+    p10: { impressions: Math.round(impressions * 0.68), ctr: Math.round(ctr * 0.68 * 10) / 10, roas: Math.round(roas * 0.65 * 10) / 10 },
+    p50: { impressions, ctr: Math.round(ctr * 10) / 10, roas: Math.round(roas * 10) / 10 },
+    p90: { impressions: Math.round(impressions * 1.42), ctr: Math.round(ctr * 1.42 * 10) / 10, roas: Math.round(roas * 1.45 * 10) / 10 },
   };
-
-  // ── EDGE FUNCTION — enriches results with precise coefficients ──────
-  callSimulationAPI(toSim, budget, format, genre, objectives, activeSubMode || '', function(data) {
-    if (data && data.impressions > 0) {
-      var fk2 = format === 'Dedicated' ? 'ded' : format === 'Mixed' ? 'mix' : 'int';
-      var crD2 = toSim.filter(function(cr){return cr&&cr.id;}).map(function(cr){
-        var bd = (data.creatorBreakdowns||[]).find(function(b){return String(b.id)===String(cr.id);});
-        var _fmt = function(v){return v>=1000?'$'+(v/1000).toFixed(v>=10000?0:1)+'K':'$'+v;};
-        var e2 = bd ? {ranges:bd.rates,fmt:_fmt} : computeCostEstimate(cr);
-        return {cr:cr,e:e2,midRate:bd?(bd.rates[fk2][0]+bd.rates[fk2][1])/2:0};
-      });
-      simResults = {
-        impressions:data.impressions, ctr:data.ctr, cpM:data.cpM, cvr:data.cvr,
-        conversions:data.conversions, roas:data.roas, engRate:data.engRate, clicks:data.clicks,
-        budget:budget, crData:crD2, creatorBreakdowns:data.creatorBreakdowns||[],
-        p10:data.p10, p50:data.p50, p90:data.p90, bench:data.bench||{ ctrBase:2.0, cpmBase:8, cvrBase:1.5, roasBase:2.0, engBase:5.0 },
-      };
-      if (typeof updateSimDisplay==='function') updateSimDisplay();
-      if (typeof updateBandDisplays==='function') updateBandDisplays();
-      if (typeof renderEfficiencyCurve==='function') renderEfficiencyCurve();
-      var _rb=document.getElementById('reRunSimBtn');
-      if(_rb){_rb.textContent='▶ RE-RUN';_rb.style.background='#FF7A00';_rb.style.color='#fff';_rb.disabled=false;}
-    }
-  });
 }
 
 function updateSimDisplay() {
@@ -13176,7 +13171,7 @@ function updateSimDisplay() {
   const budget  = parseInt((document.getElementById('budget') || {value:'85000'}).value) || 85000;
   const format  = (document.getElementById('format') || {value:'Integrated'}).value;
   const genre   = getSelectedGenre() || 'Gaming & Esports';
-  const bench   = (simResults && simResults.bench) || { ctrBase:2.0, roasBase:2.0, cvrBase:1.5, engBase:5.0 };
+  const bench   = (simResults && simResults.bench) || GENRE_BENCHMARKS[genre] || GENRE_BENCHMARKS['Gaming & Esports'] || { ctrBase:2.0, roasBase:2.0, cvrBase:1.5, engBase:5.0 };
   const fmtKey  = format === 'Dedicated' ? 'ded' : format === 'Mixed' ? 'mix' : 'int';
 
   // P10 / P50 / P90 bands
@@ -13392,17 +13387,19 @@ function runSimulation() {
     showScreen('simulator', document.querySelector('.nav-tab[data-screen="simulator"]'));
   }
 
-  // computeSimResults runs local calculation immediately, then calls API for enrichment
+  simResults = null;
   computeSimResults();
 
-  // Update display immediately with local results
-  if (simResults) {
+  // Only navigate to simulator screen if not already on it
+  var simScreen2 = document.getElementById('screen-simulator');
+  if (simScreen2 && !simScreen2.classList.contains('active')) {
+    showScreen('simulator', document.querySelector('.nav-tab[data-screen="simulator"]'));
+  } else {
     updateSimDisplay();
     updateBandDisplays();
     renderEfficiencyCurve();
   }
 
-  // Restore button after API roundtrip (allow ~3s)
   setTimeout(function() {
     if (_rrb) {
       _rrb.textContent = '▶ RE-RUN';
@@ -13410,13 +13407,7 @@ function runSimulation() {
       _rrb.style.color = '#fff';
       _rrb.disabled = false;
     }
-    // Refresh displays in case callback already fired
-    if (simResults && simResults.impressions > 0) {
-      updateSimDisplay();
-      updateBandDisplays();
-      if (typeof renderEfficiencyCurve === 'function') renderEfficiencyCurve();
-    }
-  }, 3000);
+  }, 600);
 }
 
 function renderEfficiencyCurve() {
