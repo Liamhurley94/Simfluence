@@ -21,6 +21,7 @@ const creatorsLiteral = extract('CREATORS', /const CREATORS = (\[[\s\S]*?\n\]);/
 const nicheLiteral = extract('NICHE_SPONSOR_CPM', /const NICHE_SPONSOR_CPM = (\{[\s\S]*?\n\});/);
 const defaultLiteral = extract('DEFAULT_CPM', /const DEFAULT_CPM = (\{[^}]+\});/);
 const platformLiteral = extract('PLATFORM_MULT', /const PLATFORM_MULT = (\{[^}]+\});/);
+const personasLiteral = extract('GENRE_PERSONAS', /const GENRE_PERSONAS = (\{[\s\S]*?\n\});/);
 
 // Evaluate the JS literals in a controlled scope so we can re-emit as JSON.
 // The literals are pure data (object/array literals with strings/numbers/null/undefined).
@@ -35,6 +36,7 @@ const creators = evalLiteral(creatorsLiteral).filter(
 const niche = evalLiteral(nicheLiteral);
 const defaultCpm = evalLiteral(defaultLiteral);
 const platform = evalLiteral(platformLiteral);
+const genrePersonas = evalLiteral(personasLiteral);
 
 mkdirSync(OUT_DIR, { recursive: true });
 
@@ -61,5 +63,14 @@ export const PLATFORM_MULT: Record<string, number | null> = ${JSON.stringify(pla
 `;
 writeFileSync(`${OUT_DIR}/cpm-tables.data.ts`, cpmOut);
 
+writeFileSync(`${OUT_DIR}/personas.data.json`, JSON.stringify(genrePersonas));
+
+const personaGenres = Object.keys(genrePersonas).length;
+const personaCount = Object.values(genrePersonas).reduce((total, byMode) => {
+  for (const list of Object.values(byMode)) total += Array.isArray(list) ? list.length : 0;
+  return total;
+}, 0);
+
 console.log(`✓ creators.data.json — ${creators.length} creators`);
 console.log(`✓ cpm-tables.data.ts — ${Object.keys(niche).length} niches`);
+console.log(`✓ personas.data.json — ${personaGenres} genres, ${personaCount} personas`);
