@@ -1,0 +1,39 @@
+# Netlify build + SPA routing for the Angular app.
+# Legacy HTML (reference/) is not part of this deploy — only the built Angular SPA ships.
+
+[build]
+  command = "npm run build"
+  publish = "dist/simfluence/browser"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# SPA fallback: any path Netlify doesn't find as a file resolves to the
+# Angular index.html, which then hydrates and delegates to the Angular router.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Security + caching headers. Hashed asset files are safe to cache long.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "no-cache"
