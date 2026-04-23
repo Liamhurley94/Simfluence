@@ -1,7 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 
 import { AuthService } from '../../core/auth/auth.service';
 import { CampaignContextService } from '../../core/context/campaign-context.service';
@@ -16,6 +16,7 @@ import {
   Objective,
   SimResult,
 } from '../../core/simulation/simulation.types';
+import { NewCampaign } from '../../core/campaigns/campaign.types';
 
 const FORMATS: Format[] = ['Integrated', 'Mixed', 'Dedicated'];
 
@@ -172,6 +173,16 @@ const FORMATS: Format[] = ['Integrated', 'Mixed', 'Dedicated'];
         >
           {{ pending() ? 'Running…' : result() ? '▶ Re-run' : '▶ Run simulation' }}
         </button>
+        <button
+          type="button"
+          (click)="saveToCampaigns()"
+          [disabled]="!result()"
+          class="px-4 py-2 rounded text-xs font-bold uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
+          style="background: var(--color-sf-green); color: white;"
+          data-testid="sim-save"
+        >
+          Save to campaigns
+        </button>
         @if (result()) {
           <span class="text-xs" style="color: var(--color-text-muted);">
             Last run: genre {{ context.genre() }} · {{ result()!.budget | number }} budget ·
@@ -321,6 +332,7 @@ export class SimulatorComponent {
   private auth = inject(AuthService);
   private sim = inject(SimulationService);
   private rateLimitSvc = inject(RateLimitService);
+  private router = inject(Router);
   protected readonly runSim = inject(RunSimulationService);
   protected readonly context = inject(CampaignContextService);
 
@@ -377,6 +389,30 @@ export class SimulatorComponent {
     this.selectedObjectives.update((list) =>
       list.includes(o) ? list.filter((x) => x !== o) : [...list, o],
     );
+  }
+
+  saveToCampaigns(): void {
+    const r = this.result();
+    if (!r) return;
+    const seed: Partial<NewCampaign> = {
+      name: `${this.context.genre()} campaign — ${new Date().toLocaleDateString()}`,
+      genre: this.context.genre(),
+      budget: this.budget(),
+      creatorIds: this.creators().map((c) => c.id),
+      forecast: {
+        impressions: r.impressions,
+        ctr: r.ctr,
+        cvr: r.cvr,
+        roas: r.roas,
+        p10: r.p10,
+        p50: r.p50,
+        p90: r.p90,
+      },
+    };
+    void this.router.navigate(['/app/campaigns'], {
+      queryParams: { new: '1' },
+      state: { campaignSeed: seed },
+    });
   }
 
   slug(s: string): string {
