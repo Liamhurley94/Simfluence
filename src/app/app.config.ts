@@ -12,6 +12,10 @@ import {
   CampaignsRepository,
   InMemoryCampaignsRepository,
 } from './core/campaigns/campaigns.repository';
+import {
+  InMemoryOutreachRepository,
+  OutreachRepository,
+} from './core/outreach/outreach.repository';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -23,5 +27,6 @@ export const appConfig: ApplicationConfig = {
     // Persistence stubs — swap for Supabase-backed implementations when the
     // backend repo provisions the tables.
     { provide: CampaignsRepository, useClass: InMemoryCampaignsRepository },
+    { provide: OutreachRepository, useClass: InMemoryOutreachRepository },
   ],
 };
