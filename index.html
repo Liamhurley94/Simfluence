@@ -1071,7 +1071,7 @@ function simShow(){
     <div class="pricing-header">
       <span class="section-eyebrow" style="display:inline-block">Pricing</span>
       <h2 class="section-h2" style="margin-top:16px;font-size:clamp(52px,7vw,96px)">Simple.<br><em>Transparent.</em><br>No surprises.</h2>
-      <p style="font-size:18px;color:var(--muted);margin-top:20px;font-weight:300;max-width:520px;margin-left:auto;margin-right:auto">Five tiers built for every scale of brand. Gold saves 20% annually — Platinum saves 30%.</p>
+      <p style="font-size:18px;color:var(--muted);margin-top:20px;font-weight:300;max-width:520px;margin-left:auto;margin-right:auto">Five tiers built for every scale of brand. Bronze and Silver — no contract, no commitment. Gold saves 20% annually. Platinum saves 30%.</p>
     </div>
 
     <!-- Monthly / Annual toggle -->
@@ -1093,7 +1093,7 @@ function simShow(){
         <div class="p-medal">🥉</div>
         <div class="p-tier-name" style="color:#CD7F32">Bronze</div>
         <div>
-          <span class="p-price" id="bronzePrice" style="color:#CD7F32">$800</span><span class="p-price-sub">/mo</span>
+          <span class="p-price" id="bronzePrice" style="color:#CD7F32">$400</span><span class="p-price-sub">/mo</span>
         </div>
         <div class="p-annual-line" id="bronzeAnnual">&nbsp;</div>
         <div class="p-saving-line" id="bronzeSaving">&nbsp;</div>
@@ -1115,7 +1115,7 @@ function simShow(){
         <div class="p-medal">🥈</div>
         <div class="p-tier-name" style="color:#C0C0C0">Silver</div>
         <div>
-          <span class="p-price" id="silverPrice" style="color:#C0C0C0">$1,750</span><span class="p-price-sub">/mo</span>
+          <span class="p-price" id="silverPrice" style="color:#C0C0C0">$1,000</span><span class="p-price-sub">/mo</span>
         </div>
         <div class="p-annual-line" id="silverAnnual">&nbsp;</div>
         <div class="p-saving-line" id="silverSaving" style="color:#00C46A">&nbsp;</div>
@@ -1160,7 +1160,7 @@ function simShow(){
         <div class="p-medal">🏆</div>
         <div class="p-tier-name" style="color:#E5E4E2">Platinum</div>
         <div>
-          <span class="p-price" id="platinumPrice" style="color:#E5E4E2">$7,000</span><span class="p-price-sub">/mo</span>
+          <span class="p-price" id="platinumPrice" style="color:#E5E4E2">$5,000</span><span class="p-price-sub">/mo</span>
         </div>
         <div class="p-annual-line" id="platinumAnnual">&nbsp;</div>
         <div class="p-saving-line" id="platinumSaving" style="color:#00C46A">&nbsp;</div>
@@ -1316,10 +1316,10 @@ function simShow(){
   <div>
     <div class="f-col-title">Plans</div>
     <div class="f-links">
-      <a href="#pricing" class="f-link" style="color:#CD7F32" data-scrollplan="bronze">Bronze — $800/mo</a>
-      <a href="#pricing" class="f-link" style="color:#C0C0C0" data-scrollplan="silver">Silver — $1,750/mo</a>
+      <a href="#pricing" class="f-link" style="color:#CD7F32" data-scrollplan="bronze">Bronze — $400/mo</a>
+      <a href="#pricing" class="f-link" style="color:#C0C0C0" data-scrollplan="silver">Silver — $1,000/mo</a>
       <a href="#pricing" class="f-link" style="color:#FFD400" data-scrollplan="gold">Gold — $3,500/mo</a>
-      <a href="#pricing" class="f-link" style="color:#E5E4E2" data-scrollplan="platinum">Platinum — $7,000/mo</a>
+      <a href="#pricing" class="f-link" style="color:#E5E4E2" data-scrollplan="platinum">Platinum — $5,000/mo</a>
       <a href="mailto:liam@simfluence.ai" class="f-link" style="color:#B9F2FF">Diamond — Talk to us</a>
     </div>
   </div>
@@ -1401,10 +1401,10 @@ function simShow(){
 <script>
 /* ── Pricing data ────────────────────────────────────────── */
 var PRICES = {
-  bronze:   { monthly:800,  annual:800,  annualTotal:9600,   discount:0  },
-  silver:   { monthly:1750, annual:1750, annualTotal:21000,  discount:0  },
+  bronze:   { monthly:400,  annual:400,  annualTotal:4800,   discount:0  },
+  silver:   { monthly:1000, annual:1000, annualTotal:12000,  discount:0  },
   gold:     { monthly:3500, annual:2800, annualTotal:33600,  discount:20 },
-  platinum: { monthly:7000, annual:4900, annualTotal:58800,  discount:30 }
+  platinum: { monthly:5000, annual:3500, annualTotal:42000,  discount:30 }
 };
 var isAnnual = false;
 
@@ -1521,10 +1521,10 @@ function sfStep2(){
 
 async function sfSave(){
   var planLabels={
-    bronze:   'Bronze — $800/mo',
-    silver:   'Silver — $1,750/mo',
+    bronze:   'Bronze — $400/mo',
+    silver:   'Silver — $1,000/mo',
     gold:     'Gold — $3,500/mo',
-    platinum: 'Platinum — $7,000/mo',
+    platinum: 'Platinum — $5,000/mo',
     diamond:  'Diamond — Bespoke'
   };
   var payload={
