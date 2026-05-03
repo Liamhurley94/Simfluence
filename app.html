@@ -12887,7 +12887,8 @@ function openProfileOverlay(id) {
         </div>
         ${c.bio ? `<p style="font-size:13px;color:var(--text-dim);margin-top:18px;line-height:1.7;max-width:540px">${c.bio}</p>` : ''}
         ${(function(){
-          if (c.platform !== 'YouTube') return '';
+          var hasYT = c.platform === 'YouTube' || (c.allPlatforms && c.allPlatforms.some(function(p){return p==='YouTube';}));
+          if (!hasYT) return '';
           var yt = YT_ENRICHMENT[c.id];
           if (!yt || !yt.videos || !yt.videos.length) return '';
           var rows = yt.videos.map(function(v) {
@@ -18781,7 +18782,16 @@ document.addEventListener('DOMContentLoaded', function() {
     if (typeof renderSecondaryGenreField === 'function') renderSecondaryGenreField();
     wire('format',       function() { if(typeof updateTierLabel==='function') updateTierLabel((document.getElementById('budget')||{value:'85000'}).value); if(typeof renderCreatorGrid==='function') renderCreatorGrid(); });
     wire('tierMix',      function() { if(typeof renderCreatorGrid==='function') renderCreatorGrid(); if(typeof updateSim==='function') updateSim(); });
-    wire('langFilter',   function() { if(typeof renderCreatorGrid==='function') renderCreatorGrid(); });
+    wire('langFilter', function() {
+    var langEl = document.getElementById('langFilter');
+    var val = langEl ? langEl.value : 'all';
+    activeLanguages.clear();
+    if (val && val !== 'all') activeLanguages.add(val);
+    // Sync label on the chip-based dropdown if it exists
+    var lbl = document.getElementById('languageBtnLabel');
+    if (lbl) lbl.textContent = (val && val !== 'all') ? val : 'All Languages';
+    if (typeof renderCreatorGrid === 'function') renderCreatorGrid();
+  });
     wire('sortModeSelect', function(e) { if(typeof setSortMode==='function') setSortMode(e.target.value); });
 
   // ── CPI / GFI FILTER SLIDERS ────────────────────────────────────
