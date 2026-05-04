@@ -12549,12 +12549,13 @@ function renderCreatorGrid(keepPage) {
   };
 
   function passedLangFilter(cr) {
-    if (!selectedLang || selectedLang === 'all') return true;
-    // If creator has explicit language field, use it
-    if (cr.language) return cr.language === selectedLang;
-    // Otherwise infer from bio + name + handle
-    if (selectedLang === 'English') return true; // default for pre-v4 creators
-    var signals = LANG_SIGNALS[selectedLang] || [];
+    // Single source of truth — activeLanguages global Set
+    if (activeLanguages.size === 0) return true;
+    if (cr.language) return activeLanguages.has(cr.language);
+    // Fallback inference for pre-v4 creators without explicit language field
+    var activeLang = Array.from(activeLanguages)[0];
+    if (activeLanguages.size === 1 && activeLang === 'English') return true;
+    var signals = LANG_SIGNALS[activeLang] || [];
     if (!signals.length) return false;
     var hay = ((cr.bio||'') + ' ' + cr.name + ' ' + cr.handle).toLowerCase();
     return signals.some(function(s) { return hay.indexOf(s) !== -1; });
