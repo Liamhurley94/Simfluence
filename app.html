@@ -4881,7 +4881,7 @@ function computeCostEstimate(creator) {
       },
       fmt: fmtV,
       tierLabel: 'Verified',
-      verifiedNote: '✓ Verified contracted rate — Keen Games / Higashiyama brief',
+      verifiedNote: '✓ Verified rate',
       disclaimer: 'Integrated · Dedicated · Campaign package · Prices in EUR excl. tax',
       isVerified: true
     };
@@ -12530,8 +12530,15 @@ function renderCreatorGrid(keepPage) {
   }
 
   // ── Language filter ──────────────────────────────────────────────
+  // Sync dropdown → activeLanguages on every render (catches page-load state)
   var langEl = document.getElementById('langFilter');
-  var selectedLang = langEl ? langEl.value : 'all';
+  var _dropdownLang = langEl ? langEl.value : 'all';
+  if (_dropdownLang && _dropdownLang !== 'all') {
+    if (activeLanguages.size === 0) activeLanguages.add(_dropdownLang);
+  } else if (!activeLanguages.size) {
+    // nothing selected — show all
+  }
+  var selectedLang = activeLanguages.size > 0 ? Array.from(activeLanguages)[0] : 'all';
   // Language signal maps for inference when no language field set
   var LANG_SIGNALS = {
     'German':     ['german','deutsch','germany','deutschland','österreich','schweiz'],
@@ -12746,7 +12753,7 @@ function renderCreatorGrid(keepPage) {
     .filter(cr => {
       if (!passedBudgetFilter(cr)) return false;
       // When filtering by a specific language, bypass tier/budget limits
-      var langOnly = selectedLang && selectedLang !== 'all' && selectedLang !== 'English';
+      var langOnly = activeLanguages.size > 0 && !activeLanguages.has('English');
       if (!langOnly && !passedTierFilter(cr)) return false;
       if (!passedLangFilter(cr)) return false;
       if (!passedCpiFilter(cr)) return false;
@@ -18942,15 +18949,14 @@ document.addEventListener('DOMContentLoaded', function() {
     wire('format',       function() { if(typeof updateTierLabel==='function') updateTierLabel((document.getElementById('budget')||{value:'85000'}).value); if(typeof renderCreatorGrid==='function') renderCreatorGrid(); });
     wire('tierMix',      function() { if(typeof renderCreatorGrid==='function') renderCreatorGrid(); if(typeof updateSim==='function') updateSim(); });
     wire('langFilter', function() {
-    var langEl = document.getElementById('langFilter');
-    var val = langEl ? langEl.value : 'all';
-    activeLanguages.clear();
-    if (val && val !== 'all') activeLanguages.add(val);
-    // Sync label on the chip-based dropdown if it exists
-    var lbl = document.getElementById('languageBtnLabel');
-    if (lbl) lbl.textContent = (val && val !== 'all') ? val : 'All Languages';
-    if (typeof renderCreatorGrid === 'function') renderCreatorGrid();
-  });
+      var langEl = document.getElementById('langFilter');
+      var val = langEl ? langEl.value : 'all';
+      activeLanguages.clear();
+      if (val && val !== 'all') activeLanguages.add(val);
+      var lbl = document.getElementById('languageBtnLabel');
+      if (lbl) lbl.textContent = (val && val !== 'all') ? val : 'All Languages';
+      if (typeof renderCreatorGrid === 'function') renderCreatorGrid();
+    });
     wire('sortModeSelect', function(e) { if(typeof setSortMode==='function') setSortMode(e.target.value); });
 
   // ── CPI / GFI FILTER SLIDERS ────────────────────────────────────
