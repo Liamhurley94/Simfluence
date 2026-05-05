@@ -75,15 +75,15 @@
   .nav-brand {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 0px;
   }
 
   .brand-text {
-    font-family: 'Archivo Black', sans-serif;
-    font-size: 24px;
-    font-weight: 600;
+    font-family: 'Arial Black', Arial, sans-serif;
+    font-size: 20px;
+    font-weight: 900;
     color: #FFD700;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.06em;
   }
 
   .brand-text span {
@@ -94,13 +94,22 @@
   /* LOGO - Pulse Wave S */
   .logo {
     font-family: 'Arial Black', Arial, sans-serif;
-    font-size: 28px;
+    font-size: 26px;
     font-weight: 900;
     color: #FFD700;
     position: relative;
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: rgba(255,215,0,0.08);
+    border: 1.5px solid rgba(255,215,0,0.35);
+    border-radius: 8px;
     text-decoration: none;
     cursor: pointer;
+    flex-shrink: 0;
+    margin-right: 6px;
   }
 
   .logo::after {
@@ -108,13 +117,13 @@
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 16px;
-    height: 16px;
-    border: 1px solid #FFD700;
-    border-radius: 50%;
-    opacity: 0.5;
+    width: 36px;
+    height: 36px;
+    border: 1.5px solid rgba(255,215,0,0.6);
+    border-radius: 8px;
+    opacity: 0.7;
     transform: translate(-50%, -50%);
-    animation: simfluence-pulse 3s infinite;
+    animation: simfluence-pulse 2.5s ease-out infinite;
   }
 
   @keyframes simfluence-pulse {
@@ -4370,15 +4379,17 @@ document.addEventListener('DOMContentLoaded', function() {
           <div class="page-title">Campaign <em>Simulator</em></div>
           <div class="page-meta">PROBABILISTIC OUTCOME FORECAST</div>
         </div>
-        <div style="display:flex;align-items:center;gap:16px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 16px">
+        <div style="display:flex;align-items:center;gap:16px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:0 16px;height:44px">
           <div style="font-family:Manrope,sans-serif;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--text-muted)">DURATION</div>
           <input type="range" id="campaignDuration" min="1" max="12" value="4" step="1" style="width:100px;accent-color:#0050FF;cursor:pointer">
           <span id="durationLabel" style="font-family:Manrope,sans-serif;font-weight:500;font-size:11px;font-weight:700;color:#FFD400;min-width:56px">4 weeks</span>
         </div>
-        <button id="reRunSimBtn" style="padding:10px 20px;background:#FF7A00;color:#fff;border:none;border-radius:var(--radius);font-family:Manrope,sans-serif;font-weight:600;font-size:13px;cursor:pointer;letter-spacing:.05em;font-weight:700">▶ RE-RUN</button>
-        <button id="saveToCampaignsBtn" style="padding:10px 20px;background:#00C46A;color:#fff;border:none;border-radius:var(--radius);font-family:Manrope,sans-serif;font-weight:600;font-size:13px;cursor:pointer;letter-spacing:.05em;font-weight:700">＋ SAVE TO CAMPAIGNS</button>
-        <button id="saveCampaignBtn" style="padding:10px 20px;background:#0050FF;color:#fff;border:none;border-radius:var(--radius);font-family:Manrope,sans-serif;font-weight:600;font-size:13px;cursor:pointer;letter-spacing:.05em;font-weight:700">⬇ SAVE AS PDF</button>
-        <button id="briefPdfBtn" data-oc="exportBriefPDF()" style="padding:10px 20px;background:rgba(0,191,255,0.15);color:#00BFFF;border:1px solid rgba(0,191,255,0.35);border-radius:var(--radius);font-family:Manrope,sans-serif;font-weight:600;font-size:13px;cursor:pointer;letter-spacing:.05em;display:none">📄 BRIEF PDF</button>
+        <div style="display:flex;align-items:stretch;gap:8px">
+          <button id="reRunSimBtn" style="padding:0 20px;height:44px;background:#FF7A00;color:#fff;border:none;border-radius:var(--radius);font-family:Manrope,sans-serif;font-size:13px;cursor:pointer;letter-spacing:.05em;font-weight:700;white-space:nowrap">▶ RE-RUN</button>
+          <button id="saveToCampaignsBtn" style="padding:0 20px;height:44px;background:#00C46A;color:#fff;border:none;border-radius:var(--radius);font-family:Manrope,sans-serif;font-size:13px;cursor:pointer;letter-spacing:.05em;font-weight:700;white-space:nowrap">＋ SAVE TO CAMPAIGNS</button>
+          <button id="saveCampaignBtn" style="padding:0 20px;height:44px;background:#0050FF;color:#fff;border:none;border-radius:var(--radius);font-family:Manrope,sans-serif;font-size:13px;cursor:pointer;letter-spacing:.05em;font-weight:700;white-space:nowrap">⬇ SAVE AS PDF</button>
+          <button id="briefPdfBtn" data-oc="exportBriefPDF()" style="padding:0 20px;height:44px;background:rgba(0,191,255,0.15);color:#00BFFF;border:1px solid rgba(0,191,255,0.35);border-radius:var(--radius);font-family:Manrope,sans-serif;font-size:13px;cursor:pointer;letter-spacing:.05em;font-weight:700;display:none;white-space:nowrap">📄 BRIEF PDF</button>
+        </div>
       </div>
 
       <!-- SAVED CAMPAIGNS -->
