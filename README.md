@@ -102,9 +102,17 @@ The `authInterceptor` attaches a `Bearer <jwt>` + `apikey` header to every reque
 
 ## Environment
 
-`src/environments/environment.ts` holds Supabase project URL + anon key. **The anon key is designed to be public** — Supabase's security model puts real protection in RLS policies, not in hiding the anon key. Do not rotate it "for safety"; do not move it to process env.
+Three env files in `src/environments/`. **Anon keys are designed to be public** — Supabase's security model puts real protection in RLS policies, not in hiding the anon key. Do not rotate them "for safety"; do not move to process env.
 
-Same values apply in `environment.prod.ts` for now (single Supabase project for dev + prod).
+| File                     | Used by                                       | Supabase target |
+| ------------------------ | --------------------------------------------- | --------------- |
+| `environment.ts`         | `ng serve` (default), local dev               | **staging**     |
+| `environment.staging.ts` | `ng build --configuration staging` → Netlify `develop` branch | **staging**     |
+| `environment.prod.ts`    | `ng build` (default = production) → Netlify `main` branch     | **prod**        |
+
+`angular.json` `fileReplacements` swaps `environment.ts` for the env-specific file at build time.
+
+**Branch convention**: `develop` → staging, `main` → prod. Local `ng serve` always hits staging regardless of branch — to smoke-test against prod, use `npm run start:prod`.
 
 ---
 
@@ -112,11 +120,22 @@ Same values apply in `environment.prod.ts` for now (single Supabase project for 
 
 ```bash
 npm install
-npm start                 # ng serve → http://localhost:4200
+npm start                 # ng serve → http://localhost:4200 → STAGING Supabase
+npm run start:prod        # ng serve --configuration production → PROD Supabase (rare)
 npm test                  # vitest, runs once
-npx ng build              # production build → dist/simfluence/
+npm run build             # production build → dist/simfluence/ → PROD bundle
+npm run build:staging     # staging build → dist/simfluence/ → STAGING bundle
 node scripts/extract-data.mjs  # refresh creators + cpm + personas from reference/app.html
 ```
+
+### IntelliJ run configurations
+
+`.idea/` is gitignored, so create these locally:
+
+1. Run → Edit Configurations → `+` → npm
+2. Add two configs (both with `package.json: package.json`, `command: run`):
+   - **Serve (Staging)** — script: `start`
+   - **Serve (Prod)** — script: `start:prod`
 
 ---
 

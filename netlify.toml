@@ -8,6 +8,12 @@
 [build.environment]
   NODE_VERSION = "22"
 
+# Branch-specific build commands.
+# main branch (default [build] above): npm run build → production configuration → prod Supabase
+# develop branch: npm run build:staging → staging configuration → staging Supabase
+[context.develop]
+  command = "npm run build:staging"
+
 # SPA fallback: any path Netlify doesn't find as a file resolves to the
 # Angular index.html, which then hydrates and delegates to the Angular router.
 [[redirects]]
