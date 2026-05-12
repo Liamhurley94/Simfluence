@@ -1,5 +1,7 @@
-import { Component, computed, input, output } from '@angular/core';
+import { Component, computed, inject, input, output } from '@angular/core';
 import { Creator } from '../../core/data/creator.types';
+import { TwitchLiveService } from '../../core/twitch/twitch-live.service';
+import { LiveBadgeComponent } from '../live-badge/live-badge.component';
 
 const PLATFORM_COLORS: Record<string, string> = {
   YouTube: '#FF0000',
@@ -13,6 +15,7 @@ const PLATFORM_COLORS: Record<string, string> = {
 @Component({
   selector: 'app-creator-card',
   standalone: true,
+  imports: [LiveBadgeComponent],
   template: `
     <div
       class="rounded-lg p-4 transition cursor-pointer"
@@ -30,12 +33,17 @@ const PLATFORM_COLORS: Record<string, string> = {
           {{ initials() }}
         </div>
         <div class="flex-1 min-w-0">
-          <div
-            class="font-semibold text-sm truncate"
-            style="color: var(--color-text);"
-            data-testid="creator-name"
-          >
-            {{ creator().name }}
+          <div class="flex items-center gap-1.5">
+            <div
+              class="font-semibold text-sm truncate"
+              style="color: var(--color-text);"
+              data-testid="creator-name"
+            >
+              {{ creator().name }}
+            </div>
+            @if (isLive()) {
+              <app-live-badge />
+            }
           </div>
           <div class="text-xs truncate" style="color: var(--color-text-muted);">
             {{ creator().handle }}
@@ -130,10 +138,16 @@ const PLATFORM_COLORS: Record<string, string> = {
   `,
 })
 export class CreatorCardComponent {
+  private live = inject(TwitchLiveService);
+
   readonly creator = input.required<Creator>();
   readonly selected = input(false);
   readonly canSeeRates = input(false);
   readonly toggle = output<number>();
+
+  // Tied to the TwitchLiveService streams signal so the badge appears /
+  // disappears reactively as the next poll completes.
+  readonly isLive = computed(() => this.live.isLive(this.creator()));
 
   readonly platforms = computed(() => {
     const c = this.creator();
