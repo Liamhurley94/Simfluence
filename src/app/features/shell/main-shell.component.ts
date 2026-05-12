@@ -5,6 +5,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { SideNavComponent } from './side-nav.component';
 import { TopNavComponent } from './top-nav.component';
 import { UpgradePromptComponent } from '../../shared/ui/upgrade-prompt/upgrade-prompt.component';
+import { CreatorProfileModalComponent } from '../../shared/creator-profile-modal/creator-profile-modal.component';
 import { UpgradePromptService } from '../../core/upgrade/upgrade-prompt.service';
 import { Tier, TIER_LEVELS } from '../../core/types';
 
@@ -13,7 +14,13 @@ const VALID_TIERS = new Set<string>(Object.keys(TIER_LEVELS));
 @Component({
   selector: 'app-main-shell',
   standalone: true,
-  imports: [RouterOutlet, SideNavComponent, TopNavComponent, UpgradePromptComponent],
+  imports: [
+    RouterOutlet,
+    SideNavComponent,
+    TopNavComponent,
+    UpgradePromptComponent,
+    CreatorProfileModalComponent,
+  ],
   template: `
     <div class="min-h-screen flex flex-col">
       <app-top-nav />
@@ -26,6 +33,7 @@ const VALID_TIERS = new Set<string>(Object.keys(TIER_LEVELS));
         </main>
       </div>
       <app-upgrade-prompt />
+      <app-creator-profile-modal />
     </div>
   `,
 })

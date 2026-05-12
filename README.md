@@ -83,7 +83,7 @@ All three data files regenerate. The service layer imports them directly — no 
 | ----------------------------------- | -------------------- | ------------------------------ |
 | `POST /functions/v1/score-creator`  | Scoring              | `ScoreCreatorService`          |
 | `POST /functions/v1/run-simulation` | Simulator            | `RunSimulationService`         |
-| `POST /functions/v1/youtube-creator-data` | Discovery enrichment | *(Phase 3.5 — pending)* |
+| `POST /functions/v1/youtube-creator-data` | Creator profile modal | `YoutubeCreatorService`   |
 | `POST /functions/v1/twitch-live-status`   | Live Channels panel  | `TwitchLiveService`     |
 | `POST /functions/v1/validate-password`    | Auth                 | *(not currently used)*   |
 
@@ -163,9 +163,9 @@ Append one entry per phase. Keep it one or two lines — details belong in commi
 - ✓ **Phase 1** — Auth shell with SIGN UP / SIGN IN / recover tabs, `AuthService` backed by `@supabase/supabase-js`, profile lookup from `profiles` table, session rehydration on boot.
 - ✓ **Phase 2** — Main shell (`TopNav` + `SideNav` + `ProfileDropdown`), theme toggle, `UpgradePromptService` + overlay; tier-locked sidebar tabs open the overlay inline, `?upgrade=<tier>` query param also triggers it (defense in depth with `tierGuard`).
 - ✓ **Phase 3** — Discovery: 6233 creators extracted from `app.html` → `creators.data.json`, `CreatorsService` (filter/sort/paginate), `SelectionService`, `FilterPanelComponent`, `CreatorCardComponent`, `PaginationComponent`. Discovery page orchestrates; rate column blurred for sub-silver tier. **Subsequently refactored** to server-side filtering — see *Backend migration* below.
-- ⏳ **Phase 3.5** — Discovery enrichment:
+- ✓ **Phase 3.5** — Discovery enrichment:
   - ✓ **Twitch live**: `TwitchLiveService` polls `twitch-live-status` every 90s (top 100 Twitch creators by CPI), `LiveChannelsPanelComponent` in SideNav (tier-capped 10/20/50/∞ + upgrade prompt), `LiveBadgeComponent` on creator cards.
-  - ⏳ **YouTube enrichment**: `youtube-creator-data` edge fn deployed; no frontend wrapper yet.
+  - ✓ **YouTube enrichment**: `YoutubeCreatorService` wraps `youtube-creator-data`. `CreatorProfileModalComponent` opens on creator card "ⓘ" button; shows live subs / avg views / thumbnail / genre signals bar chart / sponsor frequency / recent video titles. `CreatorProfileService` holds modal state (mirrors `UpgradePromptService` pattern).
 - ✓ **Phase 4** — Scoring: `ScoreCreatorService` wraps `score-creator` edge fn (caches gfi + cpiBreakdown by creator id), `CampaignContextService` holds shared campaign genre, scoring page shows summary stats + sortable table + genre benchmark panel, re-scores reactively on genre change.
 - ✓ **Phase 5** — Personas: 48 personas across 12 genres extracted, `PersonasService.listFor` with sub-mode → genre default fallback, auto-select shortlist (5–250 top creators by CPI), persona cards with recommendation banner + "Simulate this campaign" CTA.
 - ✓ **Phase 6** — Simulator: `SimulationService` (pure-function fallback, golden-tested against app.html), `RunSimulationService` (wraps `run-simulation` edge fn), `RateLimitService` (sessionStorage counter, 3 free / 10 silver / ∞ gold+). Simulator page shows budget/format/genre controls, 12 objective chips, P10/P50/P90 band cards, and a 6-column metrics grid. `GENRE_BENCHMARKS` extracted to `benchmarks.data.ts`. Local compute fires instantly, server result overwrites on success.
@@ -183,8 +183,7 @@ These are infrastructure efforts threaded across the feature phases above. They 
 
 ## Next up
 
-- ⏳ **Finish Phase 3.5 (YouTube enrichment)** — wrapper service for `youtube-creator-data` edge fn, populate `creator_youtube_cache` table reads on Discovery cards.
-- ⏳ **Twitch + YouTube secrets in staging** — `TWITCH_CLIENT_ID/SECRET`, `YOUTUBE_API_KEY` need to be set in staging Supabase dashboard for the wrappers to actually return data.
+- ⏳ **Twitch + YouTube secrets in staging** — `TWITCH_CLIENT_ID/SECRET`, `YOUTUBE_API_KEY` need to be set in staging Supabase dashboard (Edge Functions → Secrets) for the live feed + profile-modal enrichment to actually return data.
 - ⏳ **Cleanup**:
   - Delete `src/app/core/data/creators.data.json` (no longer imported; ~2 MB orphan).
   - Update `src/app/core/personas/personas.service.spec.ts` — `autoSelect` is now async; tests still call it synchronously.

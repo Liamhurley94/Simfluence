@@ -1,6 +1,7 @@
 import { Component, computed, inject, input, output } from '@angular/core';
 import { Creator } from '../../core/data/creator.types';
 import { TwitchLiveService } from '../../core/twitch/twitch-live.service';
+import { CreatorProfileService } from '../../core/creator-profile/creator-profile.service';
 import { LiveBadgeComponent } from '../live-badge/live-badge.component';
 
 const PLATFORM_COLORS: Record<string, string> = {
@@ -49,6 +50,17 @@ const PLATFORM_COLORS: Record<string, string> = {
             {{ creator().handle }}
           </div>
         </div>
+        <button
+          type="button"
+          (click)="openProfile($event)"
+          class="w-6 h-6 rounded text-xs flex items-center justify-center shrink-0"
+          style="background: var(--color-bg-3); color: var(--color-text-muted);"
+          aria-label="View creator profile"
+          title="View profile"
+          data-testid="creator-view-profile"
+        >
+          ⓘ
+        </button>
       </div>
 
       <div class="flex flex-wrap gap-1 mb-3">
@@ -139,6 +151,7 @@ const PLATFORM_COLORS: Record<string, string> = {
 })
 export class CreatorCardComponent {
   private live = inject(TwitchLiveService);
+  private profile = inject(CreatorProfileService);
 
   readonly creator = input.required<Creator>();
   readonly selected = input(false);
@@ -183,6 +196,11 @@ export class CreatorCardComponent {
 
   onToggle(): void {
     this.toggle.emit(this.creator().id);
+  }
+
+  openProfile(event: MouseEvent): void {
+    event.stopPropagation();
+    this.profile.open(this.creator());
   }
 
   private formatRange([lo, hi]: [number, number]): string {
