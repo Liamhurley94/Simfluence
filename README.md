@@ -82,9 +82,9 @@ All three data files regenerate. The service layer imports them directly — no 
 | Endpoint                            | Used by              | Wrapper                        |
 | ----------------------------------- | -------------------- | ------------------------------ |
 | `POST /functions/v1/score-creator`  | Scoring              | `ScoreCreatorService`          |
-| `POST /functions/v1/run-simulation` | Simulator            | *(Phase 6)*                    |
-| `POST /functions/v1/youtube-creator-data` | Discovery enrichment | *(Phase 3.5)*            |
-| `GET  /functions/v1/twitch-live-status`   | Discovery enrichment | *(Phase 3.5)*            |
+| `POST /functions/v1/run-simulation` | Simulator            | `RunSimulationService`         |
+| `POST /functions/v1/youtube-creator-data` | Discovery enrichment | *(Phase 3.5 — pending)* |
+| `POST /functions/v1/twitch-live-status`   | Live Channels panel  | `TwitchLiveService`     |
 | `POST /functions/v1/validate-password`    | Auth                 | *(not currently used)*   |
 
 The `authInterceptor` attaches a `Bearer <jwt>` + `apikey` header to every request hitting the Supabase origin; falls back to the anon key when no user session exists (matching the edge functions' own auth behavior).
@@ -157,15 +157,38 @@ node scripts/extract-data.mjs  # refresh creators + cpm + personas from referenc
 
 ## Phase log
 
-Append one entry per phase. Keep it one or two lines — details belong in commit messages.
+Append one entry per phase. Keep it one or two lines — details belong in commit messages. ✓ = done. ⏳ = in progress / partial.
 
-- **Phase 0** — Angular 21 scaffold, Tailwind 4, Vitest, Supabase client, core services (auth/storage/theme/interceptor/guards/api clients), feature route placeholders.
-- **Phase 1** — Auth shell with SIGN UP / SIGN IN / recover tabs, `AuthService` backed by `@supabase/supabase-js`, profile lookup from `profiles` table, session rehydration on boot.
-- **Phase 2** — Main shell (`TopNav` + `SideNav` + `ProfileDropdown`), theme toggle, `UpgradePromptService` + overlay; tier-locked sidebar tabs open the overlay inline, `?upgrade=<tier>` query param also triggers it (defense in depth with `tierGuard`).
-- **Phase 3** — Discovery: 6233 creators extracted from `app.html` → `creators.data.json`, `CreatorsService` (filter/sort/paginate), `SelectionService`, `FilterPanelComponent`, `CreatorCardComponent`, `PaginationComponent`. Discovery page orchestrates; rate column blurred for sub-silver tier.
-- **Phase 4** — Scoring: `ScoreCreatorService` wraps `score-creator` edge fn (caches gfi + cpiBreakdown by creator id), `CampaignContextService` holds shared campaign genre, scoring page shows summary stats + sortable table + genre benchmark panel, re-scores reactively on genre change.
-- **Phase 5** — Personas: 48 personas across 12 genres extracted, `PersonasService.listFor` with sub-mode → genre default fallback, auto-select shortlist (5–250 top creators by CPI), persona cards with recommendation banner + "Simulate this campaign" CTA.
-- **Phase 6** — Simulator: `SimulationService` (pure-function fallback, golden-tested against app.html), `RunSimulationService` (wraps `run-simulation` edge fn), `RateLimitService` (sessionStorage counter, 3 free / 10 silver / ∞ gold+). Simulator page shows budget/format/genre controls, 12 objective chips, P10/P50/P90 band cards, and a 6-column metrics grid. `GENRE_BENCHMARKS` extracted to `benchmarks.data.ts`. Local compute fires instantly, server result overwrites on success.
-- **Phase 7** — Campaigns: abstract `CampaignsRepository` token + `InMemoryCampaignsRepository` default binding (wired in `app.config.ts`), `CampaignsService` with optimistic-update signals, campaigns grid page with create/edit/delete + form modal, `BriefPdfService` (Platinum+) builds print-ready HTML and opens a window for the browser's Save-as-PDF. Simulator gained a "Save to Campaigns" button that navigates with a seed object via router state.
-- **Phase 8** — Outreach: abstract `OutreachRepository` token + `InMemoryOutreachRepository` (same DI pattern as Campaigns), `OutreachService` with `byStatus` count + `filtered` (campaign × status) signals. Full CRM table with inline status/contact/notes edits, 5 counter tiles, campaign + status filter bar, `AddOutreachComponent` modal with creator search autocomplete.
+- ✓ **Phase 0** — Angular 21 scaffold, Tailwind 4, Vitest, Supabase client, core services (auth/storage/theme/interceptor/guards/api clients), feature route placeholders.
+- ✓ **Phase 1** — Auth shell with SIGN UP / SIGN IN / recover tabs, `AuthService` backed by `@supabase/supabase-js`, profile lookup from `profiles` table, session rehydration on boot.
+- ✓ **Phase 2** — Main shell (`TopNav` + `SideNav` + `ProfileDropdown`), theme toggle, `UpgradePromptService` + overlay; tier-locked sidebar tabs open the overlay inline, `?upgrade=<tier>` query param also triggers it (defense in depth with `tierGuard`).
+- ✓ **Phase 3** — Discovery: 6233 creators extracted from `app.html` → `creators.data.json`, `CreatorsService` (filter/sort/paginate), `SelectionService`, `FilterPanelComponent`, `CreatorCardComponent`, `PaginationComponent`. Discovery page orchestrates; rate column blurred for sub-silver tier. **Subsequently refactored** to server-side filtering — see *Backend migration* below.
+- ⏳ **Phase 3.5** — Discovery enrichment:
+  - ✓ **Twitch live**: `TwitchLiveService` polls `twitch-live-status` every 90s (top 100 Twitch creators by CPI), `LiveChannelsPanelComponent` in SideNav (tier-capped 10/20/50/∞ + upgrade prompt), `LiveBadgeComponent` on creator cards.
+  - ⏳ **YouTube enrichment**: `youtube-creator-data` edge fn deployed; no frontend wrapper yet.
+- ✓ **Phase 4** — Scoring: `ScoreCreatorService` wraps `score-creator` edge fn (caches gfi + cpiBreakdown by creator id), `CampaignContextService` holds shared campaign genre, scoring page shows summary stats + sortable table + genre benchmark panel, re-scores reactively on genre change.
+- ✓ **Phase 5** — Personas: 48 personas across 12 genres extracted, `PersonasService.listFor` with sub-mode → genre default fallback, auto-select shortlist (5–250 top creators by CPI), persona cards with recommendation banner + "Simulate this campaign" CTA.
+- ✓ **Phase 6** — Simulator: `SimulationService` (pure-function fallback, golden-tested against app.html), `RunSimulationService` (wraps `run-simulation` edge fn), `RateLimitService` (sessionStorage counter, 3 free / 10 silver / ∞ gold+). Simulator page shows budget/format/genre controls, 12 objective chips, P10/P50/P90 band cards, and a 6-column metrics grid. `GENRE_BENCHMARKS` extracted to `benchmarks.data.ts`. Local compute fires instantly, server result overwrites on success.
+- ✓ **Phase 7** — Campaigns: abstract `CampaignsRepository` token + `InMemoryCampaignsRepository` default binding (wired in `app.config.ts`), `CampaignsService` with optimistic-update signals, campaigns grid page with create/edit/delete + form modal, `BriefPdfService` (Platinum+) builds print-ready HTML and opens a window for the browser's Save-as-PDF. Simulator gained a "Save to Campaigns" button that navigates with a seed object via router state.
+- ✓ **Phase 8** — Outreach: abstract `OutreachRepository` token + `InMemoryOutreachRepository` (same DI pattern as Campaigns), `OutreachService` with `byStatus` count + `filtered` (campaign × status) signals. Full CRM table with inline status/contact/notes edits, 5 counter tiles, campaign + status filter bar, `AddOutreachComponent` modal with creator search autocomplete.
+
+## Backend migration (not a phase — cross-cutting infra)
+
+These are infrastructure efforts threaded across the feature phases above. They aren't sequential, but they materially change how the app talks to Supabase.
+
+- ✓ **Dual Supabase envs** — staging project (`Simfluence-Staging`) stood up alongside prod. `develop` branch points at staging, `main` at prod. Backend has `scripts/sb <prod|staging> <args>` wrapper for safe env-switching. Netlify `[context.develop]` builds with `npm run build:staging` (uses `environment.staging.ts` via `fileReplacements`).
+- ✓ **Signup notification refactor** — Make.com webhook moved from a write-nothing `signups` table to a `profiles` INSERT trigger. URL stored per-env in Supabase Vault, read by `notify_new_profile()` trigger function. Staging has its own Make scenario.
+- ✓ **Server-side creator filtering** — `CreatorsService` rewritten from bundled JSON loader to PostgREST queries. Filter dropdowns populated via RPCs (`get_creator_genres/platforms/languages`). All consumers (Discovery, Scoring, Simulator, Outreach, AddOutreach, FilterPanel) migrated to Angular's `resource()` for reactive async data. 5,648 creators in `public.creators` (synced once from prod via `scripts/sync-creators.ts`).
+- ✓ **Edge function type-cleanup** — all 5 functions pass `deno check` cleanly with explicit types on lookup tables + lambda params.
+
+## Next up
+
+- ⏳ **Finish Phase 3.5 (YouTube enrichment)** — wrapper service for `youtube-creator-data` edge fn, populate `creator_youtube_cache` table reads on Discovery cards.
+- ⏳ **Twitch + YouTube secrets in staging** — `TWITCH_CLIENT_ID/SECRET`, `YOUTUBE_API_KEY` need to be set in staging Supabase dashboard for the wrappers to actually return data.
+- ⏳ **Cleanup**:
+  - Delete `src/app/core/data/creators.data.json` (no longer imported; ~2 MB orphan).
+  - Update `src/app/core/personas/personas.service.spec.ts` — `autoSelect` is now async; tests still call it synchronously.
+- ⏳ **Live feed enhancements** (defer until product asks): Live CPI metric (legacy formula); smart selection (top 5 per genre + rotating 250-cap pool) for fuller coverage of niche live creators.
+- ⏳ **Cutover prep**: when develop reaches parity with prod's user-facing behavior, promote develop → main. Migrations applied to staging need data-archival considerations (e.g. export `prod.signups` before applying the drop). One-day operation, owner-driven.
+- ⏳ **E2E** (Playwright) smoke covering auth → discovery → score → simulate → save → outreach. Lands at cutover prep.
 
