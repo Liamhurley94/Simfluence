@@ -12276,9 +12276,9 @@ function openProfileOverlay(id) {
   document.getElementById('profileOverlay').scrollTop = 0;
 
   // Fire live data fetch — YouTube or Twitch
-  var _allPlats = c.allPlatforms || [c.platform || ''];
-  var _hasYT     = _allPlats.includes('YouTube') || (c.platform||'').toLowerCase().includes('youtube');
-  var _hasTwitch = _allPlats.includes('Twitch')  || (c.platform||'').toLowerCase().includes('twitch');
+  var _platStr   = JSON.stringify(c.allPlatforms || [c.platform || '']);
+  var _hasYT     = _platStr.includes('YouTube') || (c.platform||'').toLowerCase().includes('youtube');
+  var _hasTwitch = _platStr.includes('Twitch')  || (c.platform||'').toLowerCase().includes('twitch');
   if (_hasYT) {
     injectLiveDataIntoProfile(c);
   } else if (_hasTwitch) {
@@ -13730,8 +13730,8 @@ async function injectLiveDataIntoProfile(creator) {
 
   // Check if creator has YouTube (primary or secondary platform)
   var platRaw = (creator.platform || '').toLowerCase();
-  var allPlats = creator.allPlatforms || [creator.platform];
-  var hasYouTube = platRaw.includes('youtube') || allPlats.includes('YouTube');
+  var allPlatsStr = JSON.stringify(creator.allPlatforms || [creator.platform]);
+  var hasYouTube = platRaw.includes('youtube') || allPlatsStr.includes('YouTube');
 
   // No YouTube at all — show platform message and return
   if (!hasYouTube) {
