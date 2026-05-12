@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, untracked } from '@angular/core';
+import { Component, computed, effect, inject, resource, untracked } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -38,7 +38,7 @@ interface ScoredRow {
           style="background: var(--color-bg-2); border: 1px solid var(--color-border); color: var(--color-text);"
           data-testid="scoring-genre"
         >
-          @for (g of genres; track g) {
+          @for (g of genres(); track g) {
             <option [ngValue]="g">{{ g }}</option>
           }
         </select>
@@ -267,11 +267,15 @@ export class ScoringComponent {
   protected score = inject(ScoreCreatorService);
   protected context = inject(CampaignContextService);
 
-  protected readonly genres = this.creatorsSvc.genres();
+  protected readonly genres = this.creatorsSvc.genres;
 
-  private readonly selectedCreators = computed(() =>
-    this.creatorsSvc.byIds(this.selection.ids()),
-  );
+  // Async batch fetch of selected creators; re-runs when selection changes.
+  private readonly selectedCreatorsRes = resource<Creator[], number[]>({
+    params: () => Array.from(this.selection.ids()),
+    loader: ({ params }) => this.creatorsSvc.byIds(params),
+    defaultValue: [],
+  });
+  private readonly selectedCreators = computed(() => this.selectedCreatorsRes.value());
 
   protected readonly rows = computed<ScoredRow[]>(() => {
     // Tie in `score.version` so rows re-render when bulk score completes.
@@ -333,8 +337,9 @@ export class ScoringComponent {
       const genre = this.context.genre();
       const subMode = this.context.subMode();
       const secondaryGenres = this.context.secondaryGenres();
-      untracked(() => {
-        const creators = this.creatorsSvc.byIds(this.selection.ids());
+      const ids = untracked(() => Array.from(this.selection.ids()));
+      if (ids.length === 0) return;
+      void this.creatorsSvc.byIds(ids).then((creators) => {
         if (creators.length === 0) return;
         this.score.clear();
         void this.score.scoreBulk({ creators, campaignGenre: genre, subMode, secondaryGenres });

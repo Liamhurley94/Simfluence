@@ -1,5 +1,7 @@
 import {
   ApplicationConfig,
+  inject,
+  provideAppInitializer,
   provideBrowserGlobalErrorListeners,
   provideZonelessChangeDetection,
 } from '@angular/core';
@@ -16,6 +18,7 @@ import {
   InMemoryOutreachRepository,
   OutreachRepository,
 } from './core/outreach/outreach.repository';
+import { CreatorsService } from './core/creators/creators.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -23,6 +26,10 @@ export const appConfig: ApplicationConfig = {
     provideZonelessChangeDetection(),
     provideRouter(routes, withComponentInputBinding()),
     provideHttpClient(withInterceptors([authInterceptor])),
+
+    // Populate filter dropdown values (genres/platforms/languages) at app boot.
+    // List/byId/byIds queries run on-demand against PostgREST per page render.
+    provideAppInitializer(() => inject(CreatorsService).loadFilterOptions()),
 
     // Persistence stubs — swap for Supabase-backed implementations when the
     // backend repo provisions the tables.

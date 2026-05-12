@@ -203,15 +203,15 @@ export class PersonasComponent {
     this.selectedName.set(this.selectedName() === p.name ? null : p.name);
   }
 
-  runAutoSelect(): void {
-    const picks = this.personasSvc.autoSelect(this.context.genre(), this.autoCount());
+  async runAutoSelect(): Promise<void> {
+    const picks = await this.personasSvc.autoSelect(this.context.genre(), this.autoCount());
     this.selection.clear();
     for (const c of picks) this.selection.add(c.id);
   }
 
-  simulate(): void {
+  async simulate(): Promise<void> {
     if (this.selection.count() === 0) {
-      this.runAutoSelect();
+      await this.runAutoSelect();
     }
     void this.router.navigateByUrl('/app/simulator');
   }

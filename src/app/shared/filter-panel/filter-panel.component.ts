@@ -58,7 +58,7 @@ const SORT_OPTIONS: { key: SortKey; label: string }[] = [
           data-testid="filter-genre"
         >
           <option [ngValue]="undefined">All genres</option>
-          @for (g of genres; track g) {
+          @for (g of genres(); track g) {
             <option [ngValue]="g">{{ g }}</option>
           }
         </select>
@@ -73,7 +73,7 @@ const SORT_OPTIONS: { key: SortKey; label: string }[] = [
           Platform
         </label>
         <div class="flex flex-wrap gap-1" data-testid="filter-platforms">
-          @for (p of platforms; track p) {
+          @for (p of platforms(); track p) {
             <button
               type="button"
               (click)="togglePlatform(p)"
@@ -97,7 +97,7 @@ const SORT_OPTIONS: { key: SortKey; label: string }[] = [
           Language
         </label>
         <div class="flex flex-wrap gap-1" data-testid="filter-languages">
-          @for (l of languages; track l) {
+          @for (l of languages(); track l) {
             <button
               type="button"
               (click)="toggleLanguage(l)"
@@ -151,9 +151,11 @@ export class FilterPanelComponent {
 
   readonly change = output<DiscoveryQuery>();
 
-  readonly genres = this.svc.genres();
-  readonly platforms = this.svc.platforms();
-  readonly languages = this.svc.languages();
+  // Bind to the service signals directly so dropdowns update when the
+  // RPC-fed lists populate after the APP_INITIALIZER fires.
+  readonly genres = this.svc.genres;
+  readonly platforms = this.svc.platforms;
+  readonly languages = this.svc.languages;
   readonly sortOptions = SORT_OPTIONS;
 
   readonly genre = signal<string | undefined>(undefined);

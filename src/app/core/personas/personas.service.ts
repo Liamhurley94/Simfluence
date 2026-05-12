@@ -36,8 +36,9 @@ export class PersonasService {
    * Pick the top `count` creators in a genre by CPI (matches Discovery's
    * default sort). If the genre yields fewer than `count`, returns all.
    */
-  autoSelect(genre: string, count: number): Creator[] {
+  async autoSelect(genre: string, count: number): Promise<Creator[]> {
     if (count <= 0) return [];
-    return this.creators.list({ genre }, 'cpi', 0, count).creators;
+    const result = await this.creators.list({ genre }, 'cpi', 0, count);
+    return result.creators;
   }
 }

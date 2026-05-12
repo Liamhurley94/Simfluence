@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, resource, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { CampaignsService } from '../../core/campaigns/campaigns.service';
@@ -229,13 +229,27 @@ export class OutreachComponent {
   protected readonly campaignFilter = signal<string>(''); // '', 'unassigned', or a campaign id
   protected readonly statusFilter = signal<string>(''); // '' or OutreachStatus
 
+  // Batch-fetch the creators referenced by visible outreach rows.
+  // Re-loads when the filtered set changes so per-row creatorFor()
+  // lookups stay synchronous from the template.
+  private readonly creatorsRes = resource<Creator[], number[]>({
+    params: () => this.svc.filtered().map((r) => r.creatorId),
+    loader: ({ params }) => this.creatorsSvc.byIds(params),
+    defaultValue: [],
+  });
+  private readonly creatorMap = computed(() => {
+    const m = new Map<number, Creator>();
+    for (const c of this.creatorsRes.value()) m.set(c.id, c);
+    return m;
+  });
+
   constructor() {
     void this.svc.load();
     void this.campaigns.load();
   }
 
   creatorFor(id: number): Creator | undefined {
-    return this.creatorsSvc.byId(id);
+    return this.creatorMap().get(id);
   }
 
   initialsOf(c: Creator): string {

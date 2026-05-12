@@ -1,17 +1,11 @@
-import { Injectable } from '@angular/core';
-import rawCreators from '../data/creators.data.json';
+import { Injectable, inject, signal } from '@angular/core';
 import { Creator, CreatorFilters, PagedCreators, SortKey } from '../data/creator.types';
-
-// Bundled at build time, lives in memory for the life of the app.
-// Cast through `unknown` so TS doesn't build a 6000-way union for the literal.
-const CREATORS = rawCreators as unknown as Creator[];
-
-function platformsOf(c: Creator): string[] {
-  return c.allPlatforms?.length ? c.allPlatforms : [c.platform];
-}
+import { SupabaseService } from '../supabase/supabase.service';
 
 const DEFAULT_PAGE_SIZE = 24;
 
+// Re-exported for SimulatorComponent's local subscriber-count math; the DB
+// has a generated subs_parsed column that does the same thing server-side.
 export function parseSubs(raw: string): number {
   if (!raw) return 0;
   const n = parseFloat(raw);
@@ -21,81 +15,137 @@ export function parseSubs(raw: string): number {
   return n;
 }
 
+function fromDb(row: Record<string, any>): Creator {
+  return {
+    id: row['id'],
+    name: row['name'],
+    handle: row['handle'],
+    platform: row['platform'],
+    allPlatforms: Array.isArray(row['all_platforms']) ? row['all_platforms'] : undefined,
+    subs: row['subs'],
+    avgViews: row['avg_views'],
+    eng: row['eng'],
+    genre: row['genre'],
+    cpi: row['cpi'],
+    gfi: row['gfi'],
+    color: row['color'],
+    verifiedDeals: row['verified_deals'],
+    sponsorHistory: Array.isArray(row['sponsor_history']) ? row['sponsor_history'] : [],
+    bio: row['bio'],
+    language: row['language'],
+    ytUrl: row['yt_url'],
+    twUrl: row['tw_url'],
+    ytHandle: row['yt_handle'],
+    ytSubs: row['yt_subs'],
+    ytAvgViews: row['yt_avg_views'],
+    ytCpi: row['yt_cpi'],
+    realCVR: row['real_cvr'],
+    realCPA: row['real_cpa'],
+    rates: row['rates'] ?? undefined,
+  };
+}
+
+// Escape % and _ wildcards so user search input is treated literally.
+function escapeIlike(s: string): string {
+  return s.replace(/[\\%_]/g, (m) => '\\' + m);
+}
+
 @Injectable({ providedIn: 'root' })
 export class CreatorsService {
-  list(
+  private readonly supabase = inject(SupabaseService);
+
+  // Filter dropdown values (small lists, fetched once via RPCs at app boot).
+  // Exposed as readonly signals so components stay reactive when load completes.
+  private readonly _genres = signal<string[]>([]);
+  private readonly _platforms = signal<string[]>([]);
+  private readonly _languages = signal<string[]>([]);
+
+  readonly genres = this._genres.asReadonly();
+  readonly platforms = this._platforms.asReadonly();
+  readonly languages = this._languages.asReadonly();
+  readonly loaded = signal(false);
+
+  /** Called by APP_INITIALIZER on boot. Populates filter dropdowns. */
+  async loadFilterOptions(): Promise<void> {
+    const [g, p, l] = await Promise.all([
+      this.supabase.client.rpc('get_creator_genres'),
+      this.supabase.client.rpc('get_creator_platforms'),
+      this.supabase.client.rpc('get_creator_languages'),
+    ]);
+    this._genres.set((g.data as string[] | null) ?? []);
+    this._platforms.set((p.data as string[] | null) ?? []);
+    this._languages.set((l.data as string[] | null) ?? []);
+    this.loaded.set(true);
+  }
+
+  /** Server-side filtered + sorted + paginated query against public.creators. */
+  async list(
     filters: CreatorFilters = {},
     sort: SortKey = 'cpi',
     page = 0,
     pageSize = DEFAULT_PAGE_SIZE,
-  ): PagedCreators {
-    let result = CREATORS.slice();
+  ): Promise<PagedCreators> {
+    let q = this.supabase.client.from('creators').select('*', { count: 'exact' });
 
     if (filters.genre) {
-      result = result.filter((c) => c.genre === filters.genre);
+      q = q.eq('genre', filters.genre);
     }
     if (filters.platforms?.length) {
-      const set = new Set(filters.platforms);
-      result = result.filter((c) => platformsOf(c).some((p) => set.has(p)));
+      q = q.overlaps('all_platforms', filters.platforms);
     }
     if (filters.languages?.length) {
-      const set = new Set(filters.languages);
-      result = result.filter((c) => set.has(c.language ?? 'English'));
+      q = q.in('language', filters.languages);
     }
     if (filters.search?.trim()) {
-      const q = filters.search.trim().toLowerCase();
-      result = result.filter(
-        (c) =>
-          c.name.toLowerCase().includes(q) ||
-          c.handle.toLowerCase().includes(q) ||
-          c.bio.toLowerCase().includes(q),
-      );
+      const s = escapeIlike(filters.search.trim());
+      q = q.or(`name.ilike.%${s}%,handle.ilike.%${s}%,bio.ilike.%${s}%`);
     }
 
-    result.sort((a, b) => {
-      switch (sort) {
-        case 'cpi':
-          return b.cpi - a.cpi;
-        case 'gfi':
-          return b.gfi - a.gfi;
-        case 'subs':
-          return parseSubs(b.subs) - parseSubs(a.subs);
-        case 'name':
-          return a.name.localeCompare(b.name);
-      }
-    });
+    const sortCol = sort === 'subs' ? 'subs_parsed' : sort;
+    const ascending = sort === 'name';
+    q = q.order(sortCol, { ascending });
 
-    const total = result.length;
+    const start = page * pageSize;
+    q = q.range(start, start + pageSize - 1);
+
+    const { data, error, count } = await q;
+    if (error) {
+      console.error('[CreatorsService] list failed:', error);
+      return { creators: [], total: 0, pageCount: 1, page: 0 };
+    }
+
+    const total = count ?? 0;
     const pageCount = Math.max(1, Math.ceil(total / pageSize));
     const safePage = Math.min(Math.max(0, page), pageCount - 1);
-    const start = safePage * pageSize;
-    const creators = result.slice(start, start + pageSize);
-
-    return { creators, total, pageCount, page: safePage };
+    return {
+      creators: (data ?? []).map(fromDb),
+      total,
+      pageCount,
+      page: safePage,
+    };
   }
 
-  byId(id: number): Creator | undefined {
-    return CREATORS.find((c) => c.id === id);
+  async byId(id: number): Promise<Creator | undefined> {
+    const { data, error } = await this.supabase.client
+      .from('creators')
+      .select('*')
+      .eq('id', id)
+      .maybeSingle();
+    if (error || !data) return undefined;
+    return fromDb(data);
   }
 
-  byIds(ids: Iterable<number>): Creator[] {
-    const set = new Set(ids);
-    return CREATORS.filter((c) => set.has(c.id));
-  }
-
-  genres(): string[] {
-    return Array.from(new Set(CREATORS.map((c) => c.genre))).sort();
-  }
-
-  platforms(): string[] {
-    const set = new Set<string>();
-    for (const c of CREATORS) for (const p of platformsOf(c)) set.add(p);
-    return Array.from(set).sort();
-  }
-
-  languages(): string[] {
-    const set = new Set<string>();
-    for (const c of CREATORS) set.add(c.language ?? 'English');
-    return Array.from(set).sort();
+  async byIds(ids: Iterable<number>): Promise<Creator[]> {
+    const arr = Array.from(ids);
+    if (arr.length === 0) return [];
+    const { data, error } = await this.supabase.client
+      .from('creators')
+      .select('*')
+      .in('id', arr);
+    if (error) {
+      console.error('[CreatorsService] byIds failed:', error);
+      return [];
+    }
+    return (data ?? []).map(fromDb);
   }
 }

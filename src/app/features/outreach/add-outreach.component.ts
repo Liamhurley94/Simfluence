@@ -1,4 +1,4 @@
-import { Component, computed, inject, output, signal } from '@angular/core';
+import { Component, computed, inject, output, resource, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { CreatorsService } from '../../core/creators/creators.service';
@@ -214,11 +214,18 @@ export class AddOutreachComponent {
   protected readonly contact = signal('');
   protected readonly notes = signal('');
 
-  protected readonly matches = computed(() => {
-    const q = this.search().trim();
-    if (q.length < 2) return [];
-    return this.creatorsSvc.list({ search: q }, 'cpi', 0, 8).creators;
+  // Live-search creator autocomplete: only hits the backend once the query
+  // is at least 2 chars; otherwise resolves to an empty list.
+  private readonly matchesRes = resource<Creator[], string>({
+    params: () => this.search().trim(),
+    loader: async ({ params }) => {
+      if (params.length < 2) return [];
+      const result = await this.creatorsSvc.list({ search: params }, 'cpi', 0, 8);
+      return result.creators;
+    },
+    defaultValue: [],
   });
+  protected readonly matches = computed(() => this.matchesRes.value());
 
   constructor() {
     void this.campaigns.load();

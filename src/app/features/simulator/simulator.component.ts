@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, resource, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -17,6 +17,7 @@ import {
   SimResult,
 } from '../../core/simulation/simulation.types';
 import { NewCampaign } from '../../core/campaigns/campaign.types';
+import { Creator } from '../../core/data/creator.types';
 
 const FORMATS: Format[] = ['Integrated', 'Mixed', 'Dedicated'];
 
@@ -110,7 +111,7 @@ const FORMATS: Format[] = ['Integrated', 'Mixed', 'Dedicated'];
             style="background: rgba(255,255,255,0.05); border: 1px solid var(--color-border); color: var(--color-text);"
             data-testid="sim-genre"
           >
-            @for (g of genres; track g) {
+            @for (g of genres(); track g) {
               <option [ngValue]="g">{{ g }}</option>
             }
           </select>
@@ -338,16 +339,20 @@ export class SimulatorComponent {
 
   protected readonly objectives = OBJECTIVES;
   protected readonly formats = FORMATS;
-  protected readonly genres = this.creatorsSvc.genres();
+  protected readonly genres = this.creatorsSvc.genres;
 
   protected readonly budget = signal(85_000);
   protected readonly format = signal<Format>('Integrated');
   protected readonly selectedObjectives = signal<Objective[]>([]);
   protected readonly result = signal<SimResult | null>(null);
 
-  protected readonly creators = computed(() =>
-    this.creatorsSvc.byIds(this.selection.ids()),
-  );
+  // Async batch fetch of selected creators; re-runs when selection changes.
+  private readonly creatorsRes = resource<Creator[], number[]>({
+    params: () => Array.from(this.selection.ids()),
+    loader: ({ params }) => this.creatorsSvc.byIds(params),
+    defaultValue: [],
+  });
+  protected readonly creators = computed(() => this.creatorsRes.value());
 
   protected readonly pending = this.runSim.pending;
 

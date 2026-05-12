@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, resource, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { Router } from '@angular/router';
 
@@ -6,12 +6,15 @@ import { CreatorsService } from '../../core/creators/creators.service';
 import { SelectionService } from '../../core/selection/selection.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { tierRank } from '../../core/types';
+import { PagedCreators } from '../../core/data/creator.types';
 import { CreatorCardComponent } from '../../shared/creator-card/creator-card.component';
 import {
   DiscoveryQuery,
   FilterPanelComponent,
 } from '../../shared/filter-panel/filter-panel.component';
 import { PaginationComponent } from '../../shared/pagination/pagination.component';
+
+const EMPTY_PAGE: PagedCreators = { creators: [], total: 0, pageCount: 1, page: 0 };
 
 @Component({
   selector: 'app-discovery',
@@ -27,7 +30,7 @@ import { PaginationComponent } from '../../shared/pagination/pagination.componen
         <div class="flex items-center justify-between mb-4">
           <h1 class="text-xl font-bold" style="color: var(--color-text);">Discovery</h1>
           <div class="text-xs" style="color: var(--color-text-muted);" data-testid="results-count">
-            {{ results().total | number }} creators
+            {{ results.value().total | number }} creators
           </div>
         </div>
 
@@ -63,7 +66,7 @@ import { PaginationComponent } from '../../shared/pagination/pagination.componen
           </div>
         }
 
-        @if (results().total === 0) {
+        @if (results.value().total === 0) {
           <div
             class="p-12 rounded-lg text-center"
             style="background: var(--color-bg-2); border: 1px solid var(--color-border);"
@@ -82,7 +85,7 @@ import { PaginationComponent } from '../../shared/pagination/pagination.componen
             style="grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));"
             data-testid="creator-grid"
           >
-            @for (c of results().creators; track c.id) {
+            @for (c of results.value().creators; track c.id) {
               <app-creator-card
                 [creator]="c"
                 [selected]="selection.has(c.id)"
@@ -92,8 +95,8 @@ import { PaginationComponent } from '../../shared/pagination/pagination.componen
             }
           </div>
           <app-pagination
-            [page]="results().page"
-            [pageCount]="results().pageCount"
+            [page]="results.value().page"
+            [pageCount]="results.value().pageCount"
             (pageChange)="onPage($event)"
           />
         }
@@ -111,9 +114,13 @@ export class DiscoveryComponent {
   protected readonly query = signal<DiscoveryQuery>({ sort: 'cpi' });
   protected readonly page = signal(0);
 
-  protected readonly results = computed(() => {
-    const q = this.query();
-    return this.creators.list(q, q.sort, this.page());
+  // Server-side filtered + paginated query. Reloads automatically when
+  // `query` or `page` signals change.
+  protected readonly results = resource<PagedCreators, { q: DiscoveryQuery; page: number }>({
+    params: () => ({ q: this.query(), page: this.page() }),
+    loader: ({ params }) =>
+      this.creators.list(params.q, params.q.sort, params.page),
+    defaultValue: EMPTY_PAGE,
   });
 
   protected readonly canSeeRates = computed(
