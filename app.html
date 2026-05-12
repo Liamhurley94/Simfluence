@@ -13625,8 +13625,11 @@ async function fetchCreatorYouTubeData(creator) {
     });
     // Read body regardless of status to get error details
     var result = await res.json();
+    // New Edge Function returns data directly (not wrapped in result.data)
+    if (result && result.top_videos) return result;
     if (result && result.data) return result.data;
     // If channel not found, show a friendly message rather than null
+    if (result && result.error && result.error.includes('not found')) return { _notFound: true };
     if (result && result.error === 'Channel not found') return { _notFound: true };
     return null;
   } catch (e) {
@@ -13756,15 +13759,15 @@ async function injectLiveDataIntoProfile(creator) {
 
   // Update subscriber count if live data available
   var subsEl = document.getElementById('profile-subs-' + creator.id);
-  if (subsEl && data.subs_live && data.subs_live > 0) {
-    var liveSubs = fmtLive(data.subs_live);
+  if (subsEl && data.subscriberCount && data.subscriberCount > 0) {
+    var liveSubs = fmtLive(data.subscriberCount);
     subsEl.innerHTML = liveSubs + ' <span style="font-size:10px;color:#00C46A">● LIVE</span>';
   }
 
   // Update avg views
   var viewsEl = document.getElementById('profile-views-' + creator.id);
-  if (viewsEl && data.avg_views_20 && data.avg_views_20 > 0) {
-    var liveViews = fmtLive(data.avg_views_20);
+  if (viewsEl && data.avgViews && data.avgViews > 0) {
+    var liveViews = fmtLive(data.avgViews);
     viewsEl.innerHTML = liveViews + ' <span style="font-size:10px;color:#00C46A">● 20 vid avg</span>';
   }
 
