@@ -11760,10 +11760,16 @@ function renderCreatorGrid(keepPage) {
     return activeLanguages.has(creatorLang);
   }
 
-  const display = scored.length >= 3 ? scored.filter(s => platformMatch(s.cr) && languageMatch(s.cr)) : CREATORS
-    .filter(cr => cr.genre === genre && platformMatch(cr) && languageMatch(cr))
-    .map(cr => ({ cr, total: cr.cpi }))
-    .sort((a,b) => b.total - a.total);
+  // When sorting by subscribers, bypass genre filter — show all creators by reach
+  const display = sortMode === 'subs'
+    ? CREATORS
+        .filter(cr => platformMatch(cr) && languageMatch(cr))
+        .map(cr => ({ cr, total: parseSubs(cr.subs) / 1e6 }))
+        .sort((a,b) => b.total - a.total)
+    : scored.length >= 3 ? scored.filter(s => platformMatch(s.cr) && languageMatch(s.cr)) : CREATORS
+        .filter(cr => cr.genre === genre && platformMatch(cr) && languageMatch(cr))
+        .map(cr => ({ cr, total: cr.cpi }))
+        .sort((a,b) => b.total - a.total);
 
   const totalHidden = CREATORS.length - display.length;
 
