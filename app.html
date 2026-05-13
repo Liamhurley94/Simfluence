@@ -12676,29 +12676,61 @@ function computeSimResults() {
   // Integrated: mid-roll segment → lower CTR; engaged viewer → higher CVR
   var fmtCtrAdj = format==='Dedicated' ? 1.35 : format==='Mixed' ? 1.12 : 1.0;
   var fmtCvrAdj = format==='Dedicated' ? 0.80 : format==='Mixed' ? 0.95 : 1.15;
-  const ctrMult    = avgCPI * (1 + awarenessW * 0.15 - salesW * 0.05) * fmtCtrAdj;
+
+  // ── Budget quality premium ─────────────────────────────────────────
+  // Higher budgets unlock better creators and placements — CTR improves
+  // up to a sweet spot (~$150K), then diminishing returns set in
+  // Scale: $10K = 0.80x, $50K = 0.95x, $100K = 1.05x, $200K = 1.12x, $500K+ = 1.08x (diminishing)
+  var budgetQuality = (function() {
+    var b = budget;
+    if (b < 10000)  return 0.75;
+    if (b < 25000)  return 0.82;
+    if (b < 50000)  return 0.90;
+    if (b < 100000) return 1.00;
+    if (b < 200000) return 1.08;
+    if (b < 500000) return 1.13;
+    // Above $500K — diminishing returns, creator saturation
+    return 1.13 * Math.pow(500000 / b, 0.08);
+  })();
+
+  // ── Creator quality premium ────────────────────────────────────────
+  // Higher CPI creators have better-engaged audiences — CTR reflects this
+  // avgCPI 0.7 = baseline, 0.9+ = significant CTR improvement
+  var creatorQuality = 0.75 + (avgCPI * 0.35);
+
+  const ctrMult    = creatorQuality * budgetQuality * (1 + awarenessW * 0.15 - salesW * 0.05) * fmtCtrAdj;
   const ctr        = Math.min(bench.ctrBase * ctrMult, 15);
-  const cvr        = Math.min(bench.cvrBase * (1 + salesW * 0.3 - awarenessW * 0.1) * avgCPI * fmtCvrAdj, 20);
+  const cvr        = Math.min(bench.cvrBase * (1 + salesW * 0.3 - awarenessW * 0.1) * avgCPI * budgetQuality * fmtCvrAdj, 20);
   const clicks     = Math.round(impressions * ctr / 100);
   const conversions = Math.round(clicks * cvr / 100);
-  const revenue    = conversions * 30;
-  const roas       = budget > 0 ? revenue / budget : 0;
-  const engRate    = Math.min(bench.engBase * (1 + engagementW * 0.2) * avgCPI, 20);
+  // ── ROAS: indicative range, not a hard prediction ────────────────
+  // roasBase from genre benchmarks × budget quality × creator quality
+  // Shown as a range (P10–P90) with explicit low-confidence labelling
+  var roasBase   = (bench.roasBase || 2.0) * budgetQuality * creatorQuality;
+  var roasP10    = Math.round(roasBase * 0.45 * 10) / 10;  // wide low end
+  var roasP50    = Math.round(roasBase * 10) / 10;
+  var roasP90    = Math.round(roasBase * 2.1 * 10) / 10;   // wide high end
+  // Keep legacy roas for saved campaigns compatibility
+  const revenue  = conversions * 30;
+  const roas     = roasP50;
+  const engRate  = Math.min(bench.engBase * (1 + engagementW * 0.2) * avgCPI * budgetQuality, 20);
 
   simResults = {
     impressions,
-    ctr:    Math.round(ctr * 10) / 10,
-    cpM:    Math.round(cpmActual * 100) / 100,
-    cvr:    Math.round(cvr * 10) / 10,
+    ctr:     Math.round(ctr * 10) / 10,
+    cpM:     Math.round(cpmActual * 100) / 100,
+    cvr:     Math.round(cvr * 10) / 10,
     conversions,
-    roas:   Math.round(roas * 10) / 10,
+    roas:    roasP50,
+    roasP10, roasP50, roasP90,
+    roasRange: roasP10 + '×–' + roasP90 + '×',
     engRate: Math.round(engRate * 10) / 10,
     clicks,
     budget,
     crData,
-    p10: { impressions: Math.round(impressions * 0.68), ctr: Math.round(ctr * 0.68 * 10) / 10, roas: Math.round(roas * 0.65 * 10) / 10 },
-    p50: { impressions, ctr: Math.round(ctr * 10) / 10, roas: Math.round(roas * 10) / 10 },
-    p90: { impressions: Math.round(impressions * 1.42), ctr: Math.round(ctr * 1.42 * 10) / 10, roas: Math.round(roas * 1.45 * 10) / 10 },
+    p10: { impressions: Math.round(impressions * 0.68), ctr: Math.round(ctr * 0.68 * 10) / 10, roas: roasP10 },
+    p50: { impressions, ctr: Math.round(ctr * 10) / 10, roas: roasP50 },
+    p90: { impressions: Math.round(impressions * 1.42), ctr: Math.round(ctr * 1.42 * 10) / 10, roas: roasP90 },
   };
 }
 
@@ -12733,7 +12765,9 @@ function updateSimDisplay() {
     { label:'CPM',              val:'$'+r.cpM,            sub:'Cost per 1,000 imps', color:'#FF7A00' },
     { label:'CVR',              val:r.cvr+'%',            sub:'Conversion rate',     color:'#9C27B0' },
     { label:'Est. Conversions', val:fmtNum(r.conversions),sub:'Installs / leads',    color:'#E91E63' },
-    { label:'ROAS',             val:r.roas+'×',           sub:'Return on ad spend',  color:'#FFD400' },
+    { label:'ROAS (indicative)', val: r.roasRange || (r.roas+'×'),
+      sub:'Range — actual depends on attribution & product price',
+      color:'#FFD400' },
   ];
   const simEl = document.getElementById('simResults');
   if (simEl) simEl.innerHTML = metrics.map(function(m) {
