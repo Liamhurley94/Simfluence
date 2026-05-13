@@ -4,6 +4,32 @@ Influencer campaign forecasting SaaS. Users build a creator shortlist, input a b
 
 ---
 
+## Migration context (read before working in this repo)
+
+This repo's `develop` branch is an **in-flight rewrite** of a legacy single-file HTML monolith. The migration shape:
+
+- **`main` branch** = the legacy HTML app (`app.html`, ~21k lines, vibe-coded). Owner edits it directly via the GitHub web UI; commit messages are all "Update app.html" and tell you nothing — real change descriptions arrive via DMs.
+- **`develop` branch** = the Angular rewrite (where you are). Becomes the new prod at cutover.
+- **Sibling repo** at `../simfluence-backend` holds Supabase migrations, edge functions, env-switching scripts, and sync tooling. Read its `CLAUDE.md` for the source-of-truth workflow.
+
+**Working assumptions you must internalize:**
+- The owner has no source-control discipline on `main` or on prod's Supabase edge functions (he edits both directly in their respective web UIs). We track those changes by **periodic re-pull + diff + selective port**.
+- Creator data lives in `Simfluence/main:app.html` as a static `CREATORS = [...]` JS literal. New creators land there first. Sync to staging Postgres via `simfluence-backend/scripts/sync-creators-from-source.ts`.
+- Prod edge function code drifts from our committed source. When something behaves differently between prod and staging, **`supabase functions download --project-ref <prod>`** is the diagnostic move.
+- We're tightening as we go. Don't preserve legacy quirks unless they encode actual product behavior users depend on. Simulator math, scoring formulas, and other IP must stay server-side in edge functions — never re-ship coefficients in the JS bundle.
+
+A standalone copy of the dual-env arch decisions is at `~/.claude/plans/dual-supabase-environments.md`.
+
+---
+
+## ⚠️ Post-cutover updates (when `develop` becomes the new prod)
+
+When the cutover finally happens — `develop` is promoted to `main`, legacy HTML retired, current staging Supabase becomes the new prod — **the "Migration context" section above must be updated or removed**, along with the matching reminder in `../simfluence-backend/CLAUDE.md`. The "track owner's manual edits" model goes away; this codebase becomes the sole source of truth. Several entries under "Next up" below (cutover prep, sync scripts as obsolete) also need refreshing.
+
+If you're a future contributor / Claude session reading this and the cutover has already happened, flag this section and offer to revise.
+
+---
+
 ## Stack
 
 | Concern   | Choice                                                    |
