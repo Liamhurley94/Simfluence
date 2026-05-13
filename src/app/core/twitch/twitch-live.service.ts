@@ -44,13 +44,11 @@ export class TwitchLiveService {
     return out;
   });
 
-  constructor() {
-    // Kick off the first poll right after construction; the service is
-    // provided in root so this fires once per app boot. Subsequent ticks
-    // run every POLL_INTERVAL_MS for the lifetime of the app.
-    void this.poll();
-    setInterval(() => void this.poll(), POLL_INTERVAL_MS);
-  }
+  // No auto-poll. The Live Channels feed that used this is retired; the
+  // remaining consumers (e.g. profile-modal Twitch enrichment, planned next)
+  // call poll() / fetch-style methods on demand. Keeping the polling pattern
+  // available — just dormant — so a future per-creator enrichment can either
+  // use isLive(creator) opportunistically or call poll() explicitly.
 
   /** Returns true if the creator's Twitch login is currently streaming. */
   isLive(creator: Creator): boolean {
