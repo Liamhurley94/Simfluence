@@ -3991,28 +3991,6 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
 
         <div class="field">
-          <label style="display:flex;align-items:center;justify-content:space-between">
-            <span>Avg. Conversion Value</span>
-            <span style="font-size:10px;color:var(--text-muted);font-weight:400">Your product/lead value</span>
-          </label>
-          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:4px" id="aovSegments">
-            <button class="aov-seg" data-val="15"   style="padding:5px 2px;font-family:Manrope,sans-serif;font-size:10px;font-weight:600;border:1px solid var(--border);border-radius:4px;background:var(--bg3);color:var(--text-muted);cursor:pointer;transition:all .15s">$15</button>
-            <button class="aov-seg" data-val="30"   style="padding:5px 2px;font-family:Manrope,sans-serif;font-size:10px;font-weight:600;border:1px solid rgba(0,196,106,0.4);border-radius:4px;background:rgba(0,196,106,0.12);color:#00C46A;cursor:pointer;transition:all .15s">$30</button>
-            <button class="aov-seg" data-val="75"   style="padding:5px 2px;font-family:Manrope,sans-serif;font-size:10px;font-weight:600;border:1px solid var(--border);border-radius:4px;background:var(--bg3);color:var(--text-muted);cursor:pointer;transition:all .15s">$75</button>
-            <button class="aov-seg" data-val="150"  style="padding:5px 2px;font-family:Manrope,sans-serif;font-size:10px;font-weight:600;border:1px solid var(--border);border-radius:4px;background:var(--bg3);color:var(--text-muted);cursor:pointer;transition:all .15s">$150</button>
-            <button class="aov-seg" data-val="500"  style="padding:5px 2px;font-family:Manrope,sans-serif;font-size:10px;font-weight:600;border:1px solid var(--border);border-radius:4px;background:var(--bg3);color:var(--text-muted);cursor:pointer;transition:all .15s">$500</button>
-            <button class="aov-seg" data-val="1000" style="padding:5px 2px;font-family:Manrope,sans-serif;font-size:10px;font-weight:600;border:1px solid var(--border);border-radius:4px;background:var(--bg3);color:var(--text-muted);cursor:pointer;transition:all .15s">$1K</button>
-            <button class="aov-seg" data-val="5000" style="padding:5px 2px;font-family:Manrope,sans-serif;font-size:10px;font-weight:600;border:1px solid var(--border);border-radius:4px;background:var(--bg3);color:var(--text-muted);cursor:pointer;transition:all .15s">$5K</button>
-            <button class="aov-seg" data-val="custom" id="aovCustomBtn" style="padding:5px 2px;font-family:Manrope,sans-serif;font-size:10px;font-weight:600;border:1px solid var(--border);border-radius:4px;background:var(--bg3);color:var(--text-muted);cursor:pointer;transition:all .15s">✏ Custom</button>
-          </div>
-          <div id="aovCustomWrap" style="display:none;margin-top:4px">
-            <input id="aovCustomInput" type="number" placeholder="Enter value e.g. 250"
-              style="width:100%;padding:7px 10px;background:var(--bg3);border:1px solid rgba(0,196,106,0.3);border-radius:5px;color:#00C46A;font-family:Manrope,sans-serif;font-size:12px;font-weight:600;outline:none;box-sizing:border-box">
-          </div>
-          <div style="font-size:10px;color:var(--text-muted);margin-top:5px">Used to calculate ROAS — enter your avg order value, lead value, or app install value</div>
-        </div>
-
-        <div class="field">
           <label>Creator Tier Mix</label>
           <select id="tierMix" >
             <option value="0">Micro only (≤50K)</option>
