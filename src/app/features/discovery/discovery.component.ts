@@ -23,7 +23,7 @@ const EMPTY_PAGE: PagedCreators = { creators: [], total: 0, pageCount: 1, page: 
   template: `
     <div class="flex gap-6">
       <aside class="w-72 shrink-0">
-        <app-filter-panel (change)="onQuery($event)" />
+        <app-filter-panel (queryChange)="onQuery($event)" />
       </aside>
 
       <section class="flex-1 min-w-0">

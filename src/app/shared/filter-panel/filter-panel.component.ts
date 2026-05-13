@@ -149,7 +149,7 @@ const SORT_OPTIONS: { key: SortKey; label: string }[] = [
 export class FilterPanelComponent {
   private svc = inject(CreatorsService);
 
-  readonly change = output<DiscoveryQuery>();
+  readonly queryChange = output<DiscoveryQuery>();
 
   // Bind to the service signals directly so dropdowns update when the
   // RPC-fed lists populate after the APP_INITIALIZER fires.
@@ -210,7 +210,7 @@ export class FilterPanelComponent {
   }
 
   private emit(): void {
-    this.change.emit({
+    this.queryChange.emit({
       genre: this.genre(),
       platforms: this.platforms_(),
       languages: this.languages_(),
