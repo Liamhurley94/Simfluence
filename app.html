@@ -3989,6 +3989,28 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
 
         <div class="field">
+          <label style="display:flex;align-items:center;justify-content:space-between">
+            <span>Avg. Conversion Value</span>
+            <span style="font-size:10px;color:var(--text-muted);font-weight:400">Your product/lead value</span>
+          </label>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:4px" id="aovSegments">
+            <button class="aov-seg" data-val="15"   style="padding:5px 2px;font-family:Manrope,sans-serif;font-size:10px;font-weight:600;border:1px solid var(--border);border-radius:4px;background:var(--bg3);color:var(--text-muted);cursor:pointer;transition:all .15s">$15</button>
+            <button class="aov-seg" data-val="30"   style="padding:5px 2px;font-family:Manrope,sans-serif;font-size:10px;font-weight:600;border:1px solid rgba(0,196,106,0.4);border-radius:4px;background:rgba(0,196,106,0.12);color:#00C46A;cursor:pointer;transition:all .15s">$30</button>
+            <button class="aov-seg" data-val="75"   style="padding:5px 2px;font-family:Manrope,sans-serif;font-size:10px;font-weight:600;border:1px solid var(--border);border-radius:4px;background:var(--bg3);color:var(--text-muted);cursor:pointer;transition:all .15s">$75</button>
+            <button class="aov-seg" data-val="150"  style="padding:5px 2px;font-family:Manrope,sans-serif;font-size:10px;font-weight:600;border:1px solid var(--border);border-radius:4px;background:var(--bg3);color:var(--text-muted);cursor:pointer;transition:all .15s">$150</button>
+            <button class="aov-seg" data-val="500"  style="padding:5px 2px;font-family:Manrope,sans-serif;font-size:10px;font-weight:600;border:1px solid var(--border);border-radius:4px;background:var(--bg3);color:var(--text-muted);cursor:pointer;transition:all .15s">$500</button>
+            <button class="aov-seg" data-val="1000" style="padding:5px 2px;font-family:Manrope,sans-serif;font-size:10px;font-weight:600;border:1px solid var(--border);border-radius:4px;background:var(--bg3);color:var(--text-muted);cursor:pointer;transition:all .15s">$1K</button>
+            <button class="aov-seg" data-val="5000" style="padding:5px 2px;font-family:Manrope,sans-serif;font-size:10px;font-weight:600;border:1px solid var(--border);border-radius:4px;background:var(--bg3);color:var(--text-muted);cursor:pointer;transition:all .15s">$5K</button>
+            <button class="aov-seg" data-val="custom" id="aovCustomBtn" style="padding:5px 2px;font-family:Manrope,sans-serif;font-size:10px;font-weight:600;border:1px solid var(--border);border-radius:4px;background:var(--bg3);color:var(--text-muted);cursor:pointer;transition:all .15s">✏ Custom</button>
+          </div>
+          <div id="aovCustomWrap" style="display:none;margin-top:4px">
+            <input id="aovCustomInput" type="number" placeholder="Enter value e.g. 250"
+              style="width:100%;padding:7px 10px;background:var(--bg3);border:1px solid rgba(0,196,106,0.3);border-radius:5px;color:#00C46A;font-family:Manrope,sans-serif;font-size:12px;font-weight:600;outline:none;box-sizing:border-box">
+          </div>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:5px">Used to calculate estimated ROAS — enter your average order value, lead value, or app install value</div>
+        </div>
+
+        <div class="field">
           <label>Creator Tier Mix</label>
           <select id="tierMix" >
             <option value="0">Micro only (≤50K)</option>
@@ -12711,7 +12733,16 @@ function computeSimResults() {
   var roasP50    = Math.round(roasBase * 10) / 10;
   var roasP90    = Math.round(roasBase * 2.1 * 10) / 10;   // wide high end
   // Keep legacy roas for saved campaigns compatibility
-  const revenue  = conversions * 30;
+  var aovSel = document.querySelector('.aov-seg.active');
+  var aovCustomWrap = document.getElementById('aovCustomWrap');
+  var aovCustomInput = document.getElementById('aovCustomInput');
+  var conversionValue = 30;
+  if (aovCustomWrap && aovCustomWrap.style.display !== 'none' && aovCustomInput && parseFloat(aovCustomInput.value) > 0) {
+    conversionValue = parseFloat(aovCustomInput.value);
+  } else if (aovSel && aovSel.dataset.val !== 'custom') {
+    conversionValue = parseFloat(aovSel.dataset.val) || 30;
+  }
+  const revenue  = conversions * conversionValue;
   const roas     = roasP50;
   const engRate  = Math.min(bench.engBase * (1 + engagementW * 0.2) * avgCPI * budgetQuality, 20);
 
@@ -16651,6 +16682,47 @@ document.addEventListener('DOMContentLoaded', function() {
       // Update brief panel meta
       if (typeof updateBriefPanel === 'function') updateBriefPanel();
     });
+  })();
+
+  // ── AOV (Average Order Value) picker ──────────────────────────────────
+  (function() {
+    var aovSegs    = document.querySelectorAll('.aov-seg');
+    var aovWrap    = document.getElementById('aovCustomWrap');
+    var aovInput   = document.getElementById('aovCustomInput');
+
+    function setActiveAov(val) {
+      aovSegs.forEach(function(btn) {
+        var isActive = btn.dataset.val === val;
+        btn.style.background  = isActive ? 'rgba(0,196,106,0.12)' : 'var(--bg3)';
+        btn.style.borderColor = isActive ? 'rgba(0,196,106,0.4)'  : 'var(--border)';
+        btn.style.color       = isActive ? '#00C46A'               : 'var(--text-muted)';
+        if (isActive) btn.classList.add('active');
+        else btn.classList.remove('active');
+      });
+    }
+
+    // Default to $30
+    setActiveAov('30');
+
+    aovSegs.forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        setActiveAov(btn.dataset.val);
+        if (btn.dataset.val === 'custom') {
+          if (aovWrap) aovWrap.style.display = 'block';
+        } else {
+          if (aovWrap) aovWrap.style.display = 'none';
+          if (typeof computeSimResults === 'function') computeSimResults();
+          if (typeof updateSimDisplay === 'function') updateSimDisplay();
+        }
+      });
+    });
+
+    if (aovInput) {
+      aovInput.addEventListener('input', function() {
+        if (typeof computeSimResults === 'function') computeSimResults();
+        if (typeof updateSimDisplay === 'function') updateSimDisplay();
+      });
+    }
   })();
 
   // ── Budget segmented picker ────────────────────────────────────────
