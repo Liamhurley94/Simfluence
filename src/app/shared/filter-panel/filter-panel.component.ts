@@ -1,7 +1,7 @@
 import { Component, computed, inject, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CreatorsService } from '../../core/creators/creators.service';
-import { CreatorFilters, SortKey } from '../../core/data/creator.types';
+import { CreatorFilters, CreatorTier, SortKey } from '../../core/data/creator.types';
 
 export interface DiscoveryQuery extends CreatorFilters {
   sort: SortKey;
@@ -12,6 +12,13 @@ const SORT_OPTIONS: { key: SortKey; label: string }[] = [
   { key: 'gfi', label: 'GFI Score' },
   { key: 'subs', label: 'Subscribers' },
   { key: 'name', label: 'Name' },
+];
+
+const TIER_OPTIONS: { key: CreatorTier; label: string }[] = [
+  { key: 'Micro', label: 'Micro only (≤50K)' },
+  { key: 'Mid-tier', label: 'Mid-tier (50K–500K)' },
+  { key: 'Established', label: 'Established (500K–2M)' },
+  { key: 'Megastar', label: 'Megastar (2M+)' },
 ];
 
 @Component({
@@ -111,6 +118,28 @@ const SORT_OPTIONS: { key: SortKey; label: string }[] = [
         </div>
       </div>
 
+      <!-- Tier -->
+      <div>
+        <label
+          class="text-[10px] uppercase tracking-wider mb-1 block"
+          style="color: var(--color-text-muted);"
+        >
+          Creator tier
+        </label>
+        <select
+          [ngModel]="tier()"
+          (ngModelChange)="onTier($event)"
+          class="w-full px-3 py-2 rounded text-sm"
+          style="background: rgba(255,255,255,0.05); border: 1px solid var(--color-border); color: var(--color-text);"
+          data-testid="filter-tier"
+        >
+          <option [ngValue]="undefined">Mixed tiers</option>
+          @for (opt of tierOptions; track opt.key) {
+            <option [ngValue]="opt.key">{{ opt.label }}</option>
+          }
+        </select>
+      </div>
+
       <!-- Sort -->
       <div>
         <label
@@ -157,19 +186,22 @@ export class FilterPanelComponent {
   readonly platforms = this.svc.platforms;
   readonly languages = this.svc.languages;
   readonly sortOptions = SORT_OPTIONS;
+  readonly tierOptions = TIER_OPTIONS;
 
   readonly genre = signal<string | undefined>(undefined);
   readonly platforms_ = signal<string[]>([]);
   readonly languages_ = signal<string[]>([]);
   readonly search = signal<string>('');
   readonly sort = signal<SortKey>('cpi');
+  readonly tier = signal<CreatorTier | undefined>(undefined);
 
   readonly hasFilters = computed(
     () =>
       !!this.genre() ||
       this.platforms_().length > 0 ||
       this.languages_().length > 0 ||
-      !!this.search().trim(),
+      !!this.search().trim() ||
+      !!this.tier(),
   );
 
   onGenre(g: string | undefined): void {
@@ -184,6 +216,11 @@ export class FilterPanelComponent {
 
   onSort(s: SortKey): void {
     this.sort.set(s);
+    this.emit();
+  }
+
+  onTier(t: CreatorTier | undefined): void {
+    this.tier.set(t);
     this.emit();
   }
 
@@ -206,6 +243,7 @@ export class FilterPanelComponent {
     this.platforms_.set([]);
     this.languages_.set([]);
     this.search.set('');
+    this.tier.set(undefined);
     this.emit();
   }
 
@@ -216,6 +254,7 @@ export class FilterPanelComponent {
       languages: this.languages_(),
       search: this.search(),
       sort: this.sort(),
+      tier: this.tier(),
     });
   }
 }

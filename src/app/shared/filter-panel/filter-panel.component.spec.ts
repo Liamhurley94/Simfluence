@@ -3,11 +3,21 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { Component, signal } from '@angular/core';
 
 import { FilterPanelComponent, DiscoveryQuery } from './filter-panel.component';
+import { CreatorsService } from '../../core/creators/creators.service';
+
+// FilterPanelComponent reads dropdown options off CreatorsService signals
+// (populated by an RPC at app boot). In tests we substitute a stub with
+// pre-populated lists so the <select> options and platform chips render.
+const creatorsStub = {
+  genres: signal(['Gaming & Esports', 'Music']),
+  platforms: signal(['YouTube', 'Twitch']),
+  languages: signal(['English', 'Spanish']),
+};
 
 @Component({
   standalone: true,
   imports: [FilterPanelComponent],
-  template: `<app-filter-panel (change)="last.set($event)" />`,
+  template: `<app-filter-panel (queryChange)="last.set($event)" />`,
 })
 class HostComponent {
   last = signal<DiscoveryQuery | null>(null);
@@ -16,7 +26,10 @@ class HostComponent {
 describe('FilterPanelComponent', () => {
   beforeEach(() => {
     TestBed.resetTestingModule();
-    TestBed.configureTestingModule({ imports: [HostComponent] });
+    TestBed.configureTestingModule({
+      imports: [HostComponent],
+      providers: [{ provide: CreatorsService, useValue: creatorsStub }],
+    });
   });
 
   it('emits query on search input change', () => {
@@ -60,6 +73,21 @@ describe('FilterPanelComponent', () => {
 
     twitchBtn.click();
     expect(fixture.componentInstance.last()?.platforms).not.toContain('Twitch');
+  });
+
+  it('emits tier when the tier select changes', () => {
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.detectChanges();
+
+    const select: HTMLSelectElement = fixture.nativeElement.querySelector(
+      '[data-testid="filter-tier"]',
+    );
+    // option index 0 is "Mixed tiers" (undefined); index 4 is "Megastar".
+    select.selectedIndex = 4;
+    select.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.last()?.tier).toBe('Megastar');
   });
 
   it('clearAll resets every filter and emits empty query', () => {

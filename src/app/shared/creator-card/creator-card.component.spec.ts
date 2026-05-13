@@ -12,6 +12,7 @@ const SAMPLE: Creator = {
   platform: 'YouTube',
   allPlatforms: ['YouTube', 'Twitch'],
   subs: '1.5M',
+  subsParsed: 1_500_000,
   avgViews: '180K',
   eng: '4.2%',
   genre: 'Gaming & Esports',
@@ -96,6 +97,19 @@ describe('CreatorCardComponent', () => {
     );
     button.click();
     expect(fixture.componentInstance.toggled()).toBe(42);
+  });
+
+  it('renders the tier badge derived from subsParsed', () => {
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.detectChanges();
+    const badge = fixture.nativeElement.querySelector('[data-testid="creator-tier-badge"]');
+    expect(badge).toBeTruthy();
+    // SAMPLE.subsParsed = 1_500_000 → Established (500K–2M).
+    expect(badge.textContent.trim()).toBe('Established');
+
+    fixture.componentInstance.creator.set({ ...SAMPLE, subsParsed: 3_000_000 });
+    fixture.detectChanges();
+    expect(badge.textContent.trim()).toBe('Megastar');
   });
 
   it('reflects selected state in the toggle label', () => {

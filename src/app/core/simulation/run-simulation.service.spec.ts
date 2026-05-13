@@ -13,6 +13,7 @@ const sampleCreator: Creator = {
   platform: 'YouTube',
   allPlatforms: ['YouTube'],
   subs: '100K',
+  subsParsed: 100_000,
   avgViews: '20K',
   eng: '3.0%',
   genre: 'Gaming & Esports',

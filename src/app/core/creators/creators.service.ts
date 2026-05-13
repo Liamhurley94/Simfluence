@@ -1,5 +1,5 @@
 import { Injectable, inject, signal } from '@angular/core';
-import { Creator, CreatorFilters, PagedCreators, SortKey } from '../data/creator.types';
+import { CREATOR_TIER_RANGES, Creator, CreatorFilters, PagedCreators, SortKey } from '../data/creator.types';
 import { SupabaseService } from '../supabase/supabase.service';
 
 const DEFAULT_PAGE_SIZE = 24;
@@ -23,6 +23,7 @@ function fromDb(row: Record<string, any>): Creator {
     platform: row['platform'],
     allPlatforms: Array.isArray(row['all_platforms']) ? row['all_platforms'] : undefined,
     subs: row['subs'],
+    subsParsed: Number(row['subs_parsed'] ?? 0),
     avgViews: row['avg_views'],
     eng: row['eng'],
     genre: row['genre'],
@@ -99,6 +100,11 @@ export class CreatorsService {
     if (filters.search?.trim()) {
       const s = escapeIlike(filters.search.trim());
       q = q.or(`name.ilike.%${s}%,handle.ilike.%${s}%,bio.ilike.%${s}%`);
+    }
+    if (filters.tier) {
+      const [lo, hi] = CREATOR_TIER_RANGES[filters.tier];
+      q = q.gte('subs_parsed', lo);
+      if (Number.isFinite(hi)) q = q.lt('subs_parsed', hi);
     }
 
     const sortCol = sort === 'subs' ? 'subs_parsed' : sort;

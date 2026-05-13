@@ -1,5 +1,5 @@
 import { Component, computed, inject, input, output } from '@angular/core';
-import { Creator } from '../../core/data/creator.types';
+import { CREATOR_TIER_COLORS, Creator, tierForSubs } from '../../core/data/creator.types';
 import { CreatorProfileService } from '../../core/creator-profile/creator-profile.service';
 
 const PLATFORM_COLORS: Record<string, string> = {
@@ -55,7 +55,16 @@ const PLATFORM_COLORS: Record<string, string> = {
         </button>
       </div>
 
-      <div class="flex flex-wrap gap-1 mb-3">
+      <div class="flex flex-wrap gap-1 mb-3 items-center">
+        <span
+          class="text-[10px] font-semibold px-1.5 py-0.5 rounded-sm uppercase tracking-wider"
+          [style.background]="tierBg()"
+          [style.color]="tierFg()"
+          [style.border]="'1px solid ' + tierBorder()"
+          data-testid="creator-tier-badge"
+        >
+          {{ tier() }}
+        </span>
         @for (p of platforms(); track p) {
           <span
             class="text-[9px] px-1.5 py-0.5 rounded uppercase tracking-wider"
@@ -153,6 +162,11 @@ export class CreatorCardComponent {
     const c = this.creator();
     return c.allPlatforms?.length ? c.allPlatforms : [c.platform];
   });
+
+  readonly tier = computed(() => tierForSubs(this.creator().subsParsed));
+  readonly tierFg = computed(() => CREATOR_TIER_COLORS[this.tier()]);
+  readonly tierBg = computed(() => CREATOR_TIER_COLORS[this.tier()] + '22');
+  readonly tierBorder = computed(() => CREATOR_TIER_COLORS[this.tier()] + '44');
 
   readonly initials = computed(() => {
     const parts = this.creator().name.trim().split(/\s+/);
