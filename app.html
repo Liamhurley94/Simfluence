@@ -12249,7 +12249,7 @@ function openProfileOverlay(id) {
       </div>
 
       <!-- TWITCH CONTEXT PANEL -->
-      ${c.platform==='Twitch' ? getTwitchPanel(c) : ''}
+      
 
       <!-- LIVE CONTENT ANALYSIS -->
       <div style="padding:20px 24px;border-top:1px solid var(--border)">
@@ -12286,6 +12286,9 @@ function openProfileOverlay(id) {
   }
 }
 
+
+// ── TWITCH PANEL STUB (data shown in live section below) ─────────────
+function getTwitchPanel(c) { return ''; }
 // ── TWITCH CREATOR ENRICHMENT ─────────────────────────────────────────
 async function injectTwitchDataIntoProfile(creator) {
   var liveEl  = document.getElementById('profile-live-' + creator.id);
