@@ -12291,7 +12291,14 @@ async function injectTwitchDataIntoProfile(creator) {
   var liveEl  = document.getElementById('profile-live-' + creator.id);
   var tsEl    = document.getElementById('profile-ts-' + creator.id);
   var inactEl = document.getElementById('profile-inactivity-' + creator.id);
-  if (!liveEl) return;
+  if (!liveEl) {
+    return;
+  }
+  // Twitch enrichment coming soon — show graceful message
+  liveEl.innerHTML = '<div style="font-size:11px;color:var(--text-muted);padding:8px 0">'
+    + '<span style="color:#9146FF;font-weight:700">Twitch</span> live data enrichment coming soon.'
+    + '</div>';
+  return;
   try {
     var res = await fetch(
       'https://iysjxslzlbojoivxjrce.supabase.co/functions/v1/twitch-creator-data',
