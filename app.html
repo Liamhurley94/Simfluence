@@ -12610,7 +12610,19 @@ function computeSimResults() {
 
   const formatKey  = format === 'Dedicated' ? 'ded' : format === 'Mixed' ? 'mix' : 'int';
   const formatMult = format === 'Dedicated' ? 1.4 : format === 'Mixed' ? 1.15 : 1.0;
-  const subModeMult = activeSubMode ? 1.08 : 1.0;
+  // Sub-mode multiplier: when sub-mode is set, only creators with
+  // high sub-mode alignment are effective — reflected in reach quality
+  const subModeGFIBoost = activeSubMode ? (function() {
+    var aligned = toSim.filter(function(cr) {
+      var bio = (cr.bio||'').toLowerCase();
+      var kws = (typeof SUBMODE_KEYWORDS !== 'undefined' && SUBMODE_KEYWORDS[activeSubMode]) || [];
+      return kws.some(function(kw) { return bio.includes(kw.toLowerCase()); });
+    }).length;
+    var ratio = toSim.length > 0 ? aligned / toSim.length : 0;
+    // 0 aligned = 0.85x (wrong audience), all aligned = 1.25x (perfect audience)
+    return 0.85 + (ratio * 0.40);
+  })() : 1.0;
+  const subModeMult = subModeGFIBoost;
 
   const crData = toSim.filter(cr => cr && cr.id).map(cr => {
     const e       = computeCostEstimate(cr);
@@ -12622,7 +12634,43 @@ function computeSimResults() {
   const cpmBase    = niche.med * (format === 'Dedicated' ? niche.dedMult : 1.0);
   const avgCPI     = toSim.reduce((a, cr) => a + cr.cpi, 0) / toSim.length / 100;
   const cpmActual  = cpmBase * Math.max(0.6, avgCPI);
-  const impressions = Math.round((budget / Math.max(cpmActual, 1)) * 1000 * subModeMult * formatMult);
+
+  // ── Creator-driven reach model ────────────────────────────────────
+  // Impressions = sum of each creator's expected views on a sponsored video
+  // Expected views = avg views * view retention factor for sponsored content
+  // View retention: Dedicated 0.85 (full video), Integrated 0.65 (mid-roll), Mixed 0.75
+  const viewRetention = format === 'Dedicated' ? 0.85 : format === 'Mixed' ? 0.75 : 0.65;
+  const subModeMult2  = activeSubMode ? 1.12 : 1.0;
+
+  // Only count creators we can actually afford within budget
+  var remainingBudget = budget;
+  var reachableCreators = crData.filter(function(d) {
+    if (d.midRate <= remainingBudget) {
+      remainingBudget -= d.midRate;
+      return true;
+    }
+    return false;
+  });
+
+  // Sum actual reach from reachable creators
+  var creatorReach = reachableCreators.reduce(function(total, d) {
+    var avgViews = parseSubs(d.cr.avgViews) || 0;
+    var subs     = parseSubs(d.cr.subs) || 0;
+    // If no avgViews, estimate from subs × typical view rate for platform
+    if (avgViews === 0) {
+      avgViews = d.cr.platform === 'YouTube' ? subs * 0.08 :
+                 d.cr.platform === 'Twitch'  ? subs * 0.04 :
+                 subs * 0.05;
+    }
+    return total + Math.round(avgViews * viewRetention);
+  }, 0);
+
+  // Blend creator reach with CPM-based reach (50/50) for stability
+  const cpmReach     = Math.round((budget / Math.max(cpmActual, 1)) * 1000);
+  const blendedReach = reachableCreators.length > 0
+    ? Math.round((creatorReach * 0.6 + cpmReach * 0.4) * subModeMult2 * formatMult)
+    : Math.round(cpmReach * subModeMult * formatMult);
+  const impressions  = blendedReach;
 
   // Dedicated: full video narrative → higher CTR; less urgency → lower CVR
   // Integrated: mid-roll segment → lower CTR; engaged viewer → higher CVR
