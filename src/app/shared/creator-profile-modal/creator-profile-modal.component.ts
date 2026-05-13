@@ -5,7 +5,7 @@ import { CreatorProfileService } from '../../core/creator-profile/creator-profil
 import { YoutubeCreatorService } from '../../core/youtube/youtube-creator.service';
 import { TwitchLiveService } from '../../core/twitch/twitch-live.service';
 import { Creator } from '../../core/data/creator.types';
-import { YoutubeCreatorData } from '../../core/youtube/youtube-creator.types';
+import { YoutubeCreatorData, YoutubeVideo } from '../../core/youtube/youtube-creator.types';
 import { TwitchEnrichment } from '../../core/twitch/twitch-live.types';
 
 function hasYoutube(c: Creator | null): c is Creator {
@@ -27,16 +27,6 @@ function activityClass(days: number | null): 'inactive' | 'stale' | 'active' | '
   if (days > 90) return 'inactive';
   if (days > 30) return 'stale';
   return 'active';
-}
-
-function topGenres(signals: Record<string, number> | undefined, n: number): { genre: string; pct: number }[] {
-  if (!signals) return [];
-  const total = Object.values(signals).reduce((s, v) => s + v, 0);
-  if (total === 0) return [];
-  return Object.entries(signals)
-    .map(([genre, count]) => ({ genre, pct: Math.round((count / total) * 100) }))
-    .sort((a, b) => b.pct - a.pct)
-    .slice(0, n);
 }
 
 function relativeTime(iso: string | undefined): string {
@@ -151,15 +141,15 @@ function sponsorColor(pct: number): string {
                           ● Live Subs
                         </div>
                         <div class="text-base font-bold" style="color: var(--color-sf-green);">
-                          {{ d.subs_live | number: '1.0-0' }}
+                          {{ d.subscriberCount | number: '1.0-0' }}
                         </div>
                       </div>
                       <div class="p-2 rounded text-center" style="background: var(--color-bg-3);">
                         <div class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">
-                          ● 20 vid avg
+                          Avg views (top 5)
                         </div>
                         <div class="text-base font-bold" style="color: var(--color-text);">
-                          {{ d.avg_views_20 | number: '1.0-0' }}
+                          {{ d.avgViews | number: '1.0-0' }}
                         </div>
                       </div>
                       <div class="p-2 rounded text-center" style="background: var(--color-bg-3);">
@@ -172,51 +162,68 @@ function sponsorColor(pct: number): string {
                       </div>
                     </div>
 
-                    <!-- Thumbnail -->
-                    @if (d.thumbnail_url) {
-                      <img
-                        [src]="d.thumbnail_url"
-                        [alt]="c.name + ' thumbnail'"
-                        class="w-full rounded"
-                        style="max-height: 200px; object-fit: cover; border: 1px solid var(--color-border);"
-                      />
-                    }
-
-                    <!-- Genre signals -->
-                    @if (topSignals().length > 0) {
-                      <div>
-                        <div class="text-[10px] uppercase tracking-wider mb-1" style="color: var(--color-text-muted);">
-                          Content signals (top 5)
+                    <!-- Secondary stats: engagement / cadence / last upload -->
+                    <div class="grid grid-cols-3 gap-2">
+                      <div class="p-2 rounded text-center" style="background: var(--color-bg-3);">
+                        <div class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">
+                          Engagement
                         </div>
-                        <div class="flex flex-col gap-1.5">
-                          @for (sig of topSignals(); track sig.genre) {
-                            <div>
-                              <div class="flex items-center justify-between text-[10px] mb-0.5">
-                                <span style="color: var(--color-text);">{{ sig.genre }}</span>
-                                <span style="color: var(--color-text-muted);">{{ sig.pct }}%</span>
-                              </div>
-                              <div class="h-1 rounded-full overflow-hidden" style="background: var(--color-bg-3);">
-                                <div
-                                  class="h-full"
-                                  [style.width.%]="sig.pct"
-                                  style="background: var(--color-sf-blue);"
-                                ></div>
-                              </div>
-                            </div>
-                          }
+                        <div class="text-sm font-bold" style="color: var(--color-text);">
+                          {{ d.engagementRate }}%
                         </div>
                       </div>
-                    }
+                      <div class="p-2 rounded text-center" style="background: var(--color-bg-3);">
+                        <div class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">
+                          Avg days between
+                        </div>
+                        <div class="text-sm font-bold" style="color: var(--color-text);">
+                          {{ d.avgDaysBetween ?? '—' }}
+                        </div>
+                      </div>
+                      <div class="p-2 rounded text-center" style="background: var(--color-bg-3);">
+                        <div class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">
+                          Last upload
+                        </div>
+                        <div class="text-sm font-bold" style="color: var(--color-text);">
+                          {{ d.lastUploadDate ? rel(d.lastUploadDate) : '—' }}
+                        </div>
+                      </div>
+                    </div>
 
-                    <!-- Recent video titles -->
-                    @if (d.top_titles?.length) {
+                    <!-- Recent videos with PAID PROMO detection (ported from
+                         reference/app.html:13936-13950). Falls back to plain
+                         title rendering when top_videos is empty. -->
+                    @if (videos().length > 0) {
                       <div>
                         <div class="text-[10px] uppercase tracking-wider mb-1" style="color: var(--color-text-muted);">
                           Recent videos
                         </div>
                         <ul class="flex flex-col gap-1">
-                          @for (title of d.top_titles; track $index) {
-                            <li class="text-xs truncate" style="color: var(--color-text);">• {{ title }}</li>
+                          @for (v of videos(); track $index) {
+                            <li class="text-xs flex items-start gap-1.5" style="color: var(--color-text);">
+                              <span class="shrink-0">•</span>
+                              @if (v.url) {
+                                <a
+                                  [attr.href]="v.url"
+                                  target="_blank"
+                                  rel="noopener"
+                                  class="truncate flex-1"
+                                  style="color: var(--color-text); text-decoration: none;"
+                                  [title]="v.title"
+                                >{{ v.title }}</a>
+                              } @else {
+                                <span class="truncate flex-1" [title]="v.title">{{ v.title }}</span>
+                              }
+                              @if (v.paid_promo) {
+                                <span
+                                  class="text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded shrink-0"
+                                  style="background: var(--color-sf-gold); color: #000;"
+                                  data-testid="paid-promo-badge"
+                                >
+                                  💰 Paid Promo
+                                </span>
+                              }
+                            </li>
                           }
                         </ul>
                       </div>
@@ -372,8 +379,26 @@ export class CreatorProfileModalComponent {
 
   protected readonly data = computed(() => this.yt.value());
   protected readonly twData = computed(() => this.tw.value());
-  protected readonly topSignals = computed(() => topGenres(this.data()?.genre_signals, 5));
   protected readonly activityState = computed(() => activityClass(this.twData()?.daysSinceStream ?? null));
+
+  // Prefer top_videos (richer shape, with paid_promo flags). Fall back to
+  // top_titles for responses that only carry the title list.
+  protected readonly videos = computed<YoutubeVideo[]>(() => {
+    const d = this.data();
+    if (!d) return [];
+    if (d.top_videos?.length) return d.top_videos;
+    if (d.top_titles?.length) {
+      return d.top_titles.map((title) => ({
+        title,
+        paid_promo: false,
+        url: null,
+        views: 0,
+        likes: 0,
+        comments: 0,
+      }));
+    }
+    return [];
+  });
 
   close(): void {
     this.profile.close();

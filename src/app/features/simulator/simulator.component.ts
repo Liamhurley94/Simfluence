@@ -7,7 +7,6 @@ import { AuthService } from '../../core/auth/auth.service';
 import { CampaignContextService } from '../../core/context/campaign-context.service';
 import { CreatorsService } from '../../core/creators/creators.service';
 import { SelectionService } from '../../core/selection/selection.service';
-import { SimulationService } from '../../core/simulation/simulation.service';
 import { RunSimulationService } from '../../core/simulation/run-simulation.service';
 import { RateLimitService } from '../../core/simulation/rate-limit.service';
 import {
@@ -316,9 +315,14 @@ const FORMATS: Format[] = ['Integrated', 'Mixed', 'Dedicated'];
               </div>
             </div>
             <div class="p-4">
-              <div class="text-[10px] uppercase" style="color: var(--color-text-muted);">ROAS</div>
-              <div class="text-lg font-bold" style="color: var(--color-sf-gold);">
-                {{ r.roas }}×
+              <div class="text-[10px] uppercase" style="color: var(--color-text-muted);">
+                ROAS (indicative)
+              </div>
+              <div class="text-lg font-bold" style="color: var(--color-sf-gold);" data-testid="sim-roas-range">
+                {{ r.roasRange }}
+              </div>
+              <div class="text-[9px] mt-0.5" style="color: var(--color-text-muted);">
+                Range — depends on attribution &amp; product price
               </div>
             </div>
           </div>
@@ -331,7 +335,6 @@ export class SimulatorComponent {
   private selection = inject(SelectionService);
   private creatorsSvc = inject(CreatorsService);
   private auth = inject(AuthService);
-  private sim = inject(SimulationService);
   private rateLimitSvc = inject(RateLimitService);
   private router = inject(Router);
   protected readonly runSim = inject(RunSimulationService);
@@ -366,7 +369,7 @@ export class SimulatorComponent {
     () => this.limit().blocked || this.creators().length === 0 || this.pending(),
   );
 
-  run(): void {
+  async run(): Promise<void> {
     if (this.runDisabled()) return;
 
     const inputs = {
@@ -378,16 +381,13 @@ export class SimulatorComponent {
       subMode: this.context.subMode() || undefined,
     };
 
-    // Local compute is instant — show something immediately.
-    const local = this.sim.compute(inputs);
-    if (local) this.result.set(local);
-
     this.rateLimitSvc.increment();
 
-    // Kick off the server run; replace when it returns.
-    void this.runSim.run(inputs).then((server) => {
-      if (server) this.result.set(server);
-    });
+    // Server-only: simulator math is proprietary, lives behind the edge fn
+    // (not shipped to the browser). `pending` drives the "Running…" state in
+    // the template; result only renders when the server returns.
+    const server = await this.runSim.run(inputs);
+    if (server) this.result.set(server);
   }
 
   toggleObjective(o: Objective): void {

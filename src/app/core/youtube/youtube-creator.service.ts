@@ -4,17 +4,11 @@ import { Creator } from '../data/creator.types';
 import {
   YoutubeCreatorData,
   YoutubeCreatorRequest,
-  YoutubeCreatorResponse,
 } from './youtube-creator.types';
 
-// Extract a channel ID from a URL like https://www.youtube.com/channel/UCxxx.
-// Returns null for handle-style URLs or anything we don't recognize.
-function channelIdFromUrl(url: string | undefined): string | null {
-  if (!url) return null;
-  const m = url.match(/\/channel\/(UC[A-Za-z0-9_-]{20,})/);
-  return m ? m[1] : null;
-}
-
+// Pick the best handle we have for the YouTube enrichment fetch.
+// Falls back to the generic `handle` (often "@" + channel name) when no
+// YouTube-specific handle is recorded on the creator.
 function handleFor(creator: Creator): string {
   return (
     creator.ytHandle ||
@@ -28,9 +22,9 @@ function handleFor(creator: Creator): string {
 export class YoutubeCreatorService {
   private edge = inject(EdgeClient);
 
-  // Per-session cache keyed by creator id. The edge fn has its own 24h DB
-  // cache; this layer just avoids re-hitting the network within one tab
-  // visit if the user opens the same profile twice.
+  // Per-session cache keyed by creator id — the edge fn no longer persists
+  // to Supabase, so this is our only cache layer. Avoids re-hitting YouTube's
+  // API quota when the user reopens the same profile during one session.
   private readonly cache = new Map<number, Promise<YoutubeCreatorData | null>>();
 
   fetch(creator: Creator): Promise<YoutubeCreatorData | null> {
@@ -42,22 +36,18 @@ export class YoutubeCreatorService {
   }
 
   private async doFetch(creator: Creator): Promise<YoutubeCreatorData | null> {
-    const channel_handle = handleFor(creator);
-    if (!channel_handle && !creator.ytUrl) return null;
+    const handle = handleFor(creator);
+    if (!handle) return null;
 
     try {
-      const res = await this.edge.post<YoutubeCreatorResponse, YoutubeCreatorRequest>(
+      const res = await this.edge.post<YoutubeCreatorData, YoutubeCreatorRequest>(
         'youtube-creator-data',
-        {
-          creator_id: creator.id,
-          channel_handle,
-          channel_id: channelIdFromUrl(creator.ytUrl),
-        },
+        { handle },
       );
-      return res?.data ?? null;
+      return res ?? null;
     } catch (err) {
       console.warn('[YoutubeCreatorService] fetch failed', err);
-      // Drop the failed promise from cache so a retry can hit fresh.
+      // Drop the failed promise from cache so a retry hits fresh.
       this.cache.delete(creator.id);
       return null;
     }

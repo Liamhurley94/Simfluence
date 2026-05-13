@@ -62,10 +62,15 @@ export interface SimResult {
   cpM: number;
   cvr: number;
   conversions: number;
-  roas: number;
+  roas: number;                    // P50 — kept for templates/callers that show a single number
+  roasP10: number;
+  roasP50: number;
+  roasP90: number;
+  roasRange: string;               // formatted "P10×–P90×" for headline display
   engRate: number;
   clicks: number;
   budget: number;
+  reachableCount: number;          // creators we could actually afford under the budget
   bench: GenreBenchmark;
   p10: SimBand;
   p50: SimBand;

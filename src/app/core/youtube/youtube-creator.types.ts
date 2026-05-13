@@ -1,29 +1,36 @@
-// Response shape from /functions/v1/youtube-creator-data.
-// Matches simfluence-backend/supabase/functions/youtube-creator-data/index.ts.
+// Shapes for the rewritten youtube-creator-data edge function.
+// Prod's source-of-truth version takes `{handle}` and returns a flat object
+// (no `data` wrapper, no Supabase-cache persistence). Sponsor detection now
+// scans video title + description against a richer regex set.
 
+// Per-video data returned in top_videos.
+export interface YoutubeVideo {
+  title: string;
+  views: number;
+  likes: number;
+  comments: number;
+  url: string | null;
+  paid_promo: boolean;
+}
+
+// Flat response shape. No `source` / `data` wrapper.
 export interface YoutubeCreatorData {
-  creator_id: number;
-  channel_id: string;
-  channel_handle: string;
-  subs_live: number;
-  total_views: number;
-  avg_views_20: number;
-  video_count: number;
+  handle: string;
+  channelId: string;
+  subscriberCount: number;
+  totalViews: number;
+  videoCount: number;
+  avgViews: number;
+  engagementRate: number;     // % (likes + comments) / views across top 5
+  avgDaysBetween: number | null;
+  lastUploadDate: string | null;   // ISO timestamp
   sponsor_freq_pct: number;
-  genre_signals: Record<string, number>; // genre name → match count
-  top_titles: string[];
-  thumbnail_url: string | null;
-  fetched_at: string; // ISO timestamp
-  expires_at: string; // ISO timestamp (24h after fetched_at)
+  top_videos: YoutubeVideo[];
+  top_titles: string[];            // kept for parallel rendering / legacy compat
+  fetched_at: string;
 }
 
-export interface YoutubeCreatorResponse {
-  source: 'cache' | 'youtube';
-  data: YoutubeCreatorData;
-}
-
+// Request body — single `handle` field. The edge fn prepends "@" if missing.
 export interface YoutubeCreatorRequest {
-  creator_id: number;
-  channel_handle: string;
-  channel_id: string | null;
+  handle: string;
 }
