@@ -138,6 +138,24 @@ describe('CreatorsService.list', () => {
     expect(query.lt).toHaveBeenCalledWith('subs_parsed', 50_000);
   });
 
+  it('minCpi adds cpi gte', async () => {
+    const { svc, query } = setup();
+    await svc.list({ minCpi: 70 }, 'cpi', 0, 10);
+    expect(query.gte).toHaveBeenCalledWith('cpi', 70);
+  });
+
+  it('minGfi adds gfi gte', async () => {
+    const { svc, query } = setup();
+    await svc.list({ minGfi: 65 }, 'cpi', 0, 10);
+    expect(query.gte).toHaveBeenCalledWith('gfi', 65);
+  });
+
+  it('minCpi/minGfi=0 is treated as no filter', async () => {
+    const { svc, query } = setup();
+    await svc.list({ minCpi: 0, minGfi: 0 }, 'cpi', 0, 10);
+    expect(query.gte).not.toHaveBeenCalled();
+  });
+
   it('maps DB row → Creator (snake_case → camelCase, subs_parsed → subsParsed)', async () => {
     const row = {
       id: 7,

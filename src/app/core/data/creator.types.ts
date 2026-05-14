@@ -67,6 +67,8 @@ export interface CreatorFilters {
   languages?: string[];
   search?: string;
   tier?: CreatorTier;
+  minCpi?: number;
+  minGfi?: number;
 }
 
 export interface PagedCreators {

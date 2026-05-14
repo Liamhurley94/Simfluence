@@ -90,6 +90,48 @@ describe('FilterPanelComponent', () => {
     expect(fixture.componentInstance.last()?.tier).toBe('Megastar');
   });
 
+  it('emits minCpi when the CPI slider moves', () => {
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.detectChanges();
+
+    const slider: HTMLInputElement = fixture.nativeElement.querySelector(
+      '[data-testid="filter-min-cpi"]',
+    );
+    slider.value = '70';
+    slider.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.last()?.minCpi).toBe(70);
+    expect(
+      fixture.nativeElement.querySelector('[data-testid="filter-min-cpi-val"]').textContent.trim(),
+    ).toBe('70');
+  });
+
+  it('emits minGfi when the GFI slider moves', () => {
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.detectChanges();
+
+    const slider: HTMLInputElement = fixture.nativeElement.querySelector(
+      '[data-testid="filter-min-gfi"]',
+    );
+    slider.value = '65';
+    slider.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.last()?.minGfi).toBe(65);
+  });
+
+  it('shows "Any" when sliders are at 0', () => {
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.detectChanges();
+    expect(
+      fixture.nativeElement.querySelector('[data-testid="filter-min-cpi-val"]').textContent.trim(),
+    ).toBe('Any');
+    expect(
+      fixture.nativeElement.querySelector('[data-testid="filter-min-gfi-val"]').textContent.trim(),
+    ).toBe('Any');
+  });
+
   it('clearAll resets every filter and emits empty query', () => {
     const fixture = TestBed.createComponent(HostComponent);
     fixture.detectChanges();

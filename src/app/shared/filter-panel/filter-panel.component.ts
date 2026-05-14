@@ -140,6 +140,62 @@ const TIER_OPTIONS: { key: CreatorTier; label: string }[] = [
         </select>
       </div>
 
+      <!-- Min CPI -->
+      <div>
+        <label
+          class="text-[10px] uppercase tracking-wider mb-1 flex items-center justify-between"
+          style="color: var(--color-text-muted);"
+        >
+          <span>Min CPI Score</span>
+          <span
+            class="text-xs font-semibold"
+            style="color: var(--color-sf-gold);"
+            data-testid="filter-min-cpi-val"
+          >
+            {{ minCpi() ? minCpi() : 'Any' }}
+          </span>
+        </label>
+        <input
+          type="range"
+          min="0"
+          max="90"
+          step="5"
+          [ngModel]="minCpi()"
+          (ngModelChange)="onMinCpi($event)"
+          class="w-full"
+          style="accent-color: var(--color-sf-gold);"
+          data-testid="filter-min-cpi"
+        />
+      </div>
+
+      <!-- Min GFI -->
+      <div>
+        <label
+          class="text-[10px] uppercase tracking-wider mb-1 flex items-center justify-between"
+          style="color: var(--color-text-muted);"
+        >
+          <span>Min GFI Score</span>
+          <span
+            class="text-xs font-semibold"
+            style="color: var(--color-sf-green);"
+            data-testid="filter-min-gfi-val"
+          >
+            {{ minGfi() ? minGfi() : 'Any' }}
+          </span>
+        </label>
+        <input
+          type="range"
+          min="0"
+          max="95"
+          step="5"
+          [ngModel]="minGfi()"
+          (ngModelChange)="onMinGfi($event)"
+          class="w-full"
+          style="accent-color: var(--color-sf-green);"
+          data-testid="filter-min-gfi"
+        />
+      </div>
+
       <!-- Sort -->
       <div>
         <label
@@ -194,6 +250,8 @@ export class FilterPanelComponent {
   readonly search = signal<string>('');
   readonly sort = signal<SortKey>('cpi');
   readonly tier = signal<CreatorTier | undefined>(undefined);
+  readonly minCpi = signal<number>(0);
+  readonly minGfi = signal<number>(0);
 
   readonly hasFilters = computed(
     () =>
@@ -201,7 +259,9 @@ export class FilterPanelComponent {
       this.platforms_().length > 0 ||
       this.languages_().length > 0 ||
       !!this.search().trim() ||
-      !!this.tier(),
+      !!this.tier() ||
+      this.minCpi() > 0 ||
+      this.minGfi() > 0,
   );
 
   onGenre(g: string | undefined): void {
@@ -221,6 +281,16 @@ export class FilterPanelComponent {
 
   onTier(t: CreatorTier | undefined): void {
     this.tier.set(t);
+    this.emit();
+  }
+
+  onMinCpi(v: number | string): void {
+    this.minCpi.set(Number(v) || 0);
+    this.emit();
+  }
+
+  onMinGfi(v: number | string): void {
+    this.minGfi.set(Number(v) || 0);
     this.emit();
   }
 
@@ -244,6 +314,8 @@ export class FilterPanelComponent {
     this.languages_.set([]);
     this.search.set('');
     this.tier.set(undefined);
+    this.minCpi.set(0);
+    this.minGfi.set(0);
     this.emit();
   }
 
@@ -255,6 +327,8 @@ export class FilterPanelComponent {
       search: this.search(),
       sort: this.sort(),
       tier: this.tier(),
+      minCpi: this.minCpi(),
+      minGfi: this.minGfi(),
     });
   }
 }

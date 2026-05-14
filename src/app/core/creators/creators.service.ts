@@ -106,6 +106,8 @@ export class CreatorsService {
       q = q.gte('subs_parsed', lo);
       if (Number.isFinite(hi)) q = q.lt('subs_parsed', hi);
     }
+    if (filters.minCpi && filters.minCpi > 0) q = q.gte('cpi', filters.minCpi);
+    if (filters.minGfi && filters.minGfi > 0) q = q.gte('gfi', filters.minGfi);
 
     const sortCol = sort === 'subs' ? 'subs_parsed' : sort;
     const ascending = sort === 'name';
