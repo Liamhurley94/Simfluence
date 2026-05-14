@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, resource, untracked } from '@angular/core';
+import { Component, computed, effect, inject, resource, signal, untracked } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -8,9 +8,10 @@ import { CampaignContextService } from '../../core/context/campaign-context.serv
 import { CreatorsService } from '../../core/creators/creators.service';
 import { SelectionService } from '../../core/selection/selection.service';
 import { ScoreCreatorService } from '../../core/score/score-creator.service';
-import { NICHE_SPONSOR_CPM, DEFAULT_CPM } from '../../core/data/cpm-tables.data';
+import { GENRE_BENCHMARKS } from '../../core/data/benchmarks.data';
 import { Creator } from '../../core/data/creator.types';
-import { computeRateRanges } from '../../core/rates/rate-estimate';
+import { computeRateRanges, RateRanges } from '../../core/rates/rate-estimate';
+import { Format } from '../../core/simulation/simulation.types';
 import { tierRank } from '../../core/types';
 
 interface ScoredRow {
@@ -18,7 +19,7 @@ interface ScoredRow {
   cpi: number;
   gfi: number;
   performance: number; // average of cpi + gfi
-  rateLabel: string;
+  ranges: RateRanges;
 }
 
 @Component({
@@ -43,6 +44,22 @@ interface ScoredRow {
             <option [ngValue]="g">{{ g }}</option>
           }
         </select>
+
+        <label class="text-[10px] uppercase tracking-wider ml-2" style="color: var(--color-text-muted);">
+          Format
+        </label>
+        <select
+          [ngModel]="format()"
+          (ngModelChange)="format.set($event)"
+          class="px-3 py-2 rounded text-sm"
+          style="background: var(--color-bg-2); border: 1px solid var(--color-border); color: var(--color-text);"
+          data-testid="scoring-format"
+        >
+          @for (f of formats; track f) {
+            <option [ngValue]="f">{{ f }}</option>
+          }
+        </select>
+
         @if (score.pending()) {
           <span class="text-xs" style="color: var(--color-text-muted);" data-testid="scoring-pending">
             Scoring…
@@ -190,28 +207,59 @@ interface ScoredRow {
                     </div>
                   </div>
                 </td>
-                <td class="p-3 text-right font-bold" [style.color]="scoreColor(row.cpi)">
-                  {{ row.cpi }}
+                <td class="p-3 text-center">
+                  <div class="text-2xl font-bold leading-none" [style.color]="scoreColor(row.cpi)">
+                    {{ row.cpi }}
+                  </div>
+                  <div class="text-[9px] mt-1" style="color: var(--color-text-muted);" data-testid="scoring-eng">
+                    {{ row.creator.eng }} eng
+                  </div>
                 </td>
-                <td class="p-3 text-right font-bold" [style.color]="scoreColor(row.gfi)">
-                  {{ row.gfi }}
+                <td class="p-3 text-center">
+                  <div class="text-2xl font-bold leading-none" [style.color]="scoreColor(row.gfi)">
+                    {{ row.gfi }}%
+                  </div>
+                  <div class="text-[9px] mt-1" style="color: var(--color-text-muted);">
+                    genre fit
+                  </div>
                 </td>
                 <td class="p-3">
-                  <div class="h-1.5 rounded-full overflow-hidden" style="background: var(--color-bg-3);">
-                    <div
-                      class="h-full"
-                      [style.width.%]="row.performance"
-                      [style.background]="scoreColor(row.performance)"
-                    ></div>
+                  <div class="flex items-center gap-2 mb-1.5">
+                    <div class="text-[8px] w-7" style="color: var(--color-text-muted);">CPI</div>
+                    <div class="flex-1 h-1 rounded-sm overflow-hidden" style="background: var(--color-bg-3);">
+                      <div
+                        class="h-full transition-all"
+                        [style.width.%]="row.cpi"
+                        [style.background]="scoreColor(row.cpi)"
+                      ></div>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <div class="text-[8px] w-7" style="color: var(--color-text-muted);">GFI</div>
+                    <div class="flex-1 h-1 rounded-sm overflow-hidden" style="background: var(--color-bg-3);">
+                      <div
+                        class="h-full transition-all"
+                        [style.width.%]="row.gfi"
+                        [style.background]="scoreColor(row.gfi)"
+                      ></div>
+                    </div>
                   </div>
                 </td>
                 <td
-                  class="p-3 text-right font-semibold"
+                  class="p-3 text-right"
                   [class.blur-sm]="!canSeeRates()"
                   [class.select-none]="!canSeeRates()"
-                  style="color: var(--color-sf-gold);"
+                  data-testid="scoring-rate"
                 >
-                  {{ row.rateLabel }}
+                  <div class="text-sm font-bold" style="color: var(--color-sf-gold);">
+                    {{ rangeLabel(row.ranges[primaryKey()]) }}
+                  </div>
+                  <div class="text-[8px] uppercase tracking-wider mt-0.5" style="color: var(--color-text-muted);">
+                    {{ format() }}
+                  </div>
+                  <div class="text-[10px] mt-0.5" style="color: var(--color-text-muted);">
+                    {{ rangeLabel(row.ranges[secondaryKey()]) }} {{ secondaryKey() }}
+                  </div>
                 </td>
               </tr>
             }
@@ -219,7 +267,7 @@ interface ScoredRow {
         </table>
       </div>
 
-      <!-- Genre benchmark -->
+      <!-- Genre benchmark — 5-card layout, mirrors prod. -->
       <div
         class="rounded-lg overflow-hidden"
         style="background: var(--color-bg-2); border: 1px solid var(--color-border);"
@@ -231,31 +279,27 @@ interface ScoredRow {
         >
           Genre Benchmark · {{ context.genre() }}
         </div>
-        <div class="grid grid-cols-3 gap-4 p-4">
-          <div>
-            <div class="text-[10px] uppercase tracking-wider" style="color: var(--color-text-muted);">
-              CPM Range (USD)
+        <div class="grid grid-cols-5 gap-3 p-4">
+          @for (m of benchmarkCards(); track m.key) {
+            <div
+              class="text-center p-4 rounded-md"
+              style="background: var(--color-bg-3);"
+              [attr.data-testid]="'benchmark-' + m.key"
+            >
+              <div
+                class="text-[9px] uppercase tracking-wider mb-1.5"
+                style="color: var(--color-text-muted);"
+              >
+                {{ m.label }}
+              </div>
+              <div class="text-2xl font-bold leading-none" style="color: var(--color-sf-gold);">
+                {{ m.value }}
+              </div>
+              <div class="text-[9px] uppercase mt-1.5" style="color: var(--color-text-muted);">
+                Industry avg
+              </div>
             </div>
-            <div class="text-lg font-bold" style="color: var(--color-text);">
-              \${{ band().lo }}–\${{ band().hi }}
-            </div>
-          </div>
-          <div>
-            <div class="text-[10px] uppercase tracking-wider" style="color: var(--color-text-muted);">
-              Median CPM
-            </div>
-            <div class="text-lg font-bold" style="color: var(--color-sf-gold);">
-              \${{ band().med }}
-            </div>
-          </div>
-          <div>
-            <div class="text-[10px] uppercase tracking-wider" style="color: var(--color-text-muted);">
-              Dedicated Multiplier
-            </div>
-            <div class="text-lg font-bold" style="color: var(--color-sf-cyan);">
-              {{ band().dedMult }}×
-            </div>
-          </div>
+          }
         </div>
       </div>
     }
@@ -290,7 +334,7 @@ export class ScoringComponent {
           cpi,
           gfi,
           performance: Math.round((cpi + gfi) / 2),
-          rateLabel: this.rateLabel(creator),
+          ranges: computeRateRanges(creator),
         };
       })
       .sort((a, b) => b.cpi - a.cpi);
@@ -323,13 +367,28 @@ export class ScoringComponent {
     return (verified / list.length) * 100;
   });
 
-  protected readonly band = computed(() => {
-    return NICHE_SPONSOR_CPM[this.context.genre()] ?? DEFAULT_CPM;
+  // Industry-average benchmarks per genre — drives the bottom benchmark cards.
+  protected readonly benchmark = computed(
+    () => GENRE_BENCHMARKS[this.context.genre()] ?? GENRE_BENCHMARKS['Gaming & Esports'],
+  );
+
+  protected readonly benchmarkCards = computed(() => {
+    const b = this.benchmark();
+    return [
+      { key: 'ctr', label: 'CTR', value: b.ctrBase + '%' },
+      { key: 'cpm', label: 'CPM', value: '$' + b.cpmBase },
+      { key: 'cvr', label: 'CVR', value: b.cvrBase + '%' },
+      { key: 'roas', label: 'ROAS', value: b.roasBase + '×' },
+      { key: 'eng', label: 'Eng Rate', value: b.engBase + '%' },
+    ];
   });
 
   protected readonly canSeeRates = computed(
     () => tierRank(this.auth.tier()) >= tierRank('silver'),
   );
+
+  protected readonly format = signal<Format>('Integrated');
+  protected readonly formats: Format[] = ['Integrated', 'Dedicated', 'Mixed'];
 
   constructor() {
     // Re-score when the campaign context changes. `untracked` reads of selection
@@ -368,11 +427,23 @@ export class ScoringComponent {
     return 'var(--color-sf-red)';
   }
 
-  private rateLabel(c: Creator): string {
-    // Mirror the card: always compute. Scoring has no format selector yet, so
-    // show the Integrated (most conservative) range for now.
-    const [lo, hi] = computeRateRanges(c).int;
-    return `$${compact(lo)}–$${compact(hi)}`;
+  // Format → range key.
+  protected primaryKey(): 'int' | 'ded' | 'mix' {
+    const f = this.format();
+    return f === 'Dedicated' ? 'ded' : f === 'Mixed' ? 'mix' : 'int';
+  }
+
+  // Pick a secondary range to show in dim text below the primary one.
+  // Conventions: Integrated → ded; Dedicated → int; Mixed → ded.
+  protected secondaryKey(): 'int' | 'ded' | 'mix' {
+    const f = this.format();
+    if (f === 'Integrated') return 'ded';
+    if (f === 'Dedicated') return 'int';
+    return 'ded';
+  }
+
+  protected rangeLabel(range: [number, number]): string {
+    return `$${compact(range[0])}–$${compact(range[1])}`;
   }
 }
 
