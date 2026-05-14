@@ -12727,11 +12727,7 @@ function computeSimResults() {
   // ── ROAS: indicative range, not a hard prediction ────────────────
   // roasBase from genre benchmarks × budget quality × creator quality
   // Shown as a range (P10–P90) with explicit low-confidence labelling
-  var roasBase   = (bench.roasBase || 2.0) * budgetQuality * creatorQuality;
-  var roasP10    = Math.round(roasBase * 0.45 * 10) / 10;  // wide low end
-  var roasP50    = Math.round(roasBase * 10) / 10;
-  var roasP90    = Math.round(roasBase * 2.1 * 10) / 10;   // wide high end
-  // Keep legacy roas for saved campaigns compatibility
+  // ── Read AOV from picker ──────────────────────────────────────────
   var aovSel = document.querySelector('.aov-seg.active');
   var aovCustomWrap = document.getElementById('aovCustomWrap');
   var aovCustomInput = document.getElementById('aovCustomInput');
@@ -12741,7 +12737,15 @@ function computeSimResults() {
   } else if (aovSel && aovSel.dataset.val !== 'custom') {
     conversionValue = parseFloat(aovSel.dataset.val) || 30;
   }
+
+  // ── ROAS: driven by actual conversions × client AOV ───────────────
   const revenue  = conversions * conversionValue;
+  var roasActual = budget > 0 ? revenue / budget : 0;
+  var roasBench  = (bench.roasBase || 2.0) * budgetQuality * creatorQuality;
+  // Blend actual with benchmark — actual drives it, benchmark anchors range
+  var roasP50    = Math.round(((roasActual * 0.6) + (roasBench * 0.4)) * 10) / 10;
+  var roasP10    = Math.round(roasP50 * 0.45 * 10) / 10;
+  var roasP90    = Math.round(roasP50 * 2.10 * 10) / 10;
   const roas     = roasP50;
   const engRate  = Math.min(bench.engBase * (1 + engagementW * 0.2) * avgCPI * budgetQuality, 20);
 
@@ -16682,6 +16686,9 @@ document.addEventListener('DOMContentLoaded', function() {
       if (typeof updateBriefPanel === 'function') updateBriefPanel();
     });
   })();
+
+  // ── Initialise sub-mode chips on page load ────────────────────────────
+  if (typeof onGenreChange === 'function') onGenreChange();
 
   // ── AOV (Average Order Value) picker ──────────────────────────────────
   (function() {
