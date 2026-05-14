@@ -90,6 +90,7 @@ const EMPTY_PAGE: PagedCreators = { creators: [], total: 0, pageCount: 1, page: 
                 [creator]="c"
                 [selected]="selection.has(c.id)"
                 [canSeeRates]="canSeeRates()"
+                [format]="query().format"
                 (toggle)="onToggle($event)"
               />
             }
@@ -111,7 +112,7 @@ export class DiscoveryComponent {
 
   protected readonly selection = inject(SelectionService);
 
-  protected readonly query = signal<DiscoveryQuery>({ sort: 'cpi' });
+  protected readonly query = signal<DiscoveryQuery>({ sort: 'cpi', format: 'Integrated' });
   protected readonly page = signal(0);
 
   // Server-side filtered + paginated query. Reloads automatically when

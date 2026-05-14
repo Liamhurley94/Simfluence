@@ -1,10 +1,17 @@
 import { Component, computed, inject, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { AuthService } from '../../core/auth/auth.service';
 import { CreatorsService } from '../../core/creators/creators.service';
 import { CreatorFilters, CreatorTier, SortKey } from '../../core/data/creator.types';
+import { Format } from '../../core/simulation/simulation.types';
+import { tierRank } from '../../core/types';
+import { UpgradePromptService } from '../../core/upgrade/upgrade-prompt.service';
 
 export interface DiscoveryQuery extends CreatorFilters {
   sort: SortKey;
+  // `format` is a display preference (which rate range to show on each card),
+  // not a DB filter — server-side queries ignore it.
+  format: Format;
 }
 
 const SORT_OPTIONS: { key: SortKey; label: string }[] = [
@@ -19,6 +26,12 @@ const TIER_OPTIONS: { key: CreatorTier; label: string }[] = [
   { key: 'Mid-tier', label: 'Mid-tier (50K–500K)' },
   { key: 'Established', label: 'Established (500K–2M)' },
   { key: 'Megastar', label: 'Megastar (2M+)' },
+];
+
+const FORMAT_OPTIONS: { key: Format; label: string }[] = [
+  { key: 'Integrated', label: 'Integrated (60–90 sec)' },
+  { key: 'Dedicated', label: 'Dedicated (full video)' },
+  { key: 'Mixed', label: 'Mixed' },
 ];
 
 @Component({
@@ -140,61 +153,103 @@ const TIER_OPTIONS: { key: CreatorTier; label: string }[] = [
         </select>
       </div>
 
-      <!-- Min CPI -->
+      <!-- Sponsored format -->
       <div>
         <label
-          class="text-[10px] uppercase tracking-wider mb-1 flex items-center justify-between"
+          class="text-[10px] uppercase tracking-wider mb-1 block"
           style="color: var(--color-text-muted);"
         >
-          <span>Min CPI Score</span>
-          <span
-            class="text-xs font-semibold"
-            style="color: var(--color-sf-gold);"
-            data-testid="filter-min-cpi-val"
-          >
-            {{ minCpi() ? minCpi() : 'Any' }}
-          </span>
+          Sponsored format
         </label>
-        <input
-          type="range"
-          min="0"
-          max="90"
-          step="5"
-          [ngModel]="minCpi()"
-          (ngModelChange)="onMinCpi($event)"
-          class="w-full"
-          style="accent-color: var(--color-sf-gold);"
-          data-testid="filter-min-cpi"
-        />
+        <select
+          [ngModel]="format()"
+          (ngModelChange)="onFormat($event)"
+          class="w-full px-3 py-2 rounded text-sm"
+          style="background: rgba(255,255,255,0.05); border: 1px solid var(--color-border); color: var(--color-text);"
+          data-testid="filter-format"
+        >
+          @for (opt of formatOptions; track opt.key) {
+            <option [ngValue]="opt.key">{{ opt.label }}</option>
+          }
+        </select>
       </div>
 
-      <!-- Min GFI -->
-      <div>
-        <label
-          class="text-[10px] uppercase tracking-wider mb-1 flex items-center justify-between"
-          style="color: var(--color-text-muted);"
-        >
-          <span>Min GFI Score</span>
-          <span
-            class="text-xs font-semibold"
-            style="color: var(--color-sf-green);"
-            data-testid="filter-min-gfi-val"
+      <!-- Score filters (Gold+ only) -->
+      <div
+        class="relative flex flex-col gap-4"
+        [class.blur-sm]="!canUseScoreFilters()"
+        [class.opacity-60]="!canUseScoreFilters()"
+        [class.pointer-events-none]="!canUseScoreFilters()"
+        data-testid="filter-score-group"
+      >
+        <!-- Min CPI -->
+        <div>
+          <label
+            class="text-[10px] uppercase tracking-wider mb-1 flex items-center justify-between"
+            style="color: var(--color-text-muted);"
           >
-            {{ minGfi() ? minGfi() : 'Any' }}
-          </span>
-        </label>
-        <input
-          type="range"
-          min="0"
-          max="95"
-          step="5"
-          [ngModel]="minGfi()"
-          (ngModelChange)="onMinGfi($event)"
-          class="w-full"
-          style="accent-color: var(--color-sf-green);"
-          data-testid="filter-min-gfi"
-        />
+            <span>Min CPI Score</span>
+            <span
+              class="text-xs font-semibold"
+              style="color: var(--color-sf-gold);"
+              data-testid="filter-min-cpi-val"
+            >
+              {{ minCpi() ? minCpi() : 'Any' }}
+            </span>
+          </label>
+          <input
+            type="range"
+            min="0"
+            max="90"
+            step="5"
+            [ngModel]="minCpi()"
+            (ngModelChange)="onMinCpi($event)"
+            class="w-full"
+            style="accent-color: var(--color-sf-gold);"
+            data-testid="filter-min-cpi"
+          />
+        </div>
+
+        <!-- Min GFI -->
+        <div>
+          <label
+            class="text-[10px] uppercase tracking-wider mb-1 flex items-center justify-between"
+            style="color: var(--color-text-muted);"
+          >
+            <span>Min GFI Score</span>
+            <span
+              class="text-xs font-semibold"
+              style="color: var(--color-sf-green);"
+              data-testid="filter-min-gfi-val"
+            >
+              {{ minGfi() ? minGfi() : 'Any' }}
+            </span>
+          </label>
+          <input
+            type="range"
+            min="0"
+            max="95"
+            step="5"
+            [ngModel]="minGfi()"
+            (ngModelChange)="onMinGfi($event)"
+            class="w-full"
+            style="accent-color: var(--color-sf-green);"
+            data-testid="filter-min-gfi"
+          />
+        </div>
       </div>
+
+      @if (!canUseScoreFilters()) {
+        <button
+          type="button"
+          (click)="promptScoreFilterUpgrade()"
+          class="-mt-2 text-[10px] uppercase tracking-wider py-1.5 rounded"
+          style="background: rgba(255,212,0,0.08); border: 1px solid rgba(255,212,0,0.3); color: var(--color-sf-gold);"
+          data-testid="filter-score-upgrade"
+        >
+          ★ Gold+ — unlock score filters
+        </button>
+      }
 
       <!-- Sort -->
       <div>
@@ -233,8 +288,14 @@ const TIER_OPTIONS: { key: CreatorTier; label: string }[] = [
 })
 export class FilterPanelComponent {
   private svc = inject(CreatorsService);
+  private auth = inject(AuthService);
+  private upgrade = inject(UpgradePromptService);
 
   readonly queryChange = output<DiscoveryQuery>();
+
+  readonly canUseScoreFilters = computed(
+    () => tierRank(this.auth.tier()) >= tierRank('gold'),
+  );
 
   // Bind to the service signals directly so dropdowns update when the
   // RPC-fed lists populate after the APP_INITIALIZER fires.
@@ -243,6 +304,7 @@ export class FilterPanelComponent {
   readonly languages = this.svc.languages;
   readonly sortOptions = SORT_OPTIONS;
   readonly tierOptions = TIER_OPTIONS;
+  readonly formatOptions = FORMAT_OPTIONS;
 
   readonly genre = signal<string | undefined>(undefined);
   readonly platforms_ = signal<string[]>([]);
@@ -250,6 +312,7 @@ export class FilterPanelComponent {
   readonly search = signal<string>('');
   readonly sort = signal<SortKey>('cpi');
   readonly tier = signal<CreatorTier | undefined>(undefined);
+  readonly format = signal<Format>('Integrated');
   readonly minCpi = signal<number>(0);
   readonly minGfi = signal<number>(0);
 
@@ -284,14 +347,25 @@ export class FilterPanelComponent {
     this.emit();
   }
 
+  onFormat(f: Format): void {
+    this.format.set(f);
+    this.emit();
+  }
+
   onMinCpi(v: number | string): void {
+    if (!this.canUseScoreFilters()) return;
     this.minCpi.set(Number(v) || 0);
     this.emit();
   }
 
   onMinGfi(v: number | string): void {
+    if (!this.canUseScoreFilters()) return;
     this.minGfi.set(Number(v) || 0);
     this.emit();
+  }
+
+  promptScoreFilterUpgrade(): void {
+    this.upgrade.open('CPI / GFI score filters', 'gold');
   }
 
   togglePlatform(p: string): void {
@@ -314,12 +388,14 @@ export class FilterPanelComponent {
     this.languages_.set([]);
     this.search.set('');
     this.tier.set(undefined);
+    this.format.set('Integrated');
     this.minCpi.set(0);
     this.minGfi.set(0);
     this.emit();
   }
 
   private emit(): void {
+    const gold = this.canUseScoreFilters();
     this.queryChange.emit({
       genre: this.genre(),
       platforms: this.platforms_(),
@@ -327,8 +403,9 @@ export class FilterPanelComponent {
       search: this.search(),
       sort: this.sort(),
       tier: this.tier(),
-      minCpi: this.minCpi(),
-      minGfi: this.minGfi(),
+      format: this.format(),
+      minCpi: gold ? this.minCpi() : 0,
+      minGfi: gold ? this.minGfi() : 0,
     });
   }
 }

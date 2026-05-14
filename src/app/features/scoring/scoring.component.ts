@@ -10,6 +10,7 @@ import { SelectionService } from '../../core/selection/selection.service';
 import { ScoreCreatorService } from '../../core/score/score-creator.service';
 import { NICHE_SPONSOR_CPM, DEFAULT_CPM } from '../../core/data/cpm-tables.data';
 import { Creator } from '../../core/data/creator.types';
+import { computeRateRanges } from '../../core/rates/rate-estimate';
 import { tierRank } from '../../core/types';
 
 interface ScoredRow {
@@ -368,10 +369,9 @@ export class ScoringComponent {
   }
 
   private rateLabel(c: Creator): string {
-    const r = c.rates;
-    const band = r?.mix ?? r?.int ?? r?.ded;
-    if (!band) return '—';
-    const [lo, hi] = band;
+    // Mirror the card: always compute. Scoring has no format selector yet, so
+    // show the Integrated (most conservative) range for now.
+    const [lo, hi] = computeRateRanges(c).int;
     return `$${compact(lo)}–$${compact(hi)}`;
   }
 }

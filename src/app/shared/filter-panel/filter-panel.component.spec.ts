@@ -1,9 +1,12 @@
 import { TestBed } from '@angular/core/testing';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Component, signal } from '@angular/core';
 
 import { FilterPanelComponent, DiscoveryQuery } from './filter-panel.component';
 import { CreatorsService } from '../../core/creators/creators.service';
+import { AuthService } from '../../core/auth/auth.service';
+import { UpgradePromptService } from '../../core/upgrade/upgrade-prompt.service';
+import { Tier } from '../../core/types';
 
 // FilterPanelComponent reads dropdown options off CreatorsService signals
 // (populated by an RPC at app boot). In tests we substitute a stub with
@@ -13,6 +16,10 @@ const creatorsStub = {
   platforms: signal(['YouTube', 'Twitch']),
   languages: signal(['English', 'Spanish']),
 };
+
+function authStub(tier: Tier = 'gold') {
+  return { tier: signal<Tier>(tier) };
+}
 
 @Component({
   standalone: true,
@@ -28,7 +35,10 @@ describe('FilterPanelComponent', () => {
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({
       imports: [HostComponent],
-      providers: [{ provide: CreatorsService, useValue: creatorsStub }],
+      providers: [
+        { provide: CreatorsService, useValue: creatorsStub },
+        { provide: AuthService, useValue: authStub('gold') },
+      ],
     });
   });
 
@@ -73,6 +83,36 @@ describe('FilterPanelComponent', () => {
 
     twitchBtn.click();
     expect(fixture.componentInstance.last()?.platforms).not.toContain('Twitch');
+  });
+
+  it('defaults format to "Integrated" and emits it on every query', () => {
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.detectChanges();
+
+    // Trigger an emit by changing search.
+    const input: HTMLInputElement = fixture.nativeElement.querySelector(
+      '[data-testid="filter-search"]',
+    );
+    input.value = 'x';
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.last()?.format).toBe('Integrated');
+  });
+
+  it('emits the new format when the format select changes', () => {
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.detectChanges();
+
+    const select: HTMLSelectElement = fixture.nativeElement.querySelector(
+      '[data-testid="filter-format"]',
+    );
+    // index 0=Integrated, 1=Dedicated, 2=Mixed
+    select.selectedIndex = 1;
+    select.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.last()?.format).toBe('Dedicated');
   });
 
   it('emits tier when the tier select changes', () => {
@@ -155,5 +195,75 @@ describe('FilterPanelComponent', () => {
     expect(q?.genre).toBeUndefined();
     expect(q?.platforms?.length).toBe(0);
     expect(q?.languages?.length).toBe(0);
+  });
+});
+
+describe('FilterPanelComponent — score-filter gating', () => {
+  function setupAt(tier: Tier) {
+    const upgrade = { open: vi.fn(), close: vi.fn(), current: signal(null) };
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      imports: [HostComponent],
+      providers: [
+        { provide: CreatorsService, useValue: creatorsStub },
+        { provide: AuthService, useValue: authStub(tier) },
+        { provide: UpgradePromptService, useValue: upgrade },
+      ],
+    });
+    return { upgrade };
+  }
+
+  it('non-gold sees the upgrade CTA and the slider group is locked', () => {
+    setupAt('silver');
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.detectChanges();
+
+    const group = fixture.nativeElement.querySelector('[data-testid="filter-score-group"]');
+    expect(group.classList.contains('pointer-events-none')).toBe(true);
+    expect(fixture.nativeElement.querySelector('[data-testid="filter-score-upgrade"]')).toBeTruthy();
+  });
+
+  it('clicking the upgrade CTA opens UpgradePromptService for gold', () => {
+    const { upgrade } = setupAt('free');
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.detectChanges();
+
+    const cta: HTMLButtonElement = fixture.nativeElement.querySelector(
+      '[data-testid="filter-score-upgrade"]',
+    );
+    cta.click();
+
+    expect(upgrade.open).toHaveBeenCalledWith('CPI / GFI score filters', 'gold');
+  });
+
+  it('non-gold: even if a slider event fires, minCpi/minGfi never emit', () => {
+    setupAt('silver');
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.detectChanges();
+
+    const slider: HTMLInputElement = fixture.nativeElement.querySelector(
+      '[data-testid="filter-min-cpi"]',
+    );
+    slider.value = '70';
+    slider.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    // Component-level emit should still treat minCpi as 0 for non-gold users.
+    // We can't easily intercept the emit here without triggering one, but the
+    // (input) wouldn't have set the signal in the first place. Confirm by
+    // reading the displayed value — should still be "Any".
+    expect(
+      fixture.nativeElement.querySelector('[data-testid="filter-min-cpi-val"]').textContent.trim(),
+    ).toBe('Any');
+  });
+
+  it('gold tier hides the upgrade CTA and unlocks the slider group', () => {
+    setupAt('gold');
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.detectChanges();
+
+    const group = fixture.nativeElement.querySelector('[data-testid="filter-score-group"]');
+    expect(group.classList.contains('pointer-events-none')).toBe(false);
+    expect(fixture.nativeElement.querySelector('[data-testid="filter-score-upgrade"]')).toBeNull();
   });
 });

@@ -4,6 +4,7 @@ import { Component, signal } from '@angular/core';
 
 import { CreatorCardComponent } from './creator-card.component';
 import { Creator } from '../../core/data/creator.types';
+import { Format } from '../../core/simulation/simulation.types';
 
 const SAMPLE: Creator = {
   id: 42,
@@ -32,6 +33,7 @@ const SAMPLE: Creator = {
     [creator]="creator()"
     [selected]="selected()"
     [canSeeRates]="canSee()"
+    [format]="format()"
     (toggle)="toggled.set($event)"
   />`,
 })
@@ -39,6 +41,7 @@ class HostComponent {
   creator = signal<Creator>(SAMPLE);
   selected = signal(false);
   canSee = signal(false);
+  format = signal<Format>('Integrated');
   toggled = signal<number | null>(null);
 }
 
@@ -67,7 +70,7 @@ describe('CreatorCardComponent', () => {
     expect(text).toContain('Twitch');
   });
 
-  it('blurs the rate label when canSeeRates=false, shows clean when true', () => {
+  it('blurs the rate label when canSeeRates=false, unblurs when true', () => {
     const fixture = TestBed.createComponent(HostComponent);
     fixture.detectChanges();
     const rate = fixture.nativeElement.querySelector('[data-testid="creator-rate"]');
@@ -76,17 +79,42 @@ describe('CreatorCardComponent', () => {
     fixture.componentInstance.canSee.set(true);
     fixture.detectChanges();
     expect(rate.classList.contains('blur-sm')).toBe(false);
-    expect(rate.textContent).toContain('$10K');
-    expect(rate.textContent).toContain('$40K');
+    // Computed range — assert non-em-dash, dollar-prefixed currency format.
+    expect(rate.textContent.trim()).not.toBe('—');
+    expect(rate.textContent).toMatch(/\$\d+/);
   });
 
-  it('shows em-dash when no rates are available', () => {
+  it('rateLabel changes range when the format input changes', () => {
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.componentInstance.canSee.set(true);
+
+    fixture.componentInstance.format.set('Integrated');
+    fixture.detectChanges();
+    const rate = fixture.nativeElement.querySelector('[data-testid="creator-rate"]');
+    const intLabel = rate.textContent.trim();
+
+    fixture.componentInstance.format.set('Dedicated');
+    fixture.detectChanges();
+    const dedLabel = rate.textContent.trim();
+
+    fixture.componentInstance.format.set('Mixed');
+    fixture.detectChanges();
+    const mixLabel = rate.textContent.trim();
+
+    // All three should be distinct and dollar-formatted (Dedicated > Mixed > Integrated by midpoint).
+    expect(intLabel).not.toBe(dedLabel);
+    expect(mixLabel).not.toBe(dedLabel);
+    expect(intLabel).toMatch(/^\$\d+/);
+  });
+
+  it('shows a computed range even when creator.rates is empty (no em-dash)', () => {
     const fixture = TestBed.createComponent(HostComponent);
     fixture.componentInstance.creator.set({ ...SAMPLE, rates: undefined });
     fixture.componentInstance.canSee.set(true);
     fixture.detectChanges();
     const rate = fixture.nativeElement.querySelector('[data-testid="creator-rate"]');
-    expect(rate.textContent.trim()).toBe('—');
+    expect(rate.textContent.trim()).not.toBe('—');
+    expect(rate.textContent).toMatch(/\$\d+/);
   });
 
   it('emits toggle with creator id when button is clicked', () => {

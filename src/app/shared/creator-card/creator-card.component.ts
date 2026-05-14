@@ -1,6 +1,8 @@
 import { Component, computed, inject, input, output } from '@angular/core';
 import { CREATOR_TIER_COLORS, Creator, tierForSubs } from '../../core/data/creator.types';
 import { CreatorProfileService } from '../../core/creator-profile/creator-profile.service';
+import { computeRateRanges } from '../../core/rates/rate-estimate';
+import { Format } from '../../core/simulation/simulation.types';
 
 const PLATFORM_COLORS: Record<string, string> = {
   YouTube: '#FF0000',
@@ -156,6 +158,7 @@ export class CreatorCardComponent {
   readonly creator = input.required<Creator>();
   readonly selected = input(false);
   readonly canSeeRates = input(false);
+  readonly format = input<Format>('Integrated');
   readonly toggle = output<number>();
 
   readonly platforms = computed(() => {
@@ -177,12 +180,13 @@ export class CreatorCardComponent {
       .toUpperCase();
   });
 
+  // Always compute ranges dynamically from creator stats (mirrors prod's
+  // `computeCostEstimate`). Stored `creator.rates` is folded into the compute
+  // as a YouTube-branch fallback when avgViews is missing.
   readonly rateLabel = computed(() => {
-    const rates = this.creator().rates;
-    if (rates?.mix) return this.formatRange(rates.mix);
-    if (rates?.int) return this.formatRange(rates.int);
-    if (rates?.ded) return this.formatRange(rates.ded);
-    return '—';
+    const ranges = computeRateRanges(this.creator());
+    const key = this.format() === 'Dedicated' ? 'ded' : this.format() === 'Mixed' ? 'mix' : 'int';
+    return this.formatRange(ranges[key]);
   });
 
   platformColor(p: string): string {
