@@ -312,7 +312,7 @@ export class FilterPanelComponent {
   readonly search = signal<string>('');
   readonly sort = signal<SortKey>('cpi');
   readonly tier = signal<CreatorTier | undefined>(undefined);
-  readonly format = signal<Format>('Integrated');
+  readonly format = signal<Format>('Mixed');
   readonly minCpi = signal<number>(0);
   readonly minGfi = signal<number>(0);
 
@@ -388,7 +388,7 @@ export class FilterPanelComponent {
     this.languages_.set([]);
     this.search.set('');
     this.tier.set(undefined);
-    this.format.set('Integrated');
+    this.format.set('Mixed');
     this.minCpi.set(0);
     this.minGfi.set(0);
     this.emit();

@@ -128,7 +128,7 @@ export class DiscoveryComponent {
 
   protected readonly selection = inject(SelectionService);
 
-  protected readonly query = signal<DiscoveryQuery>({ sort: 'cpi', format: 'Integrated' });
+  protected readonly query = signal<DiscoveryQuery>({ sort: 'cpi', format: 'Mixed' });
   protected readonly page = signal(0);
   protected readonly budget = signal<number | null>(null);
   protected readonly creatingCampaign = signal(false);
@@ -169,9 +169,9 @@ export class DiscoveryComponent {
 
   setBudget(value: number | null): void {
     this.budget.set(value);
-    // Future: thread `value` into `query` as a `maxBudget` filter so the server
-    // narrows the result set. For now, budget is a context-only signal that
-    // feeds "Create campaign from selection".
+    // Thread into the query so CreatorsService filters by affordability.
+    this.query.update((q) => ({ ...q, maxBudget: value }));
+    this.page.set(0);
   }
 
   async createCampaignFromSelection(): Promise<void> {

@@ -1,5 +1,5 @@
 import { Injectable, inject, signal } from '@angular/core';
-import { CREATOR_TIER_RANGES, Creator, CreatorFilters, PagedCreators, SortKey } from '../data/creator.types';
+import { CREATOR_TIER_RANGES, Creator, CreatorFilters, PagedCreators, SortKey, maxSubsForBudget } from '../data/creator.types';
 import { SupabaseService } from '../supabase/supabase.service';
 
 const DEFAULT_PAGE_SIZE = 24;
@@ -108,6 +108,10 @@ export class CreatorsService {
     }
     if (filters.minCpi && filters.minCpi > 0) q = q.gte('cpi', filters.minCpi);
     if (filters.minGfi && filters.minGfi > 0) q = q.gte('gfi', filters.minGfi);
+    if (filters.maxBudget && filters.maxBudget > 0) {
+      const maxSubs = maxSubsForBudget(filters.maxBudget);
+      if (Number.isFinite(maxSubs)) q = q.lt('subs_parsed', maxSubs);
+    }
 
     const sortCol = sort === 'subs' ? 'subs_parsed' : sort;
     const ascending = sort === 'name';

@@ -69,6 +69,31 @@ export interface CreatorFilters {
   tier?: CreatorTier;
   minCpi?: number;
   minGfi?: number;
+  /**
+   * Campaign-budget ceiling. Filters creators whose typical reach (subs) implies
+   * a deal cost likely to fit within the budget. Heuristic — see
+   * `maxSubsForBudget()` in CreatorsService for the mapping.
+   */
+  maxBudget?: number | null;
+}
+
+/**
+ * Maps a campaign budget to a maximum creator size (subs_parsed) we'll surface
+ * in discovery. Heuristic: bigger budgets unlock bigger creators. Anchored to
+ * the legacy tier bands (Micro / Mid-tier / Established / Megastar).
+ *
+ * - <$10K     → Micro only (≤50K subs)
+ * - $10K-50K  → Micro or low mid-tier (≤100K subs)
+ * - $50K-250K → Mid-tier and smaller (≤500K subs)
+ * - $250K-1M  → Up to Established (≤2M subs)
+ * - $1M+      → No cap (Megastars included)
+ */
+export function maxSubsForBudget(budget: number): number {
+  if (budget >= 1_000_000) return Number.POSITIVE_INFINITY;
+  if (budget >= 250_000) return 2_000_000;
+  if (budget >= 50_000) return 500_000;
+  if (budget >= 10_000) return 100_000;
+  return 50_000;
 }
 
 export interface PagedCreators {
