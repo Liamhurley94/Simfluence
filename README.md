@@ -46,7 +46,7 @@ If you're a future contributor / Claude session reading this and the cutover has
 
 ## Backend integration
 
-- **Supabase** provides Auth + existing Edge Functions (`score-creator`, `run-simulation`, `youtube-creator-data`, `twitch-live-status`, `validate-password`).
+- **Supabase** provides Auth + Edge Functions. The simulation/scoring IP stays server-side (`score-creator`, `run-simulation`, `youtube-creator-data`, `twitch-live-status`). Account / enterprise / admin endpoints (Phase 9): `upgrade-to-full`, `apply-for-enterprise`, `admin-list-enterprises`, `admin-approve-enterprise`, `admin-reject-enterprise`, `enterprise-invite-user`, `accept-enterprise-invite`. The legacy `validate-password` gate-password flow was retired on develop/staging in May 2026.
 - **No new backend work in this repo.** Database tables and RLS policies for campaigns / outreach / creator storage will live in a **separate backend repo** managed independently. Client-side repository interfaces (`CampaignsRepository`, `OutreachRepository`) are wired with in-memory stubs; swapping in a real implementation is a one-line DI change in `app.config.ts`.
 
 ---
@@ -111,7 +111,13 @@ All three data files regenerate. The service layer imports them directly — no 
 | `POST /functions/v1/run-simulation` | Simulator (sole math source) | `RunSimulationService` |
 | `POST /functions/v1/youtube-creator-data` | Creator profile modal — YouTube section | `YoutubeCreatorService` |
 | `POST /functions/v1/twitch-live-status`   | Creator profile modal — Twitch section + inactivity | `TwitchLiveService` |
-| `POST /functions/v1/validate-password`    | Auth                 | *(not currently used)*   |
+| `POST /functions/v1/upgrade-to-full`        | Account → "Upgrade to Full" CTA                    | `EnterpriseService.upgradeToFull()`    |
+| `POST /functions/v1/apply-for-enterprise`   | Account → "Apply for Enterprise" form              | `EnterpriseService.applyForEnterprise()` |
+| `GET /functions/v1/admin-list-enterprises`  | Admin tab → enterprise queue                       | `EnterpriseService.adminListEnterprises()` |
+| `POST /functions/v1/admin-approve-enterprise` | Admin enterprise detail → Approve                 | `EnterpriseService.adminApprove()`     |
+| `POST /functions/v1/admin-reject-enterprise`  | Admin enterprise detail → Reject                  | `EnterpriseService.adminReject()`      |
+| `POST /functions/v1/enterprise-invite-user`   | Account (owner) → Invite                          | `EnterpriseService.inviteUser()`       |
+| `POST /functions/v1/accept-enterprise-invite` | Signup completion with `?invite_token=`           | `EnterpriseService.acceptInvite()`     |
 
 The `authInterceptor` attaches a `Bearer <jwt>` + `apikey` header to every request hitting the Supabase origin; falls back to the anon key when no user session exists (matching the edge functions' own auth behavior).
 
@@ -197,6 +203,7 @@ Append one entry per phase. Keep it one or two lines — details belong in commi
 - ✓ **Phase 6** — Simulator: `RunSimulationService` is the sole math source — wraps the `run-simulation` edge fn (proprietary formulas stay server-side). Simulator page shows budget/format/genre controls, 12 objective chips, P10/P50/P90 band cards, and a 6-column metrics grid with ROAS rendered as an **indicative range** (`roasP10×–roasP90×`). `RateLimitService` (sessionStorage counter, 3 free / 10 silver / ∞ gold+). Edge fn math: greedy budget-fit for reachable creators, creator-driven reach blended 60/40 with CPM reach, tiered budget-quality premium, creator-quality premium `0.75 + avgCPI*0.35`, ROAS as range × `budgetQuality × creatorQuality`. Local `SimulationService` fallback was deleted in May 2026 to keep coefficients out of the JS bundle; button shows "Running…" via `pending` signal while the server is in flight.
 - ✓ **Phase 7** — Campaigns: abstract `CampaignsRepository` token + `InMemoryCampaignsRepository` default binding (wired in `app.config.ts`), `CampaignsService` with optimistic-update signals, campaigns grid page with create/edit/delete + form modal, `BriefPdfService` (Platinum+) builds print-ready HTML and opens a window for the browser's Save-as-PDF. Simulator gained a "Save to Campaigns" button that navigates with a seed object via router state.
 - ✓ **Phase 8** — Outreach: abstract `OutreachRepository` token + `InMemoryOutreachRepository` (same DI pattern as Campaigns), `OutreachService` with `byStatus` count + `filtered` (campaign × status) signals. Full CRM table with inline status/contact/notes edits, 5 counter tiles, campaign + status filter bar, `AddOutreachComponent` modal with creator search autocomplete.
+- ⏳ **Phase 9** — Account upgrades + Enterprise + Admin UI. Migration `20260515120000_enterprises_and_admin.sql` adds `enterprises` and `enterprise_invites` tables plus `is_admin` + `enterprise_id` columns on `profiles`. Seven new edge functions (`upgrade-to-full`, `apply-for-enterprise`, `admin-list-enterprises`, `admin-approve-enterprise`, `admin-reject-enterprise`, `enterprise-invite-user`, `accept-enterprise-invite`). `AccountComponent` provides settings + upgrade CTAs (Full / Apply for Enterprise) + enterprise-owner invite UI. `AdminComponent` is an enterprise approval queue hidden behind `adminGuard` (RLS-enforced via `current_user_is_admin()` SECURITY DEFINER helper). Signup flow accepts `?invite_token=` to redeem an invite. Legacy `validate-password` edge fn retired. See `../simfluence-backend/ARCHITECTURE.md` for the full account/admin/enterprise model.
 
 ## Backend migration (not a phase — cross-cutting infra)
 

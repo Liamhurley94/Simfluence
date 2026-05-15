@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/auth/auth.guard';
 import { tierGuard } from './core/auth/tier.guard';
+import { adminGuard } from './core/auth/admin.guard';
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: '/app/dashboard' },
@@ -53,6 +54,24 @@ export const routes: Routes = [
         canActivate: [tierGuard('silver')],
         loadComponent: () =>
           import('./features/outreach/outreach.component').then((m) => m.OutreachComponent),
+      },
+      {
+        path: 'account',
+        loadComponent: () =>
+          import('./features/account/account.component').then((m) => m.AccountComponent),
+      },
+      {
+        path: 'admin',
+        canActivate: [adminGuard],
+        loadComponent: () =>
+          import('./features/admin/admin.component').then((m) => m.AdminComponent),
+        children: [
+          {
+            path: ':id',
+            loadComponent: () =>
+              import('./features/admin/enterprise-detail.component').then((m) => m.EnterpriseDetailComponent),
+          },
+        ],
       },
     ],
   },

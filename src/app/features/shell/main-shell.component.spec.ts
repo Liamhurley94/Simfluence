@@ -17,6 +17,7 @@ describe('MainShellComponent', () => {
     const authStub = {
       user: signal<{ email: string } | null>({ email: 'brandon@example.com' }),
       tier: signal('free'),
+      isAdmin: signal(false),
       signOut: async () => {},
     };
 

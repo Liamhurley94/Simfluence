@@ -8,9 +8,10 @@ import { AuthService } from '../../core/auth/auth.service';
 import { UpgradePromptService } from '../../core/upgrade/upgrade-prompt.service';
 import { Tier } from '../../core/types';
 
-function setup(userTier: Tier) {
+function setup(userTier: Tier, isAdminVal = false) {
   const tier = signal<Tier>(userTier);
-  const authStub = { tier, user: () => null } as unknown as AuthService;
+  const isAdmin = signal<boolean>(isAdminVal);
+  const authStub = { tier, isAdmin, user: () => null } as unknown as AuthService;
 
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({
@@ -31,10 +32,18 @@ describe('SideNavComponent', () => {
     localStorage.clear();
   });
 
-  it('renders all 7 tabs', () => {
+  it('renders 8 tabs for a non-admin (7 originals + Account; Admin hidden)', () => {
     const { fixture } = setup('free');
     const anchors = fixture.nativeElement.querySelectorAll('a[data-testid^="nav-"]');
-    expect(anchors.length).toBe(7);
+    expect(anchors.length).toBe(8);
+    expect(fixture.nativeElement.querySelector('[data-testid="nav-admin"]')).toBeNull();
+  });
+
+  it('shows Admin tab for an admin user', () => {
+    const { fixture } = setup('free', true);
+    const anchors = fixture.nativeElement.querySelectorAll('a[data-testid^="nav-"]');
+    expect(anchors.length).toBe(9);
+    expect(fixture.nativeElement.querySelector('[data-testid="nav-admin"]')).toBeTruthy();
   });
 
   it('marks silver+ tabs as locked for free tier', () => {

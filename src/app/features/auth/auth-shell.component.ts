@@ -7,6 +7,10 @@ import { RecoverComponent } from './recover.component';
 
 type TabKey = 'signup' | 'signin' | 'recover';
 
+// Query-param input names (kebab-case in the URL, camelCase as component inputs).
+// Router withComponentInputBinding maps `?invite_token=...` → `invite_token` input,
+// not `inviteToken`. We use snake_case names to match the URL convention.
+
 @Component({
   selector: 'app-auth-shell',
   standalone: true,
@@ -55,7 +59,11 @@ type TabKey = 'signup' | 'signin' | 'recover';
 
         @switch (tab()) {
           @case ('signup') {
-            <app-signup (signedUp)="onAuthed()" />
+            <app-signup
+              [inviteToken]="invite_token()"
+              [inviteEmail]="email()"
+              (signedUp)="onAuthed()"
+            />
           }
           @case ('signin') {
             <app-login (signedIn)="onAuthed()" (forgot)="tab.set('recover')" />
@@ -74,10 +82,20 @@ export class AuthShellComponent {
 
   /** `returnTo` query param (from authGuard redirect). */
   readonly returnTo = input<string | undefined>(undefined);
+  /** `invite_token` query param — switches shell to signup mode + passes through. */
+  readonly invite_token = input<string | undefined>(undefined);
+  /** `email` query param — pre-fills signup form when invited. */
+  readonly email = input<string | undefined>(undefined);
 
   readonly tab = signal<TabKey>('signin');
 
   constructor() {
+    // If the user arrived with an invite token, default to the signup tab.
+    effect(() => {
+      if (this.invite_token()) {
+        this.tab.set('signup');
+      }
+    });
     // If the user is already authenticated, bounce to the app.
     effect(() => {
       if (this.auth.isAuthenticated()) {
@@ -87,6 +105,11 @@ export class AuthShellComponent {
   }
 
   onAuthed(): void {
+    // Land enterprise-invite acceptors on /app/account so they can see their new state.
+    if (this.invite_token()) {
+      void this.router.navigateByUrl('/app/account');
+      return;
+    }
     this.navigateAway();
   }
 

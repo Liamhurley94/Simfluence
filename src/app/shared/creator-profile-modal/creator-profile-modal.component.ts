@@ -326,7 +326,7 @@ function sponsorColor(pct: number): string {
               </div>
             }
 
-            @if (c.sponsorHistory?.length) {
+            @if (c.sponsorHistory.length) {
               <div>
                 <div class="text-[10px] uppercase tracking-wider mb-1" style="color: var(--color-text-muted);">
                   Verified sponsors
