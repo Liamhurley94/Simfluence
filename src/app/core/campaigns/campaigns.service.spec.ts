@@ -8,14 +8,18 @@ import { Campaign, NewCampaign } from './campaign.types';
 function sampleCampaign(overrides: Partial<Campaign> = {}): Campaign {
   return {
     id: 'cmp-1',
+    createdBy: 'user-1',
+    enterpriseId: null,
+    status: 'planning',
     name: 'Alpha',
     client: 'Acme',
     genre: 'Gaming',
     budget: 50_000,
-    goLiveDate: null,
-    notes: '',
-    creatorIds: [],
+    notes: null,
+    objectives: [],
     forecast: null,
+    startedAt: null,
+    completedAt: null,
     createdAt: '2026-04-23T10:00:00.000Z',
     updatedAt: '2026-04-23T10:00:00.000Z',
     ...overrides,
@@ -24,6 +28,7 @@ function sampleCampaign(overrides: Partial<Campaign> = {}): Campaign {
 
 type FakeRepo = {
   list: ReturnType<typeof vi.fn>;
+  byId: ReturnType<typeof vi.fn>;
   create: ReturnType<typeof vi.fn>;
   update: ReturnType<typeof vi.fn>;
   remove: ReturnType<typeof vi.fn>;
@@ -32,6 +37,7 @@ type FakeRepo = {
 function setup(): { service: CampaignsService; repo: FakeRepo } {
   const repo: FakeRepo = {
     list: vi.fn().mockResolvedValue([]),
+    byId: vi.fn().mockResolvedValue(null),
     create: vi.fn(),
     update: vi.fn(),
     remove: vi.fn().mockResolvedValue(undefined),
@@ -72,16 +78,7 @@ describe('CampaignsService', () => {
     const created = sampleCampaign({ id: 'new' });
     repo.create.mockResolvedValueOnce(created);
 
-    const dto: NewCampaign = {
-      name: 'N',
-      client: '',
-      genre: '',
-      budget: 1,
-      goLiveDate: null,
-      notes: '',
-      creatorIds: [],
-      forecast: null,
-    };
+    const dto: NewCampaign = { name: 'N' };
     await service.create(dto);
     expect(service.campaigns()[0].id).toBe('new');
   });
@@ -104,11 +101,9 @@ describe('CampaignsService', () => {
     ]);
     await service.load();
 
-    // Success path
     await service.remove('a');
     expect(service.campaigns().map((c) => c.id)).toEqual(['b']);
 
-    // Failure path — ensure rollback
     repo.remove.mockRejectedValueOnce(new Error('conflict'));
     await service.remove('b');
     expect(service.campaigns().map((c) => c.id)).toEqual(['b']);
@@ -121,5 +116,24 @@ describe('CampaignsService', () => {
     await service.load();
     expect(service.byId('a')?.id).toBe('a');
     expect(service.byId('missing')).toBeUndefined();
+  });
+
+  it('byIdAsync falls back to repo.byId when not cached', async () => {
+    const { service, repo } = setup();
+    const fetched = sampleCampaign({ id: 'remote' });
+    repo.byId.mockResolvedValueOnce(fetched);
+    const got = await service.byIdAsync('remote');
+    expect(got?.id).toBe('remote');
+    expect(repo.byId).toHaveBeenCalledWith('remote');
+  });
+
+  it('start() transitions planning → active and sets startedAt', async () => {
+    const { service, repo } = setup();
+    repo.update.mockImplementationOnce(async (id: string, patch: { status: string; startedAt: string }) => {
+      return sampleCampaign({ id, status: 'active', startedAt: patch.startedAt });
+    });
+    const updated = await service.start('a');
+    expect(updated?.status).toBe('active');
+    expect(updated?.startedAt).toBeTruthy();
   });
 });

@@ -5,6 +5,8 @@ import { Router } from '@angular/router';
 import { CreatorsService } from '../../core/creators/creators.service';
 import { SelectionService } from '../../core/selection/selection.service';
 import { AuthService } from '../../core/auth/auth.service';
+import { CampaignsService } from '../../core/campaigns/campaigns.service';
+import { CampaignCreatorsService } from '../../core/campaigns/campaign-creators.service';
 import { tierRank } from '../../core/types';
 import { PagedCreators } from '../../core/data/creator.types';
 import { CreatorCardComponent } from '../../shared/creator-card/creator-card.component';
@@ -13,13 +15,14 @@ import {
   FilterPanelComponent,
 } from '../../shared/filter-panel/filter-panel.component';
 import { PaginationComponent } from '../../shared/pagination/pagination.component';
+import { BudgetPickerComponent } from '../../shared/budget-picker/budget-picker.component';
 
 const EMPTY_PAGE: PagedCreators = { creators: [], total: 0, pageCount: 1, page: 0 };
 
 @Component({
   selector: 'app-discovery',
   standalone: true,
-  imports: [CreatorCardComponent, FilterPanelComponent, PaginationComponent, DecimalPipe],
+  imports: [CreatorCardComponent, FilterPanelComponent, PaginationComponent, DecimalPipe, BudgetPickerComponent],
   template: `
     <div class="flex gap-6">
       <aside class="w-72 shrink-0">
@@ -27,8 +30,9 @@ const EMPTY_PAGE: PagedCreators = { creators: [], total: 0, pageCount: 1, page: 
       </aside>
 
       <section class="flex-1 min-w-0">
-        <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
           <h1 class="text-xl font-bold" style="color: var(--color-text);">Discovery</h1>
+          <app-budget-picker [value]="budget()" (valueChange)="setBudget($event)" />
           <div class="text-xs" style="color: var(--color-text-muted);" data-testid="results-count">
             {{ results.value().total | number }} creators
           </div>
@@ -36,7 +40,7 @@ const EMPTY_PAGE: PagedCreators = { creators: [], total: 0, pageCount: 1, page: 
 
         @if (selection.hasAny()) {
           <div
-            class="mb-4 p-3 rounded-lg flex items-center justify-between"
+            class="mb-4 p-3 rounded-lg flex items-center justify-between flex-wrap gap-2"
             style="background: var(--color-bg-2); border: 1px solid var(--color-sf-blue);"
             data-testid="selection-bar"
           >
@@ -61,6 +65,16 @@ const EMPTY_PAGE: PagedCreators = { creators: [], total: 0, pageCount: 1, page: 
                 data-testid="selection-score"
               >
                 Score selected →
+              </button>
+              <button
+                type="button"
+                (click)="createCampaignFromSelection()"
+                [disabled]="creatingCampaign()"
+                class="text-xs px-3 py-1.5 rounded font-semibold disabled:opacity-50"
+                style="background: var(--color-sf-green); color: #000;"
+                data-testid="selection-create-campaign"
+              >
+                {{ creatingCampaign() ? 'Creating…' : 'Create campaign from selection' }}
               </button>
             </div>
           </div>
@@ -109,11 +123,15 @@ export class DiscoveryComponent {
   private creators = inject(CreatorsService);
   private auth = inject(AuthService);
   private router = inject(Router);
+  private campaignsSvc = inject(CampaignsService);
+  private campaignCreators = inject(CampaignCreatorsService);
 
   protected readonly selection = inject(SelectionService);
 
   protected readonly query = signal<DiscoveryQuery>({ sort: 'cpi', format: 'Integrated' });
   protected readonly page = signal(0);
+  protected readonly budget = signal<number | null>(null);
+  protected readonly creatingCampaign = signal(false);
 
   // Server-side filtered + paginated query. Reloads automatically when
   // `query` or `page` signals change.
@@ -147,5 +165,37 @@ export class DiscoveryComponent {
 
   goToScoring(): void {
     void this.router.navigateByUrl('/app/scoring');
+  }
+
+  setBudget(value: number | null): void {
+    this.budget.set(value);
+    // Future: thread `value` into `query` as a `maxBudget` filter so the server
+    // narrows the result set. For now, budget is a context-only signal that
+    // feeds "Create campaign from selection".
+  }
+
+  async createCampaignFromSelection(): Promise<void> {
+    const ids = Array.from(this.selection.ids());
+    if (ids.length === 0) return;
+    this.creatingCampaign.set(true);
+    try {
+      const created = await this.campaignsSvc.create({
+        name: `Discovery campaign — ${new Date().toLocaleDateString()}`,
+        genre: this.query().genre ?? null,
+        budget: this.budget(),
+      });
+      if (!created) return;
+
+      await Promise.all(
+        ids.map((cid) =>
+          this.campaignCreators.add({ campaignId: created.id, creatorId: cid, source: 'discovery' }),
+        ),
+      );
+
+      this.selection.clear();
+      void this.router.navigate(['/app/campaigns', created.id]);
+    } finally {
+      this.creatingCampaign.set(false);
+    }
   }
 }

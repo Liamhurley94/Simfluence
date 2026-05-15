@@ -32,23 +32,23 @@ describe('SideNavComponent', () => {
     localStorage.clear();
   });
 
-  it('renders 8 tabs for a non-admin (7 originals + Account; Admin hidden)', () => {
+  it('renders 7 tabs for a non-admin (Outreach removed; Admin hidden)', () => {
     const { fixture } = setup('free');
     const anchors = fixture.nativeElement.querySelectorAll('a[data-testid^="nav-"]');
-    expect(anchors.length).toBe(8);
+    expect(anchors.length).toBe(7);
     expect(fixture.nativeElement.querySelector('[data-testid="nav-admin"]')).toBeNull();
   });
 
   it('shows Admin tab for an admin user', () => {
     const { fixture } = setup('free', true);
     const anchors = fixture.nativeElement.querySelectorAll('a[data-testid^="nav-"]');
-    expect(anchors.length).toBe(9);
+    expect(anchors.length).toBe(8);
     expect(fixture.nativeElement.querySelector('[data-testid="nav-admin"]')).toBeTruthy();
   });
 
   it('marks silver+ tabs as locked for free tier', () => {
     const { fixture } = setup('free');
-    const lockedLabels = ['personas', 'campaigns', 'outreach'];
+    const lockedLabels = ['personas', 'campaigns'];
     for (const label of lockedLabels) {
       const anchor = fixture.nativeElement.querySelector(`[data-testid="nav-${label}"]`);
       expect(anchor?.getAttribute('aria-disabled')).toBe('true');

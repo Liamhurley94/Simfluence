@@ -1,7 +1,7 @@
 import { Component, computed, inject, resource, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { AuthService } from '../../core/auth/auth.service';
 import { CampaignContextService } from '../../core/context/campaign-context.service';
@@ -15,7 +15,8 @@ import {
   Objective,
   SimResult,
 } from '../../core/simulation/simulation.types';
-import { NewCampaign } from '../../core/campaigns/campaign.types';
+import { CampaignsService } from '../../core/campaigns/campaigns.service';
+import { CampaignCreatorsService } from '../../core/campaigns/campaign-creators.service';
 import { Creator } from '../../core/data/creator.types';
 
 const FORMATS: Format[] = ['Integrated', 'Mixed', 'Dedicated'];
@@ -337,6 +338,14 @@ export class SimulatorComponent {
   private auth = inject(AuthService);
   private rateLimitSvc = inject(RateLimitService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  private campaignsSvc = inject(CampaignsService);
+  private campaignCreators = inject(CampaignCreatorsService);
+
+  // When the simulator is opened via /simulator?campaign=:id (e.g. from the
+  // campaign detail page's "Run simulation" link), Save updates that campaign
+  // instead of creating a new one. Captured once at init.
+  protected readonly attachedCampaignId = this.route.snapshot.queryParamMap.get('campaign');
   protected readonly runSim = inject(RunSimulationService);
   protected readonly context = inject(CampaignContextService);
 
@@ -396,28 +405,52 @@ export class SimulatorComponent {
     );
   }
 
-  saveToCampaigns(): void {
+  async saveToCampaigns(): Promise<void> {
     const r = this.result();
     if (!r) return;
-    const seed: Partial<NewCampaign> = {
+
+    const forecast = {
+      impressions: r.impressions,
+      ctr: r.ctr,
+      cvr: r.cvr,
+      roas: r.roas,
+      p10: r.p10,
+      p50: r.p50,
+      p90: r.p90,
+    };
+
+    // Path A: attached to an existing campaign — update its forecast, add any
+    // newly-simulated creators to its campaign_creators with source='simulator'.
+    if (this.attachedCampaignId) {
+      const id = this.attachedCampaignId;
+      await this.campaignsSvc.update(id, { forecast });
+      await this.campaignCreators.loadFor(id);
+      const existingCreatorIds = new Set(this.campaignCreators.records().map((cc) => cc.creatorId));
+      const toAdd = this.creators().map((c) => c.id).filter((cid) => !existingCreatorIds.has(cid));
+      await Promise.all(
+        toAdd.map((cid) =>
+          this.campaignCreators.add({ campaignId: id, creatorId: cid, source: 'simulator' }),
+        ),
+      );
+      void this.router.navigate(['/app/campaigns', id]);
+      return;
+    }
+
+    // Path B: standalone save — create a new campaign with the basics + forecast.
+    const created = await this.campaignsSvc.create({
       name: `${this.context.genre()} campaign — ${new Date().toLocaleDateString()}`,
       genre: this.context.genre(),
       budget: this.budget(),
-      creatorIds: this.creators().map((c) => c.id),
-      forecast: {
-        impressions: r.impressions,
-        ctr: r.ctr,
-        cvr: r.cvr,
-        roas: r.roas,
-        p10: r.p10,
-        p50: r.p50,
-        p90: r.p90,
-      },
-    };
-    void this.router.navigate(['/app/campaigns'], {
-      queryParams: { new: '1' },
-      state: { campaignSeed: seed },
     });
+    if (!created) return;
+    await this.campaignsSvc.update(created.id, { forecast });
+    const ids = this.creators().map((c) => c.id);
+    await Promise.all(
+      ids.map((cid) =>
+        this.campaignCreators.add({ campaignId: created.id, creatorId: cid, source: 'simulator' }),
+      ),
+    );
+    void this.router.navigate(['/app/campaigns', created.id]);
   }
 
   slug(s: string): string {

@@ -6,14 +6,26 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DiscoveryComponent } from './discovery.component';
 import { AuthService } from '../../core/auth/auth.service';
 import { SelectionService } from '../../core/selection/selection.service';
+import { CampaignsRepository } from '../../core/campaigns/campaigns.repository';
 
 describe('DiscoveryComponent', () => {
-  let router: { navigateByUrl: ReturnType<typeof vi.fn> };
+  let router: { navigateByUrl: ReturnType<typeof vi.fn>; navigate: ReturnType<typeof vi.fn> };
   let tier: ReturnType<typeof signal<string>>;
 
   beforeEach(() => {
-    router = { navigateByUrl: vi.fn().mockResolvedValue(true) };
+    router = {
+      navigateByUrl: vi.fn().mockResolvedValue(true),
+      navigate: vi.fn().mockResolvedValue(true),
+    };
     tier = signal('free');
+
+    const campaignsRepoStub = {
+      list: vi.fn().mockResolvedValue([]),
+      byId: vi.fn().mockResolvedValue(null),
+      create: vi.fn(),
+      update: vi.fn(),
+      remove: vi.fn(),
+    } as unknown as CampaignsRepository;
 
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({
@@ -22,9 +34,16 @@ describe('DiscoveryComponent', () => {
         provideRouter([]),
         {
           provide: AuthService,
-          useValue: { tier, user: () => null, isAuthenticated: () => true },
+          useValue: {
+            tier,
+            user: () => null,
+            isAuthenticated: () => true,
+            enterpriseId: () => null,
+            enterprise: () => null,
+          },
         },
         { provide: Router, useValue: router },
+        { provide: CampaignsRepository, useValue: campaignsRepoStub },
       ],
     });
   });

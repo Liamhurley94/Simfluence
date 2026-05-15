@@ -50,10 +50,11 @@ export const routes: Routes = [
           import('./features/campaigns/campaigns.component').then((m) => m.CampaignsComponent),
       },
       {
-        path: 'outreach',
+        // Detail route inherits the same guard as the list route above.
+        path: 'campaigns/:id',
         canActivate: [tierGuard('silver')],
         loadComponent: () =>
-          import('./features/outreach/outreach.component').then((m) => m.OutreachComponent),
+          import('./features/campaigns/campaign-detail.component').then((m) => m.CampaignDetailComponent),
       },
       {
         path: 'account',

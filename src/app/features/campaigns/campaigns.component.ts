@@ -1,25 +1,23 @@
-import { Component, computed, inject, signal } from '@angular/core';
-import { DatePipe, DecimalPipe } from '@angular/common';
-import { ActivatedRoute, Router } from '@angular/router';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { Component, computed, inject } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
+import { Router, RouterLink } from '@angular/router';
 
 import { AuthService } from '../../core/auth/auth.service';
 import { CampaignsService } from '../../core/campaigns/campaigns.service';
 import { BriefPdfService } from '../../core/campaigns/brief-pdf.service';
-import { Campaign, NewCampaign } from '../../core/campaigns/campaign.types';
+import { Campaign, CAMPAIGN_STATUS_LABELS } from '../../core/campaigns/campaign.types';
 import { tierRank } from '../../core/types';
-import { CampaignFormComponent } from './campaign-form.component';
 
 @Component({
   selector: 'app-campaigns',
   standalone: true,
-  imports: [DecimalPipe, DatePipe, CampaignFormComponent],
+  imports: [DecimalPipe, RouterLink],
   template: `
     <div class="flex items-center justify-between mb-6">
       <h1 class="text-xl font-bold" style="color: var(--color-text);">Campaigns</h1>
       <button
         type="button"
-        (click)="openNew()"
+        (click)="createAndOpen()"
         class="px-4 py-2 rounded text-xs font-bold uppercase tracking-wider"
         style="background: var(--color-sf-blue); color: white;"
         data-testid="campaigns-new"
@@ -59,30 +57,41 @@ import { CampaignFormComponent } from './campaign-form.component';
       >
         @for (c of svc.campaigns(); track c.id) {
           <article
-            class="p-4 rounded-lg"
+            class="p-4 rounded-lg cursor-pointer hover:opacity-90"
             style="background: var(--color-bg-2); border: 1px solid var(--color-border);"
+            [routerLink]="['/app/campaigns', c.id]"
             [attr.data-testid]="'campaign-' + c.id"
           >
-            <div class="flex items-start justify-between gap-2 mb-2">
+            <div class="flex items-start justify-between gap-2 mb-1">
               <div class="min-w-0">
                 <div class="font-bold truncate" style="color: var(--color-text);">{{ c.name }}</div>
                 <div class="text-xs truncate" style="color: var(--color-text-muted);">
                   {{ c.client || 'Unassigned' }} · {{ c.genre || '—' }}
                 </div>
               </div>
-              <div
-                class="text-xs shrink-0"
-                style="color: var(--color-sf-gold);"
-              >
-                \${{ c.budget | number: '1.0-0' }}
-              </div>
+              @if (c.budget != null) {
+                <div class="text-xs shrink-0" style="color: var(--color-sf-gold);">
+                  \${{ c.budget | number: '1.0-0' }}
+                </div>
+              }
             </div>
 
-            @if (c.goLiveDate) {
-              <div class="text-[10px] uppercase tracking-wider mb-2" style="color: var(--color-text-muted);">
-                Go live {{ c.goLiveDate | date: 'mediumDate' }}
-              </div>
-            }
+            <div class="flex items-center gap-2 mb-3">
+              <span
+                class="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded"
+                [style]="statusStyle(c)"
+                [attr.data-testid]="'campaign-status-' + c.id"
+              >
+                {{ statusLabel(c) }}
+              </span>
+              <span
+                class="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded"
+                style="background: var(--color-bg-3); color: var(--color-text-muted);"
+                [attr.data-testid]="'campaign-owner-' + c.id"
+              >
+                {{ ownershipLabel(c) }}
+              </span>
+            </div>
 
             @if (c.forecast; as f) {
               <div class="grid grid-cols-3 gap-1 text-center mb-3">
@@ -106,22 +115,13 @@ import { CampaignFormComponent } from './campaign-form.component';
             }
 
             @if (c.notes) {
-              <p class="text-xs mb-3" style="color: var(--color-text);">{{ c.notes }}</p>
+              <p class="text-xs mb-3 line-clamp-2" style="color: var(--color-text);">{{ c.notes }}</p>
             }
 
-            <div class="flex gap-1 text-xs">
+            <div class="flex gap-1 text-xs" (click)="$event.stopPropagation()">
               <button
                 type="button"
-                (click)="openEdit(c)"
-                class="flex-1 py-1.5 rounded"
-                style="background: var(--color-bg-3); color: var(--color-text);"
-                [attr.data-testid]="'campaign-edit-' + c.id"
-              >
-                Edit
-              </button>
-              <button
-                type="button"
-                (click)="exportPdf(c)"
+                (click)="exportPdf(c, $event)"
                 [disabled]="!canExportBrief()"
                 class="flex-1 py-1.5 rounded disabled:opacity-40 disabled:cursor-not-allowed"
                 style="background: var(--color-sf-cyan); color: #000;"
@@ -131,7 +131,7 @@ import { CampaignFormComponent } from './campaign-form.component';
               </button>
               <button
                 type="button"
-                (click)="remove(c)"
+                (click)="remove(c, $event)"
                 class="px-2 py-1.5 rounded"
                 style="background: transparent; border: 1px solid var(--color-sf-red); color: var(--color-sf-red);"
                 [attr.data-testid]="'campaign-delete-' + c.id"
@@ -143,81 +143,61 @@ import { CampaignFormComponent } from './campaign-form.component';
         }
       </div>
     }
-
-    @if (formMode() !== 'closed') {
-      <app-campaign-form
-        [editing]="editing()"
-        [defaults]="defaults()"
-        (save)="onSave($event)"
-        (cancel)="closeForm()"
-      />
-    }
   `,
 })
 export class CampaignsComponent {
   private auth = inject(AuthService);
   private router = inject(Router);
   private pdf = inject(BriefPdfService);
-  private route = inject(ActivatedRoute);
 
   protected readonly svc = inject(CampaignsService);
-
-  protected readonly formMode = signal<'closed' | 'new' | 'edit'>('closed');
-  protected readonly editing = signal<Campaign | null>(null);
-  protected readonly defaults = signal<Partial<NewCampaign> | null>(null);
 
   protected readonly canExportBrief = computed(
     () => tierRank(this.auth.tier()) >= tierRank('platinum'),
   );
 
-  private readonly queryParams = toSignal(this.route.queryParamMap);
-
   constructor() {
     void this.svc.load();
+  }
 
-    // `?new=1` (e.g. from simulator Save button) auto-opens the form, seeded
-    // with any defaults passed via router state.
-    const params = this.queryParams();
-    if (params?.get('new') === '1') {
-      const nav = this.router.getCurrentNavigation();
-      const seed = (nav?.extras?.state?.['campaignSeed'] ?? null) as Partial<NewCampaign> | null;
-      this.defaults.set(seed);
-      this.formMode.set('new');
+  /**
+   * Creates an empty planning campaign and routes to its detail page.
+   * Campaigns are persisted from the moment of creation; "wizard state" is
+   * just which fields are filled.
+   */
+  async createAndOpen(): Promise<void> {
+    const created = await this.svc.create({ name: 'Untitled campaign' });
+    if (created) {
+      void this.router.navigate(['/app/campaigns', created.id]);
     }
   }
 
-  openNew(): void {
-    this.editing.set(null);
-    this.defaults.set(null);
-    this.formMode.set('new');
-  }
-
-  openEdit(c: Campaign): void {
-    this.editing.set(c);
-    this.formMode.set('edit');
-  }
-
-  closeForm(): void {
-    this.formMode.set('closed');
-    this.editing.set(null);
-    this.defaults.set(null);
-  }
-
-  async onSave(dto: NewCampaign): Promise<void> {
-    const existing = this.editing();
-    if (existing) {
-      await this.svc.update(existing.id, dto);
-    } else {
-      await this.svc.create(dto);
-    }
-    this.closeForm();
-  }
-
-  async remove(c: Campaign): Promise<void> {
+  async remove(c: Campaign, ev: MouseEvent): Promise<void> {
+    ev.stopPropagation();
     await this.svc.remove(c.id);
   }
 
-  exportPdf(c: Campaign): void {
+  exportPdf(c: Campaign, ev: MouseEvent): void {
+    ev.stopPropagation();
     this.pdf.export(c);
+  }
+
+  protected statusLabel(c: Campaign): string {
+    return CAMPAIGN_STATUS_LABELS[c.status];
+  }
+
+  protected statusStyle(c: Campaign): string {
+    const colors: Record<string, string> = {
+      planning: 'background: rgba(155,155,170,0.18); color: var(--color-text-muted);',
+      active: 'background: rgba(0,200,120,0.15); color: var(--color-sf-green);',
+      completed: 'background: rgba(0,180,220,0.15); color: var(--color-sf-cyan);',
+      archived: 'background: rgba(155,155,170,0.10); color: var(--color-text-muted);',
+    };
+    return colors[c.status] ?? colors['planning'];
+  }
+
+  protected ownershipLabel(c: Campaign): string {
+    if (c.enterpriseId === null) return 'Personal';
+    return this.auth.enterprise()?.name ?? 'Enterprise';
   }
 }

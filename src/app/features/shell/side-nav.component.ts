@@ -18,7 +18,6 @@ const TABS: Tab[] = [
   { label: 'Personas', route: '/app/personas', minTier: 'silver' },
   { label: 'Simulator', route: '/app/simulator' },
   { label: 'Campaigns', route: '/app/campaigns', minTier: 'silver' },
-  { label: 'Outreach', route: '/app/outreach', minTier: 'silver' },
   { label: 'Account', route: '/app/account' },
   { label: 'Admin', route: '/app/admin', requiresAdmin: true },
 ];

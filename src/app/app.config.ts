@@ -12,12 +12,8 @@ import { routes } from './app.routes';
 import { authInterceptor } from './core/auth/auth.interceptor';
 import {
   CampaignsRepository,
-  InMemoryCampaignsRepository,
+  SupabaseCampaignsRepository,
 } from './core/campaigns/campaigns.repository';
-import {
-  InMemoryOutreachRepository,
-  OutreachRepository,
-} from './core/outreach/outreach.repository';
 import { CreatorsService } from './core/creators/creators.service';
 
 export const appConfig: ApplicationConfig = {
@@ -31,9 +27,6 @@ export const appConfig: ApplicationConfig = {
     // List/byId/byIds queries run on-demand against PostgREST per page render.
     provideAppInitializer(() => inject(CreatorsService).loadFilterOptions()),
 
-    // Persistence stubs — swap for Supabase-backed implementations when the
-    // backend repo provisions the tables.
-    { provide: CampaignsRepository, useClass: InMemoryCampaignsRepository },
-    { provide: OutreachRepository, useClass: InMemoryOutreachRepository },
+    { provide: CampaignsRepository, useClass: SupabaseCampaignsRepository },
   ],
 };

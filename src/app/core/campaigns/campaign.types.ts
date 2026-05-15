@@ -1,5 +1,8 @@
 import { SimBand } from '../simulation/simulation.types';
 
+export const CAMPAIGN_STATUSES = ['planning', 'active', 'completed', 'archived'] as const;
+export type CampaignStatus = (typeof CAMPAIGN_STATUSES)[number];
+
 export interface CampaignForecast {
   impressions: number;
   ctr: number;
@@ -12,17 +15,39 @@ export interface CampaignForecast {
 
 export interface Campaign {
   id: string;
+  createdBy: string;                // auth user uuid
+  enterpriseId: string | null;      // null → personal campaign; non-null → enterprise-owned
+
+  status: CampaignStatus;
+
   name: string;
-  client: string;
-  genre: string;
-  budget: number;
-  goLiveDate: string | null; // ISO date (YYYY-MM-DD) or null
-  notes: string;
-  creatorIds: number[];
+  client: string | null;
+  genre: string | null;
+  budget: number | null;
+  notes: string | null;
+  objectives: string[];
+
   forecast: CampaignForecast | null;
-  createdAt: string; // ISO timestamp
-  updatedAt: string; // ISO timestamp
+
+  startedAt: string | null;         // ISO timestamp, set when Start campaign button is pressed
+  completedAt: string | null;       // ISO timestamp, set when Mark complete is pressed
+  createdAt: string;                // ISO timestamp
+  updatedAt: string;                // ISO timestamp
 }
 
-export type NewCampaign = Omit<Campaign, 'id' | 'createdAt' | 'updatedAt'>;
-export type UpdateCampaign = Partial<NewCampaign>;
+export type NewCampaign = Pick<Campaign, 'name'>
+  & Partial<Pick<Campaign,
+    'client' | 'genre' | 'budget' | 'notes' | 'objectives' | 'enterpriseId'
+  >>;
+
+export type UpdateCampaign = Partial<Pick<Campaign,
+  'name' | 'client' | 'genre' | 'budget' | 'notes' | 'objectives' | 'status'
+  | 'forecast' | 'startedAt' | 'completedAt'
+>>;
+
+export const CAMPAIGN_STATUS_LABELS: Record<CampaignStatus, string> = {
+  planning: 'Planning',
+  active: 'Active',
+  completed: 'Completed',
+  archived: 'Archived',
+};

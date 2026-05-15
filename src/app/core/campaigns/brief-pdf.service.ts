@@ -10,9 +10,9 @@ import { Campaign } from './campaign.types';
  */
 @Injectable({ providedIn: 'root' })
 export class BriefPdfService {
-  /** Renders `buildHtml(campaign)` and invokes print. Returns `false` if popup blocked. */
-  export(campaign: Campaign): boolean {
-    const html = this.buildHtml(campaign);
+  /** Renders `buildHtml(campaign, creatorCount)` and invokes print. Returns `false` if popup blocked. */
+  export(campaign: Campaign, creatorCount = 0): boolean {
+    const html = this.buildHtml(campaign, creatorCount);
     const win = typeof window !== 'undefined' ? window.open('', '_blank', 'width=900,height=1100') : null;
     if (!win) return false;
     win.document.write(html);
@@ -30,7 +30,7 @@ export class BriefPdfService {
   }
 
   /** Exposed separately so tests can assert document shape without opening a window. */
-  buildHtml(campaign: Campaign): string {
+  buildHtml(campaign: Campaign, creatorCount = 0): string {
     const f = campaign.forecast;
     const date = new Date().toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' });
 
@@ -90,9 +90,9 @@ export class BriefPdfService {
   <div class="meta">
     <div><div class="k">Client</div><div class="v">${escapeHtml(campaign.client || '—')}</div></div>
     <div><div class="k">Genre</div><div class="v">${escapeHtml(campaign.genre || '—')}</div></div>
-    <div><div class="k">Budget</div><div class="v">$${campaign.budget.toLocaleString()}</div></div>
-    <div><div class="k">Go-live</div><div class="v">${campaign.goLiveDate ?? '—'}</div></div>
-    <div><div class="k">Creators</div><div class="v">${campaign.creatorIds.length}</div></div>
+    <div><div class="k">Budget</div><div class="v">${campaign.budget == null ? '—' : '$' + campaign.budget.toLocaleString()}</div></div>
+    <div><div class="k">Started</div><div class="v">${campaign.startedAt ? new Date(campaign.startedAt).toLocaleDateString() : '—'}</div></div>
+    <div><div class="k">Creators</div><div class="v">${creatorCount}</div></div>
   </div>
   ${campaign.notes ? `<div class="notes">${escapeHtml(campaign.notes)}</div>` : ''}
   ${forecastBlock}

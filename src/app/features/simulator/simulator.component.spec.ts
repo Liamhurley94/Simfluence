@@ -8,6 +8,7 @@ import { AuthService } from '../../core/auth/auth.service';
 import { SelectionService } from '../../core/selection/selection.service';
 import { EdgeClient } from '../../core/api/edge.client';
 import { RateLimitService } from '../../core/simulation/rate-limit.service';
+import { CampaignsRepository } from '../../core/campaigns/campaigns.repository';
 
 function setup({ selectedIds = [] as number[], tier = 'silver' } = {}) {
   localStorage.clear();
@@ -18,10 +19,20 @@ function setup({ selectedIds = [] as number[], tier = 'silver' } = {}) {
     tier: tierSignal,
     user: () => null,
     isAuthenticated: () => true,
+    enterpriseId: () => null,
+    enterprise: () => null,
   };
 
   const post = vi.fn().mockResolvedValue({ error: 'no server in tests' });
   const edgeStub = { post, get: vi.fn() } as unknown as EdgeClient;
+
+  const campaignsRepoStub = {
+    list: vi.fn().mockResolvedValue([]),
+    byId: vi.fn().mockResolvedValue(null),
+    create: vi.fn(),
+    update: vi.fn(),
+    remove: vi.fn(),
+  } as unknown as CampaignsRepository;
 
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({
@@ -30,6 +41,7 @@ function setup({ selectedIds = [] as number[], tier = 'silver' } = {}) {
       provideRouter([]),
       { provide: AuthService, useValue: authStub },
       { provide: EdgeClient, useValue: edgeStub },
+      { provide: CampaignsRepository, useValue: campaignsRepoStub },
     ],
   });
 
