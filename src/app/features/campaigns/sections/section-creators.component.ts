@@ -1,4 +1,4 @@
-import { Component, Input, computed, effect, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { CampaignCreatorsService } from '../../../core/campaigns/campaign-creators.service';
 import {
   CampaignSuggestionGroup,
@@ -9,6 +9,11 @@ import { CreatorsService } from '../../../core/creators/creators.service';
 import { Creator } from '../../../core/data/creator.types';
 import { Campaign } from '../../../core/campaigns/campaign.types';
 import { BrowseCreatorsModalComponent } from './browse-creators-modal.component';
+
+interface MatchBand {
+  label: string;
+  color: string;
+}
 
 @Component({
   selector: 'app-section-creators',
@@ -24,143 +29,29 @@ import { BrowseCreatorsModalComponent } from './browse-creators-modal.component'
         <h2 class="text-xs uppercase tracking-wider font-bold" style="color: var(--color-text-muted);">
           Creators ({{ campaignCreators.records().length }})
         </h2>
-        <div class="flex gap-2">
-          <button
-            type="button"
-            (click)="openBrowse()"
-            [disabled]="readonly"
-            class="text-xs px-3 py-1.5 rounded disabled:opacity-40"
-            style="background: var(--color-bg-3); border: 1px solid var(--color-border); color: var(--color-text);"
-            data-testid="creators-browse"
-          >
-            Browse
-          </button>
-          <button
-            type="button"
-            (click)="loadSuggestions()"
-            [disabled]="readonly || !campaign.genre || loadingSuggestions()"
-            class="text-xs px-3 py-1.5 rounded disabled:opacity-40"
-            style="background: var(--color-sf-purple, #7c5cff); color: white;"
-            data-testid="creators-suggest"
-          >
-            {{ loadingSuggestions() ? 'Loading…' : 'Get suggestions' }}
-          </button>
-        </div>
+        <button
+          type="button"
+          (click)="openBrowse()"
+          [disabled]="readonly()"
+          class="text-xs px-3 py-1.5 rounded disabled:opacity-40"
+          style="background: var(--color-bg-3); border: 1px solid var(--color-border); color: var(--color-text);"
+          data-testid="creators-browse"
+        >
+          Browse all
+        </button>
       </div>
-
-      @if (campaignCreators.records().length === 0 && groups().length === 0) {
-        <p class="text-xs" style="color: var(--color-text-muted);">
-          No creators yet. Click "Get suggestions" for persona-driven picks, or "Browse" to search and add directly.
-        </p>
-      }
 
       @if (browseOpen()) {
         <app-browse-creators-modal
-          [campaignGenre]="campaign.genre ?? null"
+          [campaignGenre]="campaign().genre ?? null"
           [existingCreatorIds]="existingCreatorIds()"
           (close)="browseOpen.set(false)"
           (add)="addFromBrowse($event)"
         />
       }
 
-      @if (groups().length > 0) {
-        <div class="mb-4 space-y-4" data-testid="suggestion-groups">
-          @for (g of groups(); track g.persona.name) {
-            <article
-              class="rounded-lg overflow-hidden"
-              style="background: var(--color-bg-3); border: 1px solid var(--color-border);"
-              [attr.data-testid]="'persona-group-' + slugify(g.persona.name)"
-            >
-              <header
-                class="px-3 py-2 flex items-start gap-3"
-                [style.borderLeft]="'4px solid ' + g.persona.color"
-                style="background: var(--color-bg-2);"
-              >
-                <div class="text-2xl shrink-0" aria-hidden="true">{{ g.persona.icon }}</div>
-                <div class="flex-1 min-w-0">
-                  <div class="flex items-center gap-2 flex-wrap">
-                    <h3 class="text-sm font-bold" style="color: var(--color-text);">{{ g.persona.name }}</h3>
-                    <span
-                      class="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded"
-                      [style.background]="g.persona.color + '22'"
-                      [style.color]="g.persona.color"
-                      [attr.data-testid]="'persona-score-' + slugify(g.persona.name)"
-                    >
-                      Fit {{ g.personaScore }}
-                    </span>
-                  </div>
-                  <p class="text-[10px] mt-0.5" style="color: var(--color-text-muted);">{{ g.persona.desc }}</p>
-                  <div class="text-[10px] mt-1 italic" style="color: var(--color-sf-gold);">
-                    {{ g.persona.cta }}
-                  </div>
-                </div>
-              </header>
-
-              <div
-                class="grid gap-2 p-3"
-                style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));"
-              >
-                @for (s of g.creators; track s.creator.id) {
-                  <div
-                    class="p-2 rounded"
-                    style="background: var(--color-bg-2); border: 1px solid var(--color-border);"
-                    [attr.data-testid]="'suggest-' + s.creator.id"
-                  >
-                    <div class="flex items-start justify-between gap-2 mb-1">
-                      <div class="min-w-0">
-                        <div class="text-xs font-bold truncate" style="color: var(--color-text);">{{ s.creator.name }}</div>
-                        <div class="text-[10px] truncate" style="color: var(--color-text-muted);">
-                          {{ '@' + (s.creator.handle || '—') }}
-                        </div>
-                      </div>
-                      <div class="text-[10px] font-bold shrink-0 text-right" style="color: var(--color-sf-gold);">
-                        @if (s.gfi !== null) {
-                          GFI {{ s.gfi }}
-                        } @else {
-                          GFI —
-                        }
-                      </div>
-                    </div>
-                    <div class="flex gap-1">
-                      @if (existingCreatorIds().has(s.creator.id)) {
-                        <span
-                          class="flex-1 text-[10px] uppercase tracking-wider px-2 py-1 rounded text-center"
-                          style="background: var(--color-bg-3); color: var(--color-text-muted);"
-                        >
-                          Added
-                        </span>
-                      } @else {
-                        <button
-                          type="button"
-                          (click)="acceptSuggestion(s, g.persona.name)"
-                          [disabled]="readonly"
-                          class="flex-1 px-2 py-1 rounded text-xs disabled:opacity-40"
-                          style="background: var(--color-sf-blue); color: white;"
-                          [attr.data-testid]="'suggest-add-' + s.creator.id"
-                        >
-                          Add
-                        </button>
-                        <button
-                          type="button"
-                          (click)="skipSuggestion(s)"
-                          class="px-2 py-1 rounded text-xs"
-                          style="background: transparent; border: 1px solid var(--color-border); color: var(--color-text-muted);"
-                          [attr.data-testid]="'suggest-skip-' + s.creator.id"
-                        >
-                          Skip
-                        </button>
-                      }
-                    </div>
-                  </div>
-                }
-              </div>
-            </article>
-          }
-        </div>
-      }
-
       @if (campaignCreators.records().length > 0) {
-        <ul class="space-y-2">
+        <ul class="space-y-2 mb-4">
           @for (cc of campaignCreators.records(); track cc.id) {
             <li
               class="p-2 rounded flex items-center justify-between gap-3 text-xs"
@@ -187,7 +78,7 @@ import { BrowseCreatorsModalComponent } from './browse-creators-modal.component'
                 <button
                   type="button"
                   (click)="remove(cc.id)"
-                  [disabled]="readonly"
+                  [disabled]="readonly()"
                   class="text-[10px] px-1.5 py-1 rounded disabled:opacity-40"
                   style="background: transparent; border: 1px solid var(--color-sf-red); color: var(--color-sf-red);"
                   [attr.data-testid]="'campaign-creator-remove-' + cc.id"
@@ -199,6 +90,218 @@ import { BrowseCreatorsModalComponent } from './browse-creators-modal.component'
           }
         </ul>
       }
+
+      <!-- Persona-grouped suggestions: always visible (auto-loads when genre set) -->
+      <div class="mt-2">
+        <div
+          class="text-[10px] uppercase tracking-wider mb-3 flex items-center gap-2"
+          style="color: var(--color-text-muted);"
+        >
+          <span>Audience-aligned suggestions</span>
+          @if (loadingSuggestions()) {
+            <span data-testid="suggestions-loading">· loading…</span>
+          }
+        </div>
+
+        @if (!campaign().genre) {
+          <div
+            class="p-6 rounded-lg text-xs text-center"
+            style="background: var(--color-bg-3); color: var(--color-text-muted);"
+            data-testid="suggestions-need-genre"
+          >
+            Set a campaign genre above to see audience-matched creator suggestions.
+          </div>
+        } @else if (!loadingSuggestions() && groups().length === 0) {
+          <div
+            class="p-6 rounded-lg text-xs text-center"
+            style="background: var(--color-bg-3); color: var(--color-text-muted);"
+            data-testid="suggestions-empty"
+          >
+            No persona matches for this genre yet. Try "Browse all" to pick creators directly.
+          </div>
+        } @else {
+          <div
+            class="grid gap-4"
+            style="grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));"
+            data-testid="suggestion-groups"
+          >
+            @for (g of groups(); track g.persona.name; let idx = $index) {
+              <article
+                class="rounded-xl p-5 relative overflow-hidden"
+                [style.background]="'var(--color-bg-3)'"
+                [style.border]="idx === 0 ? '2px solid ' + g.persona.color : '1px solid var(--color-border)'"
+                [attr.data-testid]="'persona-group-' + slugify(g.persona.name)"
+              >
+                <!-- Match band badge -->
+                <div
+                  class="absolute top-3 right-3 text-[9px] uppercase tracking-wider px-2 py-0.5 rounded"
+                  [style.background]="bandFor(g.personaScore).color + '22'"
+                  [style.color]="bandFor(g.personaScore).color"
+                  [style.border]="'1px solid ' + bandFor(g.personaScore).color + '44'"
+                  [attr.data-testid]="'persona-band-' + slugify(g.persona.name)"
+                >
+                  {{ bandFor(g.personaScore).label }}
+                </div>
+
+                <!-- Icon -->
+                <div class="text-3xl mb-3" aria-hidden="true">{{ g.persona.icon }}</div>
+
+                <!-- Name + demographics -->
+                <div
+                  class="text-base font-bold mb-1"
+                  [style.color]="g.persona.color"
+                >
+                  {{ g.persona.name }}
+                </div>
+                <div
+                  class="text-[10px] uppercase tracking-wider mb-3"
+                  style="color: var(--color-text-muted);"
+                >
+                  {{ g.persona.demo }}
+                </div>
+
+                <!-- Description -->
+                <p
+                  class="text-xs leading-relaxed mb-4"
+                  style="color: var(--color-text);"
+                >
+                  {{ g.persona.desc }}
+                </p>
+
+                <!-- Match progress bar -->
+                <div class="mb-4">
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">
+                      Campaign match
+                    </span>
+                    <span
+                      class="text-[11px] font-bold"
+                      [style.color]="bandFor(g.personaScore).color"
+                      [attr.data-testid]="'persona-score-' + slugify(g.persona.name)"
+                    >
+                      {{ g.personaScore }}%
+                    </span>
+                  </div>
+                  <div class="h-1 rounded overflow-hidden" style="background: var(--color-bg-2);">
+                    <div
+                      class="h-full transition-all"
+                      [style.width.%]="g.personaScore"
+                      [style.background]="bandFor(g.personaScore).color"
+                    ></div>
+                  </div>
+                </div>
+
+                <!-- Purchase + Brand fit grid -->
+                <div class="grid grid-cols-2 gap-2 mb-4">
+                  <div class="rounded p-2" style="background: var(--color-bg-2); border: 1px solid var(--color-border);">
+                    <div class="text-[8px] uppercase tracking-wider mb-1" style="color: var(--color-text-muted);">
+                      Purchase behaviour
+                    </div>
+                    <div class="text-[11px] leading-snug" style="color: var(--color-text);">
+                      {{ g.persona.purchase }}
+                    </div>
+                  </div>
+                  <div class="rounded p-2" style="background: var(--color-bg-2); border: 1px solid var(--color-border);">
+                    <div class="text-[8px] uppercase tracking-wider mb-1" style="color: var(--color-text-muted);">
+                      Brand fit
+                    </div>
+                    <div class="text-[11px] leading-snug" style="color: var(--color-text);">
+                      {{ g.persona.brands }}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- CTA callout -->
+                <div
+                  class="rounded px-3 py-2 mb-4"
+                  [style.background]="g.persona.color + '15'"
+                  [style.border]="'1px solid ' + g.persona.color + '33'"
+                >
+                  <div
+                    class="text-[8px] uppercase tracking-wider mb-0.5"
+                    [style.color]="g.persona.color"
+                  >
+                    Suggested CTA
+                  </div>
+                  <div
+                    class="text-xs font-semibold"
+                    [style.color]="g.persona.color"
+                  >
+                    {{ g.persona.cta }}
+                  </div>
+                </div>
+
+                <!-- Matched creators -->
+                <div class="text-[8px] uppercase tracking-wider mb-2" style="color: var(--color-text-muted);">
+                  Matched creators
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  @for (s of g.creators; track s.creator.id) {
+                    <div
+                      class="flex items-center gap-2.5 p-2 rounded"
+                      style="background: var(--color-bg-2);"
+                      [attr.data-testid]="'suggest-' + s.creator.id"
+                    >
+                      <div
+                        class="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0"
+                        [style.background]="s.creator.color + '22'"
+                        [style.color]="s.creator.color"
+                      >
+                        {{ initialsOf(s.creator.name) }}
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <div class="text-xs font-semibold truncate" style="color: var(--color-text);">
+                          {{ s.creator.name }}
+                        </div>
+                        <div class="text-[9px] truncate" style="color: var(--color-text-muted);">
+                          {{ '@' + (s.creator.handle || '—') }} · {{ s.creator.platform }} · {{ s.creator.subs }}
+                        </div>
+                      </div>
+                      <div class="flex items-center gap-2 shrink-0">
+                        <div class="text-center">
+                          <div class="text-[8px]" style="color: var(--color-text-muted);">CPI</div>
+                          <div class="text-sm font-bold" [style.color]="cpiColor(s.creator.cpi)">{{ s.creator.cpi }}</div>
+                        </div>
+                        @if (s.gfi !== null) {
+                          <div class="text-center">
+                            <div class="text-[8px]" style="color: var(--color-text-muted);">GFI</div>
+                            <div
+                              class="text-xs font-bold px-1.5 rounded text-white"
+                              [style.background]="bandFor(s.gfi).color"
+                            >
+                              {{ s.gfi }}%
+                            </div>
+                          </div>
+                        }
+                      </div>
+                      @if (existingCreatorIds().has(s.creator.id)) {
+                        <span
+                          class="text-[9px] uppercase tracking-wider px-2 py-1 rounded shrink-0"
+                          style="background: var(--color-bg-3); color: var(--color-text-muted);"
+                          data-testid="suggest-added-badge"
+                        >
+                          Added
+                        </span>
+                      } @else {
+                        <button
+                          type="button"
+                          (click)="acceptSuggestion(s, g.persona.name)"
+                          [disabled]="readonly()"
+                          class="text-[9px] uppercase tracking-wider px-2.5 py-1 rounded shrink-0 disabled:opacity-40"
+                          style="background: rgba(0,80,255,0.12); border: 1px solid rgba(0,80,255,0.3); color: #6B9FFF;"
+                          [attr.data-testid]="'suggest-add-' + s.creator.id"
+                        >
+                          + Add
+                        </button>
+                      }
+                    </div>
+                  }
+                </div>
+              </article>
+            }
+          </div>
+        }
+      </div>
     </section>
   `,
 })
@@ -207,8 +310,8 @@ export class SectionCreatorsComponent {
   private creatorsSvc = inject(CreatorsService);
   private suggestionsSvc = inject(CampaignSuggestionsService);
 
-  @Input({ required: true }) campaign!: Campaign;
-  @Input() readonly = false;
+  readonly campaign = input.required<Campaign>();
+  readonly readonly = input(false);
 
   protected readonly creatorById = signal<Map<number, Creator>>(new Map());
   protected readonly groups = signal<CampaignSuggestionGroup[]>([]);
@@ -220,7 +323,27 @@ export class SectionCreatorsComponent {
     () => new Set(this.campaignCreators.records().map((r) => r.creatorId)),
   );
 
+  // Only inputs that actually change persona scoring should re-trigger a
+  // refetch — not every campaign mutation. Stringify keeps signal equality
+  // straightforward.
+  private readonly suggestionsKey = computed(() => {
+    const c = this.campaign();
+    if (!c.genre) return '';
+    return `${c.id}|${c.genre}|${(c.objectives ?? []).join(',')}`;
+  });
+
   constructor() {
+    // Auto-fetch suggestions on mount + whenever genre/objectives change.
+    effect(() => {
+      const key = this.suggestionsKey();
+      if (!key) {
+        this.groups.set([]);
+        return;
+      }
+      void this.loadSuggestions();
+    });
+
+    // Hydrate creator info for the "added creators" list.
     effect(async () => {
       const ids = this.campaignCreators.records().map((r) => r.creatorId);
       if (ids.length === 0) return;
@@ -234,19 +357,13 @@ export class SectionCreatorsComponent {
     });
   }
 
-  async loadSuggestions(): Promise<void> {
-    if (!this.campaign.genre) return;
+  private async loadSuggestions(): Promise<void> {
     this.loadingSuggestions.set(true);
     try {
-      const fetched = await this.suggestionsSvc.suggest(this.campaign.id);
+      const fetched = await this.suggestionsSvc.suggest(this.campaign().id);
       const skipped = this.skipped();
-      // Drop creators the user already skipped from every group; drop
-      // groups that become empty as a result.
       const filtered = fetched
-        .map((g) => ({
-          ...g,
-          creators: g.creators.filter((s) => !skipped.has(s.creator.id)),
-        }))
+        .map((g) => ({ ...g, creators: g.creators.filter((s) => !skipped.has(s.creator.id)) }))
         .filter((g) => g.creators.length > 0);
       this.groups.set(filtered);
     } finally {
@@ -256,15 +373,12 @@ export class SectionCreatorsComponent {
 
   async acceptSuggestion(s: CampaignSuggestion, personaName: string): Promise<void> {
     await this.campaignCreators.add({
-      campaignId: this.campaign.id,
+      campaignId: this.campaign().id,
       creatorId: s.creator.id,
       source: 'persona_suggestion',
       cpiAtAdd: s.creator.cpi ?? null,
       notes: `Matched to "${personaName}" persona`,
     });
-    // Keep the suggestion visible — the Added badge replaces the buttons
-    // (via existingCreatorIds()) so the user can see what they've added
-    // without losing context of the persona grouping.
   }
 
   openBrowse(): void {
@@ -273,26 +387,41 @@ export class SectionCreatorsComponent {
 
   async addFromBrowse(creatorId: number): Promise<void> {
     await this.campaignCreators.add({
-      campaignId: this.campaign.id,
+      campaignId: this.campaign().id,
       creatorId,
       source: 'manual',
     });
-  }
-
-  skipSuggestion(s: CampaignSuggestion): void {
-    this.skipped.update((set) => new Set(set).add(s.creator.id));
-    this.groups.update((groups) =>
-      groups
-        .map((g) => ({ ...g, creators: g.creators.filter((x) => x.creator.id !== s.creator.id) }))
-        .filter((g) => g.creators.length > 0),
-    );
   }
 
   async remove(id: string): Promise<void> {
     await this.campaignCreators.remove(id);
   }
 
+  /** Match band copy + colour. Mirrors prod's thresholds (85/70/55). */
+  protected bandFor(score: number): MatchBand {
+    if (score >= 85) return { label: 'Primary match', color: 'var(--color-sf-green)' };
+    if (score >= 70) return { label: 'Strong fit',    color: 'var(--color-sf-green)' };
+    if (score >= 55) return { label: 'Moderate fit',  color: 'var(--color-sf-orange)' };
+    return { label: 'Partial fit', color: 'var(--color-sf-red)' };
+  }
+
+  protected cpiColor(cpi: number): string {
+    if (cpi >= 80) return 'var(--color-sf-green)';
+    if (cpi >= 60) return 'var(--color-sf-orange)';
+    return 'var(--color-sf-red)';
+  }
+
   protected slugify(name: string): string {
     return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  }
+
+  protected initialsOf(name: string): string {
+    return (name || '')
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((p) => p[0] ?? '')
+      .join('')
+      .toUpperCase();
   }
 }
