@@ -1,15 +1,19 @@
 import { Component, Input, computed, effect, inject, signal } from '@angular/core';
 import { CampaignCreatorsService } from '../../../core/campaigns/campaign-creators.service';
-import { CampaignSuggestionsService, CampaignSuggestion } from '../../../core/campaigns/campaign-suggestions.service';
+import {
+  CampaignSuggestionGroup,
+  CampaignSuggestion,
+  CampaignSuggestionsService,
+} from '../../../core/campaigns/campaign-suggestions.service';
 import { CreatorsService } from '../../../core/creators/creators.service';
 import { Creator } from '../../../core/data/creator.types';
-import { PersonasService } from '../../../core/personas/personas.service';
-import { Persona } from '../../../core/data/persona.types';
 import { Campaign } from '../../../core/campaigns/campaign.types';
+import { BrowseCreatorsModalComponent } from './browse-creators-modal.component';
 
 @Component({
   selector: 'app-section-creators',
   standalone: true,
+  imports: [BrowseCreatorsModalComponent],
   template: `
     <section
       class="p-4 rounded-lg"
@@ -23,6 +27,16 @@ import { Campaign } from '../../../core/campaigns/campaign.types';
         <div class="flex gap-2">
           <button
             type="button"
+            (click)="openBrowse()"
+            [disabled]="readonly"
+            class="text-xs px-3 py-1.5 rounded disabled:opacity-40"
+            style="background: var(--color-bg-3); border: 1px solid var(--color-border); color: var(--color-text);"
+            data-testid="creators-browse"
+          >
+            Browse
+          </button>
+          <button
+            type="button"
             (click)="loadSuggestions()"
             [disabled]="readonly || !campaign.genre || loadingSuggestions()"
             class="text-xs px-3 py-1.5 rounded disabled:opacity-40"
@@ -34,65 +48,114 @@ import { Campaign } from '../../../core/campaigns/campaign.types';
         </div>
       </div>
 
-      @if (campaignCreators.records().length === 0 && suggestions().length === 0) {
+      @if (campaignCreators.records().length === 0 && groups().length === 0) {
         <p class="text-xs" style="color: var(--color-text-muted);">
-          No creators yet. Click "Get suggestions" for persona-driven picks, or use the embedded discovery
-          (coming in the next iteration) to browse and add.
+          No creators yet. Click "Get suggestions" for persona-driven picks, or "Browse" to search and add directly.
         </p>
       }
 
-      @if (suggestions().length > 0) {
-        <div class="mb-4">
-          <div class="text-[10px] uppercase tracking-wider mb-2" style="color: var(--color-text-muted);">
-            Suggested for "{{ campaign.genre }}"
-          </div>
-          <div class="grid gap-2" style="grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));">
-            @for (s of suggestions(); track s.creator.id) {
-              <article
-                class="p-2 rounded"
-                style="background: var(--color-bg-3); border: 1px solid var(--color-border);"
-                [attr.data-testid]="'suggest-' + s.creator.id"
+      @if (browseOpen()) {
+        <app-browse-creators-modal
+          [campaignGenre]="campaign.genre ?? null"
+          [existingCreatorIds]="existingCreatorIds()"
+          (close)="browseOpen.set(false)"
+          (add)="addFromBrowse($event)"
+        />
+      }
+
+      @if (groups().length > 0) {
+        <div class="mb-4 space-y-4" data-testid="suggestion-groups">
+          @for (g of groups(); track g.persona.name) {
+            <article
+              class="rounded-lg overflow-hidden"
+              style="background: var(--color-bg-3); border: 1px solid var(--color-border);"
+              [attr.data-testid]="'persona-group-' + slugify(g.persona.name)"
+            >
+              <header
+                class="px-3 py-2 flex items-start gap-3"
+                [style.borderLeft]="'4px solid ' + g.persona.color"
+                style="background: var(--color-bg-2);"
               >
-                <div class="flex items-start justify-between gap-2 mb-1">
-                  <div class="min-w-0">
-                    <div class="text-xs font-bold truncate" style="color: var(--color-text);">{{ s.creator.name }}</div>
-                    <div class="text-[10px] truncate" style="color: var(--color-text-muted);">
-                      {{ '@' + (s.creator.handle || '—') }}
+                <div class="text-2xl shrink-0" aria-hidden="true">{{ g.persona.icon }}</div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <h3 class="text-sm font-bold" style="color: var(--color-text);">{{ g.persona.name }}</h3>
+                    <span
+                      class="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded"
+                      [style.background]="g.persona.color + '22'"
+                      [style.color]="g.persona.color"
+                      [attr.data-testid]="'persona-score-' + slugify(g.persona.name)"
+                    >
+                      Fit {{ g.personaScore }}
+                    </span>
+                  </div>
+                  <p class="text-[10px] mt-0.5" style="color: var(--color-text-muted);">{{ g.persona.desc }}</p>
+                  <div class="text-[10px] mt-1 italic" style="color: var(--color-sf-gold);">
+                    {{ g.persona.cta }}
+                  </div>
+                </div>
+              </header>
+
+              <div
+                class="grid gap-2 p-3"
+                style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));"
+              >
+                @for (s of g.creators; track s.creator.id) {
+                  <div
+                    class="p-2 rounded"
+                    style="background: var(--color-bg-2); border: 1px solid var(--color-border);"
+                    [attr.data-testid]="'suggest-' + s.creator.id"
+                  >
+                    <div class="flex items-start justify-between gap-2 mb-1">
+                      <div class="min-w-0">
+                        <div class="text-xs font-bold truncate" style="color: var(--color-text);">{{ s.creator.name }}</div>
+                        <div class="text-[10px] truncate" style="color: var(--color-text-muted);">
+                          {{ '@' + (s.creator.handle || '—') }}
+                        </div>
+                      </div>
+                      <div class="text-[10px] font-bold shrink-0 text-right" style="color: var(--color-sf-gold);">
+                        @if (s.gfi !== null) {
+                          GFI {{ s.gfi }}
+                        } @else {
+                          GFI —
+                        }
+                      </div>
+                    </div>
+                    <div class="flex gap-1">
+                      @if (existingCreatorIds().has(s.creator.id)) {
+                        <span
+                          class="flex-1 text-[10px] uppercase tracking-wider px-2 py-1 rounded text-center"
+                          style="background: var(--color-bg-3); color: var(--color-text-muted);"
+                        >
+                          Added
+                        </span>
+                      } @else {
+                        <button
+                          type="button"
+                          (click)="acceptSuggestion(s, g.persona.name)"
+                          [disabled]="readonly"
+                          class="flex-1 px-2 py-1 rounded text-xs disabled:opacity-40"
+                          style="background: var(--color-sf-blue); color: white;"
+                          [attr.data-testid]="'suggest-add-' + s.creator.id"
+                        >
+                          Add
+                        </button>
+                        <button
+                          type="button"
+                          (click)="skipSuggestion(s)"
+                          class="px-2 py-1 rounded text-xs"
+                          style="background: transparent; border: 1px solid var(--color-border); color: var(--color-text-muted);"
+                          [attr.data-testid]="'suggest-skip-' + s.creator.id"
+                        >
+                          Skip
+                        </button>
+                      }
                     </div>
                   </div>
-                  <div class="text-[10px] font-bold shrink-0" style="color: var(--color-sf-gold);">
-                    GFI {{ s.gfi }}
-                  </div>
-                </div>
-                @if (personaFor(s.creator.id); as p) {
-                  <div class="text-[10px] mb-2" style="color: var(--color-text-muted);">
-                    <span>{{ p.icon }}</span> {{ p.name }}
-                  </div>
                 }
-                <div class="flex gap-1">
-                  <button
-                    type="button"
-                    (click)="acceptSuggestion(s)"
-                    [disabled]="readonly"
-                    class="flex-1 px-2 py-1 rounded text-xs disabled:opacity-40"
-                    style="background: var(--color-sf-blue); color: white;"
-                    [attr.data-testid]="'suggest-add-' + s.creator.id"
-                  >
-                    Add
-                  </button>
-                  <button
-                    type="button"
-                    (click)="skipSuggestion(s)"
-                    class="px-2 py-1 rounded text-xs"
-                    style="background: transparent; border: 1px solid var(--color-border); color: var(--color-text-muted);"
-                    [attr.data-testid]="'suggest-skip-' + s.creator.id"
-                  >
-                    Skip
-                  </button>
-                </div>
-              </article>
-            }
-          </div>
+              </div>
+            </article>
+          }
         </div>
       }
 
@@ -143,18 +206,18 @@ export class SectionCreatorsComponent {
   protected campaignCreators = inject(CampaignCreatorsService);
   private creatorsSvc = inject(CreatorsService);
   private suggestionsSvc = inject(CampaignSuggestionsService);
-  private personasSvc = inject(PersonasService);
 
   @Input({ required: true }) campaign!: Campaign;
   @Input() readonly = false;
 
   protected readonly creatorById = signal<Map<number, Creator>>(new Map());
-  protected readonly suggestions = signal<CampaignSuggestion[]>([]);
+  protected readonly groups = signal<CampaignSuggestionGroup[]>([]);
   protected readonly loadingSuggestions = signal(false);
+  protected readonly browseOpen = signal(false);
   private readonly skipped = signal<Set<number>>(new Set());
 
-  private readonly personas = computed<Persona[]>(() =>
-    this.campaign.genre ? this.personasSvc.listFor(this.campaign.genre) : [],
+  protected readonly existingCreatorIds = computed(
+    () => new Set(this.campaignCreators.records().map((r) => r.creatorId)),
   );
 
   constructor() {
@@ -175,42 +238,61 @@ export class SectionCreatorsComponent {
     if (!this.campaign.genre) return;
     this.loadingSuggestions.set(true);
     try {
-      const res = await this.suggestionsSvc.suggest(this.campaign.id, 8);
+      const fetched = await this.suggestionsSvc.suggest(this.campaign.id);
       const skipped = this.skipped();
-      this.suggestions.set(res.filter((s) => !skipped.has(s.creator.id)));
+      // Drop creators the user already skipped from every group; drop
+      // groups that become empty as a result.
+      const filtered = fetched
+        .map((g) => ({
+          ...g,
+          creators: g.creators.filter((s) => !skipped.has(s.creator.id)),
+        }))
+        .filter((g) => g.creators.length > 0);
+      this.groups.set(filtered);
     } finally {
       this.loadingSuggestions.set(false);
     }
   }
 
-  async acceptSuggestion(s: CampaignSuggestion): Promise<void> {
+  async acceptSuggestion(s: CampaignSuggestion, personaName: string): Promise<void> {
     await this.campaignCreators.add({
       campaignId: this.campaign.id,
       creatorId: s.creator.id,
       source: 'persona_suggestion',
       cpiAtAdd: s.creator.cpi ?? null,
+      notes: `Matched to "${personaName}" persona`,
     });
-    this.suggestions.update((list) => list.filter((x) => x.creator.id !== s.creator.id));
+    // Keep the suggestion visible — the Added badge replaces the buttons
+    // (via existingCreatorIds()) so the user can see what they've added
+    // without losing context of the persona grouping.
+  }
+
+  openBrowse(): void {
+    this.browseOpen.set(true);
+  }
+
+  async addFromBrowse(creatorId: number): Promise<void> {
+    await this.campaignCreators.add({
+      campaignId: this.campaign.id,
+      creatorId,
+      source: 'manual',
+    });
   }
 
   skipSuggestion(s: CampaignSuggestion): void {
     this.skipped.update((set) => new Set(set).add(s.creator.id));
-    this.suggestions.update((list) => list.filter((x) => x.creator.id !== s.creator.id));
+    this.groups.update((groups) =>
+      groups
+        .map((g) => ({ ...g, creators: g.creators.filter((x) => x.creator.id !== s.creator.id) }))
+        .filter((g) => g.creators.length > 0),
+    );
   }
 
   async remove(id: string): Promise<void> {
     await this.campaignCreators.remove(id);
   }
 
-  /**
-   * Round-robin assignment: nth suggestion gets the (n % personas.length)th persona.
-   * Persona text is client-side reference data; this is just visual labeling.
-   */
-  protected personaFor(creatorId: number): Persona | null {
-    const personas = this.personas();
-    if (personas.length === 0) return null;
-    const idx = this.suggestions().findIndex((s) => s.creator.id === creatorId);
-    if (idx < 0) return null;
-    return personas[idx % personas.length];
+  protected slugify(name: string): string {
+    return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
   }
 }

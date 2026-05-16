@@ -4,6 +4,12 @@ import { GenrePersonas, Persona } from '../data/persona.types';
 import { CreatorsService } from '../creators/creators.service';
 import { Creator } from '../data/creator.types';
 
+// ⚠️ DUPLICATION: `personas.data.json` is mirrored in the backend at
+// `simfluence-backend/supabase/functions/_shared/personas.data.json`.
+// The backend uses it for server-side campaign-suggestion persona scoring.
+// If you edit one, edit the other. See backend ARCHITECTURE.md §8 for the
+// planned consolidation (move to DB table / endpoint).
+
 const PERSONAS = rawPersonas as unknown as GenrePersonas;
 
 @Injectable({ providedIn: 'root' })
