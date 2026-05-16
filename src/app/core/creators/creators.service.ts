@@ -16,6 +16,14 @@ export function parseSubs(raw: string): number {
 }
 
 function fromDb(row: Record<string, any>): Creator {
+  // GFI lives in `creator_genre_scores` keyed on (creator_id, campaign_genre)
+  // and is only populated on `list()` queries with a genre filter. PostgREST
+  // returns the embedded resource as an array — flatten to the single row's
+  // gfi (filtered upstream to the requested campaign_genre).
+  const scores = row['creator_genre_scores'];
+  const gfi: number | null = Array.isArray(scores) && scores.length > 0 && typeof scores[0]?.gfi === 'number'
+    ? scores[0].gfi
+    : null;
   return {
     id: row['id'],
     name: row['name'],
@@ -28,7 +36,7 @@ function fromDb(row: Record<string, any>): Creator {
     eng: row['eng'],
     genre: row['genre'],
     cpi: row['cpi'],
-    gfi: row['gfi'],
+    gfi,
     color: row['color'],
     verifiedDeals: row['verified_deals'],
     sponsorHistory: Array.isArray(row['sponsor_history']) ? row['sponsor_history'] : [],
@@ -79,17 +87,31 @@ export class CreatorsService {
     this.loaded.set(true);
   }
 
-  /** Server-side filtered + sorted + paginated query against public.creators. */
+  /** Server-side filtered + sorted + paginated query against public.creators.
+   *
+   * When `filters.genre` is set, the query joins `creator_genre_scores` so
+   * each row carries a per-genre `gfi`. Sort-by-gfi and minGfi filter both
+   * operate on the join. When no genre is set, no join happens and `gfi` is
+   * `null` on every returned creator (UI shows a placeholder).
+   */
   async list(
     filters: CreatorFilters = {},
     sort: SortKey = 'cpi',
     page = 0,
     pageSize = DEFAULT_PAGE_SIZE,
   ): Promise<PagedCreators> {
-    let q = this.supabase.client.from('creators').select('*', { count: 'exact' });
+    const hasGenre = !!filters.genre;
+    const selectExpr = hasGenre
+      ? '*, creator_genre_scores!left(gfi)'
+      : '*';
+    let q = this.supabase.client.from('creators').select(selectExpr, { count: 'exact' });
 
     if (filters.genre) {
       q = q.eq('genre', filters.genre);
+      // Restrict the embedded resource to the requested campaign genre. With
+      // !left this preserves creators that have no score row yet — they get
+      // gfi: null and the UI shows the "—" placeholder.
+      q = q.eq('creator_genre_scores.campaign_genre', filters.genre);
     }
     if (filters.platforms?.length) {
       q = q.overlaps('all_platforms', filters.platforms);
@@ -107,15 +129,29 @@ export class CreatorsService {
       if (Number.isFinite(hi)) q = q.lt('subs_parsed', hi);
     }
     if (filters.minCpi && filters.minCpi > 0) q = q.gte('cpi', filters.minCpi);
-    if (filters.minGfi && filters.minGfi > 0) q = q.gte('gfi', filters.minGfi);
+    // minGfi only meaningful when a campaign genre is in scope. Filter is
+    // applied on the joined column; UI hides the slider when no genre.
+    if (hasGenre && filters.minGfi && filters.minGfi > 0) {
+      q = q.gte('creator_genre_scores.gfi', filters.minGfi);
+    }
     if (filters.maxBudget && filters.maxBudget > 0) {
       const maxSubs = maxSubsForBudget(filters.maxBudget);
       if (Number.isFinite(maxSubs)) q = q.lt('subs_parsed', maxSubs);
     }
 
-    const sortCol = sort === 'subs' ? 'subs_parsed' : sort;
-    const ascending = sort === 'name';
-    q = q.order(sortCol, { ascending });
+    if (sort === 'gfi') {
+      if (hasGenre) {
+        q = q.order('gfi', { ascending: false, referencedTable: 'creator_genre_scores' });
+      } else {
+        // UI prevents this case (sort='gfi' disabled when no genre). Defensive
+        // fallback so a stale URL/state doesn't blow up the query.
+        q = q.order('subs_parsed', { ascending: false });
+      }
+    } else {
+      const sortCol = sort === 'subs' ? 'subs_parsed' : sort;
+      const ascending = sort === 'name';
+      q = q.order(sortCol, { ascending });
+    }
 
     const start = page * pageSize;
     q = q.range(start, start + pageSize - 1);

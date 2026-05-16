@@ -19,10 +19,11 @@ export class RunSimulationService {
     this.pending.set(true);
     try {
       const payload = {
+        // GFI is no longer sent — the edge fn reads it from
+        // `creator_genre_scores` (or falls back to score-creator on miss).
         creators: inputs.creators.map((c) => ({
           id: String(c.id),
           cpi: String(c.cpi || 50),
-          gfi: String(c.gfi || 70),
           genre: c.genre || '',
           platform: c.platform || '',
           subs: c.subs || '',

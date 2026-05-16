@@ -17,8 +17,10 @@ import { tierRank } from '../../core/types';
 interface ScoredRow {
   creator: Creator;
   cpi: number;
-  gfi: number;
-  performance: number; // average of cpi + gfi
+  // null while the bulk-score round-trip is in flight, or if the creator has
+  // no cached row for the campaign genre. UI renders "—" rather than zeroing.
+  gfi: number | null;
+  performance: number | null;
   ranges: RateRanges;
 }
 
@@ -216,9 +218,15 @@ interface ScoredRow {
                   </div>
                 </td>
                 <td class="p-3 text-center">
-                  <div class="text-2xl font-bold leading-none" [style.color]="scoreColor(row.gfi)">
-                    {{ row.gfi }}%
-                  </div>
+                  @if (row.gfi !== null) {
+                    <div class="text-2xl font-bold leading-none" [style.color]="scoreColor(row.gfi)">
+                      {{ row.gfi }}%
+                    </div>
+                  } @else {
+                    <div class="text-2xl font-bold leading-none" style="color: var(--color-text-muted);" title="Scoring in progress…">
+                      —
+                    </div>
+                  }
                   <div class="text-[9px] mt-1" style="color: var(--color-text-muted);">
                     genre fit
                   </div>
@@ -239,8 +247,8 @@ interface ScoredRow {
                     <div class="flex-1 h-1 rounded-sm overflow-hidden" style="background: var(--color-bg-3);">
                       <div
                         class="h-full transition-all"
-                        [style.width.%]="row.gfi"
-                        [style.background]="scoreColor(row.gfi)"
+                        [style.width.%]="row.gfi ?? 0"
+                        [style.background]="scoreColor(row.gfi ?? 0)"
                       ></div>
                     </div>
                   </div>
@@ -328,12 +336,12 @@ export class ScoringComponent {
     return this.selectedCreators()
       .map((creator) => {
         const cpi = creator.cpi;
-        const gfi = this.score.getGfi(creator.id) ?? creator.gfi;
+        const gfi = this.score.getGfi(creator.id) ?? null;
         return {
           creator,
           cpi,
           gfi,
-          performance: Math.round((cpi + gfi) / 2),
+          performance: gfi === null ? null : Math.round((cpi + gfi) / 2),
           ranges: computeRateRanges(creator),
         };
       })
@@ -347,13 +355,15 @@ export class ScoringComponent {
   });
 
   protected readonly avgGfi = computed(() => {
-    const list = this.rows();
+    // Exclude rows whose GFI hasn't returned yet — averaging with 0 would
+    // mislead the user during the bulk-score round-trip.
+    const list = this.rows().filter((r): r is ScoredRow & { gfi: number } => r.gfi !== null);
     if (list.length === 0) return 0;
     return list.reduce((s, r) => s + r.gfi, 0) / list.length;
   });
 
   protected readonly topCreator = computed(() => {
-    const list = this.rows();
+    const list = this.rows().filter((r): r is ScoredRow & { gfi: number } => r.gfi !== null);
     if (list.length === 0) return null;
     return list.reduce((best, row) =>
       row.cpi + row.gfi > best.cpi + best.gfi ? row : best,

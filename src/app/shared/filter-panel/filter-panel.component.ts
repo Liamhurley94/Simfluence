@@ -211,7 +211,11 @@ const FORMAT_OPTIONS: { key: Format; label: string }[] = [
         </div>
 
         <!-- Min GFI -->
-        <div>
+        <div
+          [class.opacity-50]="!genre()"
+          [class.pointer-events-none]="!genre()"
+          [attr.title]="!genre() ? 'Select a genre to enable GFI filter' : null"
+        >
           <label
             class="text-[10px] uppercase tracking-wider mb-1 flex items-center justify-between"
             style="color: var(--color-text-muted);"
@@ -232,10 +236,16 @@ const FORMAT_OPTIONS: { key: Format; label: string }[] = [
             step="5"
             [ngModel]="minGfi()"
             (ngModelChange)="onMinGfi($event)"
+            [disabled]="!genre()"
             class="w-full"
             style="accent-color: var(--color-sf-green);"
             data-testid="filter-min-gfi"
           />
+          @if (!genre()) {
+            <div class="text-[9px] mt-1" style="color: var(--color-text-muted);">
+              Select a genre to enable
+            </div>
+          }
         </div>
       </div>
 
@@ -267,7 +277,12 @@ const FORMAT_OPTIONS: { key: Format; label: string }[] = [
           data-testid="filter-sort"
         >
           @for (opt of sortOptions; track opt.key) {
-            <option [ngValue]="opt.key">{{ opt.label }}</option>
+            <option
+              [ngValue]="opt.key"
+              [disabled]="opt.key === 'gfi' && !genre()"
+            >
+              {{ opt.label }}{{ opt.key === 'gfi' && !genre() ? ' (select genre)' : '' }}
+            </option>
           }
         </select>
       </div>
@@ -329,6 +344,13 @@ export class FilterPanelComponent {
 
   onGenre(g: string | undefined): void {
     this.genre.set(g);
+    // GFI sort + minGfi filter require a genre. If the user clears the genre
+    // while either is active, fall back to defaults so the emitted query is
+    // never in an "impossible" state for the cache.
+    if (!g) {
+      if (this.sort() === 'gfi') this.sort.set('cpi');
+      if (this.minGfi() > 0) this.minGfi.set(0);
+    }
     this.emit();
   }
 
@@ -360,6 +382,7 @@ export class FilterPanelComponent {
 
   onMinGfi(v: number | string): void {
     if (!this.canUseScoreFilters()) return;
+    if (!this.genre()) return;
     this.minGfi.set(Number(v) || 0);
     this.emit();
   }

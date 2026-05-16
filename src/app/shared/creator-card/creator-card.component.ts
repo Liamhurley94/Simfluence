@@ -118,9 +118,20 @@ const PLATFORM_COLORS: Record<string, string> = {
           <div class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">
             GFI
           </div>
-          <div class="text-sm font-bold" [style.color]="scoreColor(creator().gfi)">
-            {{ creator().gfi }}
-          </div>
+          @if (gfiDisplay() !== null) {
+            <div class="text-sm font-bold" [style.color]="scoreColor(gfiDisplay()!)">
+              {{ gfiDisplay() }}
+            </div>
+          } @else {
+            <div
+              class="text-sm font-bold"
+              style="color: var(--color-text-muted); cursor: help;"
+              title="Select a genre to compute Genre Fit Index"
+              data-testid="creator-gfi-placeholder"
+            >
+              —
+            </div>
+          }
         </div>
       </div>
 
@@ -159,6 +170,7 @@ export class CreatorCardComponent {
   readonly selected = input(false);
   readonly canSeeRates = input(false);
   readonly format = input<Format>('Integrated');
+  readonly gfiDisplay = input<number | null>(null);
   readonly toggle = output<number>();
 
   readonly platforms = computed(() => {

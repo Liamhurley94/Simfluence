@@ -105,6 +105,7 @@ const EMPTY_PAGE: PagedCreators = { creators: [], total: 0, pageCount: 1, page: 
                 [selected]="selection.has(c.id)"
                 [canSeeRates]="canSeeRates()"
                 [format]="query().format"
+                [gfiDisplay]="c.gfi"
                 (toggle)="onToggle($event)"
               />
             }
@@ -134,7 +135,8 @@ export class DiscoveryComponent {
   protected readonly creatingCampaign = signal(false);
 
   // Server-side filtered + paginated query. Reloads automatically when
-  // `query` or `page` signals change.
+  // `query` or `page` signals change. When `query.genre` is set, each creator
+  // carries a per-genre `gfi` via a join against `creator_genre_scores`.
   protected readonly results = resource<PagedCreators, { q: DiscoveryQuery; page: number }>({
     params: () => ({ q: this.query(), page: this.page() }),
     loader: ({ params }) =>

@@ -10,7 +10,10 @@ export interface Creator {
   eng: string;
   genre: string;
   cpi: number;
-  gfi: number;
+  // null when no campaign genre is in scope (Discovery without a genre filter,
+  // or paths that don't go through CreatorsService.list — byId/byIds always
+  // return null). Populated from `creator_genre_scores` join.
+  gfi: number | null;
   color: string;
   verifiedDeals: number;
   sponsorHistory: string[];
