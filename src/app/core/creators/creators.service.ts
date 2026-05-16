@@ -101,8 +101,15 @@ export class CreatorsService {
     pageSize = DEFAULT_PAGE_SIZE,
   ): Promise<PagedCreators> {
     const hasGenre = !!filters.genre;
+    const minGfiActive = hasGenre && !!filters.minGfi && filters.minGfi > 0;
+    const sortByGfi = sort === 'gfi' && hasGenre;
+    // !inner when we need parent-row exclusion (min-GFI filter, or sort-by-GFI
+    // which requires a present row to order on). !left when we just want the
+    // gfi value for display — creators without a cached row still show up,
+    // with the "—" placeholder.
+    const joinModifier = minGfiActive || sortByGfi ? '!inner' : '!left';
     const selectExpr = hasGenre
-      ? '*, creator_genre_scores!left(gfi)'
+      ? `*, creator_genre_scores${joinModifier}(gfi)`
       : '*';
     let q = this.supabase.client.from('creators').select(selectExpr, { count: 'exact' });
 
