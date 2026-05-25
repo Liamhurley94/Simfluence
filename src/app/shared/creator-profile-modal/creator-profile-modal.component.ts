@@ -115,33 +115,33 @@ function sponsorColor(pct: number): string {
                   style="background: var(--color-bg-3);"
                 >
                   <span class="text-[10px] uppercase tracking-wider font-bold" style="color: var(--color-sf-green);">
-                    ● Live YouTube Data
+                    YouTube Data
                   </span>
                   @if (yt.isLoading()) {
-                    <span class="text-[9px]" style="color: var(--color-text-muted);">Fetching…</span>
-                  } @else if (data()?.fetched_at; as ts) {
-                    <span class="text-[9px]" style="color: var(--color-text-muted);">{{ rel(ts) }}</span>
+                    <span class="text-[9px]" style="color: var(--color-text-muted);">Loading…</span>
+                  } @else if (data()?.stats_refreshed_at; as ts) {
+                    <span class="text-[9px]" style="color: var(--color-text-muted);">Updated {{ rel(ts) }}</span>
                   }
                 </div>
 
                 <div class="p-3 flex flex-col gap-3">
                   @if (yt.error()) {
                     <div class="text-xs" style="color: var(--color-sf-red);">
-                      Could not load live data.
+                      Could not load data.
                     </div>
                   } @else if (!yt.isLoading() && !data()) {
                     <div class="text-xs" style="color: var(--color-text-muted);">
-                      Channel ID not yet mapped — live data coming soon.
+                      YouTube data refresh pending.
                     </div>
                   } @else if (data(); as d) {
                     <!-- Headline stats -->
                     <div class="grid grid-cols-3 gap-2">
                       <div class="p-2 rounded text-center" style="background: var(--color-bg-3);">
                         <div class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">
-                          ● Live Subs
+                          Subscribers
                         </div>
                         <div class="text-base font-bold" style="color: var(--color-sf-green);">
-                          {{ d.subscriberCount | number: '1.0-0' }}
+                          {{ (d.subscriber_count ?? 0) | number: '1.0-0' }}
                         </div>
                       </div>
                       <div class="p-2 rounded text-center" style="background: var(--color-bg-3);">
@@ -149,15 +149,15 @@ function sponsorColor(pct: number): string {
                           Avg views (top 5)
                         </div>
                         <div class="text-base font-bold" style="color: var(--color-text);">
-                          {{ d.avgViews | number: '1.0-0' }}
+                          {{ (d.avg_views ?? 0) | number: '1.0-0' }}
                         </div>
                       </div>
                       <div class="p-2 rounded text-center" style="background: var(--color-bg-3);">
                         <div class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">
                           Sponsor freq
                         </div>
-                        <div class="text-base font-bold" [style.color]="sponsorColor(d.sponsor_freq_pct)">
-                          {{ d.sponsor_freq_pct }}%
+                        <div class="text-base font-bold" [style.color]="sponsorColor(d.sponsor_freq_pct ?? 0)">
+                          {{ d.sponsor_freq_pct ?? 0 }}%
                         </div>
                       </div>
                     </div>
@@ -169,7 +169,7 @@ function sponsorColor(pct: number): string {
                           Engagement
                         </div>
                         <div class="text-sm font-bold" style="color: var(--color-text);">
-                          {{ d.engagementRate }}%
+                          {{ d.engagement_rate ?? 0 }}%
                         </div>
                       </div>
                       <div class="p-2 rounded text-center" style="background: var(--color-bg-3);">
@@ -177,7 +177,7 @@ function sponsorColor(pct: number): string {
                           Avg days between
                         </div>
                         <div class="text-sm font-bold" style="color: var(--color-text);">
-                          {{ d.avgDaysBetween ?? '—' }}
+                          {{ d.avg_days_between ?? '—' }}
                         </div>
                       </div>
                       <div class="p-2 rounded text-center" style="background: var(--color-bg-3);">
@@ -185,7 +185,7 @@ function sponsorColor(pct: number): string {
                           Last upload
                         </div>
                         <div class="text-sm font-bold" style="color: var(--color-text);">
-                          {{ d.lastUploadDate ? rel(d.lastUploadDate) : '—' }}
+                          {{ d.last_upload_date ? rel(d.last_upload_date) : '—' }}
                         </div>
                       </div>
                     </div>
@@ -353,9 +353,9 @@ export class CreatorProfileModalComponent {
   protected readonly showYoutube = computed(() => hasYoutube(this.creator()));
   protected readonly showTwitch = computed(() => hasTwitch(this.creator()));
 
-  // Async fetch of YouTube enrichment, keyed off the currently-open creator.
-  // Loader short-circuits to null for non-YouTube creators or when the modal
-  // is closed; otherwise hits the edge fn (which has its own 24h DB cache).
+  // Reads from the `creator_youtube_stats` cache table via PostgREST. No
+  // YouTube API call ever fires from this user action — see the no-user-
+  // triggered-API rule in the project memory.
   protected readonly yt = resource<YoutubeCreatorData | null, Creator | null>({
     params: () => this.creator(),
     loader: ({ params }) => {
@@ -381,24 +381,7 @@ export class CreatorProfileModalComponent {
   protected readonly twData = computed(() => this.tw.value());
   protected readonly activityState = computed(() => activityClass(this.twData()?.daysSinceStream ?? null));
 
-  // Prefer top_videos (richer shape, with paid_promo flags). Fall back to
-  // top_titles for responses that only carry the title list.
-  protected readonly videos = computed<YoutubeVideo[]>(() => {
-    const d = this.data();
-    if (!d) return [];
-    if (d.top_videos?.length) return d.top_videos;
-    if (d.top_titles?.length) {
-      return d.top_titles.map((title) => ({
-        title,
-        paid_promo: false,
-        url: null,
-        views: 0,
-        likes: 0,
-        comments: 0,
-      }));
-    }
-    return [];
-  });
+  protected readonly videos = computed<YoutubeVideo[]>(() => this.data()?.top_videos ?? []);
 
   close(): void {
     this.profile.close();

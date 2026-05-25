@@ -1,9 +1,10 @@
-// Shapes for the rewritten youtube-creator-data edge function.
-// Prod's source-of-truth version takes `{handle}` and returns a flat object
-// (no `data` wrapper, no Supabase-cache persistence). Sponsor detection now
-// scans video title + description against a richer regex set.
+// Shapes for YouTube creator data served from the `creator_youtube_stats`
+// cache table via PostgREST. The cache is populated by the `refresh-youtube-
+// cache` edge function running on a nightly pg_cron schedule — the frontend
+// never triggers a YouTube API call directly. See
+// `simfluence-backend/supabase/functions/refresh-youtube-cache/index.ts`.
 
-// Per-video data returned in top_videos.
+// Per-video data stored in `top_videos` jsonb.
 export interface YoutubeVideo {
   title: string;
   views: number;
@@ -13,24 +14,24 @@ export interface YoutubeVideo {
   paid_promo: boolean;
 }
 
-// Flat response shape. No `source` / `data` wrapper.
+// One cache row keyed by creator_id. snake_case mirrors the DB shape directly;
+// no transformation in the service.
 export interface YoutubeCreatorData {
-  handle: string;
-  channelId: string;
-  subscriberCount: number;
-  totalViews: number;
-  videoCount: number;
-  avgViews: number;
-  engagementRate: number;     // % (likes + comments) / views across top 5
-  avgDaysBetween: number | null;
-  lastUploadDate: string | null;   // ISO timestamp
-  sponsor_freq_pct: number;
-  top_videos: YoutubeVideo[];
-  top_titles: string[];            // kept for parallel rendering / legacy compat
-  fetched_at: string;
-}
-
-// Request body — single `handle` field. The edge fn prepends "@" if missing.
-export interface YoutubeCreatorRequest {
-  handle: string;
+  creator_id:          number;
+  channel_id:          string;
+  channel_handle:      string | null;
+  subscriber_count:    number | null;
+  total_views:         number | null;
+  video_count:         number | null;
+  avg_views:           number | null;
+  engagement_rate:     number | null;     // %
+  avg_days_between:    number | null;
+  last_upload_date:    string | null;     // ISO timestamp
+  sponsor_freq_pct:    number | null;
+  top_videos:          YoutubeVideo[];
+  // Freshness — the modal displays "Updated Nh ago" from these.
+  stats_refreshed_at:  string | null;     // last channels.list write
+  videos_refreshed_at: string | null;     // last videos.list write
+  // Offline tracking (null on live rows).
+  offline_at:          string | null;
 }
