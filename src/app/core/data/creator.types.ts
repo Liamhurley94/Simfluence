@@ -21,13 +21,6 @@ export interface Creator {
 
   // optional enrichment fields
   language?: string;
-  ytUrl?: string;
-  twUrl?: string;
-  ytHandle?: string;
-  ytSubs?: string;
-  ytAvgViews?: string;
-  ytCpi?: number;
-  youtubeHandle?: string;
   realCVR?: number;
   realCPA?: number;
   rates?: {
