@@ -4,9 +4,25 @@ import { DecimalPipe } from '@angular/common';
 import { CreatorProfileService } from '../../core/creator-profile/creator-profile.service';
 import { YoutubeCreatorService } from '../../core/youtube/youtube-creator.service';
 import { TwitchLiveService } from '../../core/twitch/twitch-live.service';
+import { SupabaseService } from '../../core/supabase/supabase.service';
 import { Creator } from '../../core/data/creator.types';
 import { YoutubeCreatorData, YoutubeVideo } from '../../core/youtube/youtube-creator.types';
 import { TwitchEnrichment } from '../../core/twitch/twitch-live.types';
+import { computeRateRanges } from '../../core/rates/rate-estimate';
+
+interface GenreBenchmarks {
+  genre: string;
+  total_creators: number;
+  creator_cpi: number;
+  avg_cpi: number;
+  cpi_percentile: number;
+  creator_eng: number | null;
+  avg_eng: number | null;
+  eng_percentile: number | null;
+  creator_gfi: number | null;
+  avg_gfi: number | null;
+  gfi_percentile: number | null;
+}
 
 function hasYoutube(c: Creator | null): c is Creator {
   if (!c) return false;
@@ -240,6 +256,143 @@ function sponsorColor(pct: number): string {
               }
             }
 
+            <div
+              class="rounded-lg overflow-hidden"
+              style="border: 1px solid var(--color-border);"
+              data-testid="creator-profile-budget"
+            >
+              <div
+                class="px-3 py-2"
+                style="background: var(--color-bg-3);"
+              >
+                <span class="text-[10px] uppercase tracking-wider font-bold" style="color: var(--color-sf-gold);">
+                  Estimated Budget Range
+                </span>
+              </div>
+              <div class="p-3">
+                <div class="grid grid-cols-3 gap-2">
+                  <div class="p-2 rounded text-center" style="background: var(--color-bg-3);">
+                    <div class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">
+                      Integrated
+                    </div>
+                    <div class="text-sm font-bold" style="color: var(--color-sf-green);">
+                      {{ formatBudget(rates().int[0]) }}
+                    </div>
+                    <div class="text-[9px]" style="color: var(--color-text-muted);">
+                      ~{{ formatBudget(rates().int[1]) }}
+                    </div>
+                  </div>
+                  <div class="p-2 rounded text-center" style="background: var(--color-bg-3);">
+                    <div class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">
+                      Dedicated
+                    </div>
+                    <div class="text-sm font-bold" style="color: var(--color-sf-green);">
+                      {{ formatBudget(rates().ded[0]) }}
+                    </div>
+                    <div class="text-[9px]" style="color: var(--color-text-muted);">
+                      ~{{ formatBudget(rates().ded[1]) }}
+                    </div>
+                  </div>
+                  <div class="p-2 rounded text-center" style="background: var(--color-bg-3);">
+                    <div class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">
+                      Mixed
+                    </div>
+                    <div class="text-sm font-bold" style="color: var(--color-sf-green);">
+                      {{ formatBudget(rates().mix[0]) }}
+                    </div>
+                    <div class="text-[9px]" style="color: var(--color-text-muted);">
+                      ~{{ formatBudget(rates().mix[1]) }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            @if (bench.value(); as b) {
+              <div
+                class="rounded-lg overflow-hidden"
+                style="border: 1px solid var(--color-border);"
+                data-testid="creator-profile-benchmark"
+              >
+                <div
+                  class="px-3 py-2 flex items-center justify-between"
+                  style="background: var(--color-bg-3);"
+                >
+                  <span class="text-[10px] uppercase tracking-wider font-bold" style="color: var(--color-sf-gold);">
+                    Category Benchmarking
+                  </span>
+                  <span class="text-[9px]" style="color: var(--color-text-muted);">
+                    {{ b.genre }} ({{ b.total_creators | number }} creators)
+                  </span>
+                </div>
+                <div class="p-3">
+                  <div class="grid grid-cols-3 gap-2">
+                    <div class="p-2 rounded flex flex-col gap-1" style="background: var(--color-bg-3);">
+                      <div class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">
+                        CPI vs Category
+                      </div>
+                      <div class="text-lg font-bold" style="color: var(--color-text);">
+                        {{ b.creator_cpi }}
+                      </div>
+                      <div class="text-[9px]" style="color: var(--color-text-muted);">
+                        Category avg: {{ b.avg_cpi }}
+                      </div>
+                      <div class="text-[9px] font-semibold" style="color: var(--color-sf-green);">
+                        {{ b.creator_cpi - b.avg_cpi >= 0 ? '+' : '' }}{{ b.creator_cpi - b.avg_cpi }} pts
+                      </div>
+                      <div class="text-[8px]" style="color: var(--color-text-muted);">
+                        Top {{ b.cpi_percentile }}% in category
+                      </div>
+                    </div>
+
+                    <div class="p-2 rounded flex flex-col gap-1" style="background: var(--color-bg-3);">
+                      <div class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">
+                        Eng Rate vs Category
+                      </div>
+                      @if (b.creator_eng !== null) {
+                        <div class="text-lg font-bold" style="color: var(--color-text);">
+                          {{ b.creator_eng }}%
+                        </div>
+                        <div class="text-[9px]" style="color: var(--color-text-muted);">
+                          Category avg: {{ b.avg_eng }}%
+                        </div>
+                        <div class="text-[9px] font-semibold" style="color: var(--color-sf-green);">
+                          {{ b.creator_eng - b.avg_eng! >= 0 ? '+' : '' }}{{ (b.creator_eng - b.avg_eng!) | number: '1.0-1' }}%
+                        </div>
+                        <div class="text-[8px]" style="color: var(--color-text-muted);">
+                          Top {{ b.eng_percentile }}% in category
+                        </div>
+                      } @else {
+                        <div class="text-sm" style="color: var(--color-text-muted);">—</div>
+                      }
+                    </div>
+
+                    <div class="p-2 rounded flex flex-col gap-1" style="background: var(--color-bg-3);">
+                      <div class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">
+                        GFI vs Category
+                      </div>
+                      @if (b.creator_gfi !== null) {
+                        <div class="text-lg font-bold" style="color: var(--color-text);">
+                          {{ b.creator_gfi }}%
+                        </div>
+                        <div class="text-[9px]" style="color: var(--color-text-muted);">
+                          Category avg: {{ b.avg_gfi }}%
+                        </div>
+                        <div class="text-[9px] font-semibold" style="color: var(--color-sf-green);">
+                          {{ b.creator_gfi - b.avg_gfi! >= 0 ? '+' : '' }}{{ b.creator_gfi - b.avg_gfi! }}%
+                        </div>
+                        <div class="text-[8px]" style="color: var(--color-text-muted);">
+                          Top {{ b.gfi_percentile }}% in category
+                        </div>
+                      } @else {
+                        <div class="text-sm" style="color: var(--color-text-muted);">—</div>
+                      }
+                    </div>
+                  </div>
+                </div>
+              </div>
+            }
+
             @if (showTwitch()) {
               <div
                 class="rounded-lg overflow-hidden"
@@ -355,6 +508,7 @@ export class CreatorProfileModalComponent {
   private profile = inject(CreatorProfileService);
   private youtube = inject(YoutubeCreatorService);
   private twitch = inject(TwitchLiveService);
+  private supabase = inject(SupabaseService);
 
   protected readonly creator = this.profile.current;
   protected readonly showYoutube = computed(() => hasYoutube(this.creator()));
@@ -389,6 +543,20 @@ export class CreatorProfileModalComponent {
   protected readonly activityState = computed(() => activityClass(this.twData()?.daysSinceStream ?? null));
 
   protected readonly videos = computed<YoutubeVideo[]>(() => this.data()?.top_videos ?? []);
+  protected readonly rates = computed(() => computeRateRanges(this.creator()!));
+
+  protected readonly bench = resource<GenreBenchmarks | null, Creator | null>({
+    params: () => this.creator(),
+    loader: async ({ params }) => {
+      if (!params) return null;
+      const { data } = await this.supabase.client.rpc('get_genre_benchmarks', {
+        p_creator_id: params.id,
+        p_genre: params.genre,
+      });
+      return (data as GenreBenchmarks) ?? null;
+    },
+    defaultValue: null,
+  });
 
   close(): void {
     this.profile.close();
@@ -410,5 +578,11 @@ export class CreatorProfileModalComponent {
 
   sponsorColor(pct: number): string {
     return sponsorColor(pct);
+  }
+
+  formatBudget(n: number): string {
+    if (n >= 1_000_000) return '$' + (n / 1_000_000).toFixed(1) + 'M';
+    if (n >= 1_000) return '$' + Math.round(n / 1_000) + 'K';
+    return '$' + n;
   }
 }
