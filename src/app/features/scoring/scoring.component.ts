@@ -216,6 +216,16 @@ interface ScoredRow {
                   <div class="text-[9px] mt-1" style="color: var(--color-text-muted);" data-testid="scoring-eng">
                     {{ row.creator.eng }} eng
                   </div>
+                  @if (score.getBreakdown(row.creator.id); as bd) {
+                    <button
+                      type="button"
+                      class="text-[8px] mt-1 underline"
+                      style="color: var(--color-sf-gold);"
+                      (click)="toggleBreakdown(row.creator.id); $event.stopPropagation()"
+                    >
+                      {{ expandedCpi().has(row.creator.id) ? 'hide' : 'why this score?' }}
+                    </button>
+                  }
                 </td>
                 <td class="p-3 text-center">
                   @if (row.gfi !== null) {
@@ -270,6 +280,38 @@ interface ScoredRow {
                   </div>
                 </td>
               </tr>
+              @if (expandedCpi().has(row.creator.id) && score.getBreakdown(row.creator.id); as bd) {
+                <tr style="background: var(--color-bg-3);">
+                  <td colspan="5" class="px-6 py-3">
+                    <div class="text-[9px] uppercase tracking-wider mb-2 font-semibold" style="color: var(--color-sf-gold);">
+                      CPI Breakdown — {{ row.creator.name }}
+                    </div>
+                    <div class="grid grid-cols-4 gap-3">
+                      @for (f of bd.factors; track f.label) {
+                        <div class="p-2 rounded" style="background: var(--color-bg-2);">
+                          <div class="text-[9px] uppercase tracking-wider mb-1" style="color: var(--color-text-muted);">
+                            {{ f.label }}
+                          </div>
+                          <div class="flex items-baseline gap-1 mb-1">
+                            <span class="text-sm font-bold" style="color: var(--color-text);">{{ f.score }}</span>
+                            <span class="text-[9px]" style="color: var(--color-text-muted);">/ {{ f.max }}</span>
+                          </div>
+                          <div class="h-1 rounded-full overflow-hidden mb-1" style="background: var(--color-bg-3);">
+                            <div
+                              class="h-full"
+                              [style.width.%]="(+f.score / f.max) * 100"
+                              [style.background]="scoreColor((+f.score / f.max) * 100)"
+                            ></div>
+                          </div>
+                          <div class="text-[8px]" style="color: var(--color-text-muted);">
+                            {{ f.value }} · {{ f.note }}
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              }
             }
           </tbody>
         </table>
@@ -399,6 +441,7 @@ export class ScoringComponent {
 
   protected readonly format = signal<Format>('Integrated');
   protected readonly formats: Format[] = ['Integrated', 'Dedicated', 'Mixed'];
+  protected readonly expandedCpi = signal<Set<number>>(new Set());
 
   constructor() {
     // Re-score when the campaign context changes. `untracked` reads of selection
@@ -419,6 +462,15 @@ export class ScoringComponent {
 
   onGenreChange(g: string): void {
     this.context.genre.set(g);
+  }
+
+  toggleBreakdown(id: number): void {
+    this.expandedCpi.update((s) => {
+      const next = new Set(s);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   }
 
   initialsOf(c: Creator): string {
