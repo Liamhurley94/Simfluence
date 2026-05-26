@@ -78,31 +78,73 @@ const PLATFORM_COLORS: Record<string, string> = {
         }
       </div>
 
-      <div class="grid grid-cols-3 gap-1 mb-3 text-center">
-        <div>
-          <div class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">
-            Subs
+      @if (creator().ytStats; as yt) {
+        <div class="grid grid-cols-3 gap-1 mb-1 text-center">
+          <div>
+            <div class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">
+              Subs
+            </div>
+            <div class="text-xs font-semibold" style="color: var(--color-sf-green);">
+              {{ compact(yt.subscriberCount) }}
+            </div>
           </div>
-          <div class="text-xs font-semibold" style="color: var(--color-text);">
-            {{ creator().subs }}
+          <div>
+            <div class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">
+              Avg Views
+            </div>
+            <div class="text-xs font-semibold" style="color: var(--color-text);">
+              {{ compact(yt.avgViews) }}
+            </div>
+          </div>
+          <div>
+            <div class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">
+              Eng
+            </div>
+            <div class="text-xs font-semibold" style="color: var(--color-text);">
+              {{ yt.engagementRate }}%
+            </div>
           </div>
         </div>
-        <div>
-          <div class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">
-            Avg Views
+        @if (freshness()) {
+          <div class="text-[8px] text-right mb-2" style="color: var(--color-text-muted);">
+            {{ freshness() }}
           </div>
-          <div class="text-xs font-semibold" style="color: var(--color-text);">
-            {{ creator().avgViews }}
+        }
+      } @else {
+        <div class="grid grid-cols-3 gap-1 mb-3 text-center">
+          <div>
+            <div class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">
+              Subs
+            </div>
+            <div class="text-xs font-semibold" style="color: var(--color-text);">
+              {{ creator().subs }}
+            </div>
+          </div>
+          <div>
+            <div class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">
+              Avg Views
+            </div>
+            <div class="text-xs font-semibold" style="color: var(--color-text);">
+              {{ creator().avgViews }}
+            </div>
+          </div>
+          <div>
+            <div class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">
+              Eng
+            </div>
+            <div class="text-xs font-semibold" style="color: var(--color-text);">
+              {{ creator().eng }}
+            </div>
           </div>
         </div>
-        <div>
-          <div class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">
-            Eng
-          </div>
-          <div class="text-xs font-semibold" style="color: var(--color-text);">
-            {{ creator().eng }}
-          </div>
-        </div>
+      }
+
+      <div class="flex items-center gap-2 mb-2">
+        <div class="flex-1 h-px" style="background: var(--color-border);"></div>
+        <span class="text-[8px] uppercase tracking-widest whitespace-nowrap" style="color: var(--color-text-muted);">
+          Simfluence Scores
+        </span>
+        <div class="flex-1 h-px" style="background: var(--color-border);"></div>
       </div>
 
       <div class="grid grid-cols-2 gap-1 mb-3">
@@ -192,13 +234,21 @@ export class CreatorCardComponent {
       .toUpperCase();
   });
 
-  // Always compute ranges dynamically from creator stats (mirrors prod's
-  // `computeCostEstimate`). Stored `creator.rates` is folded into the compute
-  // as a YouTube-branch fallback when avgViews is missing.
   readonly rateLabel = computed(() => {
     const ranges = computeRateRanges(this.creator());
     const key = this.format() === 'Dedicated' ? 'ded' : this.format() === 'Mixed' ? 'mix' : 'int';
     return this.formatRange(ranges[key]);
+  });
+
+  readonly freshness = computed(() => {
+    const ts = this.creator().ytStats?.statsRefreshedAt;
+    if (!ts) return '';
+    const diffMs = Date.now() - new Date(ts).getTime();
+    if (isNaN(diffMs)) return '';
+    const hr = Math.round(diffMs / 3_600_000);
+    if (hr < 1) return 'Updated just now';
+    if (hr < 24) return `Updated ${hr}h ago`;
+    return `Updated ${Math.round(hr / 24)}d ago`;
   });
 
   platformColor(p: string): string {
@@ -220,13 +270,13 @@ export class CreatorCardComponent {
     this.profile.open(this.creator());
   }
 
-  private formatRange([lo, hi]: [number, number]): string {
-    return `$${this.compact(lo)}–$${this.compact(hi)}`;
-  }
-
-  private compact(n: number): string {
+  compact(n: number): string {
     if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
     if (n >= 1_000) return Math.round(n / 1_000) + 'K';
     return String(n);
+  }
+
+  private formatRange([lo, hi]: [number, number]): string {
+    return `$${this.compact(lo)}–$${this.compact(hi)}`;
   }
 }

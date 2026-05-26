@@ -129,7 +129,7 @@ export class DiscoveryComponent {
 
   protected readonly selection = inject(SelectionService);
 
-  protected readonly query = signal<DiscoveryQuery>({ sort: 'cpi', format: 'Mixed' });
+  protected readonly query = signal<DiscoveryQuery>({ sort: 'cpi', format: 'Mixed', platform: 'YouTube' });
   protected readonly page = signal(0);
   protected readonly budget = signal<number | null>(null);
   protected readonly creatingCampaign = signal(false);

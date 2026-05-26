@@ -1,8 +1,18 @@
 import { Injectable, inject, signal } from '@angular/core';
-import { CREATOR_TIER_RANGES, Creator, CreatorFilters, PagedCreators, SortKey, maxSubsForBudget } from '../data/creator.types';
+import { CREATOR_TIER_RANGES, Creator, CreatorFilters, PagedCreators, SortKey, YoutubeStats, maxSubsForBudget } from '../data/creator.types';
 import { SupabaseService } from '../supabase/supabase.service';
 
 const DEFAULT_PAGE_SIZE = 24;
+
+const PLATFORM_TABLES: Record<string, string> = {
+  YouTube: 'youtube_creators',
+  Twitch: 'twitch_creators',
+  Instagram: 'instagram_creators',
+  TikTok: 'tiktok_creators',
+  Facebook: 'facebook_creators',
+  'Facebook Gaming': 'facebook_creators',
+  Twitter: 'twitter_creators',
+};
 
 // Re-exported for SimulatorComponent's local subscriber-count math; the DB
 // has a generated subs_parsed column that does the same thing server-side.
@@ -13,6 +23,20 @@ export function parseSubs(raw: string): number {
   if (/M/i.test(raw)) return n * 1_000_000;
   if (/K/i.test(raw)) return n * 1_000;
   return n;
+}
+
+function parseYtStats(row: Record<string, any>): YoutubeStats | undefined {
+  const yt = row['youtube_creators'];
+  if (!yt || (Array.isArray(yt) && yt.length === 0)) return undefined;
+  const d = Array.isArray(yt) ? yt[0] : yt;
+  if (typeof d?.subscriber_count !== 'number') return undefined;
+  return {
+    subscriberCount: d.subscriber_count,
+    avgViews: d.avg_views ?? 0,
+    engagementRate: d.engagement_rate ?? 0,
+    sponsorFreqPct: d.sponsor_freq_pct ?? 0,
+    statsRefreshedAt: d.stats_refreshed_at ?? null,
+  };
 }
 
 function fromDb(row: Record<string, any>): Creator {
@@ -45,6 +69,7 @@ function fromDb(row: Record<string, any>): Creator {
     realCVR: row['real_cvr'],
     realCPA: row['real_cpa'],
     rates: row['rates'] ?? undefined,
+    ytStats: parseYtStats(row),
   };
 }
 
@@ -83,10 +108,14 @@ export class CreatorsService {
 
   /** Server-side filtered + sorted + paginated query against public.creators.
    *
+   * When `filters.platform` is set, the query INNER JOINs the corresponding
+   * platform table (e.g. `youtube_creators`). For YouTube this brings live
+   * nightly-refreshed stats; for other platforms it filters to that platform's
+   * creators (no live stats yet). The INNER JOIN handles platform filtering
+   * implicitly — no manual `all_platforms` filter needed.
+   *
    * When `filters.genre` is set, the query joins `creator_genre_scores` so
-   * each row carries a per-genre `gfi`. Sort-by-gfi and minGfi filter both
-   * operate on the join. When no genre is set, no join happens and `gfi` is
-   * `null` on every returned creator (UI shows a placeholder).
+   * each row carries a per-genre `gfi`. Both joins can be active simultaneously.
    */
   async list(
     filters: CreatorFilters = {},
@@ -97,25 +126,26 @@ export class CreatorsService {
     const hasGenre = !!filters.genre;
     const minGfiActive = hasGenre && !!filters.minGfi && filters.minGfi > 0;
     const sortByGfi = sort === 'gfi' && hasGenre;
-    // !inner when we need parent-row exclusion (min-GFI filter, or sort-by-GFI
-    // which requires a present row to order on). !left when we just want the
-    // gfi value for display — creators without a cached row still show up,
-    // with the "—" placeholder.
-    const joinModifier = minGfiActive || sortByGfi ? '!inner' : '!left';
-    const selectExpr = hasGenre
-      ? `*, creator_genre_scores${joinModifier}(gfi)`
-      : '*';
-    let q = this.supabase.client.from('creators').select(selectExpr, { count: 'exact' });
+    const gfiJoin = minGfiActive || sortByGfi ? '!inner' : '!left';
+
+    const selectParts = ['*'];
+    if (hasGenre) selectParts.push(`creator_genre_scores${gfiJoin}(gfi)`);
+    const platformTable = filters.platform ? PLATFORM_TABLES[filters.platform] : undefined;
+    if (filters.platform === 'YouTube') {
+      selectParts.push('youtube_creators!inner(subscriber_count, avg_views, engagement_rate, sponsor_freq_pct, stats_refreshed_at)');
+    } else if (platformTable) {
+      selectParts.push(`${platformTable}!inner(handle)`);
+    }
+
+    let q = this.supabase.client.from('creators').select(selectParts.join(', '), { count: 'exact' });
+
+    if (filters.platform && !platformTable) {
+      q = q.overlaps('all_platforms', [filters.platform]);
+    }
 
     if (filters.genre) {
       q = q.eq('genre', filters.genre);
-      // Restrict the embedded resource to the requested campaign genre. With
-      // !left this preserves creators that have no score row yet — they get
-      // gfi: null and the UI shows the "—" placeholder.
       q = q.eq('creator_genre_scores.campaign_genre', filters.genre);
-    }
-    if (filters.platforms?.length) {
-      q = q.overlaps('all_platforms', filters.platforms);
     }
     if (filters.languages?.length) {
       q = q.in('language', filters.languages);
@@ -130,8 +160,6 @@ export class CreatorsService {
       if (Number.isFinite(hi)) q = q.lt('subs_parsed', hi);
     }
     if (filters.minCpi && filters.minCpi > 0) q = q.gte('cpi', filters.minCpi);
-    // minGfi only meaningful when a campaign genre is in scope. Filter is
-    // applied on the joined column; UI hides the slider when no genre.
     if (hasGenre && filters.minGfi && filters.minGfi > 0) {
       q = q.gte('creator_genre_scores.gfi', filters.minGfi);
     }
@@ -144,10 +172,10 @@ export class CreatorsService {
       if (hasGenre) {
         q = q.order('gfi', { ascending: false, referencedTable: 'creator_genre_scores' });
       } else {
-        // UI prevents this case (sort='gfi' disabled when no genre). Defensive
-        // fallback so a stale URL/state doesn't blow up the query.
         q = q.order('subs_parsed', { ascending: false });
       }
+    } else if (sort === 'subs' && filters.platform === 'YouTube') {
+      q = q.order('subscriber_count', { ascending: false, referencedTable: 'youtube_creators' });
     } else {
       const sortCol = sort === 'subs' ? 'subs_parsed' : sort;
       const ascending = sort === 'name';

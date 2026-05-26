@@ -9,9 +9,8 @@ import { UpgradePromptService } from '../../core/upgrade/upgrade-prompt.service'
 
 export interface DiscoveryQuery extends CreatorFilters {
   sort: SortKey;
-  // `format` is a display preference (which rate range to show on each card),
-  // not a DB filter — server-side queries ignore it.
   format: Format;
+  platform: string;
 }
 
 const SORT_OPTIONS: { key: SortKey; label: string }[] = [
@@ -92,20 +91,17 @@ const FORMAT_OPTIONS: { key: Format; label: string }[] = [
         >
           Platform
         </label>
-        <div class="flex flex-wrap gap-1" data-testid="filter-platforms">
+        <select
+          [ngModel]="platform_()"
+          (ngModelChange)="onPlatform($event)"
+          class="w-full px-3 py-2 rounded text-sm"
+          style="background: rgba(255,255,255,0.05); border: 1px solid var(--color-border); color: var(--color-text);"
+          data-testid="filter-platform"
+        >
           @for (p of platforms(); track p) {
-            <button
-              type="button"
-              (click)="togglePlatform(p)"
-              class="text-[10px] uppercase tracking-wider px-2 py-1 rounded"
-              [style.background]="platforms_().includes(p) ? 'var(--color-sf-blue)' : 'var(--color-bg-3)'"
-              [style.color]="'#fff'"
-              [attr.data-testid]="'filter-platform-' + p.toLowerCase()"
-            >
-              {{ p }}
-            </button>
+            <option [ngValue]="p">{{ p }}</option>
           }
-        </div>
+        </select>
       </div>
 
       <!-- Language -->
@@ -322,7 +318,7 @@ export class FilterPanelComponent {
   readonly formatOptions = FORMAT_OPTIONS;
 
   readonly genre = signal<string | undefined>(undefined);
-  readonly platforms_ = signal<string[]>([]);
+  readonly platform_ = signal<string>('YouTube');
   readonly languages_ = signal<string[]>([]);
   readonly search = signal<string>('');
   readonly sort = signal<SortKey>('cpi');
@@ -334,7 +330,7 @@ export class FilterPanelComponent {
   readonly hasFilters = computed(
     () =>
       !!this.genre() ||
-      this.platforms_().length > 0 ||
+      this.platform_() !== 'YouTube' ||
       this.languages_().length > 0 ||
       !!this.search().trim() ||
       !!this.tier() ||
@@ -391,10 +387,8 @@ export class FilterPanelComponent {
     this.upgrade.open('CPI / GFI score filters', 'gold');
   }
 
-  togglePlatform(p: string): void {
-    this.platforms_.update((list) =>
-      list.includes(p) ? list.filter((x) => x !== p) : [...list, p],
-    );
+  onPlatform(p: string): void {
+    this.platform_.set(p);
     this.emit();
   }
 
@@ -407,7 +401,7 @@ export class FilterPanelComponent {
 
   clearAll(): void {
     this.genre.set(undefined);
-    this.platforms_.set([]);
+    this.platform_.set('YouTube');
     this.languages_.set([]);
     this.search.set('');
     this.tier.set(undefined);
@@ -421,7 +415,7 @@ export class FilterPanelComponent {
     const gold = this.canUseScoreFilters();
     this.queryChange.emit({
       genre: this.genre(),
-      platforms: this.platforms_(),
+      platform: this.platform_(),
       languages: this.languages_(),
       search: this.search(),
       sort: this.sort(),

@@ -1,3 +1,11 @@
+export interface YoutubeStats {
+  subscriberCount: number;
+  avgViews: number;
+  engagementRate: number;
+  sponsorFreqPct: number;
+  statsRefreshedAt: string | null;
+}
+
 export interface Creator {
   id: number;
   name: string;
@@ -28,6 +36,8 @@ export interface Creator {
     ded?: [number, number];
     mix?: [number, number];
   };
+
+  ytStats?: YoutubeStats;
 }
 
 export type Platform = 'YouTube' | 'Twitch' | 'Instagram' | 'TikTok' | 'Kick' | 'X';
@@ -59,7 +69,7 @@ export function tierForSubs(subsParsed: number): CreatorTier {
 
 export interface CreatorFilters {
   genre?: string;
-  platforms?: string[];
+  platform?: string;
   languages?: string[];
   search?: string;
   tier?: CreatorTier;
