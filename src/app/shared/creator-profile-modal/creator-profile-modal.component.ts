@@ -134,8 +134,7 @@ function sponsorColor(pct: number): string {
                       YouTube data refresh pending.
                     </div>
                   } @else if (data(); as d) {
-                    <!-- Headline stats -->
-                    <div class="grid grid-cols-3 gap-2">
+                    <div class="grid grid-cols-2 gap-2">
                       <div class="p-2 rounded text-center" style="background: var(--color-bg-3);">
                         <div class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">
                           Subscribers
@@ -152,34 +151,9 @@ function sponsorColor(pct: number): string {
                           {{ (d.avg_views ?? 0) | number: '1.0-0' }}
                         </div>
                       </div>
-                      <div class="p-2 rounded text-center" style="background: var(--color-bg-3);">
-                        <div class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">
-                          Sponsor freq
-                        </div>
-                        <div class="text-base font-bold" [style.color]="sponsorColor(d.sponsor_freq_pct ?? 0)">
-                          {{ d.sponsor_freq_pct ?? 0 }}%
-                        </div>
-                      </div>
                     </div>
 
-                    <!-- Secondary stats: engagement / cadence / last upload -->
-                    <div class="grid grid-cols-3 gap-2">
-                      <div class="p-2 rounded text-center" style="background: var(--color-bg-3);">
-                        <div class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">
-                          Engagement
-                        </div>
-                        <div class="text-sm font-bold" style="color: var(--color-text);">
-                          {{ d.engagement_rate ?? 0 }}%
-                        </div>
-                      </div>
-                      <div class="p-2 rounded text-center" style="background: var(--color-bg-3);">
-                        <div class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">
-                          Avg days between
-                        </div>
-                        <div class="text-sm font-bold" style="color: var(--color-text);">
-                          {{ d.avg_days_between ?? '—' }}
-                        </div>
-                      </div>
+                    <div class="grid grid-cols-1 gap-2">
                       <div class="p-2 rounded text-center" style="background: var(--color-bg-3);">
                         <div class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">
                           Last upload
@@ -190,9 +164,6 @@ function sponsorColor(pct: number): string {
                       </div>
                     </div>
 
-                    <!-- Recent videos with PAID PROMO detection (ported from
-                         reference/app.html:13936-13950). Falls back to plain
-                         title rendering when top_videos is empty. -->
                     @if (videos().length > 0) {
                       <div>
                         <div class="text-[10px] uppercase tracking-wider mb-1" style="color: var(--color-text-muted);">
@@ -214,15 +185,6 @@ function sponsorColor(pct: number): string {
                               } @else {
                                 <span class="truncate flex-1" [title]="v.title">{{ v.title }}</span>
                               }
-                              @if (v.paid_promo) {
-                                <span
-                                  class="text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded shrink-0"
-                                  style="background: var(--color-sf-gold); color: #000;"
-                                  data-testid="paid-promo-badge"
-                                >
-                                  💰 Paid Promo
-                                </span>
-                              }
                             </li>
                           }
                         </ul>
@@ -231,6 +193,51 @@ function sponsorColor(pct: number): string {
                   }
                 </div>
               </div>
+
+              @if (!yt.isLoading() && data(); as d) {
+                <div
+                  class="rounded-lg overflow-hidden"
+                  style="border: 1px solid var(--color-border);"
+                  data-testid="creator-profile-analysis"
+                >
+                  <div
+                    class="px-3 py-2"
+                    style="background: var(--color-bg-3);"
+                  >
+                    <span class="text-[10px] uppercase tracking-wider font-bold" style="color: var(--color-sf-gold);">
+                      Simfluence Analysis
+                    </span>
+                  </div>
+                  <div class="p-3 flex flex-col gap-3">
+                    <div class="grid grid-cols-3 gap-2">
+                      <div class="p-2 rounded text-center" style="background: var(--color-bg-3);">
+                        <div class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">
+                          Engagement
+                        </div>
+                        <div class="text-sm font-bold" style="color: var(--color-text);">
+                          {{ d.engagement_rate ?? 0 }}%
+                        </div>
+                      </div>
+                      <div class="p-2 rounded text-center" style="background: var(--color-bg-3);">
+                        <div class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">
+                          Sponsor freq
+                        </div>
+                        <div class="text-sm font-bold" [style.color]="sponsorColor(d.sponsor_freq_pct ?? 0)">
+                          {{ d.sponsor_freq_pct ?? 0 }}%
+                        </div>
+                      </div>
+                      <div class="p-2 rounded text-center" style="background: var(--color-bg-3);">
+                        <div class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">
+                          Avg days between
+                        </div>
+                        <div class="text-sm font-bold" style="color: var(--color-text);">
+                          {{ d.avg_days_between ?? '—' }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              }
             }
 
             @if (showTwitch()) {
