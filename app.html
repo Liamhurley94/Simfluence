@@ -17281,19 +17281,19 @@ console.log('🛡️ Simfluence Legal Protection System Active');
       const cpi = c.cpi || 0;
       const cpiBg = cpiColor(cpi);
 
-      return \`<a class="live-creator-row" href="\${twitchUrl}" target="_blank" rel="noopener" title="Watch \${c.name} on Twitch">
-        <div class="live-avatar" style="background:\${bg}">\${initials}</div>
+      return `<a class="live-creator-row" href="${twitchUrl}" target="_blank" rel="noopener" title="Watch ${c.name} on Twitch">
+        <div class="live-avatar" style="background:${bg}">${initials}</div>
         <div class="live-creator-info">
-          <div class="live-creator-name">\${c.name || handle}</div>
+          <div class="live-creator-name">${c.name || handle}</div>
           <div class="live-creator-meta">
-            <span class="live-viewer-count">👁 \${viewers}</span>
-            \${cat ? '<span class="live-category">' + cat + '</span>' : ''}
+            <span class="live-viewer-count">👁 ${viewers}</span>
+            ${cat ? '<span class="live-category">' + cat + '</span>' : ''}
           </div>
         </div>
-        <div class="live-cpi-badge" style="color:\${cpiBg};background:\${cpiBg}22;border:1px solid \${cpiBg}44">
-          \${cpi}
+        <div class="live-cpi-badge" style="color:${cpiBg};background:${cpiBg}22;border:1px solid ${cpiBg}44">
+          ${cpi}
         </div>
-      </a>\`;
+      </a>`;
     }).join('');
   }
 
