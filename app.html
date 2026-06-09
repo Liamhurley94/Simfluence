@@ -17307,12 +17307,17 @@ console.log('🛡️ Simfluence Legal Protection System Active');
     document.getElementById('twitch-live-feed').classList.toggle('collapsed');
   };
 
-  // Init on DOM ready
-  document.addEventListener('DOMContentLoaded', function() {
+  // Init on DOM ready (handles the case where DOM is already loaded)
+  function initLiveFeed() {
     refreshLiveFeed();
     // Refresh every 3 minutes
     setInterval(refreshLiveFeed, 3 * 60 * 1000);
-  });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initLiveFeed);
+  } else {
+    initLiveFeed();
+  }
 })();
 </script>
 
