@@ -1840,7 +1840,167 @@
     .band-card, [id^="band"] { border: 1px solid #ccc !important; }
   }
 
-  </style>
+  
+  /* ── TWITCH LIVE FEED WIDGET ─────────────────────────────── */
+  #twitch-live-feed {
+    width: 100%;
+    background: rgba(145,70,255,0.06);
+    border: 1px solid rgba(145,70,255,0.25);
+    border-radius: 6px;
+    overflow: hidden;
+    font-family: 'Manrope', sans-serif;
+    margin-bottom: 4px;
+  }
+
+  #twitch-live-feed.collapsed #live-feed-body { display: none; }
+
+  .live-feed-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: rgba(145,70,255,0.08);
+    border-bottom: 1px solid rgba(145,70,255,0.2);
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .live-feed-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #C084FC;
+  }
+
+  .live-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #FF3355;
+    box-shadow: 0 0 6px #FF3355;
+    animation: livePulse 1.4s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+
+  @keyframes livePulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  .live-feed-count {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: #FF3355;
+    font-weight: 500;
+  }
+
+  .live-feed-toggle {
+    font-size: 10px;
+    color: rgba(192,132,252,0.5);
+    transition: transform 0.2s;
+  }
+
+  #twitch-live-feed:not(.collapsed) .live-feed-toggle { transform: rotate(180deg); }
+
+  #live-feed-body {
+    max-height: 300px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(145,70,255,0.3) transparent;
+  }
+
+  .live-creator-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    cursor: pointer;
+    transition: background 0.15s;
+    text-decoration: none;
+  }
+
+  .live-creator-row:last-child { border-bottom: none; }
+  .live-creator-row:hover { background: rgba(145,70,255,0.08); }
+
+  .live-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+    border: 1.5px solid rgba(145,70,255,0.4);
+    color: #fff;
+  }
+
+  .live-creator-info { flex: 1; min-width: 0; }
+
+  .live-creator-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: #F0F2FF;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 2px;
+  }
+
+  .live-creator-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .live-viewer-count {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: #FF3355;
+    font-weight: 500;
+  }
+
+  .live-category {
+    font-size: 9px;
+    color: rgba(160,170,204,0.6);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 80px;
+  }
+
+  .live-cpi-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    font-weight: 500;
+    padding: 2px 5px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+
+  .live-empty {
+    padding: 20px 14px;
+    text-align: center;
+    font-size: 11px;
+    color: rgba(160,170,204,0.4);
+    font-style: italic;
+  }
+
+  .live-loading {
+    padding: 16px 14px;
+    text-align: center;
+    font-size: 10px;
+    color: rgba(192,132,252,0.5);
+    letter-spacing: 0.08em;
+  }
+
+</style>
 </head>
 <body>
 <!-- GATE -->
@@ -3891,6 +4051,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 
+
+
 <div class="app">
   <!-- SIDEBAR -->
   <div class="sidebar">
@@ -3898,6 +4060,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
     <div>
+<!-- ── TWITCH LIVE FEED WIDGET ──────────────────────────────── -->
+<div id="twitch-live-feed" class="collapsed">
+  <div class="live-feed-header" onclick="toggleLiveFeed()">
+    <div class="live-feed-title">
+      <div class="live-dot"></div>
+      LIVE NOW
+    </div>
+    <span class="live-feed-count" id="live-count">—</span>
+    <span class="live-feed-toggle">▲</span>
+  </div>
+  <div id="live-feed-body">
+    <div class="live-loading" id="live-loading">Checking live status...</div>
+  </div>
+</div>
+
       <div class="sidebar-section-label">Campaign Brief</div>
       <div class="field-group">
 
@@ -17026,6 +17203,117 @@ document.addEventListener('click', function(e) {
 });
 
 console.log('🛡️ Simfluence Legal Protection System Active');
+</script>
+
+
+
+<script>
+// ── TWITCH LIVE FEED ─────────────────────────────────────────────────────
+(function() {
+  const SUPABASE_URL = 'https://iysjxslzlbojoivxjrce.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5c2p4c2x6bGJvam9pdnhqcmNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjAwMjU2ODQsImV4cCI6MjAzNTYwMTY4NH0.SXBV3hWb7PdEX0D2u-0x7PBh6J6xLwKiK2wVhT8JqE8';
+
+  function cpiColor(cpi) {
+    if (cpi >= 80) return '#00D47A';
+    if (cpi >= 65) return '#FFD400';
+    return '#FF7A00';
+  }
+
+  function avatarBg(name) {
+    const colors = ['#6C5CE7','#00B894','#E17055','#0984E3','#FDCB6E','#D63031','#00CEC9'];
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    return colors[Math.abs(hash) % colors.length];
+  }
+
+  function formatViewers(n) {
+    if (!n) return '0';
+    if (n >= 1000) return (n/1000).toFixed(1).replace('.0','') + 'K';
+    return String(n);
+  }
+
+  async function fetchLiveCreators() {
+    try {
+      const res = await fetch(
+        SUPABASE_URL + '/rest/v1/creators?twitch_is_live=eq.true&select=name,handle,tw_url,twitch_viewer_count,twitch_category,cpi,color&order=twitch_viewer_count.desc&limit=10',
+        {
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+          }
+        }
+      );
+
+      if (!res.ok) throw new Error('Supabase query failed');
+      return await res.json();
+
+    } catch(e) {
+      console.warn('[LiveFeed] Supabase fetch failed:', e.message);
+      return [];
+    }
+  }
+
+  function renderLiveFeed(creators) {
+    const body  = document.getElementById('live-feed-body');
+    const count = document.getElementById('live-count');
+    const widget = document.getElementById('twitch-live-feed');
+
+    if (!body || !count) return;
+
+    if (!creators || creators.length === 0) {
+      count.textContent = '0';
+      body.innerHTML = '<div class="live-empty">No creators live right now</div>';
+      return;
+    }
+
+    count.textContent = creators.length + ' LIVE';
+
+    // Auto-expand when there are live creators
+    if (creators.length > 0) widget.classList.remove('collapsed');
+
+    body.innerHTML = creators.map(c => {
+      const handle = (c.handle || '').replace('@','');
+      const twitchUrl = c.tw_url || ('https://twitch.tv/' + handle);
+      const initials = (c.name || '?').substring(0,2).toUpperCase();
+      const bg = c.color || avatarBg(c.name || '');
+      const viewers = formatViewers(c.twitch_viewer_count);
+      const cat = c.twitch_category || '';
+      const cpi = c.cpi || 0;
+      const cpiBg = cpiColor(cpi);
+
+      return \`<a class="live-creator-row" href="\${twitchUrl}" target="_blank" rel="noopener" title="Watch \${c.name} on Twitch">
+        <div class="live-avatar" style="background:\${bg}">\${initials}</div>
+        <div class="live-creator-info">
+          <div class="live-creator-name">\${c.name || handle}</div>
+          <div class="live-creator-meta">
+            <span class="live-viewer-count">👁 \${viewers}</span>
+            \${cat ? '<span class="live-category">' + cat + '</span>' : ''}
+          </div>
+        </div>
+        <div class="live-cpi-badge" style="color:\${cpiBg};background:\${cpiBg}22;border:1px solid \${cpiBg}44">
+          \${cpi}
+        </div>
+      </a>\`;
+    }).join('');
+  }
+
+  async function refreshLiveFeed() {
+    const creators = await fetchLiveCreators();
+    renderLiveFeed(creators);
+  }
+
+  // Toggle collapse
+  window.toggleLiveFeed = function() {
+    document.getElementById('twitch-live-feed').classList.toggle('collapsed');
+  };
+
+  // Init on DOM ready
+  document.addEventListener('DOMContentLoaded', function() {
+    refreshLiveFeed();
+    // Refresh every 3 minutes
+    setInterval(refreshLiveFeed, 3 * 60 * 1000);
+  });
+})();
 </script>
 
 </body>
