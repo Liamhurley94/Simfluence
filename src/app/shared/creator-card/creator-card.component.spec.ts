@@ -34,6 +34,7 @@ const SAMPLE: Creator = {
     [selected]="selected()"
     [canSeeRates]="canSee()"
     [format]="format()"
+    [gfiDisplay]="gfiDisplay()"
     (toggle)="toggled.set($event)"
   />`,
 })
@@ -42,6 +43,9 @@ class HostComponent {
   selected = signal(false);
   canSee = signal(false);
   format = signal<Format>('Integrated');
+  // GFI is genre-relative and passed in separately (the card no longer reads
+  // creator().gfi). Discovery threads the per-genre score via [gfiDisplay].
+  gfiDisplay = signal<number | null>(SAMPLE.gfi);
   toggled = signal<number | null>(null);
 }
 

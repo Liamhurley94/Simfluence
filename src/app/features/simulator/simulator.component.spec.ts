@@ -6,9 +6,32 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SimulatorComponent } from './simulator.component';
 import { AuthService } from '../../core/auth/auth.service';
 import { SelectionService } from '../../core/selection/selection.service';
+import { CreatorsService } from '../../core/creators/creators.service';
 import { EdgeClient } from '../../core/api/edge.client';
 import { RateLimitService } from '../../core/simulation/rate-limit.service';
 import { CampaignsRepository } from '../../core/campaigns/campaigns.repository';
+import { Creator } from '../../core/data/creator.types';
+
+function mkCreator(id: number): Creator {
+  return {
+    id,
+    name: `Creator ${id}`,
+    handle: `@c${id}`,
+    platform: 'YouTube',
+    allPlatforms: ['YouTube'],
+    subs: '100K',
+    subsParsed: 100_000,
+    avgViews: '20K',
+    eng: '3.0%',
+    genre: 'Gaming & Esports',
+    cpi: 80,
+    gfi: 75,
+    color: '#fff',
+    verifiedDeals: 2,
+    sponsorHistory: [],
+    bio: 'bio',
+  };
+}
 
 function setup({ selectedIds = [] as number[], tier = 'silver' } = {}) {
   localStorage.clear();
@@ -26,6 +49,19 @@ function setup({ selectedIds = [] as number[], tier = 'silver' } = {}) {
   const post = vi.fn().mockResolvedValue({ error: 'no server in tests' });
   const edgeStub = { post, get: vi.fn() } as unknown as EdgeClient;
 
+  // Creator data now loads server-side via CreatorsService.byIds (async),
+  // wrapped in a resource() inside the component. Stub it so seeding the
+  // SelectionService with ids resolves to full Creator objects.
+  const byIds = vi.fn(async (ids: Iterable<number>) =>
+    Array.from(ids, (id) => mkCreator(id)),
+  );
+  const creatorsStub = {
+    byIds,
+    genres: signal(['Gaming & Esports', 'Music']),
+    platforms: signal(['YouTube', 'Twitch']),
+    languages: signal(['English']),
+  };
+
   const campaignsRepoStub = {
     list: vi.fn().mockResolvedValue([]),
     byId: vi.fn().mockResolvedValue(null),
@@ -40,6 +76,7 @@ function setup({ selectedIds = [] as number[], tier = 'silver' } = {}) {
     providers: [
       provideRouter([]),
       { provide: AuthService, useValue: authStub },
+      { provide: CreatorsService, useValue: creatorsStub },
       { provide: EdgeClient, useValue: edgeStub },
       { provide: CampaignsRepository, useValue: campaignsRepoStub },
     ],
@@ -64,9 +101,12 @@ describe('SimulatorComponent', () => {
     expect(fixture.nativeElement.querySelector('[data-testid="sim-controls"]')).toBeNull();
   });
 
-  it('renders controls + objectives + run button when creators are selected', () => {
+  it('renders controls + objectives + run button when creators are selected', async () => {
     setup({ selectedIds: [2, 14] });
     const fixture = TestBed.createComponent(SimulatorComponent);
+    fixture.detectChanges();
+    // CreatorsService.byIds is async (server-backed); let the resource() resolve.
+    await fixture.whenStable();
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('[data-testid="sim-controls"]')).toBeTruthy();
     expect(fixture.nativeElement.querySelector('[data-testid="sim-objectives"]')).toBeTruthy();
@@ -75,13 +115,35 @@ describe('SimulatorComponent', () => {
     expect(runBtn.disabled).toBe(false);
   });
 
-  it('clicking run computes a local result (bands render instantly) and increments rate limit', () => {
+  it('clicking run renders the server result bands and increments rate limit', async () => {
     const { post } = setup({ selectedIds: [2, 14] });
+    // The simulator is server-only (the local-compute fallback was removed — sim
+    // math is IP). Bands render only when the edge fn returns a result.
+    post.mockResolvedValueOnce({
+      impressions: 100,
+      ctr: 2,
+      cpM: 6,
+      cvr: 0.5,
+      conversions: 1,
+      roas: 0.1,
+      roasRange: '0.1–0.4×',
+      engRate: 3,
+      clicks: 2,
+      budget: 85_000,
+      bench: { ctrBase: 2, cpmBase: 8, cvrBase: 0.5, roasBase: 2, engBase: 4 },
+      p10: { impressions: 68, ctr: 1.3, roas: 0.07 },
+      p50: { impressions: 100, ctr: 2, roas: 0.1 },
+      p90: { impressions: 142, ctr: 2.8, roas: 0.15 },
+    });
+
     const fixture = TestBed.createComponent(SimulatorComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
     fixture.detectChanges();
 
     const runBtn: HTMLButtonElement = fixture.nativeElement.querySelector('[data-testid="sim-run"]');
     runBtn.click();
+    await fixture.whenStable();
     fixture.detectChanges();
 
     expect(fixture.nativeElement.querySelector('[data-testid="sim-bands"]')).toBeTruthy();
@@ -94,7 +156,7 @@ describe('SimulatorComponent', () => {
     expect(rateLimit.read()).toBe(1);
   });
 
-  it('free tier hitting limit disables the run button and shows banner', () => {
+  it('free tier hitting limit disables the run button and shows banner', async () => {
     setup({ selectedIds: [2], tier: 'free' });
     const rate = TestBed.inject(RateLimitService);
     rate.increment();
@@ -102,6 +164,8 @@ describe('SimulatorComponent', () => {
     rate.increment();
 
     const fixture = TestBed.createComponent(SimulatorComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
     fixture.detectChanges();
 
     const runBtn: HTMLButtonElement = fixture.nativeElement.querySelector('[data-testid="sim-run"]');
@@ -117,9 +181,11 @@ describe('SimulatorComponent', () => {
     expect(fixture.nativeElement.querySelector('[data-testid="sim-rate-limit"]')).toBeNull();
   });
 
-  it('toggling an objective updates the selected set', () => {
+  it('toggling an objective updates the selected set', async () => {
     setup({ selectedIds: [2] });
     const fixture = TestBed.createComponent(SimulatorComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
     fixture.detectChanges();
     const btn: HTMLButtonElement = fixture.nativeElement.querySelector(
       '[data-testid="sim-obj-direct-sales"]',

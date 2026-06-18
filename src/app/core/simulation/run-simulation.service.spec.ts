@@ -85,7 +85,9 @@ describe('RunSimulationService', () => {
     const c = body.creators[0];
     expect(c['id']).toBe('42');
     expect(c['cpi']).toBe('80');
-    expect(c['gfi']).toBe('75');
+    // GFI is no longer sent — the edge fn reads it from `creator_genre_scores`
+    // (or falls back to score-creator on a miss). See run-simulation.service.ts.
+    expect(c['gfi']).toBeUndefined();
     expect(c['language']).toBe('English');
     expect(c['realCVR']).toBe('1.2');
     expect(c['realCPA']).toBeUndefined();

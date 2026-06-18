@@ -147,10 +147,12 @@ describe('CreatorsService.list', () => {
     expect(query.gte).toHaveBeenCalledWith('best_cpi', 70);
   });
 
-  it('minGfi adds gfi gte', async () => {
+  it('minGfi adds gfi gte (requires a genre — GFI is genre-relative)', async () => {
     const { svc, query } = setup();
-    await svc.list({ minGfi: 65 }, 'cpi', 0, 10);
-    expect(query.gte).toHaveBeenCalledWith('gfi', 65);
+    // GFI lives in the genre-keyed `creator_genre_scores` embed, so minGfi only
+    // applies when a genre is set and filters on the embedded dot-notation column.
+    await svc.list({ genre: 'Gaming & Esports', minGfi: 65 }, 'cpi', 0, 10);
+    expect(query.gte).toHaveBeenCalledWith('creator_genre_scores.gfi', 65);
   });
 
   it('minCpi/minGfi=0 is treated as no filter', async () => {

@@ -6,7 +6,31 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DiscoveryComponent } from './discovery.component';
 import { AuthService } from '../../core/auth/auth.service';
 import { SelectionService } from '../../core/selection/selection.service';
+import { CreatorsService } from '../../core/creators/creators.service';
 import { CampaignsRepository } from '../../core/campaigns/campaigns.repository';
+import { Creator, PagedCreators } from '../../core/data/creator.types';
+
+function mkCreator(id: number): Creator {
+  return {
+    id,
+    name: `Creator ${id}`,
+    handle: `@c${id}`,
+    platform: 'YouTube',
+    allPlatforms: ['YouTube'],
+    subs: '100K',
+    subsParsed: 100_000,
+    avgViews: '20K',
+    eng: '3.0%',
+    genre: 'Gaming & Esports',
+    cpi: 80,
+    gfi: 75,
+    color: '#fff',
+    verifiedDeals: 2,
+    sponsorHistory: [],
+    bio: 'bio',
+    rates: { mix: [10_000, 40_000] },
+  };
+}
 
 describe('DiscoveryComponent', () => {
   let router: { navigateByUrl: ReturnType<typeof vi.fn>; navigate: ReturnType<typeof vi.fn> };
@@ -18,6 +42,21 @@ describe('DiscoveryComponent', () => {
       navigate: vi.fn().mockResolvedValue(true),
     };
     tier = signal('free');
+
+    // Creator listing now loads server-side via CreatorsService.list (async),
+    // wrapped in a resource() inside the component. Stub it so the grid renders.
+    const paged: PagedCreators = {
+      creators: [mkCreator(1), mkCreator(2)],
+      total: 2,
+      pageCount: 1,
+      page: 0,
+    };
+    const creatorsStub = {
+      list: vi.fn().mockResolvedValue(paged),
+      genres: signal(['Gaming & Esports', 'Music']),
+      platforms: signal(['YouTube', 'Twitch']),
+      languages: signal(['English']),
+    };
 
     const campaignsRepoStub = {
       list: vi.fn().mockResolvedValue([]),
@@ -43,13 +82,17 @@ describe('DiscoveryComponent', () => {
           },
         },
         { provide: Router, useValue: router },
+        { provide: CreatorsService, useValue: creatorsStub },
         { provide: CampaignsRepository, useValue: campaignsRepoStub },
       ],
     });
   });
 
-  it('renders the filter panel, creator grid, and pagination', () => {
+  it('renders the filter panel, creator grid, and pagination', async () => {
     const fixture = TestBed.createComponent(DiscoveryComponent);
+    fixture.detectChanges();
+    // CreatorsService.list is async (server-backed); let the resource() resolve.
+    await fixture.whenStable();
     fixture.detectChanges();
 
     expect(fixture.nativeElement.querySelector('app-filter-panel')).toBeTruthy();
@@ -102,17 +145,21 @@ describe('DiscoveryComponent', () => {
     expect(router.navigateByUrl).toHaveBeenCalledWith('/app/scoring');
   });
 
-  it('free tier shows blurred rate labels on cards', () => {
+  it('free tier shows blurred rate labels on cards', async () => {
     tier.set('free');
     const fixture = TestBed.createComponent(DiscoveryComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
     fixture.detectChanges();
     const firstRate = fixture.nativeElement.querySelector('[data-testid="creator-rate"]');
     expect(firstRate?.classList.contains('blur-sm')).toBe(true);
   });
 
-  it('silver+ tier shows unblurred rates', () => {
+  it('silver+ tier shows unblurred rates', async () => {
     tier.set('silver');
     const fixture = TestBed.createComponent(DiscoveryComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
     fixture.detectChanges();
     const firstRate = fixture.nativeElement.querySelector('[data-testid="creator-rate"]');
     expect(firstRate?.classList.contains('blur-sm')).toBe(false);

@@ -170,8 +170,16 @@ describe('FilterPanelComponent', () => {
     ).toBe('70');
   });
 
-  it('emits minGfi when the GFI slider moves', () => {
+  it('emits minGfi when the GFI slider moves (genre required — GFI is genre-relative)', () => {
     const fixture = TestBed.createComponent(HostComponent);
+    fixture.detectChanges();
+
+    // The GFI filter is disabled until a genre is picked (GFI is genre-relative).
+    const genre: HTMLSelectElement = fixture.nativeElement.querySelector(
+      '[data-testid="filter-genre"]',
+    );
+    genre.selectedIndex = 1;
+    genre.dispatchEvent(new Event('change'));
     fixture.detectChanges();
 
     const slider: HTMLInputElement = fixture.nativeElement.querySelector(
