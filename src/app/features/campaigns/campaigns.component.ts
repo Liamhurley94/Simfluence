@@ -18,8 +18,7 @@ import { tierRank } from '../../core/types';
       <button
         type="button"
         (click)="createAndOpen()"
-        class="px-4 py-2 rounded text-xs font-bold uppercase tracking-wider"
-        style="background: var(--color-sf-blue); color: white;"
+        class="sf-btn sf-btn-primary text-xs uppercase tracking-wider"
         data-testid="campaigns-new"
       >
         + New campaign
@@ -38,8 +37,7 @@ import { tierRank } from '../../core/types';
 
     @if (svc.campaigns().length === 0 && !svc.loading()) {
       <div
-        class="p-12 rounded-lg text-center"
-        style="background: var(--color-bg-2); border: 1px solid var(--color-border);"
+        class="sf-card p-12 text-center"
         data-testid="campaigns-empty"
       >
         <div class="text-sm font-semibold mb-2" style="color: var(--color-text);">
@@ -57,8 +55,7 @@ import { tierRank } from '../../core/types';
       >
         @for (c of svc.campaigns(); track c.id) {
           <article
-            class="p-4 rounded-lg cursor-pointer hover:opacity-90"
-            style="background: var(--color-bg-2); border: 1px solid var(--color-border);"
+            class="sf-card p-4 cursor-pointer hover:opacity-90"
             [routerLink]="['/app/campaigns', c.id]"
             [attr.data-testid]="'campaign-' + c.id"
           >
@@ -78,15 +75,14 @@ import { tierRank } from '../../core/types';
 
             <div class="flex items-center gap-2 mb-3">
               <span
-                class="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded"
+                class="sf-chip"
                 [style]="statusStyle(c)"
                 [attr.data-testid]="'campaign-status-' + c.id"
               >
                 {{ statusLabel(c) }}
               </span>
               <span
-                class="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded"
-                style="background: var(--color-bg-3); color: var(--color-text-muted);"
+                class="sf-chip"
                 [attr.data-testid]="'campaign-owner-' + c.id"
               >
                 {{ ownershipLabel(c) }}
@@ -118,12 +114,12 @@ import { tierRank } from '../../core/types';
               <p class="text-xs mb-3 line-clamp-2" style="color: var(--color-text);">{{ c.notes }}</p>
             }
 
-            <div class="flex gap-1 text-xs" (click)="$event.stopPropagation()">
+            <div class="flex gap-1" (click)="$event.stopPropagation()">
               <button
                 type="button"
                 (click)="exportPdf(c, $event)"
                 [disabled]="!canExportBrief()"
-                class="flex-1 py-1.5 rounded disabled:opacity-40 disabled:cursor-not-allowed"
+                class="sf-btn flex-1 text-xs disabled:opacity-40 disabled:cursor-not-allowed"
                 style="background: var(--color-sf-cyan); color: #000;"
                 [attr.data-testid]="'campaign-pdf-' + c.id"
               >
@@ -132,8 +128,8 @@ import { tierRank } from '../../core/types';
               <button
                 type="button"
                 (click)="remove(c, $event)"
-                class="px-2 py-1.5 rounded"
-                style="background: transparent; border: 1px solid var(--color-sf-red); color: var(--color-sf-red);"
+                class="sf-btn text-xs"
+                style="background: transparent; border-color: var(--color-sf-red); color: var(--color-sf-red);"
                 [attr.data-testid]="'campaign-delete-' + c.id"
               >
                 Delete

@@ -22,8 +22,7 @@ interface MatchBand {
   imports: [BrowseCreatorsModalComponent, DecimalPipe],
   template: `
     <section
-      class="p-4 rounded-lg"
-      style="background: var(--color-bg-2); border: 1px solid var(--color-border);"
+      class="sf-panel p-4"
       data-testid="section-creators"
     >
       <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
@@ -34,8 +33,7 @@ interface MatchBand {
           type="button"
           (click)="openBrowse()"
           [disabled]="readonly()"
-          class="text-xs px-3 py-1.5 rounded disabled:opacity-40"
-          style="background: var(--color-bg-3); border: 1px solid var(--color-border); color: var(--color-text);"
+          class="sf-btn sf-btn-ghost text-xs disabled:opacity-40"
           data-testid="creators-browse"
         >
           Browse all
@@ -70,18 +68,15 @@ interface MatchBand {
                 }
               </div>
               <div class="flex items-center gap-2 shrink-0">
-                <span
-                  class="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded"
-                  style="background: var(--color-bg-2); color: var(--color-text-muted);"
-                >
+                <span class="sf-chip">
                   {{ cc.source }}
                 </span>
                 <button
                   type="button"
                   (click)="remove(cc.id)"
                   [disabled]="readonly()"
-                  class="text-[10px] px-1.5 py-1 rounded disabled:opacity-40"
-                  style="background: transparent; border: 1px solid var(--color-sf-red); color: var(--color-sf-red);"
+                  class="sf-btn text-[10px] disabled:opacity-40"
+                  style="background: transparent; border-color: var(--color-sf-red); color: var(--color-sf-red);"
                   [attr.data-testid]="'campaign-creator-remove-' + cc.id"
                 >
                   Remove
@@ -283,8 +278,7 @@ interface MatchBand {
                       </div>
                       @if (existingCreatorIds().has(s.creator.id)) {
                         <span
-                          class="text-[9px] uppercase tracking-wider px-2 py-1 rounded shrink-0"
-                          style="background: var(--color-bg-3); color: var(--color-text-muted);"
+                          class="sf-chip shrink-0"
                           data-testid="suggest-added-badge"
                         >
                           Added
@@ -294,8 +288,7 @@ interface MatchBand {
                           type="button"
                           (click)="acceptSuggestion(s, g.persona.name)"
                           [disabled]="readonly()"
-                          class="text-[9px] uppercase tracking-wider px-2.5 py-1 rounded shrink-0 disabled:opacity-40"
-                          style="background: color-mix(in srgb, var(--color-sf-blue) 12%, transparent); border: 1px solid color-mix(in srgb, var(--color-sf-blue) 30%, transparent); color: var(--color-sf-blue);"
+                          class="sf-btn sf-btn-ghost text-[9px] shrink-0 disabled:opacity-40"
                           [attr.data-testid]="'suggest-add-' + s.creator.id"
                         >
                           + Add

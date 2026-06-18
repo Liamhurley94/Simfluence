@@ -16,8 +16,7 @@ const OBJECTIVE_OPTIONS = [
   imports: [FormsModule],
   template: `
     <section
-      class="p-4 rounded-lg"
-      style="background: var(--color-bg-2); border: 1px solid var(--color-border);"
+      class="sf-panel p-4"
       data-testid="section-budget"
     >
       <h2 class="text-xs uppercase tracking-wider font-bold mb-3" style="color: var(--color-text-muted);">
@@ -47,7 +46,7 @@ const OBJECTIVE_OPTIONS = [
               type="button"
               (click)="toggle(opt)"
               [disabled]="readonly"
-              class="px-2 py-1 rounded text-xs"
+              class="sf-chip cursor-pointer disabled:opacity-50"
               [style]="objectiveStyle(opt)"
               [attr.data-testid]="'objective-' + opt"
             >

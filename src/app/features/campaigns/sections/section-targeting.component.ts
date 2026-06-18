@@ -9,8 +9,7 @@ import { Campaign, UpdateCampaign } from '../../../core/campaigns/campaign.types
   imports: [FormsModule],
   template: `
     <section
-      class="p-4 rounded-lg"
-      style="background: var(--color-bg-2); border: 1px solid var(--color-border);"
+      class="sf-panel p-4"
       data-testid="section-targeting"
     >
       <h2 class="text-xs uppercase tracking-wider font-bold mb-3" style="color: var(--color-text-muted);">

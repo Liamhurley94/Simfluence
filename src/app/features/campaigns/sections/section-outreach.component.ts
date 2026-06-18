@@ -19,8 +19,7 @@ import { Campaign } from '../../../core/campaigns/campaign.types';
   imports: [FormsModule],
   template: `
     <section
-      class="p-4 rounded-lg"
-      style="background: var(--color-bg-2); border: 1px solid var(--color-border);"
+      class="sf-panel p-4"
       data-testid="section-outreach"
     >
       <h2 class="text-xs uppercase tracking-wider font-bold mb-3" style="color: var(--color-text-muted);">
@@ -30,8 +29,7 @@ import { Campaign } from '../../../core/campaigns/campaign.types';
       <div class="flex gap-2 mb-3 flex-wrap">
         @for (s of statuses; track s) {
           <div
-            class="text-[10px] px-2 py-1 rounded"
-            style="background: var(--color-bg-3); color: var(--color-text-muted);"
+            class="sf-chip"
             [attr.data-testid]="'outreach-count-' + s"
           >
             {{ labels[s] }}: {{ campaignCreators.statusCounts()[s] }}

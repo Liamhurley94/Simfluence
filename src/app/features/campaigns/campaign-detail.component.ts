@@ -51,11 +51,10 @@ import { SectionForecastComponent } from './sections/section-forecast.component'
             <div class="min-w-0">
               <div class="flex items-center gap-2 mb-1">
                 <h1 class="text-lg font-bold truncate" style="color: var(--color-text);">{{ c.name }}</h1>
-                <span class="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded" [style]="statusStyle()">
+                <span class="sf-chip" [style]="statusStyle()">
                   {{ statusLabel() }}
                 </span>
-                <span class="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded"
-                  style="background: var(--color-bg-3); color: var(--color-text-muted);">
+                <span class="sf-chip">
                   {{ ownershipLabel() }}
                 </span>
               </div>
@@ -69,7 +68,7 @@ import { SectionForecastComponent } from './sections/section-forecast.component'
                   type="button"
                   (click)="start()"
                   [disabled]="!canStart()"
-                  class="px-4 py-2 rounded text-xs font-bold uppercase tracking-wider disabled:opacity-40 disabled:cursor-not-allowed"
+                  class="sf-btn text-xs uppercase tracking-wider disabled:opacity-40 disabled:cursor-not-allowed"
                   style="background: var(--color-sf-green); color: #000;"
                   data-testid="campaign-start"
                 >
@@ -79,7 +78,7 @@ import { SectionForecastComponent } from './sections/section-forecast.component'
                 <button
                   type="button"
                   (click)="complete()"
-                  class="px-4 py-2 rounded text-xs font-bold uppercase tracking-wider"
+                  class="sf-btn text-xs uppercase tracking-wider"
                   style="background: var(--color-sf-cyan); color: #000;"
                   data-testid="campaign-complete"
                 >

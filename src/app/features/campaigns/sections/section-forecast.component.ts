@@ -9,8 +9,7 @@ import { Campaign } from '../../../core/campaigns/campaign.types';
   imports: [DecimalPipe, RouterLink],
   template: `
     <section
-      class="p-4 rounded-lg"
-      style="background: var(--color-bg-2); border: 1px solid var(--color-border);"
+      class="sf-panel p-4"
       data-testid="section-forecast"
     >
       <div class="flex items-center justify-between mb-3">
@@ -21,7 +20,7 @@ import { Campaign } from '../../../core/campaigns/campaign.types';
           <a
             [routerLink]="['/app/simulator']"
             [queryParams]="{ campaign: campaign.id }"
-            class="text-xs px-3 py-1.5 rounded"
+            class="sf-btn text-xs"
             style="background: var(--color-sf-cyan); color: #000;"
             data-testid="forecast-run"
           >
