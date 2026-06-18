@@ -1,51 +1,268 @@
 @import "tailwindcss";
 
+/* ============================================================================
+   Simfluence design tokens — modern social-analytics aesthetic.
+   Dark is the default; `body.light` overrides EVERY token for a legible light
+   theme. Token NAMES are stable contracts (used app-wide via inline
+   `style="var(--color-…)"` and Tailwind utilities like `bg-bg-3`). Tune values,
+   add new tokens — never rename/remove existing ones.
+   ========================================================================== */
 @theme {
-  --color-bg: #07070F;
-  --color-bg-2: #0F0F1F;
-  --color-bg-3: #181830;
-  --color-bg-4: #1A1A34;
-  --color-border: rgba(80, 100, 200, 0.2);
-  --color-border-strong: rgba(80, 100, 200, 0.45);
-  --color-text: #F0F2FF;
-  --color-text-dim: #A0AACC;
-  --color-text-muted: #6B7AA0;
+  /* Surfaces — deep indigo-black with a faint blue cast, stepping up in
+     lightness for elevation. Cleaner + slightly cooler than the old set. */
+  --color-bg: #060713;
+  --color-bg-2: #0C0E1E;
+  --color-bg-3: #14172C;
+  --color-bg-4: #1C2039;
 
-  --color-sf-blue: #0050FF;
-  --color-sf-gold: #FFD400;
-  --color-sf-green: #00C46A;
-  --color-sf-orange: #FF7A00;
-  --color-sf-red: #E60023;
-  --color-sf-cyan: #00BFFF;
-  --color-twitch: #9146FF;
+  /* Hairline borders tinted with the brand blue so edges read on dark glass. */
+  --color-border: rgba(96, 122, 226, 0.18);
+  --color-border-strong: rgba(108, 134, 240, 0.42);
 
+  /* Text — near-white primary, well-separated dim/muted steps for hierarchy. */
+  --color-text: #F1F3FF;
+  --color-text-dim: #A6B0D6;
+  --color-text-muted: #6E7AA6;
+
+  /* Brand accents — same hue families, retuned for vibrance on dark surfaces. */
+  --color-sf-blue: #2563FF;
+  --color-sf-gold: #FFCC33;
+  --color-sf-green: #10D483;
+  --color-sf-orange: #FF8A2B;
+  --color-sf-red: #FF3B5C;
+  --color-sf-cyan: #2FD4FF;
+  --color-twitch: #9B5BFF;
+
+  /* Fonts. Space Grotesk (display) + Manrope (body) + DM Mono (numeric).
+     All three are loaded via <link> in index.html. */
   --font-body: "Manrope", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Archivo Black", sans-serif;
+  --font-display: "Space Grotesk", "Manrope", ui-sans-serif, sans-serif;
   --font-mono: "DM Mono", ui-monospace, monospace;
+
+  /* Radius scale — generous, modern rounding. */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 28px;
+
+  /* Elevation — soft, layered shadows. Tuned for dark; light theme overrides
+     these below to lighter, cooler values so cards still read as elevated. */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.40);
+  --shadow-md: 0 6px 18px -4px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 18px 40px -10px rgba(0, 0, 0, 0.65), 0 6px 14px rgba(0, 0, 0, 0.40);
+  --shadow-glow: 0 0 0 1px rgba(37, 99, 255, 0.25), 0 8px 30px -6px rgba(37, 99, 255, 0.35);
+
+  /* Brand gradients — the signature blue→cyan, plus a subtler surface sheen. */
+  --gradient-brand: linear-gradient(135deg, #2563FF 0%, #2FD4FF 100%);
+  --gradient-brand-soft: linear-gradient(135deg, rgba(37, 99, 255, 0.16) 0%, rgba(47, 212, 255, 0.10) 100%);
 }
 
+/* ----------------------------------------------------------------------------
+   Light theme — full token set. Soft off-white surfaces, deep slate text,
+   accents darkened just enough to keep contrast on light backgrounds.
+   -------------------------------------------------------------------------- */
 body.light {
-  --color-bg: #F5F5F2;
-  --color-bg-2: #ECECE8;
-  --color-bg-3: #DCDCD8;
-  --color-bg-4: #CCCCC8;
-  --color-text: #080A14;
-  --color-text-dim: #3A3A50;
-  --color-text-muted: #6B6B80;
-  --color-sf-blue: #0040CC;
-  --color-sf-gold: #B8960A;
-  --color-twitch: #9146FF;
+  --color-bg: #F4F6FC;
+  --color-bg-2: #FFFFFF;
+  --color-bg-3: #EEF1FA;
+  --color-bg-4: #E3E8F5;
+
+  --color-border: rgba(38, 56, 120, 0.14);
+  --color-border-strong: rgba(38, 56, 120, 0.30);
+
+  --color-text: #0B1024;
+  --color-text-dim: #3A4368;
+  --color-text-muted: #6A7396;
+
+  --color-sf-blue: #1B4DEB;
+  --color-sf-gold: #B0820A;
+  --color-sf-green: #079960;
+  --color-sf-orange: #D9670A;
+  --color-sf-red: #DB2342;
+  --color-sf-cyan: #0E8FC4;
+  --color-twitch: #7C3CE0;
+
+  /* Lighter, cooler elevation so cards lift off the pale background. */
+  --shadow-sm: 0 1px 2px rgba(38, 56, 120, 0.08);
+  --shadow-md: 0 6px 18px -6px rgba(38, 56, 120, 0.18), 0 2px 6px rgba(38, 56, 120, 0.08);
+  --shadow-lg: 0 18px 40px -12px rgba(38, 56, 120, 0.22), 0 6px 14px rgba(38, 56, 120, 0.10);
+  --shadow-glow: 0 0 0 1px rgba(27, 77, 235, 0.18), 0 8px 28px -8px rgba(27, 77, 235, 0.28);
+
+  --gradient-brand: linear-gradient(135deg, #1B4DEB 0%, #0E8FC4 100%);
+  --gradient-brand-soft: linear-gradient(135deg, rgba(27, 77, 235, 0.10) 0%, rgba(14, 143, 196, 0.08) 100%);
 }
 
+/* ----------------------------------------------------------------------------
+   Global base
+   -------------------------------------------------------------------------- */
 html,
 body {
   height: 100%;
   margin: 0;
-  background: var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
+/* Body background: a subtle radial wash from the brand blue fading into the
+   base surface, so empty space has depth instead of flat black/white. */
+body {
+  background-color: var(--color-bg);
+  background-image:
+    radial-gradient(1100px 700px at 12% -10%, rgba(37, 99, 255, 0.10), transparent 60%),
+    radial-gradient(900px 600px at 105% 0%, rgba(47, 212, 255, 0.07), transparent 55%);
+  background-attachment: fixed;
+}
+
+body.light {
+  background-image:
+    radial-gradient(1100px 700px at 12% -10%, rgba(27, 77, 235, 0.07), transparent 60%),
+    radial-gradient(900px 600px at 105% 0%, rgba(14, 143, 196, 0.05), transparent 55%);
+}
+
+/* Gentle theme-toggle crossfade. Scoped to the properties that actually swap
+   on theme change — never `all` (would jank layout/transform animations). */
+*,
+*::before,
+*::after {
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, box-shadow 150ms ease;
+}
+
+/* Respect users who don't want motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none;
+  }
+}
+
+/* Custom scrollbar — slim, brand-tinted, theme-aware. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-strong) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-strong);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-sf-blue);
+  background-clip: padding-box;
+  border: 2px solid transparent;
+}
+
+/* ----------------------------------------------------------------------------
+   Reusable component classes — the new design language. Token-driven so they
+   work in both themes. Adopt these in later per-feature reskin phases.
+   -------------------------------------------------------------------------- */
+@layer components {
+  /* Elevated glassy panel — primary card surface. */
+  .sf-card {
+    background-color: color-mix(in srgb, var(--color-bg-2) 88%, transparent);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    backdrop-filter: blur(12px) saturate(120%);
+    -webkit-backdrop-filter: blur(12px) saturate(120%);
+  }
+
+  /* Flatter container — for grouping without the lifted/glassy treatment. */
+  .sf-panel {
+    background-color: var(--color-bg-2);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+  }
+
+  /* Buttons -------------------------------------------------------------- */
+  .sf-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.55rem 1.1rem;
+    border-radius: var(--radius-md);
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 0.9rem;
+    line-height: 1;
+    cursor: pointer;
+    border: 1px solid transparent;
+    user-select: none;
+    transition: background-color 150ms ease, border-color 150ms ease,
+      color 150ms ease, box-shadow 150ms ease, transform 120ms ease, opacity 150ms ease;
+  }
+
+  .sf-btn:active {
+    transform: translateY(1px);
+  }
+
+  .sf-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* Primary — brand gradient, white text, glow on hover. */
+  .sf-btn-primary {
+    background-image: var(--gradient-brand);
+    color: #ffffff;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .sf-btn-primary:hover:not(:disabled) {
+    box-shadow: var(--shadow-glow);
+  }
+
+  /* Ghost — transparent with a hairline border; fills lightly on hover. */
+  .sf-btn-ghost {
+    background-color: transparent;
+    color: var(--color-text-dim);
+    border-color: var(--color-border-strong);
+  }
+
+  .sf-btn-ghost:hover:not(:disabled) {
+    background-color: var(--color-bg-3);
+    color: var(--color-text);
+    border-color: var(--color-border-strong);
+  }
+
+  /* Chip — small pill for badges/tags/filters. */
+  .sf-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.2rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: 0.01em;
+    background-color: var(--color-bg-3);
+    background-image: var(--gradient-brand-soft);
+    color: var(--color-text-dim);
+    border: 1px solid var(--color-border);
+  }
+}
+
+/* ----------------------------------------------------------------------------
+   Keyframes
+   -------------------------------------------------------------------------- */
 /* Pulse used by the live-channels dot + LiveBadge component. */
 @keyframes livePulse {
   0% { opacity: 1; transform: scale(1); }
