@@ -148,3 +148,64 @@ describe('CreatorCardComponent', () => {
     expect(button.textContent).toContain('Selected');
   });
 });
+
+describe('CreatorCardComponent — show-all (CPI-only) mode', () => {
+  const SHOW_ALL: Creator = {
+    id: 99,
+    name: 'Dual Platform',
+    handle: '@dual',
+    platform: 'YouTube',
+    allPlatforms: ['YouTube', 'Twitch'],
+    subs: '1.5M',
+    subsParsed: 1_500_000,
+    avgViews: '180K',
+    eng: '4.2%',
+    genre: 'Gaming & Esports',
+    cpi: 88,
+    gfi: 72,
+    color: '#00C46A',
+    verifiedDeals: 2,
+    sponsorHistory: ['Acme'],
+    bio: 'test bio',
+    twCpi: 71,
+    ytCpi: 88,
+    bestCpi: 88,
+  };
+
+  @Component({
+    standalone: true,
+    imports: [CreatorCardComponent],
+    template: `<app-creator-card [creator]="creator()" [format]="format()" />`,
+  })
+  class ShowAllHost {
+    creator = signal<Creator>(SHOW_ALL);
+    format = signal<Format>('Integrated');
+  }
+
+  beforeEach(() => {
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({ imports: [ShowAllHost] });
+  });
+
+  it('does NOT render the raw subs/avg-views/eng block', () => {
+    const fixture = TestBed.createComponent(ShowAllHost);
+    fixture.detectChanges();
+    const text = fixture.nativeElement.textContent;
+    // The raw-stat block shows the literal subs/avgViews/eng strings. In show-all
+    // those must be absent (CPI-only). '1.5M' is the SAMPLE subs string.
+    expect(text).not.toContain('1.5M');
+    expect(text).not.toContain('180K');
+    expect(text).not.toContain('4.2%');
+  });
+
+  it('renders the best CPI and both per-platform CPIs for a multi-platform creator', () => {
+    const fixture = TestBed.createComponent(ShowAllHost);
+    fixture.detectChanges();
+    const text = fixture.nativeElement.textContent;
+    expect(text).toContain('88'); // best / yt
+    expect(text).toContain('71'); // tw
+    // Per-platform CPI labels present.
+    expect(text).toContain('YouTube');
+    expect(text).toContain('Twitch');
+  });
+});

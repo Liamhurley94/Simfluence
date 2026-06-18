@@ -110,6 +110,27 @@ const PLATFORM_COLORS: Record<string, string> = {
             {{ freshness() }}
           </div>
         }
+      } @else if (showAllMode()) {
+        @if (showBothCpis()) {
+          <div class="grid grid-cols-2 gap-1 mb-3 text-center" data-testid="creator-platform-cpis">
+            <div class="p-1.5 rounded" style="background: var(--color-bg-3);">
+              <div class="text-[9px] uppercase tracking-wider flex items-center justify-center gap-1" style="color: var(--color-text-muted);">
+                <span style="color: #9146FF;">●</span> Twitch CPI
+              </div>
+              <div class="text-xs font-bold" [style.color]="scoreColor(twCpi()!)">
+                {{ twCpi() }}
+              </div>
+            </div>
+            <div class="p-1.5 rounded" style="background: var(--color-bg-3);">
+              <div class="text-[9px] uppercase tracking-wider flex items-center justify-center gap-1" style="color: var(--color-text-muted);">
+                <span style="color: #FF0000;">●</span> YouTube CPI
+              </div>
+              <div class="text-xs font-bold" [style.color]="scoreColor(ytCpi()!)">
+                {{ ytCpi() }}
+              </div>
+            </div>
+          </div>
+        }
       } @else {
         <div class="grid grid-cols-3 gap-1 mb-3 text-center">
           <div>
@@ -219,6 +240,21 @@ export class CreatorCardComponent {
     const c = this.creator();
     return c.allPlatforms?.length ? c.allPlatforms : [c.platform];
   });
+
+  // Show-all (CPI-only) display: the creator carries a dynamic best CPI and no
+  // platform-filtered YouTube stats embed. In this mode we suppress the raw
+  // subs/avg-views/eng block (no honest cross-platform number) and lead with CPI.
+  readonly showAllMode = computed(() => {
+    const c = this.creator();
+    return c.bestCpi != null && !c.ytStats;
+  });
+
+  readonly bestCpi = computed(() => this.creator().bestCpi ?? null);
+  readonly twCpi = computed(() => this.creator().twCpi ?? null);
+  readonly ytCpi = computed(() => this.creator().ytCpi ?? null);
+
+  // Show both per-platform CPIs only when the creator genuinely has both.
+  readonly showBothCpis = computed(() => this.twCpi() != null && this.ytCpi() != null);
 
   readonly tier = computed(() => tierForSubs(this.creator().subsParsed));
   readonly tierFg = computed(() => CREATOR_TIER_COLORS[this.tier()]);
