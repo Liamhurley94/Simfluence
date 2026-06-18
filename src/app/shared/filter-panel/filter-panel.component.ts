@@ -33,6 +33,10 @@ const FORMAT_OPTIONS: { key: Format; label: string }[] = [
   { key: 'Mixed', label: 'Mixed' },
 ];
 
+// Sentinel for the show-all (no platform filter) mode — CreatorsService.list
+// recognises this exact string and runs the creator_cpi view-backed query.
+const ALL_PLATFORMS = 'All platforms';
+
 @Component({
   selector: 'app-filter-panel',
   standalone: true,
@@ -98,6 +102,7 @@ const FORMAT_OPTIONS: { key: Format; label: string }[] = [
           style="background: rgba(255,255,255,0.05); border: 1px solid var(--color-border); color: var(--color-text);"
           data-testid="filter-platform"
         >
+          <option [ngValue]="allPlatforms">{{ allPlatforms }}</option>
           @for (p of platforms(); track p) {
             <option [ngValue]="p">{{ p }}</option>
           }
@@ -316,9 +321,10 @@ export class FilterPanelComponent {
   readonly sortOptions = SORT_OPTIONS;
   readonly tierOptions = TIER_OPTIONS;
   readonly formatOptions = FORMAT_OPTIONS;
+  readonly allPlatforms = ALL_PLATFORMS;
 
   readonly genre = signal<string | undefined>(undefined);
-  readonly platform_ = signal<string>('YouTube');
+  readonly platform_ = signal<string>(ALL_PLATFORMS);
   readonly languages_ = signal<string[]>([]);
   readonly search = signal<string>('');
   readonly sort = signal<SortKey>('cpi');
@@ -330,7 +336,7 @@ export class FilterPanelComponent {
   readonly hasFilters = computed(
     () =>
       !!this.genre() ||
-      this.platform_() !== 'YouTube' ||
+      this.platform_() !== ALL_PLATFORMS ||
       this.languages_().length > 0 ||
       !!this.search().trim() ||
       !!this.tier() ||
@@ -401,7 +407,7 @@ export class FilterPanelComponent {
 
   clearAll(): void {
     this.genre.set(undefined);
-    this.platform_.set('YouTube');
+    this.platform_.set(ALL_PLATFORMS);
     this.languages_.set([]);
     this.search.set('');
     this.tier.set(undefined);

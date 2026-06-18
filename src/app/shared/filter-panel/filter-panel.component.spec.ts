@@ -86,6 +86,28 @@ describe('FilterPanelComponent', () => {
     expect(fixture.componentInstance.last()?.platform).toBe('Twitch');
   });
 
+  it('renders an "All platforms" option first in the platform dropdown', () => {
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.detectChanges();
+    const select: HTMLSelectElement = fixture.nativeElement.querySelector(
+      '[data-testid="filter-platform"]',
+    );
+    expect(select.options[0].textContent?.trim()).toBe('All platforms');
+  });
+
+  it('defaults the platform filter to "All platforms" (show-all) and emits it', () => {
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.detectChanges();
+    // Trigger an emit via search so we can read the emitted query.
+    const input: HTMLInputElement = fixture.nativeElement.querySelector(
+      '[data-testid="filter-search"]',
+    );
+    input.value = 'x';
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    expect(fixture.componentInstance.last()?.platform).toBe('All platforms');
+  });
+
   it('defaults format to "Integrated" and emits it on every query', () => {
     const fixture = TestBed.createComponent(HostComponent);
     fixture.detectChanges();
@@ -194,7 +216,7 @@ describe('FilterPanelComponent', () => {
     const q = fixture.componentInstance.last();
     expect(q?.search).toBe('');
     expect(q?.genre).toBeUndefined();
-    expect(q?.platform).toBe('YouTube');
+    expect(q?.platform).toBe('All platforms');
     expect(q?.languages?.length).toBe(0);
   });
 });
