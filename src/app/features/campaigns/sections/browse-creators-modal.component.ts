@@ -110,7 +110,12 @@ const PAGE_SIZE = 20;
                   <div class="flex-1 min-w-0">
                     <div class="text-xs font-semibold truncate" style="color: var(--color-text);">{{ c.name }}</div>
                     <div class="text-[10px] truncate" style="color: var(--color-text-muted);">
-                      {{ '@' + (c.handle || '—') }} · {{ c.platform }} · {{ c.subs }} subs
+                      {{ '@' + (c.handle || '—') }} · {{ c.platform }}
+                      @if (c.ytStats; as yt) {
+                        · {{ browseSubsLabel(yt.subscriberCount) }} subs
+                      } @else if (c.twitchStats; as tw) {
+                        · {{ tw.avgCcv | number: '1.0-0' }} avg viewers
+                      }
                     </div>
                   </div>
                   <div class="text-[10px] flex items-center gap-2 shrink-0" style="color: var(--color-text-muted);">
@@ -273,5 +278,11 @@ export class BrowseCreatorsModalComponent {
       .map((p) => p[0] ?? '')
       .join('')
       .toUpperCase();
+  }
+
+  protected browseSubsLabel(n: number): string {
+    if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
+    if (n >= 1_000) return Math.round(n / 1_000) + 'K';
+    return String(n);
   }
 }

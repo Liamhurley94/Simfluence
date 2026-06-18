@@ -1,4 +1,5 @@
 import { Component, computed, effect, inject, input, signal } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
 import { CampaignCreatorsService } from '../../../core/campaigns/campaign-creators.service';
 import {
   CampaignSuggestionGroup,
@@ -18,7 +19,7 @@ interface MatchBand {
 @Component({
   selector: 'app-section-creators',
   standalone: true,
-  imports: [BrowseCreatorsModalComponent],
+  imports: [BrowseCreatorsModalComponent, DecimalPipe],
   template: `
     <section
       class="p-4 rounded-lg"
@@ -254,7 +255,12 @@ interface MatchBand {
                           {{ s.creator.name }}
                         </div>
                         <div class="text-[9px] truncate" style="color: var(--color-text-muted);">
-                          {{ '@' + (s.creator.handle || '—') }} · {{ s.creator.platform }} · {{ s.creator.subs }}
+                          {{ '@' + (s.creator.handle || '—') }} · {{ s.creator.platform }}
+                          @if (s.creator.ytStats; as yt) {
+                            · {{ liveSubsLabel(yt.subscriberCount) }} subs
+                          } @else if (s.creator.twitchStats; as tw) {
+                            · {{ tw.avgCcv | number: '1.0-0' }} avg viewers
+                          }
                         </div>
                       </div>
                       <div class="flex items-center gap-2 shrink-0">
@@ -423,5 +429,11 @@ export class SectionCreatorsComponent {
       .map((p) => p[0] ?? '')
       .join('')
       .toUpperCase();
+  }
+
+  protected liveSubsLabel(n: number): string {
+    if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
+    if (n >= 1_000) return Math.round(n / 1_000) + 'K';
+    return String(n);
   }
 }

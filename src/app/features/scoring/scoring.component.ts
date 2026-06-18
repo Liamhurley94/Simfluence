@@ -13,6 +13,7 @@ import { Creator } from '../../core/data/creator.types';
 import { computeRateRanges, RateRanges } from '../../core/rates/rate-estimate';
 import { Format } from '../../core/simulation/simulation.types';
 import { tierRank } from '../../core/types';
+import { MetricSourceBadgeComponent } from '../../shared/metric-source/metric-source-badge.component';
 
 interface ScoredRow {
   creator: Creator;
@@ -27,7 +28,7 @@ interface ScoredRow {
 @Component({
   selector: 'app-scoring',
   standalone: true,
-  imports: [DecimalPipe, FormsModule, RouterLink],
+  imports: [DecimalPipe, FormsModule, RouterLink, MetricSourceBadgeComponent],
   template: `
     <div class="flex items-center justify-between mb-6">
       <h1 class="text-xl font-bold" style="color: var(--color-text);">Scoring</h1>
@@ -144,7 +145,11 @@ interface ScoredRow {
             {{ topCreator()?.name ?? '—' }}
           </div>
           <div class="text-[9px]" style="color: var(--color-text-muted);">
-            {{ topCreator()?.subs ?? '' }}
+            @if (topCreator()?.ytStats; as yt) {
+              {{ subsLabel(yt.subscriberCount) }} subs
+            } @else if (topCreator()?.twitchStats; as tw) {
+              {{ tw.avgCcv | number: '1.0-0' }} avg viewers
+            }
           </div>
         </div>
         <div
@@ -177,10 +182,16 @@ interface ScoredRow {
           <thead>
             <tr style="background: var(--color-sf-blue); color: white;">
               <th class="text-left p-3 text-[10px] uppercase tracking-wider">Creator</th>
-              <th class="text-right p-3 text-[10px] uppercase tracking-wider">CPI</th>
-              <th class="text-right p-3 text-[10px] uppercase tracking-wider">GFI</th>
+              <th class="text-right p-3 text-[10px] uppercase tracking-wider">
+                CPI <app-metric-source-badge source="simfluence" />
+              </th>
+              <th class="text-right p-3 text-[10px] uppercase tracking-wider">
+                GFI <app-metric-source-badge source="simfluence" />
+              </th>
               <th class="text-left p-3 text-[10px] uppercase tracking-wider w-1/3">Performance</th>
-              <th class="text-right p-3 text-[10px] uppercase tracking-wider">Est. Rate</th>
+              <th class="text-right p-3 text-[10px] uppercase tracking-wider">
+                Est. Rate <app-metric-source-badge source="simfluence" />
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -213,9 +224,19 @@ interface ScoredRow {
                   <div class="text-2xl font-bold leading-none" [style.color]="scoreColor(row.cpi)">
                     {{ row.cpi }}
                   </div>
-                  <div class="text-[9px] mt-1" style="color: var(--color-text-muted);" data-testid="scoring-eng">
-                    {{ row.creator.eng }} eng
-                  </div>
+                  @if (row.creator.ytStats; as yt) {
+                    <div class="text-[9px] mt-1" style="color: var(--color-text-muted);" data-testid="scoring-eng">
+                      {{ yt.engagementRate }}% eng
+                    </div>
+                  } @else if (row.creator.twitchStats; as tw) {
+                    <div class="text-[9px] mt-1" style="color: var(--color-text-muted);" data-testid="scoring-eng">
+                      {{ tw.avgCcv | number: '1.0-0' }} avg viewers
+                    </div>
+                  } @else {
+                    <div class="text-[9px] mt-1" style="color: var(--color-text-muted);" data-testid="scoring-eng">
+                      —
+                    </div>
+                  }
                   @if (score.getBreakdown(row.creator.id); as bd) {
                     <button
                       type="button"
@@ -506,6 +527,10 @@ export class ScoringComponent {
 
   protected rangeLabel(range: [number, number]): string {
     return `$${compact(range[0])}–$${compact(range[1])}`;
+  }
+
+  protected subsLabel(n: number): string {
+    return compact(n);
   }
 }
 
