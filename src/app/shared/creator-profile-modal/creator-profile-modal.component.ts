@@ -1,6 +1,7 @@
 import { Component, computed, inject, resource } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 
+import { MetricSourceBadgeComponent } from '../metric-source/metric-source-badge.component';
 import { CreatorProfileService } from '../../core/creator-profile/creator-profile.service';
 import { YoutubeCreatorService } from '../../core/youtube/youtube-creator.service';
 import { TwitchLiveService } from '../../core/twitch/twitch-live.service';
@@ -67,7 +68,7 @@ function sponsorColor(pct: number): string {
 @Component({
   selector: 'app-creator-profile-modal',
   standalone: true,
-  imports: [DecimalPipe],
+  imports: [DecimalPipe, MetricSourceBadgeComponent],
   template: `
     @if (creator(); as c) {
       <div
@@ -97,7 +98,7 @@ function sponsorColor(pct: number): string {
             <div class="flex-1 min-w-0">
               <div class="text-lg font-bold truncate" style="color: var(--color-text);">{{ c.name }}</div>
               <div class="text-xs truncate" style="color: var(--color-text-muted);">
-                {{ c.handle }} · {{ c.platform }} · {{ c.subs }} subs · {{ c.genre }}
+                {{ c.handle }} · {{ c.platform }} · {{ c.genre }}
               </div>
             </div>
             <button
@@ -130,9 +131,12 @@ function sponsorColor(pct: number): string {
                   class="px-3 py-2 flex items-center justify-between"
                   style="background: var(--color-bg-3);"
                 >
-                  <span class="text-[10px] uppercase tracking-wider font-bold" style="color: var(--color-sf-green);">
-                    YouTube Data
-                  </span>
+                  <div class="flex items-center gap-2">
+                    <span class="text-[10px] uppercase tracking-wider font-bold" style="color: var(--color-sf-green);">
+                      YouTube Data
+                    </span>
+                    <app-metric-source-badge source="youtube" />
+                  </div>
                   @if (yt.isLoading()) {
                     <span class="text-[9px]" style="color: var(--color-text-muted);">Loading…</span>
                   } @else if (data()?.stats_refreshed_at; as ts) {
@@ -217,12 +221,13 @@ function sponsorColor(pct: number): string {
                   data-testid="creator-profile-analysis"
                 >
                   <div
-                    class="px-3 py-2"
+                    class="px-3 py-2 flex items-center gap-2"
                     style="background: var(--color-bg-3);"
                   >
                     <span class="text-[10px] uppercase tracking-wider font-bold" style="color: var(--color-sf-gold);">
                       Simfluence Analysis
                     </span>
+                    <app-metric-source-badge source="simfluence" />
                   </div>
                   <div class="p-3 flex flex-col gap-3">
                     <div class="grid grid-cols-3 gap-2">
@@ -256,18 +261,29 @@ function sponsorColor(pct: number): string {
               }
             }
 
+            @if (!showYoutube() && !showTwitch()) {
+              <div
+                class="p-3 rounded text-center text-xs"
+                style="border: 1px solid var(--color-border); color: var(--color-text-muted);"
+                data-testid="creator-profile-stats-unavailable"
+              >
+                Live stats unavailable for this creator.
+              </div>
+            }
+
             <div
               class="rounded-lg overflow-hidden"
               style="border: 1px solid var(--color-border);"
               data-testid="creator-profile-budget"
             >
               <div
-                class="px-3 py-2"
+                class="px-3 py-2 flex items-center gap-2"
                 style="background: var(--color-bg-3);"
               >
                 <span class="text-[10px] uppercase tracking-wider font-bold" style="color: var(--color-sf-gold);">
                   Estimated Budget Range
                 </span>
+                <app-metric-source-badge source="simfluence" />
               </div>
               <div class="p-3">
                 <div class="grid grid-cols-3 gap-2">
@@ -318,9 +334,12 @@ function sponsorColor(pct: number): string {
                   class="px-3 py-2 flex items-center justify-between"
                   style="background: var(--color-bg-3);"
                 >
-                  <span class="text-[10px] uppercase tracking-wider font-bold" style="color: var(--color-sf-gold);">
-                    Category Benchmarking
-                  </span>
+                  <div class="flex items-center gap-2">
+                    <span class="text-[10px] uppercase tracking-wider font-bold" style="color: var(--color-sf-gold);">
+                      Category Benchmarking
+                    </span>
+                    <app-metric-source-badge source="simfluence" />
+                  </div>
                   <span class="text-[9px]" style="color: var(--color-text-muted);">
                     {{ b.genre }} ({{ b.total_creators | number }} creators)
                   </span>
@@ -412,6 +431,30 @@ function sponsorColor(pct: number): string {
                 </div>
 
                 <div class="p-3 flex flex-col gap-3">
+                  @if (creator()?.twitchStats; as ts) {
+                    <div class="grid grid-cols-3 gap-2" data-testid="creator-profile-twitch-stats">
+                      <div class="p-2 rounded text-center" style="background: var(--color-bg-3);">
+                        <div class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">Avg Viewers</div>
+                        <div class="text-sm font-bold" style="color: #9146FF;">{{ ts.avgCcv | number: '1.0-0' }}</div>
+                      </div>
+                      <div class="p-2 rounded text-center" style="background: var(--color-bg-3);">
+                        <div class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">Peak CCV</div>
+                        <div class="text-sm font-bold" style="color: var(--color-text);">{{ ts.peakCcv | number: '1.0-0' }}</div>
+                      </div>
+                      <div class="p-2 rounded text-center" style="background: var(--color-bg-3);">
+                        <div class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">Streams/30d</div>
+                        <div class="text-sm font-bold" style="color: var(--color-text);">{{ ts.streams30d }}</div>
+                      </div>
+                    </div>
+                    @if (ts.primaryGameName) {
+                      <div class="text-xs text-center" style="color: var(--color-text-muted);">
+                        Top game: <strong>{{ ts.primaryGameName }}</strong>
+                      </div>
+                    }
+                    <div class="flex justify-end">
+                      <app-metric-source-badge source="twitch" />
+                    </div>
+                  }
                   @if (!tw.isLoading() && !twData()) {
                     <div class="text-xs" style="color: var(--color-text-muted);">
                       Twitch live info unavailable — API not configured.
