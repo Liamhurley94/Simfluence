@@ -62,20 +62,23 @@ function makeQuery(initial: Partial<QueryStub['result']> = {}): QueryStub {
 }
 
 function setup(query: QueryStub = makeQuery(), rpc: Mock = vi.fn().mockResolvedValue({ data: [] })) {
-  const supabaseStub = { client: { from: () => query, rpc } };
+  const fromSpy = vi.fn(() => query);
+  const supabaseStub = { client: { from: fromSpy, rpc } };
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({
     providers: [{ provide: SupabaseService, useValue: supabaseStub }],
   });
-  return { svc: TestBed.inject(CreatorsService), query, rpc };
+  return { svc: TestBed.inject(CreatorsService), query, rpc, fromSpy };
 }
 
 describe('CreatorsService.list', () => {
-  it('builds a paginated select with count', async () => {
+  it('builds a paginated select with count and orders by best_cpi (show-all)', async () => {
     const { svc, query } = setup(makeQuery({ data: [], count: 0 }));
     await svc.list({}, 'cpi', 0, 10);
-    expect(query.select).toHaveBeenCalledWith('*', { count: 'exact' });
-    expect(query.order).toHaveBeenCalledWith('cpi', { ascending: false });
+    const selectArg = query.select.mock.calls[0][0] as string;
+    expect(selectArg).toContain('*');
+    expect(query.select.mock.calls[0][1]).toEqual({ count: 'exact' });
+    expect(query.order).toHaveBeenCalledWith('best_cpi', { ascending: false, nullsFirst: false });
     expect(query.range).toHaveBeenCalledWith(0, 9);
   });
 
@@ -138,10 +141,10 @@ describe('CreatorsService.list', () => {
     expect(query.lt).toHaveBeenCalledWith('subs_parsed', 50_000);
   });
 
-  it('minCpi adds cpi gte', async () => {
+  it('minCpi adds best_cpi gte (show-all default mode)', async () => {
     const { svc, query } = setup();
     await svc.list({ minCpi: 70 }, 'cpi', 0, 10);
-    expect(query.gte).toHaveBeenCalledWith('cpi', 70);
+    expect(query.gte).toHaveBeenCalledWith('best_cpi', 70);
   });
 
   it('minGfi adds gfi gte', async () => {
@@ -154,6 +157,47 @@ describe('CreatorsService.list', () => {
     const { svc, query } = setup();
     await svc.list({ minCpi: 0, minGfi: 0 }, 'cpi', 0, 10);
     expect(query.gte).not.toHaveBeenCalled();
+  });
+
+  it('show-all mode (no platform) queries the creator_cpi view', async () => {
+    const { svc, fromSpy } = setup();
+    await svc.list({}, 'cpi', 0, 10);
+    expect(fromSpy).toHaveBeenCalledWith('creator_cpi');
+  });
+
+  it('show-all mode orders by best_cpi descending, NULLS LAST', async () => {
+    const { svc, query } = setup();
+    await svc.list({}, 'cpi', 0, 10);
+    expect(query.order).toHaveBeenCalledWith('best_cpi', { ascending: false, nullsFirst: false });
+  });
+
+  it('show-all mode minCpi filters on best_cpi', async () => {
+    const { svc, query } = setup();
+    await svc.list({ minCpi: 70 }, 'cpi', 0, 10);
+    expect(query.gte).toHaveBeenCalledWith('best_cpi', 70);
+  });
+
+  it('platform-filtered mode (YouTube) queries the creators base table', async () => {
+    const { svc, fromSpy } = setup();
+    await svc.list({ platform: 'YouTube' }, 'cpi', 0, 10);
+    expect(fromSpy).toHaveBeenCalledWith('creators');
+  });
+
+  it('platform-filtered YouTube embeds yt_cpi and sorts cpi on the youtube_creators table', async () => {
+    const { svc, query } = setup();
+    await svc.list({ platform: 'YouTube' }, 'cpi', 0, 10);
+    const selectArg = query.select.mock.calls[0][0] as string;
+    expect(selectArg).toContain('youtube_creators!inner(');
+    expect(selectArg).toContain('yt_cpi');
+    expect(query.order).toHaveBeenCalledWith('yt_cpi', { ascending: false, nullsFirst: false, referencedTable: 'youtube_creators' });
+  });
+
+  it('platform-filtered YouTube minCpi filters on the embedded yt_cpi (dot-notation)', async () => {
+    const { svc, query } = setup();
+    await svc.list({ platform: 'YouTube', minCpi: 60 }, 'cpi', 0, 10);
+    // PostgREST filters on an embedded resource use dot-notation column names —
+    // there is NO referencedTable option on filter methods (only on .order()).
+    expect(query.gte).toHaveBeenCalledWith('youtube_creators.yt_cpi', 60);
   });
 
   it('maps DB row → Creator (snake_case → camelCase, subs_parsed → subsParsed)', async () => {

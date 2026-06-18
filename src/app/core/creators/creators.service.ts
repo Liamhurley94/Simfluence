@@ -14,6 +14,10 @@ const PLATFORM_TABLES: Record<string, string> = {
   Twitter: 'twitter_creators',
 };
 
+// Show-all sentinel: the filter panel's "All platforms" option (see filter-panel.component.ts).
+// When the platform filter is this (or absent), `list()` runs the view-backed show-all mode.
+const ALL_PLATFORMS = 'All platforms';
+
 // Re-exported for SimulatorComponent's local subscriber-count math; the DB
 // has a generated subs_parsed column that does the same thing server-side.
 export function parseSubs(raw: string): number {
@@ -39,7 +43,7 @@ function parseYtStats(row: Record<string, any>): YoutubeStats | undefined {
   };
 }
 
-function fromDb(row: Record<string, any>): Creator {
+function fromDb(row: Record<string, any>, cpiSource: 'best' | 'yt' | 'tw' = 'best'): Creator {
   // GFI lives in `creator_genre_scores` keyed on (creator_id, campaign_genre)
   // and is only populated on `list()` queries with a genre filter. PostgREST
   // returns the embedded resource as an array — flatten to the single row's
@@ -48,6 +52,28 @@ function fromDb(row: Record<string, any>): Creator {
   const gfi: number | null = Array.isArray(scores) && scores.length > 0 && typeof scores[0]?.gfi === 'number'
     ? scores[0].gfi
     : null;
+
+  // Per-platform CPIs. In show-all they arrive as plain view columns (tw_cpi/yt_cpi/
+  // best_cpi). In platform-filtered mode the platform's cpi rides in on the embedded
+  // resource (youtube_creators[].yt_cpi / twitch_creators[].tw_cpi); pull it out.
+  const ytEmbed = row['youtube_creators'];
+  const ytEmbedRow = Array.isArray(ytEmbed) ? ytEmbed[0] : ytEmbed;
+  const twEmbed = row['twitch_creators'];
+  const twEmbedRow = Array.isArray(twEmbed) ? twEmbed[0] : twEmbed;
+
+  const ytCpi: number | null = row['yt_cpi'] ?? (typeof ytEmbedRow?.yt_cpi === 'number' ? ytEmbedRow.yt_cpi : null);
+  const twCpi: number | null = row['tw_cpi'] ?? (typeof twEmbedRow?.tw_cpi === 'number' ? twEmbedRow.tw_cpi : null);
+  const bestCpi: number | null = row['best_cpi'] ?? null;
+
+  // The `cpi` field carries the mode-appropriate CPI: best_cpi in show-all, the
+  // filtered platform's CPI in platform-filtered mode (spec §5). Falls back to the
+  // static creators.cpi only if the dynamic value is absent.
+  const dynamicCpi =
+    cpiSource === 'yt' ? ytCpi :
+    cpiSource === 'tw' ? twCpi :
+    bestCpi;
+  const cpi = dynamicCpi ?? row['cpi'];
+
   return {
     id: row['id'],
     name: row['name'],
@@ -59,7 +85,7 @@ function fromDb(row: Record<string, any>): Creator {
     avgViews: row['avg_views'],
     eng: row['eng'],
     genre: row['genre'],
-    cpi: row['cpi'],
+    cpi,
     gfi,
     color: row['color'],
     verifiedDeals: row['verified_deals'],
@@ -70,6 +96,9 @@ function fromDb(row: Record<string, any>): Creator {
     realCPA: row['real_cpa'],
     rates: row['rates'] ?? undefined,
     ytStats: parseYtStats(row),
+    twCpi,
+    ytCpi,
+    bestCpi,
   };
 }
 
@@ -106,22 +135,36 @@ export class CreatorsService {
     this.loaded.set(true);
   }
 
-  /** Server-side filtered + sorted + paginated query against public.creators.
+  /** Server-side filtered + sorted + paginated creator query.
    *
-   * When `filters.platform` is set, the query INNER JOINs the corresponding
-   * platform table (e.g. `youtube_creators`). For YouTube this brings live
-   * nightly-refreshed stats; for other platforms it filters to that platform's
-   * creators (no live stats yet). The INNER JOIN handles platform filtering
-   * implicitly — no manual `all_platforms` filter needed.
+   * Two modes (CPI Consumer Wiring §5):
+   *  - **Show-all** (no platform filter): queries the `creator_cpi` view and uses
+   *    `best_cpi = greatest(tw_cpi, yt_cpi)` for the minCpi filter and the cpi sort.
+   *    Embeds `creator_genre_scores(gfi)`. No raw per-platform stats (cards show CPI only).
+   *  - **Platform-filtered**: queries the `creators` base table with the existing
+   *    platform `!inner` embed plus that platform's cpi column; filters/sorts cpi on
+   *    the embedded column. Raw platform stats flow through the embed exactly as before.
    *
-   * When `filters.genre` is set, the query joins `creator_genre_scores` so
-   * each row carries a per-genre `gfi`. Both joins can be active simultaneously.
+   * Branching lives here so it ports cleanly to a server-side RPC later (white-label).
    */
   async list(
     filters: CreatorFilters = {},
     sort: SortKey = 'cpi',
     page = 0,
     pageSize = DEFAULT_PAGE_SIZE,
+  ): Promise<PagedCreators> {
+    const showAll = !filters.platform || filters.platform === ALL_PLATFORMS;
+    return showAll
+      ? this.listShowAll(filters, sort, page, pageSize)
+      : this.listPlatformFiltered(filters, sort, page, pageSize);
+  }
+
+  /** Show-all: view-backed, best_cpi-driven, no raw-stat embed. */
+  private async listShowAll(
+    filters: CreatorFilters,
+    sort: SortKey,
+    page: number,
+    pageSize: number,
   ): Promise<PagedCreators> {
     const hasGenre = !!filters.genre;
     const minGfiActive = hasGenre && !!filters.minGfi && filters.minGfi > 0;
@@ -130,17 +173,91 @@ export class CreatorsService {
 
     const selectParts = ['*'];
     if (hasGenre) selectParts.push(`creator_genre_scores${gfiJoin}(gfi)`);
-    const platformTable = filters.platform ? PLATFORM_TABLES[filters.platform] : undefined;
-    if (filters.platform === 'YouTube') {
-      selectParts.push('youtube_creators!inner(subscriber_count, avg_views, engagement_rate, sponsor_freq_pct, stats_refreshed_at)');
+
+    let q = this.supabase.client.from('creator_cpi').select(selectParts.join(', '), { count: 'exact' });
+
+    if (filters.genre) {
+      q = q.eq('genre', filters.genre);
+      q = q.eq('creator_genre_scores.campaign_genre', filters.genre);
+    }
+    if (filters.languages?.length) {
+      q = q.in('language', filters.languages);
+    }
+    if (filters.search?.trim()) {
+      const s = escapeIlike(filters.search.trim());
+      q = q.or(`name.ilike.%${s}%,handle.ilike.%${s}%,bio.ilike.%${s}%`);
+    }
+    if (filters.tier) {
+      const [lo, hi] = CREATOR_TIER_RANGES[filters.tier];
+      q = q.gte('subs_parsed', lo);
+      if (Number.isFinite(hi)) q = q.lt('subs_parsed', hi);
+    }
+    if (filters.minCpi && filters.minCpi > 0) q = q.gte('best_cpi', filters.minCpi);
+    if (hasGenre && filters.minGfi && filters.minGfi > 0) {
+      q = q.gte('creator_genre_scores.gfi', filters.minGfi);
+    }
+    if (filters.maxBudget && filters.maxBudget > 0) {
+      const maxSubs = maxSubsForBudget(filters.maxBudget);
+      if (Number.isFinite(maxSubs)) q = q.lt('subs_parsed', maxSubs);
+    }
+
+    if (sort === 'gfi') {
+      if (hasGenre) {
+        q = q.order('gfi', { ascending: false, referencedTable: 'creator_genre_scores' });
+      } else {
+        q = q.order('subs_parsed', { ascending: false });
+      }
+    } else if (sort === 'cpi') {
+      // NULLS LAST: DESC puts NULLs first by default, which would float null-CPI
+      // creators to the top. Keep them last.
+      q = q.order('best_cpi', { ascending: false, nullsFirst: false });
+    } else {
+      const sortCol = sort === 'subs' ? 'subs_parsed' : sort;
+      const ascending = sort === 'name';
+      q = q.order(sortCol, { ascending });
+    }
+
+    const start = page * pageSize;
+    q = q.range(start, start + pageSize - 1);
+
+    const { data, error, count } = await q;
+    if (error) {
+      console.error('[CreatorsService] listShowAll failed:', error);
+      return { creators: [], total: 0, pageCount: 1, page: 0 };
+    }
+    return this.toPaged(data ?? [], count, page, pageSize, 'best');
+  }
+
+  /** Platform-filtered: base-table, embedded platform cpi column, raw stats as before. */
+  private async listPlatformFiltered(
+    filters: CreatorFilters,
+    sort: SortKey,
+    page: number,
+    pageSize: number,
+  ): Promise<PagedCreators> {
+    const platform = filters.platform!;
+    const hasGenre = !!filters.genre;
+    const minGfiActive = hasGenre && !!filters.minGfi && filters.minGfi > 0;
+    const sortByGfi = sort === 'gfi' && hasGenre;
+    const gfiJoin = minGfiActive || sortByGfi ? '!inner' : '!left';
+
+    const platformTable = PLATFORM_TABLES[platform];
+    const cpiSource: 'yt' | 'tw' = platform === 'Twitch' ? 'tw' : 'yt';
+
+    const selectParts = ['*'];
+    if (hasGenre) selectParts.push(`creator_genre_scores${gfiJoin}(gfi)`);
+    if (platform === 'YouTube') {
+      selectParts.push('youtube_creators!inner(subscriber_count, avg_views, engagement_rate, sponsor_freq_pct, stats_refreshed_at, yt_cpi)');
+    } else if (platform === 'Twitch') {
+      selectParts.push('twitch_creators!inner(handle, tw_cpi)');
     } else if (platformTable) {
       selectParts.push(`${platformTable}!inner(handle)`);
     }
 
     let q = this.supabase.client.from('creators').select(selectParts.join(', '), { count: 'exact' });
 
-    if (filters.platform && !platformTable) {
-      q = q.overlaps('all_platforms', [filters.platform]);
+    if (!platformTable) {
+      q = q.overlaps('all_platforms', [platform]);
     }
 
     if (filters.genre) {
@@ -159,7 +276,15 @@ export class CreatorsService {
       q = q.gte('subs_parsed', lo);
       if (Number.isFinite(hi)) q = q.lt('subs_parsed', hi);
     }
-    if (filters.minCpi && filters.minCpi > 0) q = q.gte('cpi', filters.minCpi);
+    if (filters.minCpi && filters.minCpi > 0) {
+      // Filter on the embedded platform cpi column via PostgREST dot-notation
+      // (filters have NO referencedTable option — that's order()-only). Only
+      // YouTube/Twitch have a cpi column; other platform tables (handle-only
+      // embed) fall back to the static creators.cpi.
+      if (platform === 'YouTube') q = q.gte('youtube_creators.yt_cpi', filters.minCpi);
+      else if (platform === 'Twitch') q = q.gte('twitch_creators.tw_cpi', filters.minCpi);
+      else q = q.gte('cpi', filters.minCpi);
+    }
     if (hasGenre && filters.minGfi && filters.minGfi > 0) {
       q = q.gte('creator_genre_scores.gfi', filters.minGfi);
     }
@@ -174,8 +299,12 @@ export class CreatorsService {
       } else {
         q = q.order('subs_parsed', { ascending: false });
       }
-    } else if (sort === 'subs' && filters.platform === 'YouTube') {
+    } else if (sort === 'subs' && platform === 'YouTube') {
       q = q.order('subscriber_count', { ascending: false, referencedTable: 'youtube_creators' });
+    } else if (sort === 'cpi' && platform === 'YouTube') {
+      q = q.order('yt_cpi', { ascending: false, nullsFirst: false, referencedTable: 'youtube_creators' });
+    } else if (sort === 'cpi' && platform === 'Twitch') {
+      q = q.order('tw_cpi', { ascending: false, nullsFirst: false, referencedTable: 'twitch_creators' });
     } else {
       const sortCol = sort === 'subs' ? 'subs_parsed' : sort;
       const ascending = sort === 'name';
@@ -187,15 +316,25 @@ export class CreatorsService {
 
     const { data, error, count } = await q;
     if (error) {
-      console.error('[CreatorsService] list failed:', error);
+      console.error('[CreatorsService] listPlatformFiltered failed:', error);
       return { creators: [], total: 0, pageCount: 1, page: 0 };
     }
+    return this.toPaged(data ?? [], count, page, pageSize, cpiSource);
+  }
 
+  /** Shared paging + row-mapping tail for both list modes. */
+  private toPaged(
+    rows: Record<string, any>[],
+    count: number | null,
+    page: number,
+    pageSize: number,
+    cpiSource: 'best' | 'yt' | 'tw',
+  ): PagedCreators {
     const total = count ?? 0;
     const pageCount = Math.max(1, Math.ceil(total / pageSize));
     const safePage = Math.min(Math.max(0, page), pageCount - 1);
     return {
-      creators: (data ?? []).map(fromDb),
+      creators: rows.map((r) => fromDb(r, cpiSource)),
       total,
       pageCount,
       page: safePage,
@@ -223,6 +362,6 @@ export class CreatorsService {
       console.error('[CreatorsService] byIds failed:', error);
       return [];
     }
-    return (data ?? []).map(fromDb);
+    return (data ?? []).map((r) => fromDb(r));
   }
 }
