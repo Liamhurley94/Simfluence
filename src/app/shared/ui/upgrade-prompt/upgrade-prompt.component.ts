@@ -10,7 +10,7 @@ import { UpgradePromptService } from '../../../core/upgrade/upgrade-prompt.servi
     @if (service.current(); as req) {
       <div
         class="fixed inset-0 z-50 flex items-center justify-center p-6"
-        style="background: rgba(0, 0, 0, 0.65);"
+        style="background: var(--color-overlay);"
         (click)="service.close()"
         data-testid="upgrade-backdrop"
       >

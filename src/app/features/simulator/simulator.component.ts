@@ -48,7 +48,7 @@ const FORMATS: Format[] = ['Integrated', 'Mixed', 'Dedicated'];
         <a
           routerLink="/app/discovery"
           class="inline-block px-4 py-2 rounded text-xs font-semibold"
-          style="background: var(--color-sf-blue); color: white;"
+          style="background: var(--color-sf-blue); color: var(--color-bg);"
         >
           Go to Discovery
         </a>
@@ -74,7 +74,7 @@ const FORMATS: Format[] = ['Integrated', 'Mixed', 'Dedicated'];
             [ngModel]="budget()"
             (ngModelChange)="budget.set($event || 0)"
             class="w-full px-3 py-2 rounded text-sm"
-            style="background: rgba(255,255,255,0.05); border: 1px solid var(--color-border); color: var(--color-text);"
+            style="background: var(--color-bg-3); border: 1px solid var(--color-border); color: var(--color-text);"
             data-testid="sim-budget"
           />
         </div>
@@ -89,7 +89,7 @@ const FORMATS: Format[] = ['Integrated', 'Mixed', 'Dedicated'];
             [ngModel]="format()"
             (ngModelChange)="format.set($event)"
             class="w-full px-3 py-2 rounded text-sm"
-            style="background: rgba(255,255,255,0.05); border: 1px solid var(--color-border); color: var(--color-text);"
+            style="background: var(--color-bg-3); border: 1px solid var(--color-border); color: var(--color-text);"
             data-testid="sim-format"
           >
             @for (f of formats; track f) {
@@ -108,7 +108,7 @@ const FORMATS: Format[] = ['Integrated', 'Mixed', 'Dedicated'];
             [ngModel]="context.genre()"
             (ngModelChange)="context.genre.set($event)"
             class="w-full px-3 py-2 rounded text-sm"
-            style="background: rgba(255,255,255,0.05); border: 1px solid var(--color-border); color: var(--color-text);"
+            style="background: var(--color-bg-3); border: 1px solid var(--color-border); color: var(--color-text);"
             data-testid="sim-genre"
           >
             @for (g of genres(); track g) {
@@ -133,7 +133,7 @@ const FORMATS: Format[] = ['Integrated', 'Mixed', 'Dedicated'];
               (click)="toggleObjective(o)"
               class="text-[10px] px-2 py-1 rounded"
               [style.background]="selectedObjectives().includes(o) ? 'var(--color-sf-blue)' : 'var(--color-bg-3)'"
-              [style.color]="'#fff'"
+              style="color: var(--color-bg);"
               [attr.data-testid]="'sim-obj-' + slug(o)"
             >
               {{ o }}
@@ -146,7 +146,7 @@ const FORMATS: Format[] = ['Integrated', 'Mixed', 'Dedicated'];
       @if (limit().blocked) {
         <div
           class="p-3 mb-4 rounded-lg text-xs"
-          style="background: rgba(230,0,35,0.08); border: 1px solid var(--color-sf-red); color: var(--color-sf-red);"
+          style="background: color-mix(in srgb, var(--color-sf-red) 8%, transparent); border: 1px solid var(--color-sf-red); color: var(--color-sf-red);"
           data-testid="sim-rate-limit"
         >
           You've used all {{ limit().limit }} simulations for this month. Upgrade your tier for more
@@ -169,7 +169,7 @@ const FORMATS: Format[] = ['Integrated', 'Mixed', 'Dedicated'];
           (click)="run()"
           [disabled]="runDisabled()"
           class="px-4 py-2 rounded text-xs font-bold uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
-          style="background: var(--color-sf-orange); color: white;"
+          style="background: var(--color-sf-orange); color: var(--color-bg);"
           data-testid="sim-run"
         >
           {{ pending() ? 'Running…' : result() ? '▶ Re-run' : '▶ Run simulation' }}
@@ -179,7 +179,7 @@ const FORMATS: Format[] = ['Integrated', 'Mixed', 'Dedicated'];
           (click)="saveToCampaigns()"
           [disabled]="!result()"
           class="px-4 py-2 rounded text-xs font-bold uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
-          style="background: var(--color-sf-green); color: white;"
+          style="background: var(--color-sf-green); color: var(--color-bg);"
           data-testid="sim-save"
         >
           Save to campaigns
@@ -280,7 +280,7 @@ const FORMATS: Format[] = ['Integrated', 'Mixed', 'Dedicated'];
         >
           <div
             class="px-4 py-3 text-[10px] uppercase tracking-wider font-semibold"
-            style="background: var(--color-sf-blue); color: white;"
+            style="background: var(--color-sf-blue); color: var(--color-bg);"
           >
             Base case metrics
           </div>

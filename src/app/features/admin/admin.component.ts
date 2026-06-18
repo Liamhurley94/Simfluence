@@ -20,14 +20,14 @@ import { EnterpriseWithStats } from '../../core/enterprise/enterprise.types';
       @if (loading()) {
         <p class="text-sm" style="color: var(--color-text-muted);">Loading enterprises…</p>
       } @else if (error()) {
-        <p class="text-sm" style="color: #ff8080;">{{ error() }}</p>
+        <p class="text-sm" style="color: var(--color-sf-red);">{{ error() }}</p>
       } @else if (enterprises().length === 0) {
         <p class="text-sm" style="color: var(--color-text-muted);">No enterprises yet.</p>
       } @else {
         <div class="rounded-lg overflow-hidden" style="background: var(--color-bg-2); border: 1px solid var(--color-border);">
           <table class="w-full text-sm" data-testid="admin-enterprises-table">
             <thead>
-              <tr style="color: var(--color-text-muted); background: rgba(255,255,255,0.03);">
+              <tr style="color: var(--color-text-muted); background: var(--color-bg-3);">
                 <th class="text-left px-3 py-2 text-[10px] uppercase tracking-wider font-medium">Name</th>
                 <th class="text-left px-3 py-2 text-[10px] uppercase tracking-wider font-medium">Contact</th>
                 <th class="text-left px-3 py-2 text-[10px] uppercase tracking-wider font-medium">Owner</th>
@@ -91,17 +91,17 @@ export class AdminComponent {
 
   protected badgeBg(status: string): string {
     switch (status) {
-      case 'pending':  return 'rgba(255, 212, 0, 0.15)';
-      case 'active':   return 'rgba(0, 196, 106, 0.15)';
-      case 'rejected': return 'rgba(255, 80, 80, 0.15)';
-      default:         return 'rgba(255,255,255,0.08)';
+      case 'pending':  return 'color-mix(in srgb, var(--color-sf-gold) 15%, transparent)';
+      case 'active':   return 'color-mix(in srgb, var(--color-sf-green) 15%, transparent)';
+      case 'rejected': return 'color-mix(in srgb, var(--color-sf-red) 15%, transparent)';
+      default:         return 'var(--color-bg-3)';
     }
   }
   protected badgeFg(status: string): string {
     switch (status) {
       case 'pending':  return 'var(--color-sf-gold)';
-      case 'active':   return '#00c46a';
-      case 'rejected': return '#ff8080';
+      case 'active':   return 'var(--color-sf-green)';
+      case 'rejected': return 'var(--color-sf-red)';
       default:         return 'var(--color-text-muted)';
     }
   }

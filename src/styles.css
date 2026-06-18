@@ -33,6 +33,9 @@
   --color-sf-cyan: #2FD4FF;
   --color-twitch: #9B5BFF;
 
+  /* Modal/drawer backdrop — dark semi-transparent scrim. */
+  --color-overlay: rgba(0, 0, 0, 0.70);
+
   /* Fonts. Space Grotesk (display) + Manrope (body) + DM Mono (numeric).
      All three are loaded via <link> in index.html. */
   --font-body: "Manrope", ui-sans-serif, system-ui, sans-serif;
@@ -81,6 +84,9 @@ body.light {
   --color-sf-red: #DB2342;
   --color-sf-cyan: #0E8FC4;
   --color-twitch: #7C3CE0;
+
+  /* Backdrop scrim is lighter in light mode so the modal stands out. */
+  --color-overlay: rgba(15, 20, 50, 0.55);
 
   /* Lighter, cooler elevation so cards lift off the pale background. */
   --shadow-sm: 0 1px 2px rgba(38, 56, 120, 0.08);

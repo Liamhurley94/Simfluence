@@ -7,7 +7,7 @@ import { MetricSourceBadgeComponent } from '../metric-source/metric-source-badge
 
 const PLATFORM_COLORS: Record<string, string> = {
   YouTube: '#FF0000',
-  Twitch: '#9146FF',
+  Twitch: 'var(--color-twitch)',
   Instagram: '#E1306C',
   TikTok: '#FFFFFF',
   Kick: '#53FC18',
@@ -30,7 +30,7 @@ const PLATFORM_COLORS: Record<string, string> = {
         <div
           class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0"
           [style.background]="creator().color"
-          [style.color]="'#fff'"
+          style="color: var(--color-bg);"
         >
           {{ initials() }}
         </div>
@@ -73,7 +73,7 @@ const PLATFORM_COLORS: Record<string, string> = {
           <span
             class="text-[9px] px-1.5 py-0.5 rounded uppercase tracking-wider"
             [style.background]="platformColor(p)"
-            [style.color]="p === 'TikTok' ? '#000' : '#fff'"
+            [style.color]="p === 'TikTok' ? '#000' : 'var(--color-bg)'"
           >
             {{ p }}
           </span>
@@ -121,7 +121,7 @@ const PLATFORM_COLORS: Record<string, string> = {
             <div class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">
               Avg Viewers
             </div>
-            <div class="text-xs font-semibold" style="color: #9146FF;">
+            <div class="text-xs font-semibold" style="color: var(--color-twitch);">
               {{ compact(tw.avgCcv) }}
             </div>
           </div>
@@ -155,7 +155,7 @@ const PLATFORM_COLORS: Record<string, string> = {
           <div class="grid grid-cols-2 gap-1 mb-3 text-center" data-testid="creator-platform-cpis">
             <div class="p-1.5 rounded" style="background: var(--color-bg-3);">
               <div class="text-[9px] uppercase tracking-wider flex items-center justify-center gap-1" style="color: var(--color-text-muted);">
-                <span style="color: #9146FF;">●</span> Twitch CPI
+                <span style="color: var(--color-twitch);">●</span> Twitch CPI
               </div>
               <div class="text-xs font-bold" [style.color]="scoreColor(twCpi()!)">
                 {{ twCpi() }}
@@ -236,7 +236,7 @@ const PLATFORM_COLORS: Record<string, string> = {
         type="button"
         class="w-full py-2 rounded text-xs font-semibold uppercase tracking-wider"
         [style.background]="selected() ? 'var(--color-sf-green)' : 'var(--color-sf-blue)'"
-        [style.color]="'#fff'"
+        style="color: var(--color-bg);"
         (click)="onToggle(); $event.stopPropagation()"
         data-testid="creator-toggle"
       >
@@ -277,8 +277,9 @@ export class CreatorCardComponent {
 
   readonly tier = computed(() => tierForSubs(this.creator().subsParsed));
   readonly tierFg = computed(() => CREATOR_TIER_COLORS[this.tier()]);
-  readonly tierBg = computed(() => CREATOR_TIER_COLORS[this.tier()] + '22');
-  readonly tierBorder = computed(() => CREATOR_TIER_COLORS[this.tier()] + '44');
+  // color-mix gives us the 13%/27% alpha equivalents of the old hex+suffix trick.
+  readonly tierBg = computed(() => `color-mix(in srgb, ${CREATOR_TIER_COLORS[this.tier()]} 13%, transparent)`);
+  readonly tierBorder = computed(() => `color-mix(in srgb, ${CREATOR_TIER_COLORS[this.tier()]} 27%, transparent)`);
 
   readonly initials = computed(() => {
     const parts = this.creator().name.trim().split(/\s+/);
@@ -307,7 +308,7 @@ export class CreatorCardComponent {
   });
 
   platformColor(p: string): string {
-    return PLATFORM_COLORS[p] ?? '#888';
+    return PLATFORM_COLORS[p] ?? 'var(--color-text-muted)';
   }
 
   scoreColor(score: number): string {

@@ -73,7 +73,7 @@ function sponsorColor(pct: number): string {
     @if (creator(); as c) {
       <div
         class="fixed inset-0 z-50 flex items-center justify-center p-6"
-        style="background: rgba(0,0,0,0.7);"
+        style="background: var(--color-overlay);"
         (click)="close()"
         data-testid="creator-profile-backdrop"
       >
@@ -91,7 +91,7 @@ function sponsorColor(pct: number): string {
             <div
               class="w-14 h-14 rounded-full flex items-center justify-center text-lg font-bold shrink-0"
               [style.background]="c.color"
-              style="color: white;"
+              style="color: var(--color-bg);"
             >
               {{ initialsOf(c) }}
             </div>
@@ -422,7 +422,7 @@ function sponsorColor(pct: number): string {
                   class="px-3 py-2 flex items-center justify-between"
                   style="background: var(--color-bg-3);"
                 >
-                  <span class="text-[10px] uppercase tracking-wider font-bold" style="color: #9146FF;">
+                  <span class="text-[10px] uppercase tracking-wider font-bold" style="color: var(--color-twitch);">
                     ● Twitch
                   </span>
                   @if (tw.isLoading()) {
@@ -435,7 +435,7 @@ function sponsorColor(pct: number): string {
                     <div class="grid grid-cols-3 gap-2" data-testid="creator-profile-twitch-stats">
                       <div class="p-2 rounded text-center" style="background: var(--color-bg-3);">
                         <div class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">Avg Viewers</div>
-                        <div class="text-sm font-bold" style="color: #9146FF;">{{ ts.avgCcv | number: '1.0-0' }}</div>
+                        <div class="text-sm font-bold" style="color: var(--color-twitch);">{{ ts.avgCcv | number: '1.0-0' }}</div>
                       </div>
                       <div class="p-2 rounded text-center" style="background: var(--color-bg-3);">
                         <div class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">Peak CCV</div>
@@ -491,7 +491,7 @@ function sponsorColor(pct: number): string {
                     @if (activityState() === 'inactive') {
                       <div
                         class="flex items-center gap-2 px-3 py-2 rounded"
-                        style="background: rgba(255,51,85,0.08); border: 1px solid rgba(255,51,85,0.3);"
+                        style="background: color-mix(in srgb, var(--color-sf-red) 8%, transparent); border: 1px solid color-mix(in srgb, var(--color-sf-red) 30%, transparent);"
                         data-testid="creator-profile-twitch-inactivity"
                       >
                         <span style="font-size: 16px;">⚠️</span>
@@ -519,7 +519,7 @@ function sponsorColor(pct: number): string {
                       target="_blank"
                       rel="noopener"
                       class="text-xs px-3 py-1.5 rounded text-center"
-                      style="background: #9146FF; color: white; text-decoration: none;"
+                      style="background: var(--color-twitch); color: var(--color-bg); text-decoration: none;"
                       data-testid="creator-profile-twitch-link"
                     >
                       ▶ View on Twitch

@@ -60,7 +60,7 @@ const ALL_PLATFORMS = 'All platforms';
           (ngModelChange)="onSearch($event)"
           placeholder="Name, handle, bio…"
           class="w-full px-3 py-2 rounded text-sm"
-          style="background: rgba(255,255,255,0.05); border: 1px solid var(--color-border); color: var(--color-text);"
+          style="background: var(--color-bg-3); border: 1px solid var(--color-border); color: var(--color-text);"
           data-testid="filter-search"
         />
       </div>
@@ -77,7 +77,7 @@ const ALL_PLATFORMS = 'All platforms';
           [ngModel]="genre()"
           (ngModelChange)="onGenre($event)"
           class="w-full px-3 py-2 rounded text-sm"
-          style="background: rgba(255,255,255,0.05); border: 1px solid var(--color-border); color: var(--color-text);"
+          style="background: var(--color-bg-3); border: 1px solid var(--color-border); color: var(--color-text);"
           data-testid="filter-genre"
         >
           <option [ngValue]="undefined">All genres</option>
@@ -99,7 +99,7 @@ const ALL_PLATFORMS = 'All platforms';
           [ngModel]="platform_()"
           (ngModelChange)="onPlatform($event)"
           class="w-full px-3 py-2 rounded text-sm"
-          style="background: rgba(255,255,255,0.05); border: 1px solid var(--color-border); color: var(--color-text);"
+          style="background: var(--color-bg-3); border: 1px solid var(--color-border); color: var(--color-text);"
           data-testid="filter-platform"
         >
           <option [ngValue]="allPlatforms">{{ allPlatforms }}</option>
@@ -124,7 +124,7 @@ const ALL_PLATFORMS = 'All platforms';
               (click)="toggleLanguage(l)"
               class="text-[10px] px-2 py-1 rounded"
               [style.background]="languages_().includes(l) ? 'var(--color-sf-blue)' : 'var(--color-bg-3)'"
-              [style.color]="'#fff'"
+              style="color: var(--color-bg);"
             >
               {{ l }}
             </button>
@@ -144,7 +144,7 @@ const ALL_PLATFORMS = 'All platforms';
           [ngModel]="tier()"
           (ngModelChange)="onTier($event)"
           class="w-full px-3 py-2 rounded text-sm"
-          style="background: rgba(255,255,255,0.05); border: 1px solid var(--color-border); color: var(--color-text);"
+          style="background: var(--color-bg-3); border: 1px solid var(--color-border); color: var(--color-text);"
           data-testid="filter-tier"
         >
           <option [ngValue]="undefined">Mixed tiers</option>
@@ -166,7 +166,7 @@ const ALL_PLATFORMS = 'All platforms';
           [ngModel]="format()"
           (ngModelChange)="onFormat($event)"
           class="w-full px-3 py-2 rounded text-sm"
-          style="background: rgba(255,255,255,0.05); border: 1px solid var(--color-border); color: var(--color-text);"
+          style="background: var(--color-bg-3); border: 1px solid var(--color-border); color: var(--color-text);"
           data-testid="filter-format"
         >
           @for (opt of formatOptions; track opt.key) {
@@ -255,7 +255,7 @@ const ALL_PLATFORMS = 'All platforms';
           type="button"
           (click)="promptScoreFilterUpgrade()"
           class="-mt-2 text-[10px] uppercase tracking-wider py-1.5 rounded"
-          style="background: rgba(255,212,0,0.08); border: 1px solid rgba(255,212,0,0.3); color: var(--color-sf-gold);"
+          style="background: color-mix(in srgb, var(--color-sf-gold) 8%, transparent); border: 1px solid color-mix(in srgb, var(--color-sf-gold) 30%, transparent); color: var(--color-sf-gold);"
           data-testid="filter-score-upgrade"
         >
           ★ Gold+ — unlock score filters
@@ -274,7 +274,7 @@ const ALL_PLATFORMS = 'All platforms';
           [ngModel]="sort()"
           (ngModelChange)="onSort($event)"
           class="w-full px-3 py-2 rounded text-sm"
-          style="background: rgba(255,255,255,0.05); border: 1px solid var(--color-border); color: var(--color-text);"
+          style="background: var(--color-bg-3); border: 1px solid var(--color-border); color: var(--color-text);"
           data-testid="filter-sort"
         >
           @for (opt of sortOptions; track opt.key) {

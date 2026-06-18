@@ -88,10 +88,10 @@ export const CREATOR_TIER_RANGES: Record<CreatorTier, [number, number]> = {
 };
 
 export const CREATOR_TIER_COLORS: Record<CreatorTier, string> = {
-  Megastar: '#FFD400',
-  Established: '#FF7A00',
-  'Mid-tier': '#0050FF',
-  Micro: '#00C46A',
+  Megastar: 'var(--color-sf-gold)',
+  Established: 'var(--color-sf-orange)',
+  'Mid-tier': 'var(--color-sf-blue)',
+  Micro: 'var(--color-sf-green)',
 };
 
 export function tierForSubs(subsParsed: number): CreatorTier {

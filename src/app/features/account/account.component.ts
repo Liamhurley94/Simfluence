@@ -50,7 +50,7 @@ interface MemberRow {
               type="button"
               (click)="showApplyForm.set(true)"
               class="px-4 py-2 rounded text-sm font-medium"
-              style="background: rgba(255,255,255,0.08); color: var(--color-text); border: 1px solid var(--color-border-strong);"
+              style="background: var(--color-bg-3); color: var(--color-text); border: 1px solid var(--color-border-strong);"
               data-testid="account-apply-enterprise"
             >
               Apply for Enterprise
@@ -68,7 +68,7 @@ interface MemberRow {
             type="button"
             (click)="showApplyForm.set(true)"
             class="px-4 py-2 rounded text-sm font-medium"
-            style="background: rgba(255,255,255,0.08); color: var(--color-text); border: 1px solid var(--color-border-strong);"
+            style="background: var(--color-bg-3); color: var(--color-text); border: 1px solid var(--color-border-strong);"
             data-testid="account-apply-enterprise"
           >
             Apply for Enterprise
@@ -93,8 +93,8 @@ interface MemberRow {
 
       <!-- REJECTED banner -->
       @if (status() === 'enterprise_rejected') {
-        <div class="p-5 rounded-lg" style="background: rgba(255, 80, 80, 0.08); border: 1px solid rgba(255,80,80,0.5);">
-          <h2 class="text-lg font-bold mb-1" style="color: #ff8080;">Enterprise application rejected</h2>
+        <div class="p-5 rounded-lg" style="background: color-mix(in srgb, var(--color-sf-red) 8%, transparent); border: 1px solid color-mix(in srgb, var(--color-sf-red) 50%, transparent);">
+          <h2 class="text-lg font-bold mb-1" style="color: var(--color-sf-red);">Enterprise application rejected</h2>
           @if (auth.enterprise()?.rejected_reason; as reason) {
             <p class="text-sm" style="color: var(--color-text);">{{ reason }}</p>
           }
@@ -102,7 +102,7 @@ interface MemberRow {
             type="button"
             (click)="showApplyForm.set(true)"
             class="mt-3 px-4 py-2 rounded text-sm font-medium"
-            style="background: rgba(255,255,255,0.08); color: var(--color-text); border: 1px solid var(--color-border-strong);"
+            style="background: var(--color-bg-3); color: var(--color-text); border: 1px solid var(--color-border-strong);"
             data-testid="account-reapply-enterprise"
           >
             Re-apply
@@ -133,7 +133,7 @@ interface MemberRow {
               formControlName="email"
               placeholder="teammate@example.com"
               class="flex-1 px-3 py-2 rounded text-sm"
-              style="background: rgba(255,255,255,0.05); border: 1px solid var(--color-border); color: var(--color-text);"
+              style="background: var(--color-bg-3); border: 1px solid var(--color-border); color: var(--color-text);"
               data-testid="account-invite-email"
             />
             <button
@@ -147,7 +147,7 @@ interface MemberRow {
             </button>
           </form>
           @if (inviteError()) {
-            <p class="mt-2 text-xs" style="color: #ff8080;">{{ inviteError() }}</p>
+            <p class="mt-2 text-xs" style="color: var(--color-sf-red);">{{ inviteError() }}</p>
           }
           @if (inviteSuccess()) {
             <p class="mt-2 text-xs" style="color: var(--color-sf-gold);">{{ inviteSuccess() }}</p>
@@ -193,7 +193,7 @@ interface MemberRow {
       @if (showApplyForm()) {
         <div
           class="fixed inset-0 z-40 flex items-center justify-center p-6"
-          style="background: rgba(0,0,0,0.65);"
+          style="background: var(--color-overlay);"
           (click)="showApplyForm.set(false)"
         >
           <form
@@ -212,7 +212,7 @@ interface MemberRow {
                 type="text"
                 formControlName="name"
                 class="w-full px-3 py-2 rounded text-sm"
-                style="background: rgba(255,255,255,0.05); border: 1px solid var(--color-border); color: var(--color-text);"
+                style="background: var(--color-bg-3); border: 1px solid var(--color-border); color: var(--color-text);"
                 data-testid="apply-enterprise-name"
               />
             </div>
@@ -222,7 +222,7 @@ interface MemberRow {
                 type="email"
                 formControlName="contact_email"
                 class="w-full px-3 py-2 rounded text-sm"
-                style="background: rgba(255,255,255,0.05); border: 1px solid var(--color-border); color: var(--color-text);"
+                style="background: var(--color-bg-3); border: 1px solid var(--color-border); color: var(--color-text);"
                 data-testid="apply-enterprise-contact"
               />
             </div>
@@ -232,13 +232,13 @@ interface MemberRow {
                 rows="3"
                 formControlName="address"
                 class="w-full px-3 py-2 rounded text-sm"
-                style="background: rgba(255,255,255,0.05); border: 1px solid var(--color-border); color: var(--color-text);"
+                style="background: var(--color-bg-3); border: 1px solid var(--color-border); color: var(--color-text);"
                 data-testid="apply-enterprise-address"
               ></textarea>
             </div>
 
             @if (applyError()) {
-              <p class="text-xs" style="color: #ff8080;">{{ applyError() }}</p>
+              <p class="text-xs" style="color: var(--color-sf-red);">{{ applyError() }}</p>
             }
 
             <div class="flex justify-end gap-2 mt-2">

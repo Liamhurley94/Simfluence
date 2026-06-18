@@ -24,7 +24,7 @@ const PAGE_SIZE = 20;
   template: `
     <div
       class="fixed inset-0 z-40 flex items-center justify-center p-4"
-      style="background: rgba(0,0,0,0.6);"
+      style="background: var(--color-overlay);"
       (click)="onBackdrop($event)"
       data-testid="browse-creators-backdrop"
     >
@@ -65,7 +65,7 @@ const PAGE_SIZE = 20;
             (ngModelChange)="onSearch($event)"
             placeholder="Search name, handle, bio…"
             class="flex-1 min-w-0 px-3 py-2 rounded text-sm"
-            style="background: rgba(255,255,255,0.05); border: 1px solid var(--color-border); color: var(--color-text);"
+            style="background: var(--color-bg-3); border: 1px solid var(--color-border); color: var(--color-text);"
             data-testid="browse-creators-search"
           />
           @if (campaignGenre) {
@@ -74,7 +74,7 @@ const PAGE_SIZE = 20;
               (click)="toggleGenreFilter()"
               class="text-[10px] uppercase tracking-wider px-2 py-1.5 rounded"
               [style.background]="genreActive() ? 'var(--color-sf-blue)' : 'var(--color-bg-3)'"
-              style="color: #fff;"
+              style="color: var(--color-bg);"
               data-testid="browse-creators-genre-toggle"
             >
               {{ campaignGenre }}
@@ -103,7 +103,7 @@ const PAGE_SIZE = 20;
                   <div
                     class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0"
                     [style.background]="c.color"
-                    style="color: white;"
+                    style="color: var(--color-bg);"
                   >
                     {{ initialsOf(c.name) }}
                   </div>
@@ -140,7 +140,7 @@ const PAGE_SIZE = 20;
                       (click)="onAdd(c.id)"
                       [disabled]="addingIds().has(c.id)"
                       class="text-[10px] uppercase tracking-wider px-3 py-1 rounded shrink-0 disabled:opacity-50"
-                      style="background: var(--color-sf-blue); color: white;"
+                      style="background: var(--color-sf-blue); color: var(--color-bg);"
                       [attr.data-testid]="'browse-creator-add-' + c.id"
                     >
                       {{ addingIds().has(c.id) ? 'Adding…' : 'Add' }}

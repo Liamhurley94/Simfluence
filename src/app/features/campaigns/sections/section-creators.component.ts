@@ -272,7 +272,8 @@ interface MatchBand {
                           <div class="text-center">
                             <div class="text-[8px]" style="color: var(--color-text-muted);">GFI</div>
                             <div
-                              class="text-xs font-bold px-1.5 rounded text-white"
+                              class="text-xs font-bold px-1.5 rounded"
+                              style="color: var(--color-bg);"
                               [style.background]="bandFor(s.gfi).color"
                             >
                               {{ s.gfi }}%
@@ -294,7 +295,7 @@ interface MatchBand {
                           (click)="acceptSuggestion(s, g.persona.name)"
                           [disabled]="readonly()"
                           class="text-[9px] uppercase tracking-wider px-2.5 py-1 rounded shrink-0 disabled:opacity-40"
-                          style="background: rgba(0,80,255,0.12); border: 1px solid rgba(0,80,255,0.3); color: #6B9FFF;"
+                          style="background: color-mix(in srgb, var(--color-sf-blue) 12%, transparent); border: 1px solid color-mix(in srgb, var(--color-sf-blue) 30%, transparent); color: var(--color-sf-blue);"
                           [attr.data-testid]="'suggest-add-' + s.creator.id"
                         >
                           + Add

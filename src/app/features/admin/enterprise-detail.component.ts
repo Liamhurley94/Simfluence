@@ -15,7 +15,7 @@ interface MemberRow { id: string; email: string | null; tier: string | null; }
   template: `
     <div
       class="fixed inset-0 z-40 flex items-start justify-center p-6 overflow-auto"
-      style="background: rgba(0,0,0,0.7);"
+      style="background: var(--color-overlay);"
       (click)="close()"
     >
       <div
@@ -27,7 +27,7 @@ interface MemberRow { id: string; email: string | null; tier: string | null; }
         @if (loading()) {
           <p class="text-sm" style="color: var(--color-text-muted);">Loading…</p>
         } @else if (error()) {
-          <p class="text-sm" style="color: #ff8080;">{{ error() }}</p>
+          <p class="text-sm" style="color: var(--color-sf-red);">{{ error() }}</p>
         } @else if (enterprise(); as e) {
           <header class="flex justify-between items-start">
             <div>
@@ -93,7 +93,7 @@ interface MemberRow { id: string; email: string | null; tier: string | null; }
                 (click)="showRejectForm.set(!showRejectForm())"
                 [disabled]="busy()"
                 class="px-4 py-2 rounded text-sm"
-                style="background: rgba(255,80,80,0.15); color: #ff8080;"
+                style="background: color-mix(in srgb, var(--color-sf-red) 15%, transparent); color: var(--color-sf-red);"
                 data-testid="admin-reject"
               >
                 Reject
@@ -118,7 +118,7 @@ interface MemberRow { id: string; email: string | null; tier: string | null; }
                   [value]="rejectReason()"
                   (input)="rejectReason.set($any($event.target).value)"
                   class="w-full px-3 py-2 rounded text-sm"
-                  style="background: rgba(255,255,255,0.05); border: 1px solid var(--color-border); color: var(--color-text);"
+                  style="background: var(--color-bg-3); border: 1px solid var(--color-border); color: var(--color-text);"
                   data-testid="admin-reject-reason"
                 ></textarea>
                 <button
@@ -126,7 +126,7 @@ interface MemberRow { id: string; email: string | null; tier: string | null; }
                   (click)="onReject()"
                   [disabled]="busy()"
                   class="mt-2 px-4 py-2 rounded text-sm"
-                  style="background: rgba(255,80,80,0.15); color: #ff8080;"
+                  style="background: color-mix(in srgb, var(--color-sf-red) 15%, transparent); color: var(--color-sf-red);"
                   data-testid="admin-reject-confirm"
                 >Confirm reject</button>
               </div>
@@ -221,8 +221,8 @@ export class EnterpriseDetailComponent {
   protected statusColor(status: string): string {
     switch (status) {
       case 'pending':  return 'var(--color-sf-gold)';
-      case 'active':   return '#00c46a';
-      case 'rejected': return '#ff8080';
+      case 'active':   return 'var(--color-sf-green)';
+      case 'rejected': return 'var(--color-sf-red)';
       default:         return 'var(--color-text-muted)';
     }
   }
