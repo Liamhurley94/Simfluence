@@ -219,7 +219,7 @@ These are infrastructure efforts threaded across the feature phases above. They 
 
 ## Next up
 
-- ⏳ **Twitch + YouTube secrets in staging** — `TWITCH_CLIENT_ID/SECRET`, `YOUTUBE_API_KEY` need to be set in staging Supabase dashboard (Edge Functions → Secrets) for the profile-modal enrichment sections to actually return data. (Owner pending Twitch credential regen.)
+- ✓ **Twitch + YouTube secrets in staging** — `TWITCH_CLIENT_ID/SECRET` and `YOUTUBE_API_KEY` are set in staging (Edge Functions → Secrets). Confirmed live on 2026-06-18: Twitch profile refresh resolved 4,888 / 5,005 creators, live CCV sweeps running every 5 min. `yt_cpi` and `tw_cpi` pipelines both active.
 - ⏳ **Budget slider with debounce** — replace the `<input type="number">` in the Simulator with a slider. Needs ~250–300ms debounce on input → run-simulation call so dragging fires one request when the user lands, not 50 during the drag.
 - ⏳ **Sub-mode bio-keyword alignment** — `run-simulation/index.ts` currently uses a flat `subMode ? 1.08 : 1.0` multiplier. Legacy app.html computed `0.85 + (alignmentRatio * 0.40)` from creator bios matched against `SUBMODE_KEYWORDS`. Port `SUBMODE_KEYWORDS` into the edge fn (or extract it shared via score-creator) and replace the flat multiplier.
 - ⏳ **Discovery platform-filtered redesign** — Discovery currently queries `creators` (platform-neutral). Stats like `subs`/`avg_views` are stale (from app.html sync, never refreshed). Plan: filter by one platform at a time (YouTube default), JOIN the active platform table (`youtube_creators`/`twitch_creators`) so stats on cards are live-refreshed. Needed for YouTube ToS compliance — can't show stale subscriber counts while claiming daily refresh.

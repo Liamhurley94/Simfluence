@@ -33,10 +33,10 @@ export const routes: Routes = [
           import('./features/scoring/scoring.component').then((m) => m.ScoringComponent),
       },
       {
+        // Personas route hidden pending product review — see simfluence-backend/docs/persona-feature-review.md
+        // Component + service files are intentionally kept in place; only the entry points are hidden.
         path: 'personas',
-        canActivate: [tierGuard('silver')],
-        loadComponent: () =>
-          import('./features/personas/personas.component').then((m) => m.PersonasComponent),
+        redirectTo: '/app/discovery',
       },
       {
         path: 'simulator',

@@ -15,7 +15,7 @@ const TABS: Tab[] = [
   { label: 'Dashboard', route: '/app/dashboard' },
   { label: 'Discovery', route: '/app/discovery' },
   { label: 'Scoring', route: '/app/scoring' },
-  { label: 'Personas', route: '/app/personas', minTier: 'silver' },
+  // Personas tab hidden pending product review — see simfluence-backend/docs/persona-feature-review.md
   { label: 'Simulator', route: '/app/simulator' },
   { label: 'Campaigns', route: '/app/campaigns', minTier: 'silver' },
   { label: 'Account', route: '/app/account' },

@@ -32,23 +32,26 @@ describe('SideNavComponent', () => {
     localStorage.clear();
   });
 
-  it('renders 7 tabs for a non-admin (Outreach removed; Admin hidden)', () => {
+  it('renders 6 tabs for a non-admin (Personas hidden; Outreach removed; Admin hidden)', () => {
     const { fixture } = setup('free');
     const anchors = fixture.nativeElement.querySelectorAll('a[data-testid^="nav-"]');
-    expect(anchors.length).toBe(7);
+    expect(anchors.length).toBe(6);
     expect(fixture.nativeElement.querySelector('[data-testid="nav-admin"]')).toBeNull();
+    // Personas tab is hidden pending product review — see simfluence-backend/docs/persona-feature-review.md
+    expect(fixture.nativeElement.querySelector('[data-testid="nav-personas"]')).toBeNull();
   });
 
   it('shows Admin tab for an admin user', () => {
     const { fixture } = setup('free', true);
     const anchors = fixture.nativeElement.querySelectorAll('a[data-testid^="nav-"]');
-    expect(anchors.length).toBe(8);
+    expect(anchors.length).toBe(7);
     expect(fixture.nativeElement.querySelector('[data-testid="nav-admin"]')).toBeTruthy();
   });
 
   it('marks silver+ tabs as locked for free tier', () => {
     const { fixture } = setup('free');
-    const lockedLabels = ['personas', 'campaigns'];
+    // Personas is hidden from nav; Campaigns is the remaining silver-gated tab
+    const lockedLabels = ['campaigns'];
     for (const label of lockedLabels) {
       const anchor = fixture.nativeElement.querySelector(`[data-testid="nav-${label}"]`);
       expect(anchor?.getAttribute('aria-disabled')).toBe('true');
@@ -58,7 +61,8 @@ describe('SideNavComponent', () => {
 
   it('does not lock silver+ tabs for silver tier', () => {
     const { fixture } = setup('silver');
-    const anchor = fixture.nativeElement.querySelector('[data-testid="nav-personas"]');
+    // Campaigns is the visible silver-gated tab (Personas is hidden from nav)
+    const anchor = fixture.nativeElement.querySelector('[data-testid="nav-campaigns"]');
     expect(anchor?.getAttribute('aria-disabled')).toBe('false');
     expect(anchor?.querySelector('[data-testid="nav-lock"]')).toBeNull();
   });
@@ -68,9 +72,9 @@ describe('SideNavComponent', () => {
     const event = new MouseEvent('click', { cancelable: true, bubbles: true });
     (fixture.componentInstance as unknown as {
       onClick: (tab: unknown, e: MouseEvent) => void;
-    }).onClick({ label: 'Personas', route: '/app/personas', minTier: 'silver' }, event);
+    }).onClick({ label: 'Campaigns', route: '/app/campaigns', minTier: 'silver' }, event);
 
-    expect(upgrade.current()).toEqual({ feature: 'Personas', requiredTier: 'silver' });
+    expect(upgrade.current()).toEqual({ feature: 'Campaigns', requiredTier: 'silver' });
     expect(event.defaultPrevented).toBe(true);
   });
 
