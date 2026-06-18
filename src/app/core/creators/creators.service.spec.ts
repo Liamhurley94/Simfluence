@@ -71,6 +71,20 @@ function setup(query: QueryStub = makeQuery(), rpc: Mock = vi.fn().mockResolvedV
   return { svc: TestBed.inject(CreatorsService), query, rpc, fromSpy };
 }
 
+describe('CreatorsService.byId / byIds', () => {
+  it('byIds queries the creator_cpi view so hydrated creators carry best_cpi', async () => {
+    const { svc, fromSpy } = setup();
+    await svc.byIds([1, 2]);
+    expect(fromSpy).toHaveBeenCalledWith('creator_cpi');
+  });
+
+  it('byId queries the creator_cpi view', async () => {
+    const { svc, fromSpy } = setup(makeQuery({ data: { id: 1, name: 'X' } }));
+    await svc.byId(1);
+    expect(fromSpy).toHaveBeenCalledWith('creator_cpi');
+  });
+});
+
 describe('CreatorsService.list', () => {
   it('builds a paginated select with count and orders by best_cpi (show-all)', async () => {
     const { svc, query } = setup(makeQuery({ data: [], count: 0 }));

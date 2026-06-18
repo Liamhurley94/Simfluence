@@ -341,9 +341,13 @@ export class CreatorsService {
     };
   }
 
+  // byId/byIds read the creator_cpi VIEW (not the base creators table) so the
+  // hydrated Creator carries the dynamic best_cpi/tw_cpi/yt_cpi. This keeps the
+  // hydrate-known-creators paths (scoring, simulator, campaign creator/outreach
+  // lists, profile modal) on the dynamic CPI — mirrors campaign-suggest.
   async byId(id: number): Promise<Creator | undefined> {
     const { data, error } = await this.supabase.client
-      .from('creators')
+      .from('creator_cpi')
       .select('*')
       .eq('id', id)
       .maybeSingle();
@@ -355,7 +359,7 @@ export class CreatorsService {
     const arr = Array.from(ids);
     if (arr.length === 0) return [];
     const { data, error } = await this.supabase.client
-      .from('creators')
+      .from('creator_cpi')
       .select('*')
       .in('id', arr);
     if (error) {
