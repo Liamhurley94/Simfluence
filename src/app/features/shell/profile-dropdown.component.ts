@@ -9,8 +9,7 @@ import { AuthService } from '../../core/auth/auth.service';
   imports: [TitleCasePipe],
   template: `
     <div
-      class="absolute right-0 top-full mt-1 w-56 rounded-lg p-2 z-40"
-      style="background: var(--color-bg-2); border: 1px solid var(--color-border);"
+      class="sf-card absolute right-0 top-full mt-1 w-56 p-2 z-40"
       data-testid="profile-dropdown"
     >
       <div class="px-3 py-2 border-b" style="border-color: var(--color-border);">
@@ -28,8 +27,7 @@ import { AuthService } from '../../core/auth/auth.service';
       <button
         type="button"
         (click)="signOut()"
-        class="w-full text-left px-3 py-2 mt-1 rounded text-sm hover:bg-[color:var(--color-bg-3)]"
-        style="color: var(--color-text);"
+        class="sf-btn sf-btn-ghost w-full mt-1 text-xs justify-start"
         data-testid="profile-signout"
       >
         Sign out

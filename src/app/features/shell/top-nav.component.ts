@@ -12,14 +12,16 @@ import { ProfileDropdownComponent } from './profile-dropdown.component';
       class="flex items-center justify-between px-4 py-3 border-b"
       style="background: var(--color-bg-2); border-color: var(--color-border);"
     >
-      <div class="text-sm font-bold" style="color: var(--color-sf-blue);">Simfluence</div>
+      <div
+        class="font-bold tracking-tight"
+        style="font-family: var(--font-display); font-size: 1.05rem; background: var(--gradient-brand); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;"
+      >Simfluence</div>
 
       <div class="flex items-center gap-2">
         <button
           type="button"
           (click)="theme.toggle()"
-          class="text-xs px-2 py-1 rounded"
-          style="color: var(--color-text);"
+          class="sf-btn sf-btn-ghost text-xs"
           [attr.aria-label]="'Switch to ' + (theme.theme() === 'dark' ? 'light' : 'dark') + ' mode'"
           data-testid="theme-toggle"
         >
@@ -30,8 +32,7 @@ import { ProfileDropdownComponent } from './profile-dropdown.component';
           <button
             type="button"
             (click)="toggleProfile()"
-            class="text-xs px-3 py-1.5 rounded"
-            style="background: var(--color-bg-3); color: var(--color-text);"
+            class="sf-btn sf-btn-ghost text-xs"
             [attr.aria-expanded]="profileOpen()"
             data-testid="profile-toggle"
           >
