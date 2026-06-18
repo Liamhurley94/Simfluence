@@ -38,6 +38,15 @@ export interface Creator {
   };
 
   ytStats?: YoutubeStats;
+
+  // Dynamic per-platform CPI from the creator_cpi view (CPI Consumer Wiring §5).
+  // null when that platform's CPI hasn't been computed (no Twitch sessions / no
+  // YT stats). `cpi` above carries the mode-appropriate CPI (bestCpi in show-all,
+  // the filtered platform's CPI in platform-filtered mode); these three carry the
+  // raw per-platform values for the card's CPI display.
+  twCpi?: number | null;
+  ytCpi?: number | null;
+  bestCpi?: number | null;
 }
 
 export type Platform = 'YouTube' | 'Twitch' | 'Instagram' | 'TikTok' | 'Kick' | 'X';
