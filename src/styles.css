@@ -17,6 +17,7 @@
   --color-sf-orange: #FF7A00;
   --color-sf-red: #E60023;
   --color-sf-cyan: #00BFFF;
+  --color-twitch: #9146FF;
 
   --font-body: "Manrope", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Archivo Black", sans-serif;
@@ -33,6 +34,7 @@ body.light {
   --color-text-muted: #6B6B80;
   --color-sf-blue: #0040CC;
   --color-sf-gold: #B8960A;
+  --color-twitch: #9146FF;
 }
 
 html,

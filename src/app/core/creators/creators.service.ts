@@ -1,8 +1,15 @@
 import { Injectable, inject, signal } from '@angular/core';
-import { CREATOR_TIER_RANGES, Creator, CreatorFilters, PagedCreators, SortKey, YoutubeStats, maxSubsForBudget } from '../data/creator.types';
+import { CREATOR_TIER_RANGES, Creator, CreatorFilters, PagedCreators, SortKey, TwitchStats, YoutubeStats, maxSubsForBudget } from '../data/creator.types';
 import { SupabaseService } from '../supabase/supabase.service';
 
 const DEFAULT_PAGE_SIZE = 24;
+
+// Embedded-resource select fragments for fresh per-platform stats. Reused across
+// the platform-filtered list embed and the byId/byIds view embed so the column
+// sets stay in lockstep. NOTE: column names are bare here; callers add the
+// `youtube_creators(...)` / `twitch_creators(...)` wrapper (and any !inner).
+const YT_STATS_COLS = 'subscriber_count, avg_views, engagement_rate, sponsor_freq_pct, stats_refreshed_at';
+const TW_LIVE_COLS = 'avg_ccv, peak_ccv, streams_30d, hours_streamed_30d, last_stream_at, primary_game_name, live_refreshed_at';
 
 const PLATFORM_TABLES: Record<string, string> = {
   YouTube: 'youtube_creators',
@@ -40,6 +47,26 @@ function parseYtStats(row: Record<string, any>): YoutubeStats | undefined {
     engagementRate: d.engagement_rate ?? 0,
     sponsorFreqPct: d.sponsor_freq_pct ?? 0,
     statsRefreshedAt: d.stats_refreshed_at ?? null,
+  };
+}
+
+// Mirror of parseYtStats for the live Twitch aggregates. Gated on avg_ccv being
+// a number: a twitch_creators row with no finalized sessions has all live
+// columns NULL, which means "no live data yet" — return undefined rather than a
+// row of zeros so the rendering phase can distinguish "never live" from "0 CCV".
+function parseTwitchStats(row: Record<string, any>): TwitchStats | undefined {
+  const tw = row['twitch_creators'];
+  if (!tw || (Array.isArray(tw) && tw.length === 0)) return undefined;
+  const d = Array.isArray(tw) ? tw[0] : tw;
+  if (typeof d?.avg_ccv !== 'number') return undefined;
+  return {
+    avgCcv: d.avg_ccv,
+    peakCcv: d.peak_ccv ?? 0,
+    streams30d: d.streams_30d ?? 0,
+    hoursStreamed30d: d.hours_streamed_30d ?? 0,
+    lastStreamAt: d.last_stream_at ?? null,
+    primaryGameName: d.primary_game_name ?? null,
+    liveRefreshedAt: d.live_refreshed_at ?? null,
   };
 }
 
@@ -96,6 +123,7 @@ function fromDb(row: Record<string, any>, cpiSource: 'best' | 'yt' | 'tw' = 'bes
     realCPA: row['real_cpa'],
     rates: row['rates'] ?? undefined,
     ytStats: parseYtStats(row),
+    twitchStats: parseTwitchStats(row),
     twCpi,
     ytCpi,
     bestCpi,
@@ -247,9 +275,9 @@ export class CreatorsService {
     const selectParts = ['*'];
     if (hasGenre) selectParts.push(`creator_genre_scores${gfiJoin}(gfi)`);
     if (platform === 'YouTube') {
-      selectParts.push('youtube_creators!inner(subscriber_count, avg_views, engagement_rate, sponsor_freq_pct, stats_refreshed_at, yt_cpi)');
+      selectParts.push(`youtube_creators!inner(${YT_STATS_COLS}, yt_cpi)`);
     } else if (platform === 'Twitch') {
-      selectParts.push('twitch_creators!inner(handle, tw_cpi)');
+      selectParts.push(`twitch_creators!inner(handle, tw_cpi, ${TW_LIVE_COLS})`);
     } else if (platformTable) {
       selectParts.push(`${platformTable}!inner(handle)`);
     }
@@ -345,10 +373,21 @@ export class CreatorsService {
   // hydrated Creator carries the dynamic best_cpi/tw_cpi/yt_cpi. This keeps the
   // hydrate-known-creators paths (scoring, simulator, campaign creator/outreach
   // lists, profile modal) on the dynamic CPI — mirrors campaign-suggest.
+  //
+  // The embed below pulls FRESH per-platform stats onto the hydrated Creator so
+  // these paths stop showing the stale static creators.subs/avg_views/eng
+  // snapshot. EMPIRICALLY VERIFIED: the creator_cpi view exposes PostgREST
+  // relationships to both youtube_creators and twitch_creators — a probe
+  // (select=id,youtube_creators(subscriber_count),twitch_creators(avg_ccv))
+  // returned 200 with embedded objects (null when the creator has no row /
+  // stats on that platform). So no base-table fallback is needed.
+  private static readonly STATS_EMBED =
+    `*, youtube_creators(${YT_STATS_COLS}), twitch_creators(${TW_LIVE_COLS})`;
+
   async byId(id: number): Promise<Creator | undefined> {
     const { data, error } = await this.supabase.client
       .from('creator_cpi')
-      .select('*')
+      .select(CreatorsService.STATS_EMBED)
       .eq('id', id)
       .maybeSingle();
     if (error || !data) return undefined;
@@ -360,7 +399,7 @@ export class CreatorsService {
     if (arr.length === 0) return [];
     const { data, error } = await this.supabase.client
       .from('creator_cpi')
-      .select('*')
+      .select(CreatorsService.STATS_EMBED)
       .in('id', arr);
     if (error) {
       console.error('[CreatorsService] byIds failed:', error);

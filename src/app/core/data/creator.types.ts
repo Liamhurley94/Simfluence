@@ -6,6 +6,30 @@ export interface YoutubeStats {
   statsRefreshedAt: string | null;
 }
 
+/**
+ * Live Twitch aggregates produced by the live-sweep system
+ * (twitch_finalize_stale_sessions, see backend migration
+ * 20260612100100_twitch_live_functions.sql). These are rolling 30-day
+ * stats — NOT a static snapshot. Mirrors the YoutubeStats shape so both
+ * platforms surface "fresh per-platform data" the same way.
+ */
+export interface TwitchStats {
+  /** Rolling 30d average concurrent viewers. */
+  avgCcv: number;
+  /** Max peak concurrent viewers across the 30d window. */
+  peakCcv: number;
+  /** Number of streams in the last 30 days. */
+  streams30d: number;
+  /** Total hours streamed in the last 30 days. */
+  hoursStreamed30d: number;
+  /** Timestamp of the most recently finalized stream (null if never live). */
+  lastStreamAt: string | null;
+  /** Most-streamed game/category over the 30d window. */
+  primaryGameName: string | null;
+  /** When the live aggregates were last recomputed (the "freshness" stamp). */
+  liveRefreshedAt: string | null;
+}
+
 export interface Creator {
   id: number;
   name: string;
@@ -38,6 +62,7 @@ export interface Creator {
   };
 
   ytStats?: YoutubeStats;
+  twitchStats?: TwitchStats;
 
   // Dynamic per-platform CPI from the creator_cpi view (CPI Consumer Wiring §5).
   // null when that platform's CPI hasn't been computed (no Twitch sessions / no
