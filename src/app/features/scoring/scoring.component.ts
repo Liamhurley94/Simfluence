@@ -73,8 +73,7 @@ interface ScoredRow {
 
     @if (rows().length === 0) {
       <div
-        class="p-12 rounded-lg text-center"
-        style="background: var(--color-bg-2); border: 1px solid var(--color-border);"
+        class="sf-card p-12 text-center"
         data-testid="scoring-empty"
       >
         <div class="text-sm font-semibold mb-2" style="color: var(--color-text);">
@@ -85,8 +84,7 @@ interface ScoredRow {
         </p>
         <a
           routerLink="/app/discovery"
-          class="inline-block px-4 py-2 rounded text-xs font-semibold"
-          style="background: var(--color-sf-blue); color: white;"
+          class="sf-btn sf-btn-primary text-xs"
         >
           Go to Discovery
         </a>
@@ -95,8 +93,7 @@ interface ScoredRow {
       <!-- Summary stats -->
       <div class="grid grid-cols-4 gap-3 mb-6" data-testid="scoring-summary">
         <div
-          class="p-4 rounded-lg"
-          style="background: var(--color-bg-2); border: 1px solid var(--color-border);"
+          class="sf-card p-4"
         >
           <div class="text-[10px] uppercase tracking-wider mb-1" style="color: var(--color-text-muted);">
             Avg CPI Score
@@ -113,8 +110,7 @@ interface ScoredRow {
           </div>
         </div>
         <div
-          class="p-4 rounded-lg"
-          style="background: var(--color-bg-2); border: 1px solid var(--color-border);"
+          class="sf-card p-4"
         >
           <div class="text-[10px] uppercase tracking-wider mb-1" style="color: var(--color-text-muted);">
             Avg GFI Score
@@ -131,8 +127,7 @@ interface ScoredRow {
           </div>
         </div>
         <div
-          class="p-4 rounded-lg"
-          style="background: var(--color-bg-2); border: 1px solid var(--color-border);"
+          class="sf-card p-4"
         >
           <div class="text-[10px] uppercase tracking-wider mb-1" style="color: var(--color-text-muted);">
             Top Creator
@@ -153,8 +148,7 @@ interface ScoredRow {
           </div>
         </div>
         <div
-          class="p-4 rounded-lg"
-          style="background: var(--color-bg-2); border: 1px solid var(--color-border);"
+          class="sf-card p-4"
         >
           <div class="text-[10px] uppercase tracking-wider mb-1" style="color: var(--color-text-muted);">
             Data Confidence
@@ -174,8 +168,7 @@ interface ScoredRow {
 
       <!-- Scoring table -->
       <div
-        class="rounded-lg overflow-hidden mb-6"
-        style="background: var(--color-bg-2); border: 1px solid var(--color-border);"
+        class="sf-card overflow-hidden mb-6"
         data-testid="scoring-table"
       >
         <table class="w-full text-sm">
@@ -340,8 +333,7 @@ interface ScoredRow {
 
       <!-- Genre benchmark — 5-card layout, mirrors prod. -->
       <div
-        class="rounded-lg overflow-hidden"
-        style="background: var(--color-bg-2); border: 1px solid var(--color-border);"
+        class="sf-card overflow-hidden"
         data-testid="genre-benchmark"
       >
         <div

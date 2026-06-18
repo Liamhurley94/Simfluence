@@ -35,8 +35,7 @@ const FORMATS: Format[] = ['Integrated', 'Mixed', 'Dedicated'];
 
     @if (creators().length === 0) {
       <div
-        class="p-12 rounded-lg text-center"
-        style="background: var(--color-bg-2); border: 1px solid var(--color-border);"
+        class="sf-card p-12 text-center"
         data-testid="sim-empty"
       >
         <div class="text-sm font-semibold mb-2" style="color: var(--color-text);">
@@ -47,8 +46,7 @@ const FORMATS: Format[] = ['Integrated', 'Mixed', 'Dedicated'];
         </p>
         <a
           routerLink="/app/discovery"
-          class="inline-block px-4 py-2 rounded text-xs font-semibold"
-          style="background: var(--color-sf-blue); color: var(--color-bg);"
+          class="sf-btn sf-btn-primary text-xs"
         >
           Go to Discovery
         </a>
@@ -56,8 +54,8 @@ const FORMATS: Format[] = ['Integrated', 'Mixed', 'Dedicated'];
     } @else {
       <!-- Controls -->
       <div
-        class="p-4 mb-6 rounded-lg grid gap-4"
-        style="background: var(--color-bg-2); border: 1px solid var(--color-border); grid-template-columns: repeat(3, minmax(0,1fr));"
+        class="sf-panel p-4 mb-6 grid gap-4"
+        style="grid-template-columns: repeat(3, minmax(0,1fr));"
         data-testid="sim-controls"
       >
         <div>
@@ -131,9 +129,10 @@ const FORMATS: Format[] = ['Integrated', 'Mixed', 'Dedicated'];
             <button
               type="button"
               (click)="toggleObjective(o)"
-              class="text-[10px] px-2 py-1 rounded"
-              [style.background]="selectedObjectives().includes(o) ? 'var(--color-sf-blue)' : 'var(--color-bg-3)'"
-              style="color: var(--color-bg);"
+              class="sf-chip cursor-pointer"
+              [style.background]="selectedObjectives().includes(o) ? 'var(--color-sf-blue)' : ''"
+              [style.color]="selectedObjectives().includes(o) ? 'white' : ''"
+              [style.border-color]="selectedObjectives().includes(o) ? 'var(--color-sf-blue)' : ''"
               [attr.data-testid]="'sim-obj-' + slug(o)"
             >
               {{ o }}
@@ -168,7 +167,7 @@ const FORMATS: Format[] = ['Integrated', 'Mixed', 'Dedicated'];
           type="button"
           (click)="run()"
           [disabled]="runDisabled()"
-          class="px-4 py-2 rounded text-xs font-bold uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
+          class="sf-btn text-xs uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
           style="background: var(--color-sf-orange); color: var(--color-bg);"
           data-testid="sim-run"
         >
@@ -178,7 +177,7 @@ const FORMATS: Format[] = ['Integrated', 'Mixed', 'Dedicated'];
           type="button"
           (click)="saveToCampaigns()"
           [disabled]="!result()"
-          class="px-4 py-2 rounded text-xs font-bold uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
+          class="sf-btn text-xs uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
           style="background: var(--color-sf-green); color: var(--color-bg);"
           data-testid="sim-save"
         >
@@ -196,8 +195,8 @@ const FORMATS: Format[] = ['Integrated', 'Mixed', 'Dedicated'];
         <!-- Bands -->
         <div class="grid grid-cols-3 gap-3 mb-6" data-testid="sim-bands">
           <div
-            class="rounded-lg p-4"
-            style="background: var(--color-bg-2); border: 2px solid var(--color-sf-red);"
+            class="sf-card p-4"
+            style="border-color: var(--color-sf-red); border-width: 2px;"
             data-testid="sim-p10"
           >
             <div class="text-[10px] uppercase tracking-wider mb-2" style="color: var(--color-sf-red);">
@@ -219,8 +218,8 @@ const FORMATS: Format[] = ['Integrated', 'Mixed', 'Dedicated'];
             </div>
           </div>
           <div
-            class="rounded-lg p-4"
-            style="background: var(--color-bg-2); border: 2px solid var(--color-sf-gold);"
+            class="sf-card p-4"
+            style="border-color: var(--color-sf-gold); border-width: 2px;"
             data-testid="sim-p50"
           >
             <div
@@ -245,8 +244,8 @@ const FORMATS: Format[] = ['Integrated', 'Mixed', 'Dedicated'];
             </div>
           </div>
           <div
-            class="rounded-lg p-4"
-            style="background: var(--color-bg-2); border: 2px solid var(--color-sf-green);"
+            class="sf-card p-4"
+            style="border-color: var(--color-sf-green); border-width: 2px;"
             data-testid="sim-p90"
           >
             <div
@@ -274,8 +273,7 @@ const FORMATS: Format[] = ['Integrated', 'Mixed', 'Dedicated'];
 
         <!-- Core metrics grid -->
         <div
-          class="rounded-lg overflow-hidden"
-          style="background: var(--color-bg-2); border: 1px solid var(--color-border);"
+          class="sf-card overflow-hidden"
           data-testid="sim-metrics"
         >
           <div
