@@ -43,8 +43,7 @@ const ALL_PLATFORMS = 'All platforms';
   imports: [FormsModule],
   template: `
     <div
-      class="p-4 rounded-lg flex flex-col gap-4"
-      style="background: var(--color-bg-2); border: 1px solid var(--color-border);"
+      class="sf-card p-4 flex flex-col gap-4"
     >
       <!-- Search -->
       <div>
@@ -122,9 +121,10 @@ const ALL_PLATFORMS = 'All platforms';
             <button
               type="button"
               (click)="toggleLanguage(l)"
-              class="text-[10px] px-2 py-1 rounded"
-              [style.background]="languages_().includes(l) ? 'var(--color-sf-blue)' : 'var(--color-bg-3)'"
-              style="color: var(--color-bg);"
+              class="sf-chip cursor-pointer"
+              [style.background]="languages_().includes(l) ? 'var(--color-sf-blue)' : ''"
+              [style.color]="languages_().includes(l) ? 'white' : ''"
+              [style.border-color]="languages_().includes(l) ? 'var(--color-sf-blue)' : ''"
             >
               {{ l }}
             </button>
@@ -292,8 +292,7 @@ const ALL_PLATFORMS = 'All platforms';
         <button
           type="button"
           (click)="clearAll()"
-          class="text-xs py-1.5 rounded"
-          style="background: transparent; border: 1px solid var(--color-border); color: var(--color-text-muted);"
+          class="sf-btn sf-btn-ghost text-xs w-full"
           data-testid="filter-clear"
         >
           Clear filters

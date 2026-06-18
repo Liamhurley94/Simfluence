@@ -20,9 +20,8 @@ const PLATFORM_COLORS: Record<string, string> = {
   imports: [MetricSourceBadgeComponent],
   template: `
     <div
-      class="rounded-lg p-4 transition cursor-pointer"
-      [style.background]="'var(--color-bg-2)'"
-      [style.border]="selected() ? '2px solid ' + creator().color : '1px solid var(--color-border)'"
+      class="sf-card p-4 cursor-pointer"
+      [style.border]="selected() ? '2px solid ' + creator().color : ''"
       (click)="onToggle()"
       data-testid="creator-card"
     >

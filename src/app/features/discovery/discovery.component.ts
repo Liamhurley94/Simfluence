@@ -40,8 +40,8 @@ const EMPTY_PAGE: PagedCreators = { creators: [], total: 0, pageCount: 1, page: 
 
         @if (selection.hasAny()) {
           <div
-            class="mb-4 p-3 rounded-lg flex items-center justify-between flex-wrap gap-2"
-            style="background: var(--color-bg-2); border: 1px solid var(--color-sf-blue);"
+            class="sf-panel mb-4 p-3 flex items-center justify-between flex-wrap gap-2"
+            style="border-color: var(--color-sf-blue);"
             data-testid="selection-bar"
           >
             <div class="text-sm" style="color: var(--color-text);">
@@ -51,8 +51,7 @@ const EMPTY_PAGE: PagedCreators = { creators: [], total: 0, pageCount: 1, page: 
               <button
                 type="button"
                 (click)="clearSelection()"
-                class="text-xs px-3 py-1.5 rounded"
-                style="background: transparent; border: 1px solid var(--color-border); color: var(--color-text);"
+                class="sf-btn sf-btn-ghost text-xs"
                 data-testid="selection-clear"
               >
                 Clear
@@ -60,8 +59,7 @@ const EMPTY_PAGE: PagedCreators = { creators: [], total: 0, pageCount: 1, page: 
               <button
                 type="button"
                 (click)="goToScoring()"
-                class="text-xs px-3 py-1.5 rounded font-semibold"
-                style="background: var(--color-sf-blue); color: white;"
+                class="sf-btn sf-btn-primary text-xs"
                 data-testid="selection-score"
               >
                 Score selected →
@@ -82,8 +80,7 @@ const EMPTY_PAGE: PagedCreators = { creators: [], total: 0, pageCount: 1, page: 
 
         @if (results.value().total === 0) {
           <div
-            class="p-12 rounded-lg text-center"
-            style="background: var(--color-bg-2); border: 1px solid var(--color-border);"
+            class="sf-card p-12 text-center"
             data-testid="empty-state"
           >
             <div class="text-sm font-semibold mb-2" style="color: var(--color-text);">
