@@ -104,10 +104,10 @@ describe('CreatorsService.list', () => {
     expect(query.eq).toHaveBeenCalledWith('genre', 'Gaming & Esports');
   });
 
-  it('applies platforms filter via .overlaps on all_platforms', async () => {
+  it('applies a non-table platform filter via .overlaps on all_platforms', async () => {
     const { svc, query } = setup();
-    await svc.list({ platforms: ['Twitch', 'YouTube'] }, 'cpi', 0, 10);
-    expect(query.overlaps).toHaveBeenCalledWith('all_platforms', ['Twitch', 'YouTube']);
+    await svc.list({ platform: 'Kick' }, 'cpi', 0, 10);
+    expect(query.overlaps).toHaveBeenCalledWith('all_platforms', ['Kick']);
   });
 
   it('applies languages filter via .in', async () => {

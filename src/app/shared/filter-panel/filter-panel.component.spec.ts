@@ -72,17 +72,18 @@ describe('FilterPanelComponent', () => {
     expect(fixture.componentInstance.last()?.genre).toBeTruthy();
   });
 
-  it('toggles platform selection via chip click', () => {
+  it('emits the selected platform when the platform select changes', () => {
     const fixture = TestBed.createComponent(HostComponent);
     fixture.detectChanges();
-    const twitchBtn: HTMLButtonElement = fixture.nativeElement.querySelector(
-      '[data-testid="filter-platform-twitch"]',
+    const select: HTMLSelectElement = fixture.nativeElement.querySelector(
+      '[data-testid="filter-platform"]',
     );
-    twitchBtn.click();
-    expect(fixture.componentInstance.last()?.platforms).toContain('Twitch');
-
-    twitchBtn.click();
-    expect(fixture.componentInstance.last()?.platforms).not.toContain('Twitch');
+    // Options: 0 = "All platforms" (show-all sentinel), then the RPC platforms
+    // ['YouTube','Twitch']. Pick the last (Twitch).
+    select.selectedIndex = select.options.length - 1;
+    select.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+    expect(fixture.componentInstance.last()?.platform).toBe('Twitch');
   });
 
   it('defaults format to "Integrated" and emits it on every query', () => {
@@ -193,7 +194,7 @@ describe('FilterPanelComponent', () => {
     const q = fixture.componentInstance.last();
     expect(q?.search).toBe('');
     expect(q?.genre).toBeUndefined();
-    expect(q?.platforms?.length).toBe(0);
+    expect(q?.platform).toBe('YouTube');
     expect(q?.languages?.length).toBe(0);
   });
 });
