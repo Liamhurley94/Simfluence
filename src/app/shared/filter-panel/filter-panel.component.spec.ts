@@ -108,7 +108,7 @@ describe('FilterPanelComponent', () => {
     expect(fixture.componentInstance.last()?.platform).toBe('All platforms');
   });
 
-  it('defaults format to "Integrated" and emits it on every query', () => {
+  it('defaults format to "Mixed" and emits it on every query', () => {
     const fixture = TestBed.createComponent(HostComponent);
     fixture.detectChanges();
 
@@ -120,7 +120,7 @@ describe('FilterPanelComponent', () => {
     input.dispatchEvent(new Event('input'));
     fixture.detectChanges();
 
-    expect(fixture.componentInstance.last()?.format).toBe('Integrated');
+    expect(fixture.componentInstance.last()?.format).toBe('Mixed');
   });
 
   it('emits the new format when the format select changes', () => {
