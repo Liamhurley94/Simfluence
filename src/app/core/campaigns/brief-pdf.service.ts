@@ -41,17 +41,17 @@ export class BriefPdfService {
         <div class="bands">
           <div class="band worst">
             <div class="label">P10 · Worst case</div>
-            <div class="value">${f.p10.impressions.toLocaleString()} impressions</div>
+            <div class="value">${f.p10.impressions.toLocaleString('en-GB')} impressions</div>
             <div class="sub">CTR ${f.p10.ctr}% · ROAS ${f.p10.roas}×</div>
           </div>
           <div class="band base">
             <div class="label">P50 · Base case</div>
-            <div class="value">${f.p50.impressions.toLocaleString()} impressions</div>
+            <div class="value">${f.p50.impressions.toLocaleString('en-GB')} impressions</div>
             <div class="sub">CTR ${f.p50.ctr}% · ROAS ${f.p50.roas}×</div>
           </div>
           <div class="band best">
             <div class="label">P90 · Best case</div>
-            <div class="value">${f.p90.impressions.toLocaleString()} impressions</div>
+            <div class="value">${f.p90.impressions.toLocaleString('en-GB')} impressions</div>
             <div class="sub">CTR ${f.p90.ctr}% · ROAS ${f.p90.roas}×</div>
           </div>
         </div>
@@ -90,7 +90,7 @@ export class BriefPdfService {
   <div class="meta">
     <div><div class="k">Client</div><div class="v">${escapeHtml(campaign.client || '—')}</div></div>
     <div><div class="k">Genre</div><div class="v">${escapeHtml(campaign.genre || '—')}</div></div>
-    <div><div class="k">Budget</div><div class="v">${campaign.budget == null ? '—' : '$' + campaign.budget.toLocaleString()}</div></div>
+    <div><div class="k">Budget</div><div class="v">${campaign.budget == null ? '—' : '$' + campaign.budget.toLocaleString('en-GB')}</div></div>
     <div><div class="k">Started</div><div class="v">${campaign.startedAt ? new Date(campaign.startedAt).toLocaleDateString() : '—'}</div></div>
     <div><div class="k">Creators</div><div class="v">${creatorCount}</div></div>
   </div>
