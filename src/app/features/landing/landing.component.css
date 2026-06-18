@@ -1,0 +1,154 @@
+/* Landing-page motion + layout. Token-driven so it works in both themes.
+   All non-essential motion is gated behind prefers-reduced-motion below. */
+
+:host {
+  display: block;
+}
+
+/* ---- Scroll reveal (driven by ScrollRevealDirective) -------------------- */
+.sf-reveal {
+  opacity: 0;
+  transform: translateY(22px);
+  transition:
+    opacity 620ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 620ms cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+.sf-reveal-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* ---- Animated gradient mesh behind the hero ---------------------------- */
+.sf-hero-mesh {
+  position: absolute;
+  inset: -20% -10% auto -10%;
+  height: 130%;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(40% 40% at 18% 22%, rgba(37, 99, 255, 0.35), transparent 70%),
+    radial-gradient(38% 38% at 82% 18%, rgba(47, 212, 255, 0.28), transparent 70%),
+    radial-gradient(45% 45% at 60% 80%, rgba(155, 91, 255, 0.22), transparent 72%);
+  filter: blur(14px);
+  animation: sfMeshDrift 22s ease-in-out infinite alternate;
+}
+body.light .sf-hero-mesh {
+  background:
+    radial-gradient(40% 40% at 18% 22%, rgba(27, 77, 235, 0.2), transparent 70%),
+    radial-gradient(38% 38% at 82% 18%, rgba(14, 143, 196, 0.16), transparent 70%),
+    radial-gradient(45% 45% at 60% 80%, rgba(124, 60, 224, 0.12), transparent 72%);
+}
+@keyframes sfMeshDrift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(2%, -2%, 0) scale(1.06);
+  }
+  100% {
+    transform: translate3d(-2%, 1%, 0) scale(1.02);
+  }
+}
+
+/* Faint grid overlay for that "analytics" texture. */
+.sf-hero-grid {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, var(--color-border) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--color-border) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(75% 65% at 50% 35%, #000 0%, transparent 80%);
+  -webkit-mask-image: radial-gradient(75% 65% at 50% 35%, #000 0%, transparent 80%);
+  opacity: 0.5;
+}
+
+/* ---- Floating glass cards in the hero ---------------------------------- */
+.sf-float {
+  animation: sfFloat 6s ease-in-out infinite;
+}
+.sf-float-slow {
+  animation: sfFloat 8.5s ease-in-out infinite;
+}
+.sf-float-delay {
+  animation-delay: -3s;
+}
+@keyframes sfFloat {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+/* ---- Gradient text for headline accents ------------------------------- */
+.sf-grad-text {
+  background-image: var(--gradient-brand);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ---- Animated chart: stroke-draw + area fade -------------------------- */
+.sf-chart-line {
+  stroke-dasharray: 600;
+  stroke-dashoffset: 600;
+  animation: sfDraw 2.4s ease-out 0.3s forwards;
+}
+.sf-chart-area {
+  opacity: 0;
+  animation: sfFade 1.6s ease-out 1.6s forwards;
+}
+@keyframes sfDraw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes sfFade {
+  to {
+    opacity: 1;
+  }
+}
+
+/* ---- Card hover lift ---------------------------------------------------- */
+.sf-lift {
+  transition:
+    transform 220ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 220ms ease;
+}
+.sf-lift:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* ---- Reduced motion: kill all non-essential animation ----------------- */
+@media (prefers-reduced-motion: reduce) {
+  .sf-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .sf-hero-mesh,
+  .sf-float,
+  .sf-float-slow,
+  .sf-chart-line,
+  .sf-chart-area {
+    animation: none;
+  }
+  .sf-chart-line {
+    stroke-dashoffset: 0;
+  }
+  .sf-chart-area {
+    opacity: 1;
+  }
+  .sf-lift:hover {
+    transform: none;
+  }
+}

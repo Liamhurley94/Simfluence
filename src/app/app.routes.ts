@@ -4,7 +4,14 @@ import { tierGuard } from './core/auth/tier.guard';
 import { adminGuard } from './core/auth/admin.guard';
 
 export const routes: Routes = [
-  { path: '', pathMatch: 'full', redirectTo: '/app/dashboard' },
+  // Public marketing landing — the pre-auth face of the app. Lives at the root
+  // so unauthenticated visitors see it instead of being bounced to /login.
+  {
+    path: '',
+    pathMatch: 'full',
+    loadComponent: () =>
+      import('./features/landing/landing.component').then((m) => m.LandingComponent),
+  },
   {
     path: 'login',
     loadComponent: () =>
