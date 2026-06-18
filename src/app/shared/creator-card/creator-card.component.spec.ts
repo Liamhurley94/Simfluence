@@ -24,6 +24,13 @@ const SAMPLE: Creator = {
   sponsorHistory: ['Acme'],
   bio: 'test bio',
   rates: { mix: [10_000, 40_000] },
+  ytStats: {
+    subscriberCount: 1_500_000,
+    avgViews: 180_000,
+    engagementRate: 4.2,
+    sponsorFreqPct: 15,
+    statsRefreshedAt: null,
+  },
 };
 
 @Component({
@@ -61,9 +68,65 @@ describe('CreatorCardComponent', () => {
     const el = fixture.nativeElement;
     expect(el.querySelector('[data-testid="creator-name"]').textContent).toContain('Test Creator');
     expect(el.textContent).toContain('@test');
+    // Live YT stats — compact(1_500_000) = '1.5M' from ytStats.subscriberCount
     expect(el.textContent).toContain('1.5M');
     expect(el.textContent).toContain('85');
     expect(el.textContent).toContain('72');
+    // YouTube source badge
+    expect(el.querySelector('[data-testid="metric-source-youtube"]')).toBeTruthy();
+  });
+
+  it('shows muted placeholder and no platform badges when creator has no ytStats or twitchStats', () => {
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.componentInstance.creator.set({
+      ...SAMPLE,
+      ytStats: undefined,
+      twitchStats: undefined,
+    });
+    fixture.detectChanges();
+    const el = fixture.nativeElement;
+    expect(el.querySelector('[data-testid="creator-stats-unavailable"]')).toBeTruthy();
+    expect(el.textContent).toContain('Live stats unavailable');
+    expect(el.querySelector('[data-testid="metric-source-youtube"]')).toBeNull();
+    expect(el.querySelector('[data-testid="metric-source-twitch"]')).toBeNull();
+  });
+
+  it('renders Twitch CCV block + twitch badge for a Twitch-only creator (no ytStats)', () => {
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.componentInstance.creator.set({
+      ...SAMPLE,
+      platform: 'Twitch',
+      allPlatforms: ['Twitch'],
+      ytStats: undefined,
+      twitchStats: {
+        avgCcv: 3_200,
+        peakCcv: 8_500,
+        streams30d: 14,
+        hoursStreamed30d: 56,
+        lastStreamAt: null,
+        primaryGameName: 'Fortnite',
+        liveRefreshedAt: null,
+      },
+    });
+    fixture.detectChanges();
+    const el = fixture.nativeElement;
+    expect(el.querySelector('[data-testid="creator-twitch-stats"]')).toBeTruthy();
+    expect(el.textContent).toContain('3K');    // compact(3200) → Math.round(3.2)=3 → '3K'
+    expect(el.textContent).toContain('9K');    // compact(8500) → Math.round(8.5)=9 → '9K'
+    expect(el.textContent).toContain('14');    // streams30d
+    expect(el.textContent).toContain('Fortnite');
+    expect(el.querySelector('[data-testid="metric-source-twitch"]')).toBeTruthy();
+    // YT badge must not appear
+    expect(el.querySelector('[data-testid="metric-source-youtube"]')).toBeNull();
+    // Muted placeholder must not appear
+    expect(el.querySelector('[data-testid="creator-stats-unavailable"]')).toBeNull();
+  });
+
+  it('renders simfluence badge on CPI tile', () => {
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.detectChanges();
+    const el = fixture.nativeElement;
+    expect(el.querySelector('[data-testid="metric-source-simfluence"]')).toBeTruthy();
   });
 
   it('renders a badge per platform', () => {

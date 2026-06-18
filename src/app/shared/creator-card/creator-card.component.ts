@@ -3,6 +3,7 @@ import { CREATOR_TIER_COLORS, Creator, tierForSubs } from '../../core/data/creat
 import { CreatorProfileService } from '../../core/creator-profile/creator-profile.service';
 import { computeRateRanges } from '../../core/rates/rate-estimate';
 import { Format } from '../../core/simulation/simulation.types';
+import { MetricSourceBadgeComponent } from '../metric-source/metric-source-badge.component';
 
 const PLATFORM_COLORS: Record<string, string> = {
   YouTube: '#FF0000',
@@ -16,6 +17,7 @@ const PLATFORM_COLORS: Record<string, string> = {
 @Component({
   selector: 'app-creator-card',
   standalone: true,
+  imports: [MetricSourceBadgeComponent],
   template: `
     <div
       class="rounded-lg p-4 transition cursor-pointer"
@@ -106,10 +108,48 @@ const PLATFORM_COLORS: Record<string, string> = {
           </div>
         </div>
         @if (freshness()) {
-          <div class="text-[8px] text-right mb-2" style="color: var(--color-text-muted);">
+          <div class="text-[8px] text-right mb-1" style="color: var(--color-text-muted);">
             {{ freshness() }}
           </div>
         }
+        <div class="flex justify-end mt-1 mb-2">
+          <app-metric-source-badge source="youtube" />
+        </div>
+      } @else if (creator().twitchStats; as tw) {
+        <div class="grid grid-cols-3 gap-1 mb-1 text-center" data-testid="creator-twitch-stats">
+          <div>
+            <div class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">
+              Avg Viewers
+            </div>
+            <div class="text-xs font-semibold" style="color: #9146FF;">
+              {{ compact(tw.avgCcv) }}
+            </div>
+          </div>
+          <div>
+            <div class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">
+              Peak
+            </div>
+            <div class="text-xs font-semibold" style="color: var(--color-text);">
+              {{ compact(tw.peakCcv) }}
+            </div>
+          </div>
+          <div>
+            <div class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">
+              Streams/30d
+            </div>
+            <div class="text-xs font-semibold" style="color: var(--color-text);">
+              {{ tw.streams30d }}
+            </div>
+          </div>
+        </div>
+        @if (tw.primaryGameName) {
+          <div class="text-[9px] mb-1 text-center" style="color: var(--color-text-muted);">
+            {{ tw.primaryGameName }}
+          </div>
+        }
+        <div class="flex justify-end mt-1 mb-2">
+          <app-metric-source-badge source="twitch" />
+        </div>
       } @else if (showAllMode()) {
         @if (showBothCpis()) {
           <div class="grid grid-cols-2 gap-1 mb-3 text-center" data-testid="creator-platform-cpis">
@@ -132,31 +172,8 @@ const PLATFORM_COLORS: Record<string, string> = {
           </div>
         }
       } @else {
-        <div class="grid grid-cols-3 gap-1 mb-3 text-center">
-          <div>
-            <div class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">
-              Subs
-            </div>
-            <div class="text-xs font-semibold" style="color: var(--color-text);">
-              {{ creator().subs }}
-            </div>
-          </div>
-          <div>
-            <div class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">
-              Avg Views
-            </div>
-            <div class="text-xs font-semibold" style="color: var(--color-text);">
-              {{ creator().avgViews }}
-            </div>
-          </div>
-          <div>
-            <div class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">
-              Eng
-            </div>
-            <div class="text-xs font-semibold" style="color: var(--color-text);">
-              {{ creator().eng }}
-            </div>
-          </div>
+        <div class="py-2 mb-2 text-center text-[10px]" style="color: var(--color-text-muted);" data-testid="creator-stats-unavailable">
+          Live stats unavailable
         </div>
       }
 
@@ -176,6 +193,7 @@ const PLATFORM_COLORS: Record<string, string> = {
           <div class="text-sm font-bold" [style.color]="scoreColor(creator().cpi)">
             {{ creator().cpi }}
           </div>
+          <app-metric-source-badge source="simfluence" />
         </div>
         <div class="text-center p-2 rounded" style="background: var(--color-bg-3);">
           <div class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">
@@ -185,6 +203,7 @@ const PLATFORM_COLORS: Record<string, string> = {
             <div class="text-sm font-bold" [style.color]="scoreColor(gfiDisplay()!)">
               {{ gfiDisplay() }}
             </div>
+            <app-metric-source-badge source="simfluence" />
           } @else {
             <div
               class="text-sm font-bold"
