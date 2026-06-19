@@ -11,6 +11,7 @@ import { Creator } from '../../core/data/creator.types';
 import { YoutubeCreatorData, YoutubeVideo } from '../../core/youtube/youtube-creator.types';
 import { TwitchEnrichment } from '../../core/twitch/twitch-live.types';
 import { computeRateRanges } from '../../core/rates/rate-estimate';
+import { lastStreamPhrase } from '../../core/twitch/twitch-live.util';
 
 interface GenreBenchmarks {
   genre: string;
@@ -670,12 +671,7 @@ export class CreatorProfileModalComponent {
   protected readonly activityState = computed(() => activityClass(this.twData()?.daysSinceStream ?? null));
 
   // Humanize days-since-last-stream so the card never renders "0 days ago".
-  protected lastStreamPhrase(days: number | null): string {
-    if (days == null) return 'recently';
-    if (days <= 0) return 'today';
-    if (days === 1) return 'yesterday';
-    return `${days} days ago`;
-  }
+  protected readonly lastStreamPhrase = lastStreamPhrase;
 
   protected readonly videos = computed<YoutubeVideo[]>(() => this.data()?.top_videos ?? []);
   protected readonly rates = computed(() => computeRateRanges(this.creator()!));

@@ -272,3 +272,41 @@ describe('CreatorsService.loadFilterOptions', () => {
     expect(svc.loaded()).toBe(true);
   });
 });
+
+describe('fromDb — twitchStats mapping', () => {
+  it('maps twitch_creators embed to twitchStats on Creator', async () => {
+    const row = {
+      id: 10, name: 'TwitchGuy', handle: '@tw', platform: 'Twitch',
+      all_platforms: ['Twitch'], subs: '200K', subs_parsed: 200_000,
+      avg_views: '0', eng: '0%', genre: 'Gaming', cpi: 65, gfi: null,
+      color: '#9147ff', verified_deals: 0, sponsor_history: [],
+      bio: '',
+      twitch_creators: [{
+        avg_ccv: 1200, peak_ccv: 3500, streams_30d: 12,
+        hours_streamed_30d: 36, last_stream_at: '2026-06-15T20:00:00Z',
+        primary_game_name: 'Valorant', live_refreshed_at: '2026-06-19T00:00:00Z',
+      }],
+    };
+    const { svc } = setup(makeQuery({ data: row }));
+    const creator = await svc.byId(10);
+    expect(creator?.twitchStats).toBeDefined();
+    expect(creator?.twitchStats?.avgCcv).toBe(1200);
+    expect(creator?.twitchStats?.peakCcv).toBe(3500);
+    expect(creator?.twitchStats?.streams30d).toBe(12);
+    expect(creator?.twitchStats?.lastStreamAt).toBe('2026-06-15T20:00:00Z');
+    expect(creator?.twitchStats?.primaryGameName).toBe('Valorant');
+  });
+
+  it('leaves twitchStats undefined when no twitch embed', async () => {
+    const row = {
+      id: 11, name: 'YTOnly', handle: '@yt', platform: 'YouTube',
+      all_platforms: ['YouTube'], subs: '300K', subs_parsed: 300_000,
+      avg_views: '0', eng: '0%', genre: 'Tech', cpi: 70, gfi: null,
+      color: '#ff0', verified_deals: 0, sponsor_history: [], bio: '',
+      twitch_creators: [],
+    };
+    const { svc } = setup(makeQuery({ data: row }));
+    const creator = await svc.byId(11);
+    expect(creator?.twitchStats).toBeUndefined();
+  });
+});
