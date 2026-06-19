@@ -1,11 +1,12 @@
 import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ThemeService } from '../../core/theme/theme.service';
+import { IconComponent, IconName } from '../../shared/icon/icon.component';
 import { ScrollRevealDirective } from './scroll-reveal.directive';
 import { CountUpDirective } from './count-up.directive';
 
 interface Feature {
-  readonly icon: string; // single-char glyph / emoji used as a lightweight icon
+  readonly icon: IconName;
   readonly title: string;
   readonly body: string;
   readonly meta: string;
@@ -17,37 +18,33 @@ interface Step {
   readonly body: string;
 }
 
-interface Plan {
-  readonly name: string;
-  readonly price: string;
-  readonly cadence: string;
-  readonly blurb: string;
-  readonly features: readonly string[];
-  readonly featured: boolean;
-  readonly cta: string;
-}
-
 /**
  * Public, pre-auth marketing landing page. Wired to the root route (`/`) so
  * unauthenticated visitors land here rather than being bounced to /login.
- * Reuses the app's design tokens + .sf-* classes; motion lives in the sibling
- * CSS file and is gated behind prefers-reduced-motion.
+ * Reuses the app's Linear design language (.sf-* classes + tokens). Motion lives
+ * in the sibling CSS file and is gated behind prefers-reduced-motion.
+ *
+ * CTA model (owner feedback — no "circular" duplicate buttons): the nav has ONE
+ * quiet ghost "Log in" → /login (sign-in form); the hero has ONE primary yellow
+ * "Get started" → /login?start=signup (signup form). Distinct roles, distinct
+ * destinations.
  *
  * Content note: AI-persona / audience-demographic / audience-overlap / "model
  * learns over time" / API claims are deliberately omitted pending compliance
- * review — only shipped, truthful capabilities are marketed here.
+ * review — only shipped, truthful capabilities are marketed here. Pricing lives
+ * on a separate /pricing page, not inlined here.
  */
 @Component({
   selector: 'app-landing',
   standalone: true,
-  imports: [RouterLink, ScrollRevealDirective, CountUpDirective],
+  imports: [RouterLink, IconComponent, ScrollRevealDirective, CountUpDirective],
   styleUrl: './landing.component.css',
   template: `
-    <div class="min-h-screen overflow-x-hidden" style="color: var(--color-text);">
+    <div class="min-h-screen overflow-x-hidden" style="color: var(--color-text); background: var(--color-bg);">
       <!-- ============================ HEADER ============================ -->
       <header
-        class="sticky top-0 z-30 backdrop-blur-md border-b"
-        style="background: color-mix(in srgb, var(--color-bg) 78%, transparent); border-color: var(--color-border);"
+        class="sticky top-0 z-30 border-b"
+        style="background: var(--color-bg); border-color: var(--color-border);"
       >
         <div class="mx-auto max-w-6xl px-5 h-16 flex items-center justify-between">
           <a routerLink="/" class="flex items-center gap-2" aria-label="Simfluence home">
@@ -55,21 +52,15 @@ interface Plan {
               class="inline-block w-6 h-6 rounded-lg"
               style="background-image: var(--gradient-brand);"
             ></span>
-            <span
-              class="font-bold text-lg tracking-tight"
-              style="font-family: var(--font-display);"
-            >
+            <span class="font-semibold text-lg tracking-tight" style="font-family: var(--font-display);">
               Simfluence
             </span>
           </a>
 
-          <nav
-            class="hidden md:flex items-center gap-7 text-sm"
-            style="color: var(--color-text-dim);"
-          >
+          <nav class="hidden md:flex items-center gap-7 text-sm" style="color: var(--color-text-dim);">
             <a href="#features" class="hover:opacity-80">Platform</a>
             <a href="#how" class="hover:opacity-80">How it works</a>
-            <a href="#pricing" class="hover:opacity-80">Pricing</a>
+            <a routerLink="/pricing" class="hover:opacity-80">Pricing</a>
           </nav>
 
           <div class="flex items-center gap-2">
@@ -82,130 +73,147 @@ interface Plan {
               "
               data-testid="theme-toggle"
             >
-              {{ theme.theme() === 'dark' ? '🌙' : '☀️' }}
+              <app-icon [name]="theme.theme() === 'dark' ? 'moon' : 'sun'" />
             </button>
-            <a
-              routerLink="/login"
-              class="sf-btn sf-btn-ghost hidden sm:inline-flex"
-              data-testid="header-login"
-            >
+            <!-- Single quiet auth link → sign-in form. -->
+            <a routerLink="/login" class="sf-btn sf-btn-ghost" data-testid="header-login">
               Log in
-            </a>
-            <a routerLink="/login" class="sf-btn sf-btn-primary" data-testid="header-cta">
-              Launch app
             </a>
           </div>
         </div>
       </header>
 
       <!-- ============================= HERO ============================= -->
-      <section class="relative isolate">
-        <div class="sf-hero-mesh" aria-hidden="true"></div>
-        <div class="sf-hero-grid" aria-hidden="true"></div>
+      <section class="mx-auto max-w-6xl px-5 pt-16 pb-16 md:pt-24 md:pb-24">
+        <div class="grid lg:grid-cols-[1.02fr_0.98fr] gap-12 lg:gap-14 items-center">
+          <!-- Copy -->
+          <div sfScrollReveal>
+            <span class="sf-chip mb-6">Campaign intelligence for influencer marketing</span>
+            <h1
+              class="font-semibold leading-[1.04] text-4xl sm:text-5xl md:text-6xl"
+              style="font-family: var(--font-display); letter-spacing: -0.035em;"
+              data-testid="hero-headline"
+            >
+              Know <span class="sf-grad-text">before</span> you spend.
+            </h1>
+            <p class="mt-6 text-lg max-w-xl" style="color: var(--color-text-dim);">
+              Forecast a creator campaign's reach and cost before a single dollar is committed —
+              with P10 / P50 / P90 confidence bands. Model it, see the range, launch with a
+              benchmark.
+            </p>
 
-        <div class="relative z-10 mx-auto max-w-6xl px-5 pt-20 pb-16 md:pt-28 md:pb-24">
-          <div class="grid lg:grid-cols-[1.05fr_0.95fr] gap-12 items-center">
-            <!-- Copy -->
-            <div sfScrollReveal>
-              <span class="sf-chip mb-5">Campaign intelligence for influencer marketing</span>
-              <h1
-                class="font-bold leading-[1.05] tracking-tight text-4xl sm:text-5xl md:text-6xl"
-                style="font-family: var(--font-display);"
-                data-testid="hero-headline"
+            <!-- Single primary CTA → signup form. -->
+            <div class="mt-8 flex flex-wrap gap-3 items-center">
+              <a
+                routerLink="/login"
+                [queryParams]="{ start: 'signup' }"
+                class="sf-btn sf-btn-primary !px-6 !py-3 text-base"
+                data-testid="hero-cta-primary"
               >
-                Know <span class="sf-grad-text">before</span> you spend.
-              </h1>
-              <p class="mt-5 text-lg max-w-xl" style="color: var(--color-text-dim);">
-                Forecast a creator campaign's reach and cost before a single dollar is committed —
-                with P10 / P50 / P90 confidence bands. Model it, see the range, launch with a
-                benchmark.
-              </p>
-
-              <div class="mt-8 flex flex-wrap gap-3">
-                <a
-                  routerLink="/login"
-                  class="sf-btn sf-btn-primary !px-6 !py-3 text-base"
-                  data-testid="hero-cta-primary"
-                >
-                  Get started free
-                </a>
-                <a
-                  href="#how"
-                  class="sf-btn sf-btn-ghost !px-6 !py-3 text-base"
-                  data-testid="hero-cta-secondary"
-                >
-                  See how it works
-                </a>
-              </div>
-
-              <p class="mt-4 text-xs" style="color: var(--color-text-muted);">
-                No card required to explore. Forecasts are estimates, not guarantees.
-              </p>
+                Get started
+                <app-icon name="arrow-right" [size]="17" />
+              </a>
+              <a href="#how" class="sf-btn sf-btn-ghost !px-6 !py-3 text-base" data-testid="hero-cta-secondary">
+                See how it works
+              </a>
             </div>
 
-            <!-- Animated visual: floating stat cards + a drawn forecast chart -->
-            <div class="relative h-[360px] sm:h-[420px]" aria-hidden="true">
-              <!-- Forecast chart card -->
-              <div class="sf-card sf-float p-5 absolute inset-x-0 top-6 mx-auto max-w-sm">
+            <p class="mt-4 text-xs" style="color: var(--color-text-muted);">
+              No card required to explore. Forecasts are estimates, not guarantees.
+            </p>
+          </div>
+
+          <!-- Product-as-hero: a faithful static showcase of the app's own UI, built
+               in the real design language (hairline .sf-cards, mono numerals). -->
+          <div sfScrollReveal class="relative" aria-hidden="true">
+            <div class="sf-card sf-product-shell p-4 sm:p-5">
+              <!-- Chrome row -->
+              <div class="flex items-center justify-between mb-4">
+                <span class="sf-chip">Campaign forecast</span>
+                <span class="text-[11px]" style="color: var(--color-text-muted); font-family: var(--font-mono);">
+                  /app/simulator
+                </span>
+              </div>
+
+              <!-- Creator card + score tiles -->
+              <div class="grid grid-cols-[1fr_auto] gap-3">
+                <div class="sf-panel p-4">
+                  <div class="flex items-center gap-3">
+                    <span
+                      class="w-9 h-9 rounded-full flex-none flex items-center justify-center text-sm font-semibold"
+                      style="background: var(--color-bg-4); color: var(--color-text-dim); font-family: var(--font-mono);"
+                    >NW</span>
+                    <div class="min-w-0">
+                      <div class="text-sm font-semibold truncate">Northwind Gaming</div>
+                      <div class="text-[11px]" style="color: var(--color-text-muted);">
+                        YouTube · Gaming · 1.4M subs
+                      </div>
+                    </div>
+                  </div>
+                  <div class="mt-3 grid grid-cols-2 gap-2">
+                    <div class="sf-panel px-3 py-2" style="background: var(--color-bg-3);">
+                      <div class="text-[10px] uppercase tracking-wide" style="color: var(--color-text-muted);">CPI</div>
+                      <div class="text-xl font-semibold" style="font-family: var(--font-mono); color: var(--color-sf-green);">87</div>
+                    </div>
+                    <div class="sf-panel px-3 py-2" style="background: var(--color-bg-3);">
+                      <div class="text-[10px] uppercase tracking-wide" style="color: var(--color-text-muted);">GFI</div>
+                      <div class="text-xl font-semibold" style="font-family: var(--font-mono); color: var(--color-sf-gold);">92</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Headline metric tile -->
+                <div class="sf-panel p-4 flex flex-col justify-center text-center w-32" style="background: var(--color-bg-3);">
+                  <div class="text-[10px] uppercase tracking-wide" style="color: var(--color-text-muted);">P50 reach</div>
+                  <div class="text-2xl font-semibold leading-none mt-1" style="font-family: var(--font-mono);">5.1M</div>
+                  <div class="text-[10px] mt-1" style="color: var(--color-text-muted);">impressions</div>
+                </div>
+              </div>
+
+              <!-- Forecast chart panel -->
+              <div class="sf-panel p-4 mt-3">
                 <div class="flex items-center justify-between mb-2">
-                  <span class="text-xs font-semibold" style="color: var(--color-text-dim);"
-                    >Forecast · Impressions</span
-                  >
+                  <span class="text-xs font-semibold" style="color: var(--color-text-dim);">Forecast · Impressions</span>
                   <span class="sf-chip">P10–P90</span>
                 </div>
-                <svg viewBox="0 0 320 120" class="w-full h-[120px]" preserveAspectRatio="none">
+                <svg viewBox="0 0 320 110" class="w-full h-[110px]" preserveAspectRatio="none">
                   <defs>
                     <linearGradient id="sfArea" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stop-color="var(--color-sf-cyan)" stop-opacity="0.35" />
-                      <stop offset="100%" stop-color="var(--color-sf-blue)" stop-opacity="0" />
+                      <stop offset="0%" stop-color="var(--color-accent)" stop-opacity="0.28" />
+                      <stop offset="100%" stop-color="var(--color-accent)" stop-opacity="0" />
                     </linearGradient>
                   </defs>
+                  <!-- P10 lower band (secondary, blue) -->
+                  <path
+                    class="sf-chart-line-sub"
+                    d="M0,100 C60,90 90,72 140,76 C190,80 230,58 320,52"
+                    fill="none"
+                    stroke="var(--color-sf-blue)"
+                    stroke-width="1.5"
+                    stroke-dasharray="3 3"
+                    stroke-linecap="round"
+                  />
+                  <!-- P50 area + line (primary accent) -->
                   <path
                     class="sf-chart-area"
-                    d="M0,95 C60,80 90,50 140,55 C190,60 230,25 320,18 L320,120 L0,120 Z"
+                    d="M0,88 C60,72 90,44 140,49 C190,54 230,20 320,14 L320,110 L0,110 Z"
                     fill="url(#sfArea)"
                   />
                   <path
                     class="sf-chart-line"
-                    d="M0,95 C60,80 90,50 140,55 C190,60 230,25 320,18"
+                    d="M0,88 C60,72 90,44 140,49 C190,54 230,20 320,14"
                     fill="none"
-                    stroke="var(--color-sf-cyan)"
+                    stroke="var(--color-accent)"
                     stroke-width="2.5"
                     stroke-linecap="round"
                   />
                 </svg>
                 <div
-                  class="mt-2 flex justify-between text-xs"
+                  class="mt-1 flex justify-between text-[11px]"
                   style="color: var(--color-text-muted); font-family: var(--font-mono);"
                 >
-                  <span>4.2M</span><span>5.1M</span><span>5.8M</span>
+                  <span>P10 · 4.2M</span><span>P50 · 5.1M</span><span>P90 · 5.8M</span>
                 </div>
-              </div>
-
-              <!-- CPI score card -->
-              <div class="sf-card sf-float sf-float-delay p-4 absolute left-0 bottom-2 w-40">
-                <div class="text-xs" style="color: var(--color-text-muted);">CPI score</div>
-                <div
-                  class="text-3xl font-bold"
-                  style="font-family: var(--font-mono); color: var(--color-sf-green);"
-                >
-                  87
-                </div>
-                <div class="text-[11px]" style="color: var(--color-text-dim);">
-                  cost-per-impression
-                </div>
-              </div>
-
-              <!-- GFI score card -->
-              <div class="sf-card sf-float-slow p-4 absolute right-0 bottom-10 w-40">
-                <div class="text-xs" style="color: var(--color-text-muted);">GFI score</div>
-                <div
-                  class="text-3xl font-bold"
-                  style="font-family: var(--font-mono); color: var(--color-sf-gold);"
-                >
-                  92
-                </div>
-                <div class="text-[11px]" style="color: var(--color-text-dim);">genre fit</div>
               </div>
             </div>
           </div>
@@ -214,10 +222,10 @@ interface Plan {
 
       <!-- ====================== PROBLEM / STATS ======================== -->
       <section class="mx-auto max-w-6xl px-5 py-16 md:py-20">
-        <div sfScrollReveal class="text-center max-w-2xl mx-auto">
+        <div sfScrollReveal class="max-w-2xl">
           <h2
-            class="font-bold text-3xl md:text-4xl tracking-tight"
-            style="font-family: var(--font-display);"
+            class="font-semibold text-3xl md:text-4xl"
+            style="font-family: var(--font-display); letter-spacing: -0.03em;"
           >
             Brands spend before they <span class="sf-grad-text">know</span>.
           </h2>
@@ -227,16 +235,12 @@ interface Plan {
           </p>
         </div>
 
-        <div class="mt-12 grid sm:grid-cols-3 gap-5">
+        <div class="mt-10 grid sm:grid-cols-3 gap-5">
           @for (stat of stats; track stat.label) {
-            <div
-              sfScrollReveal
-              class="sf-card p-7 text-center"
-              [style.transition-delay.ms]="$index * 100"
-            >
+            <div sfScrollReveal class="sf-card p-7" [style.transition-delay.ms]="$index * 100">
               <div
-                class="text-4xl md:text-5xl font-bold"
-                style="font-family: var(--font-mono); color: var(--color-sf-blue);"
+                class="text-4xl md:text-5xl font-semibold"
+                style="font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--color-text);"
               >
                 <span
                   [sfCountUp]="stat.value"
@@ -254,11 +258,11 @@ interface Plan {
 
       <!-- ========================= FEATURES ============================ -->
       <section id="features" class="mx-auto max-w-6xl px-5 py-16 md:py-20">
-        <div sfScrollReveal class="text-center max-w-2xl mx-auto mb-12">
+        <div sfScrollReveal class="max-w-2xl mb-12">
           <span class="sf-chip mb-4">The platform</span>
           <h2
-            class="font-bold text-3xl md:text-4xl tracking-tight"
-            style="font-family: var(--font-display);"
+            class="font-semibold text-3xl md:text-4xl"
+            style="font-family: var(--font-display); letter-spacing: -0.03em;"
           >
             Built to replace <span class="sf-grad-text">guesswork</span>.
           </h2>
@@ -270,28 +274,16 @@ interface Plan {
 
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
           @for (f of features; track f.title) {
-            <div
-              sfScrollReveal
-              class="sf-card sf-lift p-6"
-              [style.transition-delay.ms]="$index * 80"
-            >
+            <div sfScrollReveal class="sf-card sf-lift p-6" [style.transition-delay.ms]="$index * 80">
               <div
-                class="w-11 h-11 rounded-xl flex items-center justify-center text-xl mb-4"
-                style="background-image: var(--gradient-brand-soft); border: 1px solid var(--color-border);"
-                aria-hidden="true"
+                class="w-10 h-10 rounded-lg flex items-center justify-center mb-4"
+                style="background: var(--color-bg-3); border: 1px solid var(--color-border); color: var(--color-text-dim);"
               >
-                {{ f.icon }}
+                <app-icon [name]="f.icon" [size]="19" />
               </div>
-              <h3 class="font-semibold text-lg" style="font-family: var(--font-display);">
-                {{ f.title }}
-              </h3>
-              <p class="mt-2 text-sm leading-relaxed" style="color: var(--color-text-dim);">
-                {{ f.body }}
-              </p>
-              <div
-                class="mt-4 text-xs font-medium"
-                style="color: var(--color-text-muted); font-family: var(--font-mono);"
-              >
+              <h3 class="font-semibold text-lg" style="font-family: var(--font-display);">{{ f.title }}</h3>
+              <p class="mt-2 text-sm leading-relaxed" style="color: var(--color-text-dim);">{{ f.body }}</p>
+              <div class="mt-4 text-xs" style="color: var(--color-text-muted); font-family: var(--font-mono);">
                 {{ f.meta }}
               </div>
             </div>
@@ -300,113 +292,40 @@ interface Plan {
       </section>
 
       <!-- ======================= HOW IT WORKS ========================= -->
-      <section id="how" class="relative">
-        <div class="mx-auto max-w-6xl px-5 py-16 md:py-20">
-          <div sfScrollReveal class="text-center max-w-2xl mx-auto mb-12">
-            <span class="sf-chip mb-4">How it works</span>
-            <h2
-              class="font-bold text-3xl md:text-4xl tracking-tight"
-              style="font-family: var(--font-display);"
-            >
-              Brief to forecast in <span class="sf-grad-text">minutes</span>.
-            </h2>
-          </div>
-
-          <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            @for (s of steps; track s.n) {
-              <div sfScrollReveal class="sf-panel p-6" [style.transition-delay.ms]="$index * 90">
-                <div
-                  class="text-sm font-bold w-8 h-8 rounded-lg flex items-center justify-center mb-4"
-                  style="background-image: var(--gradient-brand); color: #fff; font-family: var(--font-mono);"
-                >
-                  {{ s.n }}
-                </div>
-                <h3 class="font-semibold" style="font-family: var(--font-display);">
-                  {{ s.title }}
-                </h3>
-                <p class="mt-2 text-sm" style="color: var(--color-text-dim);">{{ s.body }}</p>
-              </div>
-            }
-          </div>
-        </div>
-      </section>
-
-      <!-- ========================== PRICING =========================== -->
-      <section id="pricing" class="mx-auto max-w-6xl px-5 py-16 md:py-20">
-        <div sfScrollReveal class="text-center max-w-2xl mx-auto mb-12">
-          <span class="sf-chip mb-4">Pricing</span>
+      <section id="how" class="mx-auto max-w-6xl px-5 py-16 md:py-20">
+        <div sfScrollReveal class="max-w-2xl mb-12">
+          <span class="sf-chip mb-4">How it works</span>
           <h2
-            class="font-bold text-3xl md:text-4xl tracking-tight"
-            style="font-family: var(--font-display);"
+            class="font-semibold text-3xl md:text-4xl"
+            style="font-family: var(--font-display); letter-spacing: -0.03em;"
           >
-            Simple. <span class="sf-grad-text">Transparent.</span>
+            Brief to forecast in <span class="sf-grad-text">minutes</span>.
           </h2>
-          <p class="mt-4" style="color: var(--color-text-dim);">
-            Tiers for every scale of brand. Start small, scale up. All prices USD, excl. tax.
-          </p>
         </div>
 
-        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-5 items-start">
-          @for (p of plans; track p.name) {
-            <div
-              sfScrollReveal
-              class="sf-card sf-lift p-6 flex flex-col h-full"
-              [style.transition-delay.ms]="$index * 70"
-              [style.border-color]="p.featured ? 'var(--color-border-strong)' : null"
-            >
-              @if (p.featured) {
-                <span class="sf-chip self-start mb-3" style="color: var(--color-text);"
-                  >Most popular</span
-                >
-              }
-              <h3 class="font-semibold text-lg" style="font-family: var(--font-display);">
-                {{ p.name }}
-              </h3>
-              <div class="mt-2 flex items-baseline gap-1">
-                <span class="text-3xl font-bold" style="font-family: var(--font-mono);">{{
-                  p.price
-                }}</span>
-                <span class="text-sm" style="color: var(--color-text-muted);">{{ p.cadence }}</span>
-              </div>
-              <p class="mt-2 text-sm" style="color: var(--color-text-dim);">{{ p.blurb }}</p>
-              <ul class="mt-5 space-y-2 text-sm flex-1" style="color: var(--color-text-dim);">
-                @for (item of p.features; track item) {
-                  <li class="flex gap-2">
-                    <span style="color: var(--color-sf-green);" aria-hidden="true">✓</span>
-                    <span>{{ item }}</span>
-                  </li>
-                }
-              </ul>
-              <a
-                routerLink="/login"
-                class="sf-btn mt-6 w-full"
-                [class.sf-btn-primary]="p.featured"
-                [class.sf-btn-ghost]="!p.featured"
+        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          @for (s of steps; track s.n) {
+            <div sfScrollReveal class="sf-panel p-6" [style.transition-delay.ms]="$index * 90">
+              <div
+                class="text-sm font-semibold w-8 h-8 rounded-lg flex items-center justify-center mb-4"
+                style="background: var(--color-bg-3); border: 1px solid var(--color-border); color: var(--color-text); font-family: var(--font-mono);"
               >
-                {{ p.cta }}
-              </a>
+                {{ s.n }}
+              </div>
+              <h3 class="font-semibold" style="font-family: var(--font-display);">{{ s.title }}</h3>
+              <p class="mt-2 text-sm" style="color: var(--color-text-dim);">{{ s.body }}</p>
             </div>
           }
         </div>
-
-        <p class="mt-8 text-center text-xs" style="color: var(--color-text-muted);">
-          Need a custom or enterprise plan?
-          <a routerLink="/login" class="underline">Get in touch</a>.
-        </p>
       </section>
 
       <!-- ======================== CLOSING CTA ========================= -->
       <section class="mx-auto max-w-6xl px-5 py-16 md:py-24">
-        <div
-          sfScrollReveal
-          class="sf-card relative overflow-hidden text-center px-6 py-16"
-          style="background-image: var(--gradient-brand-soft);"
-        >
-          <div class="sf-hero-mesh" aria-hidden="true" style="opacity: 0.6;"></div>
-          <div class="relative z-10 max-w-2xl mx-auto">
+        <div sfScrollReveal class="sf-card text-center px-6 py-16">
+          <div class="max-w-2xl mx-auto">
             <h2
-              class="font-bold text-3xl md:text-4xl tracking-tight"
-              style="font-family: var(--font-display);"
+              class="font-semibold text-3xl md:text-4xl"
+              style="font-family: var(--font-display); letter-spacing: -0.03em;"
             >
               Your next campaign already has a <span class="sf-grad-text">forecast</span>.
             </h2>
@@ -415,10 +334,12 @@ interface Plan {
             </p>
             <a
               routerLink="/login"
+              [queryParams]="{ start: 'signup' }"
               class="sf-btn sf-btn-primary !px-7 !py-3 text-base mt-8"
               data-testid="closing-cta"
             >
-              Get started free
+              Get started
+              <app-icon name="arrow-right" [size]="17" />
             </a>
           </div>
         </div>
@@ -429,11 +350,8 @@ interface Plan {
         <div class="mx-auto max-w-6xl px-5 py-12 grid gap-8 md:grid-cols-[1.5fr_1fr_1fr]">
           <div>
             <div class="flex items-center gap-2 mb-3">
-              <span
-                class="inline-block w-5 h-5 rounded-md"
-                style="background-image: var(--gradient-brand);"
-              ></span>
-              <span class="font-bold" style="font-family: var(--font-display);">Simfluence</span>
+              <span class="inline-block w-5 h-5 rounded-md" style="background-image: var(--gradient-brand);"></span>
+              <span class="font-semibold" style="font-family: var(--font-display);">Simfluence</span>
             </div>
             <p class="text-sm max-w-xs" style="color: var(--color-text-muted);">
               Campaign intelligence for influencer marketing. Forecast reach and cost before you
@@ -447,7 +365,7 @@ interface Plan {
               <li><a href="#features" class="hover:opacity-80">Creator discovery</a></li>
               <li><a href="#features" class="hover:opacity-80">CPI &amp; GFI scoring</a></li>
               <li><a href="#features" class="hover:opacity-80">Campaign simulator</a></li>
-              <li><a href="#pricing" class="hover:opacity-80">Pricing</a></li>
+              <li><a routerLink="/pricing" class="hover:opacity-80">Pricing</a></li>
             </ul>
           </div>
 
@@ -455,7 +373,9 @@ interface Plan {
             <div class="font-semibold mb-3" style="color: var(--color-text-dim);">Get started</div>
             <ul class="space-y-2" style="color: var(--color-text-muted);">
               <li><a routerLink="/login" class="hover:opacity-80">Log in</a></li>
-              <li><a routerLink="/login" class="hover:opacity-80">Create account</a></li>
+              <li>
+                <a routerLink="/login" [queryParams]="{ start: 'signup' }" class="hover:opacity-80">Create account</a>
+              </li>
             </ul>
           </div>
         </div>
@@ -509,37 +429,37 @@ export class LandingComponent {
 
   protected readonly features: readonly Feature[] = [
     {
-      icon: '🔎',
+      icon: 'search',
       title: 'Creator discovery',
       body: 'Find creators by what they will deliver, not by follower count. Thousands of creators across YouTube, Twitch and more — searchable by genre, platform and region.',
       meta: 'YouTube · Twitch · multi-platform',
     },
     {
-      icon: '📊',
+      icon: 'bar-chart',
       title: 'CPI & GFI scoring',
       body: 'Two scores follower count never could. The Simfluence CPI rates cost-per-impression efficiency; the GFI measures genre fit between a creator and your campaign.',
       meta: '0–100 scale · per-creator',
     },
     {
-      icon: '🎯',
+      icon: 'target',
       title: 'Campaign forecasting',
       body: 'Forecast reach and cost with P10 / P50 / P90 confidence bands — so you see the likely range, not a single optimistic number, before you commit budget.',
       meta: 'P10 / P50 / P90 bands',
     },
     {
-      icon: '🧪',
+      icon: 'beaker',
       title: 'What-if simulator',
       body: 'Swap creators in and out, adjust budget, and re-run the forecast instantly to compare scenarios before you settle on a shortlist.',
       meta: 'budget & creator what-ifs',
     },
     {
-      icon: '🗂️',
+      icon: 'folder',
       title: 'Campaign workspace',
       body: 'Save briefs, build a shortlist, and keep your forecast alongside the plan — one place for the whole campaign, not a scatter of spreadsheets.',
       meta: 'briefs · shortlists',
     },
     {
-      icon: '✉️',
+      icon: 'mail',
       title: 'Outreach tracker',
       body: 'Track which creators you have reached out to and where each conversation stands, straight from the shortlist you built.',
       meta: 'outreach status',
@@ -566,71 +486,6 @@ export class LandingComponent {
       n: '4',
       title: 'Launch with a benchmark',
       body: 'Know the expected range before you spend. Brief your team with confidence.',
-    },
-  ];
-
-  // Pricing mirrors prod tiers, but filtered to honest, shipped capabilities:
-  // persona/archetype, audience-overlap, "learns over time" and API lines removed.
-  protected readonly plans: readonly Plan[] = [
-    {
-      name: 'Bronze',
-      price: '$400',
-      cadence: '/mo',
-      blurb: 'For getting started with forecasting.',
-      featured: false,
-      cta: 'Get started',
-      features: [
-        '25 creator results per search',
-        'CPI & GFI scores on every creator',
-        '3 campaign simulations / month',
-        'Outreach tracker (3 creators)',
-        'Email support',
-      ],
-    },
-    {
-      name: 'Silver',
-      price: '$1,000',
-      cadence: '/mo',
-      blurb: 'For brands running regular campaigns.',
-      featured: false,
-      cta: 'Get started',
-      features: [
-        '100 creator results',
-        'Full CPI & GFI scores',
-        '10 simulations / month',
-        '3 saved campaign briefs',
-        'Priority support',
-      ],
-    },
-    {
-      name: 'Gold',
-      price: '$3,500',
-      cadence: '/mo',
-      blurb: 'For teams forecasting at scale.',
-      featured: true,
-      cta: 'Get started',
-      features: [
-        'Unlimited creator database',
-        'Unlimited simulations',
-        'Campaigns workspace (1 active brief)',
-        'Budget split view & PDF summary',
-        '10 saved briefs · CSV shortlist',
-      ],
-    },
-    {
-      name: 'Platinum',
-      price: '$5,000',
-      cadence: '/mo',
-      blurb: 'For the highest-volume publishers.',
-      featured: false,
-      cta: 'Get started',
-      features: [
-        'Unlimited creator database',
-        'Unlimited campaign briefs',
-        'Full P10 / P50 / P90 PDF report',
-        'Unlimited CSV export',
-        'Direct line to the founder',
-      ],
     },
   ];
 }

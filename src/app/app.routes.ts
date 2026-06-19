@@ -17,6 +17,13 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/auth/auth-shell.component').then((m) => m.AuthShellComponent),
   },
+  // Public pricing page — linked from the landing nav/footer, not inlined on the
+  // landing (owner: "pricing should only be clicked to").
+  {
+    path: 'pricing',
+    loadComponent: () =>
+      import('./features/pricing/pricing.component').then((m) => m.PricingComponent),
+  },
   {
     path: 'app',
     canActivate: [authGuard],

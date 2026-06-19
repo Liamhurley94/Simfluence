@@ -86,10 +86,24 @@ export class AuthShellComponent {
   readonly invite_token = input<string | undefined>(undefined);
   /** `email` query param — pre-fills signup form when invited. */
   readonly email = input<string | undefined>(undefined);
+  /**
+   * `start` query param — seeds which tab opens. Lets the public landing route
+   * its "Get started" CTA to `/login?start=signup` (signup form) while the quiet
+   * "Log in" link goes to `/login` (sign-in form). Named `start` rather than
+   * `tab` to avoid colliding with the local `tab` signal below.
+   */
+  readonly start = input<'signup' | 'signin' | undefined>(undefined);
 
   readonly tab = signal<TabKey>('signin');
 
   constructor() {
+    // Seed the open tab from the `start` query param (e.g. ?start=signup).
+    effect(() => {
+      const start = this.start();
+      if (start === 'signup' || start === 'signin') {
+        this.tab.set(start);
+      }
+    });
     // If the user arrived with an invite token, default to the signup tab.
     effect(() => {
       if (this.invite_token()) {
