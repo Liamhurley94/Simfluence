@@ -377,7 +377,38 @@ function sponsorColor(pct: number): string {
               </div>
             </div>
 
-            @if (bench.value(); as b) {
+            @if (bench.isLoading()) {
+              <!-- Skeleton of the Category Benchmarking box (3 tiles) so it reserves
+                   its space during load instead of appearing and expanding the modal. -->
+              <div
+                class="rounded-lg overflow-hidden"
+                style="border: 1px solid var(--color-border);"
+                data-testid="creator-profile-benchmark-skeleton"
+              >
+                <div class="px-3 py-2 flex items-center justify-between" style="background: var(--color-bg-3);">
+                  <div class="flex items-center gap-2">
+                    <span class="text-[10px] uppercase tracking-wider font-bold leading-none" style="color: var(--color-sf-gold);">
+                      Category Benchmarking
+                    </span>
+                    <app-metric-source-badge source="simfluence" />
+                  </div>
+                  <div class="sf-skeleton h-2 w-28"></div>
+                </div>
+                <div class="p-3">
+                  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                    @for (i of [1, 2, 3]; track i) {
+                      <div class="p-2 rounded flex flex-col gap-1" style="background: var(--color-bg-3);">
+                        <div class="sf-skeleton h-2 w-24"></div>
+                        <div class="sf-skeleton h-5 w-16"></div>
+                        <div class="sf-skeleton h-2 w-20"></div>
+                        <div class="sf-skeleton h-2 w-14"></div>
+                        <div class="sf-skeleton h-2 w-24"></div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              </div>
+            } @else if (bench.value(); as b) {
               <div
                 class="rounded-lg overflow-hidden"
                 style="border: 1px solid var(--color-border);"
