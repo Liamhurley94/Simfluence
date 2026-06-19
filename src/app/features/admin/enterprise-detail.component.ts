@@ -19,8 +19,7 @@ interface MemberRow { id: string; email: string | null; tier: string | null; }
       (click)="close()"
     >
       <div
-        class="max-w-2xl w-full p-6 rounded-lg flex flex-col gap-4 mt-12"
-        style="background: var(--color-bg-2); border: 1px solid var(--color-border-strong);"
+        class="sf-card max-w-2xl w-full p-6 flex flex-col gap-4 mt-12"
         (click)="$event.stopPropagation()"
         data-testid="enterprise-detail"
       >
@@ -92,8 +91,8 @@ interface MemberRow { id: string; email: string | null; tier: string | null; }
                 type="button"
                 (click)="showRejectForm.set(!showRejectForm())"
                 [disabled]="busy()"
-                class="px-4 py-2 rounded text-sm"
-                style="background: color-mix(in srgb, var(--color-sf-red) 15%, transparent); color: var(--color-sf-red);"
+                class="sf-btn sf-btn-ghost"
+                style="color: var(--color-sf-red); border-color: color-mix(in srgb, var(--color-sf-red) 40%, transparent);"
                 data-testid="admin-reject"
               >
                 Reject
@@ -102,8 +101,7 @@ interface MemberRow { id: string; email: string | null; tier: string | null; }
                 type="button"
                 (click)="onApprove()"
                 [disabled]="busy()"
-                class="px-4 py-2 rounded text-sm font-medium"
-                style="background: var(--color-sf-gold); color: #000;"
+                class="sf-btn sf-btn-primary"
                 data-testid="admin-approve"
               >
                 {{ busy() ? 'Working…' : 'Approve' }}
@@ -125,8 +123,8 @@ interface MemberRow { id: string; email: string | null; tier: string | null; }
                   type="button"
                   (click)="onReject()"
                   [disabled]="busy()"
-                  class="mt-2 px-4 py-2 rounded text-sm"
-                  style="background: color-mix(in srgb, var(--color-sf-red) 15%, transparent); color: var(--color-sf-red);"
+                  class="sf-btn sf-btn-ghost mt-2"
+                  style="color: var(--color-sf-red); border-color: color-mix(in srgb, var(--color-sf-red) 40%, transparent);"
                   data-testid="admin-reject-confirm"
                 >Confirm reject</button>
               </div>

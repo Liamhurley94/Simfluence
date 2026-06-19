@@ -24,7 +24,7 @@ import { EnterpriseWithStats } from '../../core/enterprise/enterprise.types';
       } @else if (enterprises().length === 0) {
         <p class="text-sm" style="color: var(--color-text-muted);">No enterprises yet.</p>
       } @else {
-        <div class="rounded-lg overflow-hidden" style="background: var(--color-bg-2); border: 1px solid var(--color-border);">
+        <div class="sf-card overflow-hidden">
           <table class="w-full text-sm" data-testid="admin-enterprises-table">
             <thead>
               <tr style="color: var(--color-text-muted); background: var(--color-bg-3);">
@@ -49,7 +49,7 @@ import { EnterpriseWithStats } from '../../core/enterprise/enterprise.types';
                   <td class="px-3 py-2">{{ e.owner_email ?? '—' }}</td>
                   <td class="px-3 py-2">
                     <span
-                      class="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded"
+                      class="sf-chip"
                       [style.background]="badgeBg(e.status)"
                       [style.color]="badgeFg(e.status)"
                     >{{ e.status }}</span>
