@@ -30,6 +30,9 @@ const SOURCE_META: Record<MetricSource, SourceMeta> = {
 @Component({
   selector: 'app-metric-source-badge',
   standalone: true,
+  // Host is a flex container centered on its content so the badge aligns
+  // vertically with adjacent text/titles regardless of the surrounding context.
+  host: { class: 'inline-flex items-center' },
   template: `
     <span
       class="inline-flex items-center gap-1 text-[10px] leading-none uppercase tracking-wider whitespace-nowrap"
