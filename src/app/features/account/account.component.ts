@@ -28,29 +28,27 @@ interface MemberRow {
       <!-- BASIC: two CTAs -->
       @if (status() === 'basic') {
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div class="p-5 rounded-lg" style="background: var(--color-bg-2); border: 1px solid var(--color-border);">
+          <div class="sf-card p-5">
             <h2 class="text-lg font-bold mb-1" style="color: var(--color-text);">Upgrade to Full</h2>
             <p class="text-sm mb-4" style="color: var(--color-text-muted);">Unlock all features for an individual account.</p>
             <button
               type="button"
               (click)="onUpgradeToFull()"
               [disabled]="busy()"
-              class="px-4 py-2 rounded text-sm font-medium"
-              style="background: var(--color-sf-gold); color: #000;"
+              class="sf-btn sf-btn-primary"
               data-testid="account-upgrade-full"
             >
               {{ busy() ? 'Working…' : 'Upgrade to Full' }}
             </button>
           </div>
 
-          <div class="p-5 rounded-lg" style="background: var(--color-bg-2); border: 1px solid var(--color-border);">
+          <div class="sf-card p-5">
             <h2 class="text-lg font-bold mb-1" style="color: var(--color-text);">Apply for Enterprise</h2>
             <p class="text-sm mb-4" style="color: var(--color-text-muted);">Invite teammates after admin approval.</p>
             <button
               type="button"
               (click)="showApplyForm.set(true)"
-              class="px-4 py-2 rounded text-sm font-medium"
-              style="background: var(--color-bg-3); color: var(--color-text); border: 1px solid var(--color-border-strong);"
+              class="sf-btn sf-btn-ghost"
               data-testid="account-apply-enterprise"
             >
               Apply for Enterprise
@@ -61,14 +59,13 @@ interface MemberRow {
 
       <!-- FULL: still allow applying for enterprise -->
       @if (status() === 'full') {
-        <div class="p-5 rounded-lg" style="background: var(--color-bg-2); border: 1px solid var(--color-border);">
+        <div class="sf-card p-5">
           <h2 class="text-lg font-bold mb-1" style="color: var(--color-text);">Full account</h2>
           <p class="text-sm mb-4" style="color: var(--color-text-muted);">You have full access. Want to add teammates?</p>
           <button
             type="button"
             (click)="showApplyForm.set(true)"
-            class="px-4 py-2 rounded text-sm font-medium"
-            style="background: var(--color-bg-3); color: var(--color-text); border: 1px solid var(--color-border-strong);"
+            class="sf-btn sf-btn-ghost"
             data-testid="account-apply-enterprise"
           >
             Apply for Enterprise
@@ -78,7 +75,7 @@ interface MemberRow {
 
       <!-- PENDING banner -->
       @if (status() === 'enterprise_pending') {
-        <div class="p-5 rounded-lg" style="background: rgba(255, 212, 0, 0.08); border: 1px solid var(--color-sf-gold);">
+        <div class="sf-card p-5" style="border-color: var(--color-sf-gold);">
           <h2 class="text-lg font-bold mb-1" style="color: var(--color-sf-gold);">Enterprise application pending</h2>
           <p class="text-sm" style="color: var(--color-text-muted);">An admin will review your application shortly.</p>
           @if (auth.enterprise(); as ent) {
@@ -93,7 +90,7 @@ interface MemberRow {
 
       <!-- REJECTED banner -->
       @if (status() === 'enterprise_rejected') {
-        <div class="p-5 rounded-lg" style="background: color-mix(in srgb, var(--color-sf-red) 8%, transparent); border: 1px solid color-mix(in srgb, var(--color-sf-red) 50%, transparent);">
+        <div class="sf-card p-5" style="border-color: color-mix(in srgb, var(--color-sf-red) 50%, transparent);">
           <h2 class="text-lg font-bold mb-1" style="color: var(--color-sf-red);">Enterprise application rejected</h2>
           @if (auth.enterprise()?.rejected_reason; as reason) {
             <p class="text-sm" style="color: var(--color-text);">{{ reason }}</p>
@@ -101,8 +98,7 @@ interface MemberRow {
           <button
             type="button"
             (click)="showApplyForm.set(true)"
-            class="mt-3 px-4 py-2 rounded text-sm font-medium"
-            style="background: var(--color-bg-3); color: var(--color-text); border: 1px solid var(--color-border-strong);"
+            class="sf-btn sf-btn-ghost mt-3"
             data-testid="account-reapply-enterprise"
           >
             Re-apply
@@ -112,7 +108,7 @@ interface MemberRow {
 
       <!-- MEMBER (read-only) -->
       @if (status() === 'enterprise_member') {
-        <div class="p-5 rounded-lg" style="background: var(--color-bg-2); border: 1px solid var(--color-border);">
+        <div class="sf-card p-5">
           <h2 class="text-lg font-bold mb-1" style="color: var(--color-text);">{{ auth.enterprise()?.name }}</h2>
           <p class="text-sm" style="color: var(--color-text-muted);">You are a member of this enterprise.</p>
         </div>
@@ -120,12 +116,12 @@ interface MemberRow {
 
       <!-- OWNER: enterprise info + members + invite -->
       @if (status() === 'enterprise_owner' && auth.enterprise(); as ent) {
-        <div class="p-5 rounded-lg" style="background: var(--color-bg-2); border: 1px solid var(--color-border);">
+        <div class="sf-card p-5">
           <h2 class="text-lg font-bold mb-1" style="color: var(--color-text);">{{ ent.name }}</h2>
           <p class="text-xs uppercase tracking-wider" style="color: var(--color-sf-gold);">Active enterprise · owner</p>
         </div>
 
-        <div class="p-5 rounded-lg" style="background: var(--color-bg-2); border: 1px solid var(--color-border);">
+        <div class="sf-card p-5">
           <h3 class="text-sm font-bold mb-3 uppercase tracking-wider" style="color: var(--color-text-muted);">Invite teammate</h3>
           <form [formGroup]="inviteForm" (ngSubmit)="onInvite()" class="flex gap-2">
             <input
@@ -139,8 +135,7 @@ interface MemberRow {
             <button
               type="submit"
               [disabled]="busy() || inviteForm.invalid"
-              class="px-4 py-2 rounded text-sm font-medium"
-              style="background: var(--color-sf-gold); color: #000;"
+              class="sf-btn sf-btn-primary"
               data-testid="account-invite-submit"
             >
               {{ busy() ? 'Sending…' : 'Invite' }}
@@ -154,7 +149,7 @@ interface MemberRow {
           }
         </div>
 
-        <div class="p-5 rounded-lg" style="background: var(--color-bg-2); border: 1px solid var(--color-border);">
+        <div class="sf-card p-5">
           <h3 class="text-sm font-bold mb-3 uppercase tracking-wider" style="color: var(--color-text-muted);">Pending invites</h3>
           @if (enterprise.invitesLoading()) {
             <p class="text-sm" style="color: var(--color-text-muted);">Loading…</p>
@@ -172,7 +167,7 @@ interface MemberRow {
           }
         </div>
 
-        <div class="p-5 rounded-lg" style="background: var(--color-bg-2); border: 1px solid var(--color-border);">
+        <div class="sf-card p-5">
           <h3 class="text-sm font-bold mb-3 uppercase tracking-wider" style="color: var(--color-text-muted);">Members</h3>
           @if (members().length === 0) {
             <p class="text-sm" style="color: var(--color-text-muted);">Just you for now.</p>
@@ -200,8 +195,7 @@ interface MemberRow {
             [formGroup]="applyForm"
             (ngSubmit)="onApply()"
             (click)="$event.stopPropagation()"
-            class="max-w-lg w-full p-6 rounded-lg flex flex-col gap-3"
-            style="background: var(--color-bg-2); border: 1px solid var(--color-border-strong);"
+            class="sf-card max-w-lg w-full p-6 flex flex-col gap-3"
             data-testid="apply-enterprise-form"
           >
             <h2 class="text-lg font-bold mb-2" style="color: var(--color-text);">Apply for Enterprise</h2>
@@ -245,14 +239,12 @@ interface MemberRow {
               <button
                 type="button"
                 (click)="showApplyForm.set(false)"
-                class="px-4 py-2 rounded text-sm"
-                style="color: var(--color-text-muted);"
+                class="sf-btn sf-btn-ghost"
               >Cancel</button>
               <button
                 type="submit"
                 [disabled]="busy() || applyForm.invalid"
-                class="px-4 py-2 rounded text-sm font-medium"
-                style="background: var(--color-sf-gold); color: #000;"
+                class="sf-btn sf-btn-primary"
                 data-testid="apply-enterprise-submit"
               >
                 {{ busy() ? 'Submitting…' : 'Submit application' }}
