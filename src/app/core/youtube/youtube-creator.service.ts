@@ -3,9 +3,11 @@ import { SupabaseService } from '../supabase/supabase.service';
 import { Creator } from '../data/creator.types';
 import { YoutubeCreatorData } from './youtube-creator.types';
 
-// Reads YouTube creator data from the `creator_youtube_stats` cache table via
-// PostgREST. The cache is populated by the `refresh-youtube-cache` edge fn on
-// a nightly cron — this service NEVER triggers a YouTube API call. See
+// Reads YouTube creator data from the `youtube_creators` cache table via
+// PostgREST. (Formerly `creator_youtube_stats` — renamed by migration
+// 20260525000000_platform_tables.sql; same columns + offline_at.) The cache is
+// populated by the `refresh-youtube-cache` edge fn on a nightly cron — this
+// service NEVER triggers a YouTube API call. See
 // ~/.claude/projects/.../memory/feedback_no_user_triggered_yt_api.md.
 
 @Injectable({ providedIn: 'root' })
@@ -28,7 +30,7 @@ export class YoutubeCreatorService {
   private async doFetch(creator: Creator): Promise<YoutubeCreatorData | null> {
     try {
       const { data, error } = await this.supabase.client
-        .from('creator_youtube_stats')
+        .from('youtube_creators')
         .select('*')
         .eq('creator_id', creator.id)
         .is('offline_at', null)
