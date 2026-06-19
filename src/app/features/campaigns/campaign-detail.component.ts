@@ -81,7 +81,7 @@ import { SectionForecastComponent } from './sections/section-forecast.component'
                   type="button"
                   (click)="complete()"
                   class="sf-btn text-xs uppercase tracking-wider"
-                  style="background: var(--color-sf-cyan); color: #000;"
+                  style="background: var(--color-accent); color: var(--color-accent-fg);"
                   data-testid="campaign-complete"
                 >
                   Mark complete

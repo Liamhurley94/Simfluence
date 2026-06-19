@@ -29,10 +29,13 @@
   --color-text-muted: #6e7178;
 
   /* Accents.
-     --color-sf-cyan = THE rationed signature accent (primary CTA only).
-       Crisp on #08090a; near-black text sits on it for AA contrast.
+     --color-accent = THE rationed signature accent (primary CTA only) — the
+       Simfluence prod yellow. Near-black (--color-accent-fg) text sits on it.
      --color-sf-blue = indigo-ish secondary, for links/icons (Linear's #5e6ad2).
+     --color-sf-cyan = secondary data-viz highlight (charts).
      green/red/gold/twitch = semantic-only (status dots/outlines), tuned dark. */
+  --color-accent: #ffd400;
+  --color-accent-fg: #08090a;
   --color-sf-cyan: #3dd4f0;
   --color-sf-blue: #5e6ad2;
   --color-sf-gold: #f2c94c;
@@ -63,13 +66,13 @@
   --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.40);
   --shadow-lg: 0 8px 24px -6px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.40);
   /* Optional accent ring — kept for explicit opt-in usages; NOT a default. */
-  --shadow-glow: 0 0 0 1px rgba(61, 212, 240, 0.30), 0 4px 16px -4px rgba(61, 212, 240, 0.25);
+  --shadow-glow: 0 0 0 1px rgba(255, 212, 0, 0.32), 0 4px 16px -4px rgba(255, 212, 0, 0.26);
 
   /* Brand gradient tokens — retained ONLY because feature templates (landing,
      top-nav) still reference them for clipped-text wordmarks; foundation
      surfaces no longer use gradients. Do not introduce new surface usages. */
-  --gradient-brand: linear-gradient(135deg, #3dd4f0 0%, #5e6ad2 100%);
-  --gradient-brand-soft: linear-gradient(135deg, rgba(61, 212, 240, 0.12) 0%, rgba(94, 106, 210, 0.10) 100%);
+  --gradient-brand: linear-gradient(135deg, #ffd400 0%, #f5a623 100%);
+  --gradient-brand-soft: linear-gradient(135deg, rgba(255, 212, 0, 0.14) 0%, rgba(245, 166, 35, 0.10) 100%);
 }
 
 /* ----------------------------------------------------------------------------
@@ -89,6 +92,8 @@ body.light {
   --color-text-dim: #4a4f57;
   --color-text-muted: #8a8f98;
 
+  --color-accent: #f2c200;
+  --color-accent-fg: #08090a;
   --color-sf-cyan: #0c97b8;
   --color-sf-blue: #4b54bd;
   --color-sf-gold: #b07e0a;
@@ -104,10 +109,10 @@ body.light {
   --shadow-sm: 0 1px 2px rgba(13, 14, 16, 0.06);
   --shadow-md: 0 2px 4px rgba(13, 14, 16, 0.08);
   --shadow-lg: 0 8px 24px -6px rgba(13, 14, 16, 0.12), 0 2px 6px rgba(13, 14, 16, 0.06);
-  --shadow-glow: 0 0 0 1px rgba(12, 151, 184, 0.25), 0 4px 16px -4px rgba(12, 151, 184, 0.20);
+  --shadow-glow: 0 0 0 1px rgba(242, 194, 0, 0.30), 0 4px 16px -4px rgba(242, 194, 0, 0.22);
 
-  --gradient-brand: linear-gradient(135deg, #0c97b8 0%, #4b54bd 100%);
-  --gradient-brand-soft: linear-gradient(135deg, rgba(12, 151, 184, 0.10) 0%, rgba(75, 84, 189, 0.08) 100%);
+  --gradient-brand: linear-gradient(135deg, #f2c200 0%, #e08a1e 100%);
+  --gradient-brand-soft: linear-gradient(135deg, rgba(242, 194, 0, 0.12) 0%, rgba(224, 138, 30, 0.08) 100%);
 }
 
 /* ----------------------------------------------------------------------------
@@ -251,16 +256,16 @@ h6 {
     transform: none;
   }
 
-  /* Primary — solid accent (cyan) fill, near-black text. Rationed: one per
+  /* Primary — solid accent (yellow) fill, near-black text. Rationed: one per
      screen. Subtle shadow, slight brighten on hover. */
   .sf-btn-primary {
-    background-color: var(--color-sf-cyan);
-    color: #08090a;
+    background-color: var(--color-accent);
+    color: var(--color-accent-fg);
     box-shadow: var(--shadow-sm);
   }
 
   .sf-btn-primary:hover:not(:disabled) {
-    background-color: color-mix(in srgb, var(--color-sf-cyan) 88%, white);
+    background-color: color-mix(in srgb, var(--color-accent) 90%, white);
   }
 
   /* Ghost — transparent with a hairline border; fills faintly on hover. */

@@ -21,7 +21,7 @@ import { Campaign } from '../../../core/campaigns/campaign.types';
             [routerLink]="['/app/simulator']"
             [queryParams]="{ campaign: campaign.id }"
             class="sf-btn text-xs"
-            style="background: var(--color-sf-cyan); color: #000;"
+            style="background: var(--color-accent); color: var(--color-accent-fg);"
             data-testid="forecast-run"
           >
             {{ campaign.forecast ? 'Rerun simulation' : 'Run simulation' }}

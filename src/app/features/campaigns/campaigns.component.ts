@@ -120,7 +120,7 @@ import { tierRank } from '../../core/types';
                 (click)="exportPdf(c, $event)"
                 [disabled]="!canExportBrief()"
                 class="sf-btn flex-1 text-xs disabled:opacity-40 disabled:cursor-not-allowed"
-                style="background: var(--color-sf-cyan); color: #000;"
+                style="background: var(--color-accent); color: var(--color-accent-fg);"
                 [attr.data-testid]="'campaign-pdf-' + c.id"
               >
                 Brief PDF
