@@ -73,14 +73,14 @@ function sponsorColor(pct: number): string {
   template: `
     @if (creator(); as c) {
       <div
-        class="fixed inset-0 z-50 flex items-center justify-center p-6"
+        class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6"
         style="background: var(--color-overlay);"
         (click)="close()"
         data-testid="creator-profile-backdrop"
       >
         <div
-          class="max-w-xl w-full rounded-lg overflow-hidden flex flex-col"
-          style="background: var(--color-bg-2); border: 1px solid var(--color-border-strong); max-height: 90vh;"
+          class="max-w-2xl w-full rounded-lg overflow-hidden flex flex-col max-h-[calc(100vh-3rem)] overflow-y-auto"
+          style="background: var(--color-bg-2); border: 1px solid var(--color-border-strong);"
           (click)="$event.stopPropagation()"
           data-testid="creator-profile-modal"
         >
@@ -133,7 +133,7 @@ function sponsorColor(pct: number): string {
                   style="background: var(--color-bg-3);"
                 >
                   <div class="flex items-center gap-2">
-                    <span class="text-[10px] uppercase tracking-wider font-bold" style="color: var(--color-sf-green);">
+                    <span class="text-[10px] uppercase tracking-wider font-bold leading-none" style="color: var(--color-sf-green);">
                       YouTube Data
                     </span>
                     <app-metric-source-badge source="youtube" />
@@ -155,7 +155,7 @@ function sponsorColor(pct: number): string {
                       YouTube data refresh pending.
                     </div>
                   } @else if (data(); as d) {
-                    <div class="grid grid-cols-2 gap-2">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <div class="p-2 rounded text-center" style="background: var(--color-bg-3);">
                         <div class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">
                           Subscribers
@@ -225,13 +225,13 @@ function sponsorColor(pct: number): string {
                     class="px-3 py-2 flex items-center gap-2"
                     style="background: var(--color-bg-3);"
                   >
-                    <span class="text-[10px] uppercase tracking-wider font-bold" style="color: var(--color-sf-gold);">
+                    <span class="text-[10px] uppercase tracking-wider font-bold leading-none" style="color: var(--color-sf-gold);">
                       Simfluence Analysis
                     </span>
                     <app-metric-source-badge source="simfluence" />
                   </div>
                   <div class="p-3 flex flex-col gap-3">
-                    <div class="grid grid-cols-3 gap-2">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
                       <div class="p-2 rounded text-center" style="background: var(--color-bg-3);">
                         <div class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">
                           Engagement
@@ -281,13 +281,13 @@ function sponsorColor(pct: number): string {
                 class="px-3 py-2 flex items-center gap-2"
                 style="background: var(--color-bg-3);"
               >
-                <span class="text-[10px] uppercase tracking-wider font-bold" style="color: var(--color-sf-gold);">
+                <span class="text-[10px] uppercase tracking-wider font-bold leading-none" style="color: var(--color-sf-gold);">
                   Estimated Budget Range
                 </span>
                 <app-metric-source-badge source="simfluence" />
               </div>
               <div class="p-3">
-                <div class="grid grid-cols-3 gap-2">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
                   <div class="p-2 rounded text-center" style="background: var(--color-bg-3);">
                     <div class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">
                       Integrated
@@ -336,7 +336,7 @@ function sponsorColor(pct: number): string {
                   style="background: var(--color-bg-3);"
                 >
                   <div class="flex items-center gap-2">
-                    <span class="text-[10px] uppercase tracking-wider font-bold" style="color: var(--color-sf-gold);">
+                    <span class="text-[10px] uppercase tracking-wider font-bold leading-none" style="color: var(--color-sf-gold);">
                       Category Benchmarking
                     </span>
                     <app-metric-source-badge source="simfluence" />
@@ -346,7 +346,7 @@ function sponsorColor(pct: number): string {
                   </span>
                 </div>
                 <div class="p-3">
-                  <div class="grid grid-cols-3 gap-2">
+                  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
                     <div class="p-2 rounded flex flex-col gap-1" style="background: var(--color-bg-3);">
                       <div class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">
                         CPI vs Category
@@ -423,7 +423,7 @@ function sponsorColor(pct: number): string {
                   class="px-3 py-2 flex items-center justify-between"
                   style="background: var(--color-bg-3);"
                 >
-                  <span class="text-[10px] uppercase tracking-wider font-bold" style="color: var(--color-twitch);">
+                  <span class="text-[10px] uppercase tracking-wider font-bold leading-none" style="color: var(--color-twitch);">
                     ● Twitch
                   </span>
                   @if (tw.isLoading()) {
@@ -433,7 +433,7 @@ function sponsorColor(pct: number): string {
 
                 <div class="p-3 flex flex-col gap-3">
                   @if (creator()?.twitchStats; as ts) {
-                    <div class="grid grid-cols-3 gap-2" data-testid="creator-profile-twitch-stats">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2" data-testid="creator-profile-twitch-stats">
                       <div class="p-2 rounded text-center" style="background: var(--color-bg-3);">
                         <div class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">Avg Viewers</div>
                         <div class="text-sm font-bold" style="color: var(--color-twitch);">{{ ts.avgCcv | number: '1.0-0' }}</div>
