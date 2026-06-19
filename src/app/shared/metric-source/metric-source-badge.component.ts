@@ -32,13 +32,13 @@ const SOURCE_META: Record<MetricSource, SourceMeta> = {
   standalone: true,
   template: `
     <span
-      class="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider whitespace-nowrap"
+      class="inline-flex items-center gap-1 text-[10px] leading-none uppercase tracking-wider whitespace-nowrap"
       [style.color]="'var(' + colorVar() + ')'"
       [attr.data-testid]="'metric-source-' + source()"
       [attr.title]="text()"
     >
       <span
-        class="inline-block rounded-full"
+        class="block rounded-full shrink-0"
         style="width: 6px; height: 6px;"
         [style.background]="'var(' + colorVar() + ')'"
         aria-hidden="true"
