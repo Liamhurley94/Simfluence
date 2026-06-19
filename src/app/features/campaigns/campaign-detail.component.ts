@@ -47,7 +47,7 @@ import { SectionForecastComponent } from './sections/section-forecast.component'
       } @else if (campaign(); as c) {
         <header
           class="sticky top-0 z-10 -mx-4 px-4 py-3 mb-4 backdrop-blur"
-          style="background: rgba(20,20,30,0.85); border-bottom: 1px solid var(--color-border);"
+          style="background: color-mix(in srgb, var(--color-bg-2) 88%, transparent); border-bottom: 1px solid var(--color-border);"
         >
           <div class="flex items-center justify-between gap-3">
             <div class="min-w-0">

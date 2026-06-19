@@ -6,6 +6,7 @@ import {
   CampaignSuggestion,
   CampaignSuggestionsService,
 } from '../../../core/campaigns/campaign-suggestions.service';
+import { FEATURES } from '../../../core/features';
 import { CreatorsService } from '../../../core/creators/creators.service';
 import { Creator } from '../../../core/data/creator.types';
 import { Campaign } from '../../../core/campaigns/campaign.types';
@@ -69,7 +70,7 @@ interface MatchBand {
               </div>
               <div class="flex items-center gap-2 shrink-0">
                 <span class="sf-chip">
-                  {{ cc.source }}
+                  {{ cc.source === 'persona_suggestion' ? 'Suggested' : (cc.source === 'manual' ? 'Manual' : cc.source) }}
                 </span>
                 <button
                   type="button"
@@ -87,7 +88,10 @@ interface MatchBand {
         </ul>
       }
 
-      <!-- Persona-grouped suggestions: always visible (auto-loads when genre set) -->
+      <!-- Persona-grouped suggestions HIDDEN pending product review — see
+           simfluence-backend/docs/persona-feature-review.md. Guarded by a falsy
+           flag so the markup + auto-fetch stay intact for easy re-enable. -->
+      @if (showSuggestions) {
       <div class="mt-2">
         <div
           class="text-[10px] uppercase tracking-wider mb-3 flex items-center gap-2"
@@ -302,6 +306,7 @@ interface MatchBand {
           </div>
         }
       </div>
+      }
     </section>
   `,
 })
@@ -319,6 +324,11 @@ export class SectionCreatorsComponent {
   protected readonly browseOpen = signal(false);
   private readonly skipped = signal<Set<number>>(new Set());
 
+  // Persona-grouped "audience-aligned suggestions" — gated by the central
+  // FEATURES.personas flag (same flag as the standalone Personas page/nav), so
+  // both hide/show together. The template block + auto-fetch effect stay intact.
+  protected readonly showSuggestions = FEATURES.personas;
+
   protected readonly existingCreatorIds = computed(
     () => new Set(this.campaignCreators.records().map((r) => r.creatorId)),
   );
@@ -335,6 +345,7 @@ export class SectionCreatorsComponent {
   constructor() {
     // Auto-fetch suggestions on mount + whenever genre/objectives change.
     effect(() => {
+      if (!this.showSuggestions) return; // suggestions hidden — skip the fetch
       const key = this.suggestionsKey();
       if (!key) {
         this.groups.set([]);

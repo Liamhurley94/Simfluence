@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { authGuard } from './core/auth/auth.guard';
 import { tierGuard } from './core/auth/tier.guard';
 import { adminGuard } from './core/auth/admin.guard';
+import { FEATURES } from './core/features';
 
 export const routes: Routes = [
   // Public marketing landing — the pre-auth face of the app. Lives at the root
@@ -47,10 +48,15 @@ export const routes: Routes = [
           import('./features/scoring/scoring.component').then((m) => m.ScoringComponent),
       },
       {
-        // Personas route hidden pending product review — see simfluence-backend/docs/persona-feature-review.md
-        // Component + service files are intentionally kept in place; only the entry points are hidden.
+        // Personas — gated by FEATURES.personas (hidden pending review; same flag
+        // as the nav tab + campaign suggestions). When off, redirect to discovery.
         path: 'personas',
-        redirectTo: '/app/discovery',
+        ...(FEATURES.personas
+          ? {
+              loadComponent: () =>
+                import('./features/personas/personas.component').then((m) => m.PersonasComponent),
+            }
+          : { redirectTo: '/app/discovery' }),
       },
       {
         path: 'simulator',

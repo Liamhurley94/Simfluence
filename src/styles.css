@@ -368,3 +368,50 @@ h6 {
 @media (prefers-reduced-motion: reduce) {
   .sf-skeleton { animation: none; }
 }
+
+/* ----------------------------------------------------------------------------
+   Form controls — Linear inputs & selects. A box-shadow accent focus ring
+   (replaces the browser-default blue) is applied to ALL controls — box-shadow so
+   it wins regardless of inline border/bg. The .sf-input / .sf-select classes add
+   the full token-driven treatment + a custom select chevron (no OS appearance).
+   -------------------------------------------------------------------------- */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 38%, transparent);
+}
+
+.sf-input,
+.sf-select {
+  width: 100%;
+  background-color: var(--color-bg-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  line-height: 1.4;
+  padding: 0.5rem 0.75rem;
+  transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+}
+.sf-input::placeholder { color: var(--color-text-muted); }
+.sf-input:hover,
+.sf-select:hover { border-color: var(--color-border-strong); }
+.sf-input:focus-visible,
+.sf-select:focus-visible {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 38%, transparent);
+}
+
+.sf-select {
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  padding-right: 2rem;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238a8f98' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 0.7rem center;
+  background-size: 14px;
+}
