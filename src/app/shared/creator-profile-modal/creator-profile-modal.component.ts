@@ -146,7 +146,34 @@ function sponsorColor(pct: number): string {
                 </div>
 
                 <div class="p-3 flex flex-col gap-3">
-                  @if (yt.error()) {
+                  @if (yt.isLoading()) {
+                    <!-- Skeleton mirrors the loaded layout (2 stat tiles, last-upload
+                         tile, 3 recent-video lines) so the box opens at ~final size. -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2" data-testid="creator-profile-youtube-skeleton">
+                      <div class="p-2 rounded flex flex-col items-center gap-1.5" style="background: var(--color-bg-3);">
+                        <div class="sf-skeleton h-2 w-16"></div>
+                        <div class="sf-skeleton h-4 w-24"></div>
+                      </div>
+                      <div class="p-2 rounded flex flex-col items-center gap-1.5" style="background: var(--color-bg-3);">
+                        <div class="sf-skeleton h-2 w-16"></div>
+                        <div class="sf-skeleton h-4 w-24"></div>
+                      </div>
+                    </div>
+                    <div class="grid grid-cols-1 gap-2">
+                      <div class="p-2 rounded flex flex-col items-center gap-1.5" style="background: var(--color-bg-3);">
+                        <div class="sf-skeleton h-2 w-16"></div>
+                        <div class="sf-skeleton h-4 w-20"></div>
+                      </div>
+                    </div>
+                    <div>
+                      <div class="sf-skeleton h-2 w-24 mb-2"></div>
+                      <div class="flex flex-col gap-1.5">
+                        <div class="sf-skeleton h-3 w-full"></div>
+                        <div class="sf-skeleton h-3 w-11/12"></div>
+                        <div class="sf-skeleton h-3 w-4/5"></div>
+                      </div>
+                    </div>
+                  } @else if (yt.error()) {
                     <div class="text-xs" style="color: var(--color-sf-red);">
                       Could not load data.
                     </div>
@@ -215,7 +242,32 @@ function sponsorColor(pct: number): string {
                 </div>
               </div>
 
-              @if (!yt.isLoading() && data(); as d) {
+              @if (yt.isLoading()) {
+                <!-- Skeleton of the Simfluence Analysis box (3 tiles) so it reserves
+                     its space during load rather than appearing and shoving content. -->
+                <div
+                  class="rounded-lg overflow-hidden"
+                  style="border: 1px solid var(--color-border);"
+                  data-testid="creator-profile-analysis-skeleton"
+                >
+                  <div class="px-3 py-2 flex items-center gap-2" style="background: var(--color-bg-3);">
+                    <span class="text-[10px] uppercase tracking-wider font-bold leading-none" style="color: var(--color-sf-gold);">
+                      Simfluence Analysis
+                    </span>
+                    <app-metric-source-badge source="simfluence" />
+                  </div>
+                  <div class="p-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                      @for (i of [1, 2, 3]; track i) {
+                        <div class="p-2 rounded flex flex-col items-center gap-1.5" style="background: var(--color-bg-3);">
+                          <div class="sf-skeleton h-2 w-16"></div>
+                          <div class="sf-skeleton h-4 w-12"></div>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                </div>
+              } @else if (data(); as d) {
                 <div
                   class="rounded-lg overflow-hidden"
                   style="border: 1px solid var(--color-border);"

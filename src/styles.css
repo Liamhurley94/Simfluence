@@ -349,3 +349,22 @@ h6 {
     animation: none;
   }
 }
+
+/* ----------------------------------------------------------------------------
+   Skeleton ("shadow") loaders — placeholder blocks shaped like the eventual
+   content so async panels open at ~their final size instead of inflating when
+   data lands. Theme-agnostic gentle pulse (uses the bg-4 token); disabled under
+   prefers-reduced-motion (static block).
+   -------------------------------------------------------------------------- */
+@keyframes sf-skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.45; }
+}
+.sf-skeleton {
+  background-color: var(--color-bg-4);
+  border-radius: var(--radius-sm);
+  animation: sf-skeleton-pulse 1.4s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sf-skeleton { animation: none; }
+}
