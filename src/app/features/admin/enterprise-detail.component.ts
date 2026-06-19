@@ -115,8 +115,7 @@ interface MemberRow { id: string; email: string | null; tier: string | null; }
                   rows="2"
                   [value]="rejectReason()"
                   (input)="rejectReason.set($any($event.target).value)"
-                  class="w-full px-3 py-2 rounded text-sm"
-                  style="background: var(--color-bg-3); border: 1px solid var(--color-border); color: var(--color-text);"
+                  class="sf-input"
                   data-testid="admin-reject-reason"
                 ></textarea>
                 <button

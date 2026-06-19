@@ -78,8 +78,7 @@ const FORMATS: Format[] = ['Integrated', 'Mixed', 'Dedicated'];
             step="1000"
             [ngModel]="budget()"
             (ngModelChange)="budget.set($event || 0)"
-            class="w-full px-3 py-2 rounded text-sm"
-            style="background: var(--color-bg-3); border: 1px solid var(--color-border); color: var(--color-text);"
+            class="sf-input"
             data-testid="sim-budget"
           />
         </div>
@@ -93,8 +92,7 @@ const FORMATS: Format[] = ['Integrated', 'Mixed', 'Dedicated'];
           <select
             [ngModel]="format()"
             (ngModelChange)="format.set($event)"
-            class="w-full px-3 py-2 rounded text-sm"
-            style="background: var(--color-bg-3); border: 1px solid var(--color-border); color: var(--color-text);"
+            class="sf-select"
             data-testid="sim-format"
           >
             @for (f of formats; track f) {
@@ -112,8 +110,7 @@ const FORMATS: Format[] = ['Integrated', 'Mixed', 'Dedicated'];
           <select
             [ngModel]="context.genre()"
             (ngModelChange)="context.genre.set($event)"
-            class="w-full px-3 py-2 rounded text-sm"
-            style="background: var(--color-bg-3); border: 1px solid var(--color-border); color: var(--color-text);"
+            class="sf-select"
             data-testid="sim-genre"
           >
             @for (g of genres(); track g) {

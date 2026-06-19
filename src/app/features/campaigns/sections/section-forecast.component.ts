@@ -9,10 +9,10 @@ import { Campaign } from '../../../core/campaigns/campaign.types';
   imports: [DecimalPipe, RouterLink],
   template: `
     <section
-      class="sf-panel p-4"
+      class="sf-panel p-5"
       data-testid="section-forecast"
     >
-      <div class="flex items-center justify-between mb-3">
+      <div class="flex items-center justify-between mb-4">
         <h2 class="text-xs uppercase tracking-wider font-bold" style="color: var(--color-text-muted);">
           Forecast
         </h2>

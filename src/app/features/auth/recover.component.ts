@@ -18,8 +18,7 @@ import { AuthService } from '../../core/auth/auth.service';
         placeholder="Email"
         autocomplete="email"
         [disabled]="sent()"
-        class="w-full px-3 py-2 rounded text-sm"
-        style="background: var(--color-bg-3); border: 1px solid var(--color-border); color: var(--color-text);"
+        class="sf-input"
         data-testid="recover-email"
       />
       @if (sent()) {

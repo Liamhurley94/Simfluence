@@ -41,8 +41,7 @@ interface ScoredRow {
         <select
           [ngModel]="context.genre()"
           (ngModelChange)="onGenreChange($event)"
-          class="px-3 py-2 rounded text-sm"
-          style="background: var(--color-bg-2); border: 1px solid var(--color-border); color: var(--color-text);"
+          class="sf-select w-auto"
           data-testid="scoring-genre"
         >
           @for (g of genres(); track g) {
@@ -56,8 +55,7 @@ interface ScoredRow {
         <select
           [ngModel]="format()"
           (ngModelChange)="format.set($event)"
-          class="px-3 py-2 rounded text-sm"
-          style="background: var(--color-bg-2); border: 1px solid var(--color-border); color: var(--color-text);"
+          class="sf-select w-auto"
           data-testid="scoring-format"
         >
           @for (f of formats; track f) {

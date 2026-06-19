@@ -23,10 +23,10 @@ interface MatchBand {
   imports: [BrowseCreatorsModalComponent, DecimalPipe],
   template: `
     <section
-      class="sf-panel p-4"
+      class="sf-panel p-5"
       data-testid="section-creators"
     >
-      <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+      <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
         <h2 class="text-xs uppercase tracking-wider font-bold" style="color: var(--color-text-muted);">
           Creators ({{ campaignCreators.records().length }})
         </h2>

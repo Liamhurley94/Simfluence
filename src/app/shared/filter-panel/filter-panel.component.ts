@@ -59,8 +59,7 @@ const ALL_PLATFORMS = 'All platforms';
           [ngModel]="search()"
           (ngModelChange)="onSearch($event)"
           placeholder="Name, handle, bio…"
-          class="w-full px-3 py-2 rounded text-sm"
-          style="background: var(--color-bg-3); border: 1px solid var(--color-border); color: var(--color-text);"
+          class="sf-input"
           data-testid="filter-search"
         />
       </div>
@@ -76,8 +75,7 @@ const ALL_PLATFORMS = 'All platforms';
         <select
           [ngModel]="genre()"
           (ngModelChange)="onGenre($event)"
-          class="w-full px-3 py-2 rounded text-sm"
-          style="background: var(--color-bg-3); border: 1px solid var(--color-border); color: var(--color-text);"
+          class="sf-select"
           data-testid="filter-genre"
         >
           <option [ngValue]="undefined">All genres</option>
@@ -98,8 +96,7 @@ const ALL_PLATFORMS = 'All platforms';
         <select
           [ngModel]="platform_()"
           (ngModelChange)="onPlatform($event)"
-          class="w-full px-3 py-2 rounded text-sm"
-          style="background: var(--color-bg-3); border: 1px solid var(--color-border); color: var(--color-text);"
+          class="sf-select"
           data-testid="filter-platform"
         >
           <option [ngValue]="allPlatforms">{{ allPlatforms }}</option>
@@ -144,8 +141,7 @@ const ALL_PLATFORMS = 'All platforms';
         <select
           [ngModel]="tier()"
           (ngModelChange)="onTier($event)"
-          class="w-full px-3 py-2 rounded text-sm"
-          style="background: var(--color-bg-3); border: 1px solid var(--color-border); color: var(--color-text);"
+          class="sf-select"
           data-testid="filter-tier"
         >
           <option [ngValue]="undefined">Mixed tiers</option>
@@ -166,8 +162,7 @@ const ALL_PLATFORMS = 'All platforms';
         <select
           [ngModel]="format()"
           (ngModelChange)="onFormat($event)"
-          class="w-full px-3 py-2 rounded text-sm"
-          style="background: var(--color-bg-3); border: 1px solid var(--color-border); color: var(--color-text);"
+          class="sf-select"
           data-testid="filter-format"
         >
           @for (opt of formatOptions; track opt.key) {
@@ -274,8 +269,7 @@ const ALL_PLATFORMS = 'All platforms';
         <select
           [ngModel]="sort()"
           (ngModelChange)="onSort($event)"
-          class="w-full px-3 py-2 rounded text-sm"
-          style="background: var(--color-bg-3); border: 1px solid var(--color-border); color: var(--color-text);"
+          class="sf-select"
           data-testid="filter-sort"
         >
           @for (opt of sortOptions; track opt.key) {

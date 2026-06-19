@@ -16,14 +16,14 @@ const OBJECTIVE_OPTIONS = [
   imports: [FormsModule],
   template: `
     <section
-      class="sf-panel p-4"
+      class="sf-panel p-5"
       data-testid="section-budget"
     >
-      <h2 class="text-xs uppercase tracking-wider font-bold mb-3" style="color: var(--color-text-muted);">
+      <h2 class="text-xs uppercase tracking-wider font-bold mb-4" style="color: var(--color-text-muted);">
         Budget & objectives
       </h2>
 
-      <label class="block mb-4">
+      <label class="block mb-5">
         <span class="text-[10px] uppercase tracking-wider" style="color: var(--color-text-muted);">Budget (USD)</span>
         <input
           type="number"
@@ -32,8 +32,7 @@ const OBJECTIVE_OPTIONS = [
           [(ngModel)]="budget"
           (blur)="commitBudget()"
           [readOnly]="readonly"
-          class="w-full mt-1 px-2 py-1.5 rounded text-sm"
-          style="background: var(--color-bg-3); border: 1px solid var(--color-border); color: var(--color-text);"
+          class="sf-input mt-1"
           data-testid="budget-input"
         />
       </label>

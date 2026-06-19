@@ -13,8 +13,7 @@ import { AuthService } from '../../core/auth/auth.service';
         formControlName="email"
         placeholder="Email"
         autocomplete="username"
-        class="w-full px-3 py-2 rounded text-sm"
-        style="background: var(--color-bg-3); border: 1px solid var(--color-border); color: var(--color-text);"
+        class="sf-input"
         data-testid="login-email"
       />
       <input
@@ -22,8 +21,7 @@ import { AuthService } from '../../core/auth/auth.service';
         formControlName="password"
         placeholder="Password"
         autocomplete="current-password"
-        class="w-full px-3 py-2 rounded text-sm"
-        style="background: var(--color-bg-3); border: 1px solid var(--color-border); color: var(--color-text);"
+        class="sf-input"
         data-testid="login-password"
       />
       @if (error()) {

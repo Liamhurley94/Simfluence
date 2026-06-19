@@ -91,7 +91,7 @@ import { SectionForecastComponent } from './sections/section-forecast.component'
           </div>
         </header>
 
-        <div class="space-y-4">
+        <div class="space-y-5">
           <app-section-basics
             [campaign]="c"
             [readonly]="readonly()"

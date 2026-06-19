@@ -66,8 +66,7 @@ const PAGE_SIZE = 20;
             [ngModel]="search()"
             (ngModelChange)="onSearch($event)"
             placeholder="Search name, handle, bio…"
-            class="flex-1 min-w-0 px-3 py-2 rounded text-sm"
-            style="background: var(--color-bg-3); border: 1px solid var(--color-border); color: var(--color-text);"
+            class="sf-input flex-1 min-w-0"
             data-testid="browse-creators-search"
           />
           @if (campaignGenre) {

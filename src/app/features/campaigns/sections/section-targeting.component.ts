@@ -9,10 +9,10 @@ import { Campaign, UpdateCampaign } from '../../../core/campaigns/campaign.types
   imports: [FormsModule],
   template: `
     <section
-      class="sf-panel p-4"
+      class="sf-panel p-5"
       data-testid="section-targeting"
     >
-      <h2 class="text-xs uppercase tracking-wider font-bold mb-3" style="color: var(--color-text-muted);">
+      <h2 class="text-xs uppercase tracking-wider font-bold mb-4" style="color: var(--color-text-muted);">
         Targeting
       </h2>
 
@@ -22,8 +22,7 @@ import { Campaign, UpdateCampaign } from '../../../core/campaigns/campaign.types
           [(ngModel)]="selected"
           (change)="commit()"
           [disabled]="readonly"
-          class="w-full mt-1 px-2 py-1.5 rounded text-sm"
-          style="background: var(--color-bg-3); border: 1px solid var(--color-border); color: var(--color-text);"
+          class="sf-select mt-1"
           data-testid="targeting-genre"
         >
           <option value="">— Select a genre —</option>

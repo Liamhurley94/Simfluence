@@ -128,8 +128,7 @@ interface MemberRow {
               type="email"
               formControlName="email"
               placeholder="teammate@example.com"
-              class="flex-1 px-3 py-2 rounded text-sm"
-              style="background: var(--color-bg-3); border: 1px solid var(--color-border); color: var(--color-text);"
+              class="sf-input flex-1"
               data-testid="account-invite-email"
             />
             <button
@@ -205,8 +204,7 @@ interface MemberRow {
               <input
                 type="text"
                 formControlName="name"
-                class="w-full px-3 py-2 rounded text-sm"
-                style="background: var(--color-bg-3); border: 1px solid var(--color-border); color: var(--color-text);"
+                class="sf-input"
                 data-testid="apply-enterprise-name"
               />
             </div>
@@ -215,8 +213,7 @@ interface MemberRow {
               <input
                 type="email"
                 formControlName="contact_email"
-                class="w-full px-3 py-2 rounded text-sm"
-                style="background: var(--color-bg-3); border: 1px solid var(--color-border); color: var(--color-text);"
+                class="sf-input"
                 data-testid="apply-enterprise-contact"
               />
             </div>
@@ -225,8 +222,7 @@ interface MemberRow {
               <textarea
                 rows="3"
                 formControlName="address"
-                class="w-full px-3 py-2 rounded text-sm"
-                style="background: var(--color-bg-3); border: 1px solid var(--color-border); color: var(--color-text);"
+                class="sf-input"
                 data-testid="apply-enterprise-address"
               ></textarea>
             </div>

@@ -8,22 +8,21 @@ import { Campaign, UpdateCampaign } from '../../../core/campaigns/campaign.types
   imports: [FormsModule],
   template: `
     <section
-      class="sf-panel p-4"
+      class="sf-panel p-5"
       data-testid="section-basics"
     >
-      <h2 class="text-xs uppercase tracking-wider font-bold mb-3" style="color: var(--color-text-muted);">
+      <h2 class="text-xs uppercase tracking-wider font-bold mb-4" style="color: var(--color-text-muted);">
         Basics
       </h2>
 
-      <label class="block mb-3">
+      <label class="block mb-4">
         <span class="text-[10px] uppercase tracking-wider" style="color: var(--color-text-muted);">Name</span>
         <input
           type="text"
           [(ngModel)]="name"
           (blur)="commitName()"
           [readOnly]="readonly"
-          class="w-full mt-1 px-2 py-1.5 rounded text-sm"
-          style="background: var(--color-bg-3); border: 1px solid var(--color-border); color: var(--color-text);"
+          class="sf-input mt-1"
           data-testid="basics-name"
         />
       </label>
@@ -36,8 +35,7 @@ import { Campaign, UpdateCampaign } from '../../../core/campaigns/campaign.types
           (blur)="commitClient()"
           [readOnly]="readonly"
           placeholder="Brand or sponsor name"
-          class="w-full mt-1 px-2 py-1.5 rounded text-sm"
-          style="background: var(--color-bg-3); border: 1px solid var(--color-border); color: var(--color-text);"
+          class="sf-input mt-1"
           data-testid="basics-client"
         />
       </label>

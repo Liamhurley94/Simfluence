@@ -53,8 +53,7 @@ const PRESETS: { value: number; label: string }[] = [
           min="1000"
           step="1000"
           placeholder="$"
-          class="w-28 px-2 py-1 rounded text-xs"
-          style="background: var(--color-bg-3); border: 1px solid var(--color-border); color: var(--color-text);"
+          class="sf-input w-28 py-1 text-xs"
           data-testid="budget-custom-input"
         />
       }

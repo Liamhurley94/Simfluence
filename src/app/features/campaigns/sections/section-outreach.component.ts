@@ -19,14 +19,14 @@ import { Campaign } from '../../../core/campaigns/campaign.types';
   imports: [FormsModule],
   template: `
     <section
-      class="sf-panel p-4"
+      class="sf-panel p-5"
       data-testid="section-outreach"
     >
-      <h2 class="text-xs uppercase tracking-wider font-bold mb-3" style="color: var(--color-text-muted);">
+      <h2 class="text-xs uppercase tracking-wider font-bold mb-4" style="color: var(--color-text-muted);">
         Outreach
       </h2>
 
-      <div class="flex gap-2 mb-3 flex-wrap">
+      <div class="flex gap-2 mb-4 flex-wrap">
         @for (s of statuses; track s) {
           <div
             class="sf-chip"
@@ -86,8 +86,7 @@ import { Campaign } from '../../../core/campaigns/campaign.types';
                       [ngModel]="cc.format"
                       (ngModelChange)="setFormat(cc, $event)"
                       [disabled]="readonly"
-                      class="px-1 py-0.5 rounded text-xs"
-                      style="background: var(--color-bg-3); border: 1px solid var(--color-border); color: var(--color-text);"
+                      class="sf-select px-1 py-0.5 text-xs"
                       [attr.data-testid]="'outreach-format-' + cc.id"
                     >
                       <option [ngValue]="null">—</option>
@@ -103,8 +102,7 @@ import { Campaign } from '../../../core/campaigns/campaign.types';
                       (blur)="setContactEmail(cc, $event)"
                       [readOnly]="readonly"
                       placeholder="email"
-                      class="w-full px-1 py-0.5 rounded text-xs"
-                      style="background: var(--color-bg-3); border: 1px solid var(--color-border); color: var(--color-text);"
+                      class="sf-input px-1 py-0.5 text-xs"
                       [attr.data-testid]="'outreach-email-' + cc.id"
                     />
                   </td>
@@ -115,8 +113,7 @@ import { Campaign } from '../../../core/campaigns/campaign.types';
                       (blur)="setNotes(cc, $event)"
                       [readOnly]="readonly"
                       placeholder="notes"
-                      class="w-full px-1 py-0.5 rounded text-xs"
-                      style="background: var(--color-bg-3); border: 1px solid var(--color-border); color: var(--color-text);"
+                      class="sf-input px-1 py-0.5 text-xs"
                       [attr.data-testid]="'outreach-notes-' + cc.id"
                     />
                   </td>
