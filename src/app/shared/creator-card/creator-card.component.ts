@@ -23,7 +23,7 @@ const PLATFORM_COLORS: Record<string, string> = {
     <div
       class="sf-card p-4 cursor-pointer"
       [style.border]="selected() ? '2px solid ' + creator().color : ''"
-      (click)="onToggle()"
+      (click)="openModal()"
       data-testid="creator-card"
     >
       <div class="flex items-start gap-3 mb-3">
@@ -46,17 +46,6 @@ const PLATFORM_COLORS: Record<string, string> = {
             {{ creator().handle }}
           </div>
         </div>
-        <button
-          type="button"
-          (click)="openProfile($event)"
-          class="w-6 h-6 rounded text-xs flex items-center justify-center shrink-0"
-          style="background: var(--color-bg-3); color: var(--color-text-muted);"
-          aria-label="View creator profile"
-          title="View profile"
-          data-testid="creator-view-profile"
-        >
-          ⓘ
-        </button>
       </div>
 
       <div class="flex flex-wrap gap-1 mb-3 items-center">
@@ -151,26 +140,8 @@ const PLATFORM_COLORS: Record<string, string> = {
           <app-metric-source-badge source="twitch" />
         </div>
       } @else if (showAllMode()) {
-        @if (showBothCpis()) {
-          <div class="grid grid-cols-2 gap-1 mb-3 text-center" data-testid="creator-platform-cpis">
-            <div class="p-1.5 rounded" style="background: var(--color-bg-3);">
-              <div class="text-[9px] uppercase tracking-wider flex items-center justify-center gap-1" style="color: var(--color-text-muted);">
-                <span style="color: var(--color-twitch);">●</span> Twitch CPI
-              </div>
-              <div class="text-xs font-bold" [style.color]="scoreColor(twCpi()!)">
-                {{ twCpi() }}
-              </div>
-            </div>
-            <div class="p-1.5 rounded" style="background: var(--color-bg-3);">
-              <div class="text-[9px] uppercase tracking-wider flex items-center justify-center gap-1" style="color: var(--color-text-muted);">
-                <span style="color: var(--color-sf-red);">●</span> YouTube CPI
-              </div>
-              <div class="text-xs font-bold" [style.color]="scoreColor(ytCpi()!)">
-                {{ ytCpi() }}
-              </div>
-            </div>
-          </div>
-        }
+        <!-- Show-all: per-platform CPIs render in the unified Simfluence Scores
+             section below — no raw stats here, and no duplicate "best" tile. -->
       } @else {
         <div class="py-2 mb-2 text-center text-[10px]" style="color: var(--color-text-muted);" data-testid="creator-stats-unavailable">
           Live stats unavailable
@@ -185,25 +156,37 @@ const PLATFORM_COLORS: Record<string, string> = {
         <div class="flex-1 h-px" style="background: var(--color-border);"></div>
       </div>
 
-      <div class="grid grid-cols-2 gap-1 mb-3">
-        <div class="text-center p-2 rounded" style="background: var(--color-bg-3);">
-          <div class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">
-            CPI
-          </div>
-          <div class="text-sm font-bold" [style.color]="scoreColor(creator().cpi)">
-            {{ creator().cpi }}
-          </div>
-          <app-metric-source-badge source="simfluence" />
-        </div>
-        <div class="text-center p-2 rounded" style="background: var(--color-bg-3);">
-          <div class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">
-            GFI
-          </div>
-          @if (gfiDisplay() !== null) {
-            <div class="text-sm font-bold" [style.color]="scoreColor(gfiDisplay()!)">
-              {{ gfiDisplay() }}
+      <!-- Unified Simfluence scores: per-platform CPI(s) + GFI, one equal-width
+           row so single- and multi-platform cards are the same height, and no
+           redundant "best" tile. The divider above labels the whole section as
+           Simfluence-computed (no per-tile source badges). -->
+      <div class="flex gap-1 mb-3" data-testid="creator-scores">
+        @if (twCpi() !== null) {
+          <div class="flex-1 text-center p-2 rounded" style="background: var(--color-bg-3);" data-testid="creator-cpi-twitch">
+            <div class="text-[9px] uppercase tracking-wider flex items-center justify-center gap-1" style="color: var(--color-text-muted);">
+              <span style="color: var(--color-twitch);">●</span> Twitch CPI
             </div>
-            <app-metric-source-badge source="simfluence" />
+            <div class="text-sm font-bold" [style.color]="scoreColor(twCpi()!)">{{ twCpi() }}</div>
+          </div>
+        }
+        @if (ytCpi() !== null) {
+          <div class="flex-1 text-center p-2 rounded" style="background: var(--color-bg-3);" data-testid="creator-cpi-youtube">
+            <div class="text-[9px] uppercase tracking-wider flex items-center justify-center gap-1" style="color: var(--color-text-muted);">
+              <span style="color: var(--color-sf-red);">●</span> YouTube CPI
+            </div>
+            <div class="text-sm font-bold" [style.color]="scoreColor(ytCpi()!)">{{ ytCpi() }}</div>
+          </div>
+        }
+        @if (twCpi() === null && ytCpi() === null) {
+          <div class="flex-1 text-center p-2 rounded" style="background: var(--color-bg-3);" data-testid="creator-cpi">
+            <div class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">CPI</div>
+            <div class="text-sm font-bold" [style.color]="scoreColor(creator().cpi)">{{ creator().cpi }}</div>
+          </div>
+        }
+        <div class="flex-1 text-center p-2 rounded" style="background: var(--color-bg-3);">
+          <div class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">GFI</div>
+          @if (gfiDisplay() !== null) {
+            <div class="text-sm font-bold" [style.color]="scoreColor(gfiDisplay()!)">{{ gfiDisplay() }}</div>
           } @else {
             <div
               class="text-sm font-bold"
@@ -272,12 +255,8 @@ export class CreatorCardComponent {
     return c.bestCpi != null && !c.ytStats;
   });
 
-  readonly bestCpi = computed(() => this.creator().bestCpi ?? null);
   readonly twCpi = computed(() => this.creator().twCpi ?? null);
   readonly ytCpi = computed(() => this.creator().ytCpi ?? null);
-
-  // Show both per-platform CPIs only when the creator genuinely has both.
-  readonly showBothCpis = computed(() => this.twCpi() != null && this.ytCpi() != null);
 
   readonly tier = computed(() => tierForSubs(this.creator().subsParsed));
   readonly tierFg = computed(() => CREATOR_TIER_COLORS[this.tier()]);
@@ -325,8 +304,9 @@ export class CreatorCardComponent {
     this.toggle.emit(this.creator().id);
   }
 
-  openProfile(event: MouseEvent): void {
-    event.stopPropagation();
+  // Clicking the card body opens the profile modal; the Select button toggles
+  // selection (it stops propagation so it doesn't also open the modal).
+  openModal(): void {
     this.profile.open(this.creator());
   }
 

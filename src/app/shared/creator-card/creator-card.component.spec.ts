@@ -1,8 +1,9 @@
 import { TestBed } from '@angular/core/testing';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Component, signal } from '@angular/core';
 
 import { CreatorCardComponent } from './creator-card.component';
+import { CreatorProfileService } from '../../core/creator-profile/creator-profile.service';
 import { Creator } from '../../core/data/creator.types';
 import { Format } from '../../core/simulation/simulation.types';
 
@@ -122,11 +123,31 @@ describe('CreatorCardComponent', () => {
     expect(el.querySelector('[data-testid="creator-stats-unavailable"]')).toBeNull();
   });
 
-  it('renders simfluence badge on CPI tile', () => {
+  it('labels the unified scores section as Simfluence (divider, not per-tile badges)', () => {
     const fixture = TestBed.createComponent(HostComponent);
     fixture.detectChanges();
     const el = fixture.nativeElement;
-    expect(el.querySelector('[data-testid="metric-source-simfluence"]')).toBeTruthy();
+    // After the redesign the CPI/GFI tiles live under one "Simfluence Scores"
+    // divider; there are no per-tile source badges.
+    expect(el.textContent).toContain('Simfluence Scores');
+    expect(el.querySelector('[data-testid="creator-scores"]')).toBeTruthy();
+  });
+
+  it('clicking the card body opens the profile modal', () => {
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.detectChanges();
+    const openSpy = vi.spyOn(TestBed.inject(CreatorProfileService), 'open').mockImplementation(() => {});
+    fixture.nativeElement.querySelector('[data-testid="creator-card"]').click();
+    expect(openSpy).toHaveBeenCalledWith(expect.objectContaining({ id: SAMPLE.id }));
+  });
+
+  it('clicking Select toggles selection and does NOT open the modal', () => {
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.detectChanges();
+    const openSpy = vi.spyOn(TestBed.inject(CreatorProfileService), 'open').mockImplementation(() => {});
+    fixture.nativeElement.querySelector('[data-testid="creator-toggle"]').click();
+    expect(fixture.componentInstance.toggled()).toBe(SAMPLE.id);
+    expect(openSpy).not.toHaveBeenCalled();
   });
 
   it('renders a badge per platform', () => {
