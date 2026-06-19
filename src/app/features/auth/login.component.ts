@@ -34,8 +34,7 @@ import { AuthService } from '../../core/auth/auth.service';
       <button
         type="submit"
         [disabled]="busy()"
-        class="w-full py-2 rounded font-semibold text-sm disabled:opacity-60"
-        style="background: var(--color-sf-blue); color: white;"
+        class="sf-btn sf-btn-primary w-full"
         data-testid="login-submit"
       >
         {{ busy() ? 'Signing in…' : 'Sign in' }}

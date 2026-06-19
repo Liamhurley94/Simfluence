@@ -17,11 +17,11 @@ type TabKey = 'signup' | 'signin' | 'recover';
   imports: [LoginComponent, SignupComponent, RecoverComponent],
   template: `
     <div class="min-h-screen flex items-center justify-center p-6">
-      <div
-        class="max-w-md w-full p-8 rounded-lg"
-        style="background: var(--color-bg-2); border: 1px solid var(--color-border);"
-      >
-        <div class="mb-6 text-lg font-bold" style="color: var(--color-sf-blue);">
+      <div class="sf-card max-w-md w-full p-8">
+        <div
+          class="mb-6 text-lg font-bold tracking-tight"
+          style="font-family: var(--font-display); background: var(--gradient-brand); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;"
+        >
           Simfluence
         </div>
 

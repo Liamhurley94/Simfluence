@@ -46,8 +46,7 @@ import { IconComponent } from '../../shared/icon/icon.component';
       <button
         type="submit"
         [disabled]="busy()"
-        class="w-full py-2 rounded font-semibold text-sm disabled:opacity-60"
-        style="background: var(--color-sf-blue); color: white;"
+        class="sf-btn sf-btn-primary w-full"
         data-testid="signup-submit"
       >
         {{ busy() ? 'Creating account…' : (inviteToken() ? 'Join enterprise' : 'Create free account') }}

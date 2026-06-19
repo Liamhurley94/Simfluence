@@ -33,7 +33,7 @@ const TABS: Tab[] = [
         <a
           [attr.href]="tab.route"
           [routerLink]="isLocked(tab) ? null : tab.route"
-          routerLinkActive="bg-[color:var(--color-bg-3)] !text-[color:var(--color-sf-blue)] font-semibold"
+          routerLinkActive="bg-[color:var(--color-bg-3)] !text-[color:var(--color-text)] font-semibold"
           (click)="onClick(tab, $event)"
           class="px-3 py-2 rounded text-sm flex items-center justify-between cursor-pointer"
           style="color: var(--color-text-dim); transition: color 150ms ease, background-color 150ms ease;"
