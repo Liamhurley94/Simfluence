@@ -7,11 +7,12 @@ import { CampaignsService } from '../../core/campaigns/campaigns.service';
 import { BriefPdfService } from '../../core/campaigns/brief-pdf.service';
 import { Campaign, CAMPAIGN_STATUS_LABELS } from '../../core/campaigns/campaign.types';
 import { tierRank } from '../../core/types';
+import { SpinnerComponent } from '../../shared/spinner/spinner.component';
 
 @Component({
   selector: 'app-campaigns',
   standalone: true,
-  imports: [DecimalPipe, RouterLink],
+  imports: [DecimalPipe, RouterLink, SpinnerComponent],
   template: `
     <div class="flex items-center justify-between mb-6">
       <h1 class="text-xl font-bold" style="color: var(--color-text);">Campaigns</h1>
@@ -35,7 +36,11 @@ import { tierRank } from '../../core/types';
       </div>
     }
 
-    @if (svc.campaigns().length === 0 && !svc.loading()) {
+    @if (svc.loading()) {
+      <div class="flex justify-center py-12">
+        <app-spinner label="Loading campaigns…" />
+      </div>
+    } @else if (svc.campaigns().length === 0) {
       <div
         class="sf-card p-12 text-center"
         data-testid="campaigns-empty"

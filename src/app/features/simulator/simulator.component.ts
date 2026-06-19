@@ -3,6 +3,7 @@ import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { IconComponent } from '../../shared/icon/icon.component';
+import { SpinnerComponent } from '../../shared/spinner/spinner.component';
 
 import { AuthService } from '../../core/auth/auth.service';
 import { CampaignContextService } from '../../core/context/campaign-context.service';
@@ -25,7 +26,7 @@ const FORMATS: Format[] = ['Integrated', 'Mixed', 'Dedicated'];
 @Component({
   selector: 'app-simulator',
   standalone: true,
-  imports: [DecimalPipe, FormsModule, RouterLink, IconComponent],
+  imports: [DecimalPipe, FormsModule, RouterLink, IconComponent, SpinnerComponent],
   template: `
     <div class="flex items-center justify-between mb-6">
       <h1 class="text-xl font-bold" style="color: var(--color-text);">Simulator</h1>
@@ -34,7 +35,11 @@ const FORMATS: Format[] = ['Integrated', 'Mixed', 'Dedicated'];
       </div>
     </div>
 
-    @if (creators().length === 0) {
+    @if (creatorsLoading()) {
+      <div class="flex justify-center py-12">
+        <app-spinner label="Loading creators…" />
+      </div>
+    } @else if (creators().length === 0) {
       <div
         class="sf-card p-12 text-center"
         data-testid="sim-empty"
@@ -367,6 +372,11 @@ export class SimulatorComponent {
     defaultValue: [],
   });
   protected readonly creators = computed(() => this.creatorsRes.value());
+  // True only when there is a non-empty selection in flight — avoids flashing
+  // the spinner on the genuine "nothing selected" empty state.
+  protected readonly creatorsLoading = computed(
+    () => this.selection.ids().size > 0 && this.creatorsRes.isLoading(),
+  );
 
   protected readonly pending = this.runSim.pending;
 

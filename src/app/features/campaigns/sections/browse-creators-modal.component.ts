@@ -11,6 +11,7 @@ import {
 import { FormsModule } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
 import { IconComponent } from '../../../shared/icon/icon.component';
+import { SpinnerComponent } from '../../../shared/spinner/spinner.component';
 
 import { CreatorsService } from '../../../core/creators/creators.service';
 import { CreatorFilters, PagedCreators } from '../../../core/data/creator.types';
@@ -21,7 +22,7 @@ const PAGE_SIZE = 20;
 @Component({
   selector: 'app-browse-creators-modal',
   standalone: true,
-  imports: [FormsModule, DecimalPipe, IconComponent],
+  imports: [FormsModule, DecimalPipe, IconComponent, SpinnerComponent],
   template: `
     <div
       class="fixed inset-0 z-40 flex items-center justify-center p-4"
@@ -86,8 +87,8 @@ const PAGE_SIZE = 20;
 
         <div class="flex-1 overflow-y-auto px-4 py-3">
           @if (results.isLoading()) {
-            <div class="text-xs py-8 text-center" style="color: var(--color-text-muted);">
-              Loading…
+            <div class="flex justify-center py-8">
+              <app-spinner label="Loading creators…" />
             </div>
           } @else if (results.value().total === 0) {
             <div class="text-xs py-8 text-center" style="color: var(--color-text-muted);" data-testid="browse-creators-empty">

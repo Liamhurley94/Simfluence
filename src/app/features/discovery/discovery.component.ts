@@ -17,13 +17,14 @@ import {
 } from '../../shared/filter-panel/filter-panel.component';
 import { PaginationComponent } from '../../shared/pagination/pagination.component';
 import { BudgetPickerComponent } from '../../shared/budget-picker/budget-picker.component';
+import { SpinnerComponent } from '../../shared/spinner/spinner.component';
 
 const EMPTY_PAGE: PagedCreators = { creators: [], total: 0, pageCount: 1, page: 0 };
 
 @Component({
   selector: 'app-discovery',
   standalone: true,
-  imports: [CreatorCardComponent, FilterPanelComponent, PaginationComponent, DecimalPipe, BudgetPickerComponent, IconComponent],
+  imports: [CreatorCardComponent, FilterPanelComponent, PaginationComponent, DecimalPipe, BudgetPickerComponent, IconComponent, SpinnerComponent],
   template: `
     <div class="flex gap-6">
       <aside class="w-72 shrink-0">
@@ -79,7 +80,11 @@ const EMPTY_PAGE: PagedCreators = { creators: [], total: 0, pageCount: 1, page: 
           </div>
         }
 
-        @if (results.value().total === 0) {
+        @if (results.isLoading()) {
+          <div class="flex justify-center py-12">
+            <app-spinner label="Loading creators…" />
+          </div>
+        } @else if (results.value().total === 0) {
           <div
             class="sf-card p-12 text-center"
             data-testid="empty-state"

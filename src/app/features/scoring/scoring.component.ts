@@ -14,6 +14,7 @@ import { computeRateRanges, RateRanges } from '../../core/rates/rate-estimate';
 import { Format } from '../../core/simulation/simulation.types';
 import { tierRank } from '../../core/types';
 import { MetricSourceBadgeComponent } from '../../shared/metric-source/metric-source-badge.component';
+import { SpinnerComponent } from '../../shared/spinner/spinner.component';
 
 interface ScoredRow {
   creator: Creator;
@@ -28,7 +29,7 @@ interface ScoredRow {
 @Component({
   selector: 'app-scoring',
   standalone: true,
-  imports: [DecimalPipe, FormsModule, RouterLink, MetricSourceBadgeComponent],
+  imports: [DecimalPipe, FormsModule, RouterLink, MetricSourceBadgeComponent, SpinnerComponent],
   template: `
     <div class="flex items-center justify-between mb-6">
       <h1 class="text-xl font-bold" style="color: var(--color-text);">Scoring</h1>
@@ -71,7 +72,11 @@ interface ScoredRow {
       </div>
     </div>
 
-    @if (rows().length === 0) {
+    @if (creatorsLoading()) {
+      <div class="flex justify-center py-12">
+        <app-spinner label="Loading creators…" />
+      </div>
+    } @else if (rows().length === 0) {
       <div
         class="sf-card p-12 text-center"
         data-testid="scoring-empty"
@@ -384,6 +389,11 @@ export class ScoringComponent {
     defaultValue: [],
   });
   private readonly selectedCreators = computed(() => this.selectedCreatorsRes.value());
+  // True only when there is a non-empty selection in flight — avoids flashing
+  // the spinner on the genuine "nothing selected" empty state.
+  protected readonly creatorsLoading = computed(
+    () => this.selection.hasAny() && this.selectedCreatorsRes.isLoading(),
+  );
 
   protected readonly rows = computed<ScoredRow[]>(() => {
     // Tie in `score.version` so rows re-render when bulk score completes.
