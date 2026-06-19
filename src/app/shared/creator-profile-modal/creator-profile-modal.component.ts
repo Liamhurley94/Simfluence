@@ -80,14 +80,14 @@ function sponsorColor(pct: number): string {
         data-testid="creator-profile-backdrop"
       >
         <div
-          class="max-w-2xl w-full rounded-lg overflow-hidden flex flex-col max-h-[calc(100vh-3rem)] overflow-y-auto sf-modal-in"
+          class="max-w-2xl w-full rounded-lg overflow-hidden flex flex-col max-h-[calc(100vh-3rem)] sf-modal-in"
           style="background: var(--color-bg-2); border: 1px solid var(--color-border-strong);"
           (click)="$event.stopPropagation()"
           data-testid="creator-profile-modal"
         >
-          <!-- Header -->
+          <!-- Header (fixed; body scrolls) -->
           <div
-            class="px-5 py-4 flex items-center gap-3 border-b"
+            class="px-5 py-4 flex items-center gap-3 border-b shrink-0"
             style="border-color: var(--color-border);"
           >
             <div
@@ -114,8 +114,10 @@ function sponsorColor(pct: number): string {
             </button>
           </div>
 
-          <!-- Body (scrollable) -->
-          <div class="flex-1 overflow-y-auto p-5 flex flex-col gap-4">
+          <!-- Body — the single scroll container. min-h-0 lets this flex child
+               shrink below its content so overflow-y-auto actually scrolls
+               (a flex item defaults to min-height:auto, which was clipping it). -->
+          <div class="flex-1 min-h-0 overflow-y-auto p-5 flex flex-col gap-4">
             @if (c.bio) {
               <div>
                 <div class="text-[10px] uppercase tracking-wider mb-1" style="color: var(--color-text-muted);">Bio</div>

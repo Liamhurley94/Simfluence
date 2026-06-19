@@ -31,13 +31,13 @@ const PAGE_SIZE = 20;
       data-testid="browse-creators-backdrop"
     >
       <div
-        class="w-full max-w-3xl max-h-[88vh] flex flex-col rounded-lg sf-modal-in"
+        class="w-full max-w-3xl max-h-[88vh] flex flex-col rounded-lg overflow-hidden sf-modal-in"
         style="background: var(--color-bg-2); border: 1px solid var(--color-border);"
         (click)="$event.stopPropagation()"
         data-testid="browse-creators-modal"
       >
         <header
-          class="flex items-center justify-between px-4 py-3"
+          class="flex items-center justify-between px-4 py-3 shrink-0"
           style="border-bottom: 1px solid var(--color-border);"
         >
           <div>
@@ -58,7 +58,7 @@ const PAGE_SIZE = 20;
         </header>
 
         <div
-          class="px-4 py-3 flex items-center gap-2 flex-wrap"
+          class="px-4 py-3 flex items-center gap-2 flex-wrap shrink-0"
           style="border-bottom: 1px solid var(--color-border);"
         >
           <input
@@ -84,7 +84,7 @@ const PAGE_SIZE = 20;
           }
         </div>
 
-        <div class="flex-1 overflow-y-auto px-4 py-3">
+        <div class="flex-1 min-h-0 overflow-y-auto px-4 py-3">
           @if (results.isLoading()) {
             <div class="flex justify-center py-8">
               <app-spinner label="Loading creators…" />
