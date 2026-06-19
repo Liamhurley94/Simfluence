@@ -541,7 +541,7 @@ function sponsorColor(pct: number): string {
                   }
                   @if (!tw.isLoading() && !twData()) {
                     <div class="text-xs" style="color: var(--color-text-muted);">
-                      Twitch live info unavailable — API not configured.
+                      Live status unavailable.
                     </div>
                   } @else if (twData(); as d) {
                     @if (d.live) {
@@ -572,7 +572,7 @@ function sponsorColor(pct: number): string {
                     }
 
                     <!-- Inactivity badge — port of reference/app.html:12361-12366 -->
-                    @if (activityState() === 'inactive') {
+                    @if (!d.live && activityState() === 'inactive') {
                       <div
                         class="flex items-center gap-2 px-3 py-2 rounded"
                         style="background: color-mix(in srgb, var(--color-sf-red) 8%, transparent); border: 1px solid color-mix(in srgb, var(--color-sf-red) 30%, transparent);"
@@ -588,13 +588,13 @@ function sponsorColor(pct: number): string {
                           </div>
                         </div>
                       </div>
-                    } @else if (activityState() === 'stale') {
+                    } @else if (!d.live && activityState() === 'stale') {
                       <div class="text-[10px]" style="color: var(--color-sf-gold);" data-testid="creator-profile-twitch-stale">
-                        Last stream: {{ d.daysSinceStream }} days ago
+                        Last streamed {{ lastStreamPhrase(d.daysSinceStream) }}
                       </div>
-                    } @else if (activityState() === 'active') {
+                    } @else if (!d.live && activityState() === 'active') {
                       <div class="text-[10px]" style="color: var(--color-sf-green);" data-testid="creator-profile-twitch-active">
-                        <app-icon name="check" [size]="12" style="display:inline-block;vertical-align:middle;" /> Active — last stream {{ d.daysSinceStream }} days ago
+                        <app-icon name="check" [size]="12" style="display:inline-block;vertical-align:middle;" /> Active — last streamed {{ lastStreamPhrase(d.daysSinceStream) }}
                       </div>
                     }
 
@@ -668,6 +668,14 @@ export class CreatorProfileModalComponent {
   protected readonly data = computed(() => this.yt.value());
   protected readonly twData = computed(() => this.tw.value());
   protected readonly activityState = computed(() => activityClass(this.twData()?.daysSinceStream ?? null));
+
+  // Humanize days-since-last-stream so the card never renders "0 days ago".
+  protected lastStreamPhrase(days: number | null): string {
+    if (days == null) return 'recently';
+    if (days <= 0) return 'today';
+    if (days === 1) return 'yesterday';
+    return `${days} days ago`;
+  }
 
   protected readonly videos = computed<YoutubeVideo[]>(() => this.data()?.top_videos ?? []);
   protected readonly rates = computed(() => computeRateRanges(this.creator()!));
