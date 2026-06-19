@@ -17,7 +17,7 @@ interface MemberRow {
   standalone: true,
   imports: [ReactiveFormsModule, DatePipe],
   template: `
-    <section class="max-w-3xl mx-auto py-8 flex flex-col gap-6">
+    <section class="max-w-3xl mx-auto py-8 flex flex-col gap-6 sf-appear">
       <header>
         <h1 class="text-2xl font-bold" style="color: var(--color-text);">Account</h1>
         <p class="mt-1 text-sm" style="color: var(--color-text-muted);">
@@ -187,7 +187,7 @@ interface MemberRow {
       <!-- APPLY FOR ENTERPRISE FORM (modal) -->
       @if (showApplyForm()) {
         <div
-          class="fixed inset-0 z-40 flex items-center justify-center p-6"
+          class="fixed inset-0 z-40 flex items-center justify-center p-6 sf-fade-in"
           style="background: var(--color-overlay);"
           (click)="showApplyForm.set(false)"
         >
@@ -195,7 +195,7 @@ interface MemberRow {
             [formGroup]="applyForm"
             (ngSubmit)="onApply()"
             (click)="$event.stopPropagation()"
-            class="sf-card max-w-lg w-full p-6 flex flex-col gap-3"
+            class="sf-card max-w-lg w-full p-6 flex flex-col gap-3 sf-modal-in"
             data-testid="apply-enterprise-form"
           >
             <h2 class="text-lg font-bold mb-2" style="color: var(--color-text);">Apply for Enterprise</h2>

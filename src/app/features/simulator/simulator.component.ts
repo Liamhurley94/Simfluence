@@ -28,6 +28,7 @@ const FORMATS: Format[] = ['Integrated', 'Mixed', 'Dedicated'];
   standalone: true,
   imports: [DecimalPipe, FormsModule, RouterLink, IconComponent, SpinnerComponent],
   template: `
+    <div class="sf-appear">
     <div class="flex items-center justify-between mb-6">
       <h1 class="text-xl font-bold" style="color: var(--color-text);">Simulator</h1>
       <div class="text-xs" style="color: var(--color-text-muted);" data-testid="sim-selection-count">
@@ -337,6 +338,7 @@ const FORMATS: Format[] = ['Integrated', 'Mixed', 'Dedicated'];
         </div>
       }
     }
+    </div>
   `,
 })
 export class SimulatorComponent {

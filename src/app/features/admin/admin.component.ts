@@ -9,7 +9,7 @@ import { EnterpriseWithStats } from '../../core/enterprise/enterprise.types';
   standalone: true,
   imports: [RouterLink, RouterOutlet, DatePipe],
   template: `
-    <section class="py-8">
+    <section class="py-8 sf-appear">
       <header class="mb-6">
         <h1 class="text-2xl font-bold" style="color: var(--color-text);">Admin</h1>
         <p class="text-sm mt-1" style="color: var(--color-text-muted);">Enterprise approvals.</p>

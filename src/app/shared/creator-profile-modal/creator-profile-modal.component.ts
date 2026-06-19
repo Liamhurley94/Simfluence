@@ -73,13 +73,13 @@ function sponsorColor(pct: number): string {
   template: `
     @if (creator(); as c) {
       <div
-        class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6"
+        class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 sf-fade-in"
         style="background: var(--color-overlay);"
         (click)="close()"
         data-testid="creator-profile-backdrop"
       >
         <div
-          class="max-w-2xl w-full rounded-lg overflow-hidden flex flex-col max-h-[calc(100vh-3rem)] overflow-y-auto"
+          class="max-w-2xl w-full rounded-lg overflow-hidden flex flex-col max-h-[calc(100vh-3rem)] overflow-y-auto sf-modal-in"
           style="background: var(--color-bg-2); border: 1px solid var(--color-border-strong);"
           (click)="$event.stopPropagation()"
           data-testid="creator-profile-modal"

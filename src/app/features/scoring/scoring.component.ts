@@ -31,6 +31,7 @@ interface ScoredRow {
   standalone: true,
   imports: [DecimalPipe, FormsModule, RouterLink, MetricSourceBadgeComponent, SpinnerComponent],
   template: `
+    <div class="sf-appear">
     <div class="flex items-center justify-between mb-6">
       <h1 class="text-xl font-bold" style="color: var(--color-text);">Scoring</h1>
       <div class="flex items-center gap-3">
@@ -193,10 +194,11 @@ interface ScoredRow {
             </tr>
           </thead>
           <tbody>
-            @for (row of rows(); track row.creator.id) {
+            @for (row of rows(); track row.creator.id; let i = $index) {
               <tr
-                class="border-t"
+                class="border-t sf-appear"
                 style="border-color: var(--color-border);"
+                [style.animation-delay.ms]="(i < 12 ? i : 12) * 30"
                 [attr.data-testid]="'scoring-row-' + row.creator.id"
               >
                 <td class="p-3">
@@ -371,6 +373,7 @@ interface ScoredRow {
         </div>
       </div>
     }
+    </div>
   `,
 })
 export class ScoringComponent {

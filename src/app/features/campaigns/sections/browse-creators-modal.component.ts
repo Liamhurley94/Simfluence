@@ -25,13 +25,13 @@ const PAGE_SIZE = 20;
   imports: [FormsModule, DecimalPipe, IconComponent, SpinnerComponent],
   template: `
     <div
-      class="fixed inset-0 z-40 flex items-center justify-center p-4"
+      class="fixed inset-0 z-40 flex items-center justify-center p-4 sf-fade-in"
       style="background: var(--color-overlay);"
       (click)="onBackdrop($event)"
       data-testid="browse-creators-backdrop"
     >
       <div
-        class="w-full max-w-3xl max-h-[88vh] flex flex-col rounded-lg"
+        class="w-full max-w-3xl max-h-[88vh] flex flex-col rounded-lg sf-modal-in"
         style="background: var(--color-bg-2); border: 1px solid var(--color-border);"
         (click)="$event.stopPropagation()"
         data-testid="browse-creators-modal"
@@ -96,10 +96,11 @@ const PAGE_SIZE = 20;
             </div>
           } @else {
             <ul class="space-y-2">
-              @for (c of results.value().creators; track c.id) {
+              @for (c of results.value().creators; track c.id; let i = $index) {
                 <li
-                  class="flex items-center gap-3 p-2 rounded"
+                  class="flex items-center gap-3 p-2 rounded sf-appear"
                   style="background: var(--color-bg-3);"
+                  [style.animation-delay.ms]="(i < 12 ? i : 12) * 30"
                   [attr.data-testid]="'browse-creator-' + c.id"
                 >
                   <div

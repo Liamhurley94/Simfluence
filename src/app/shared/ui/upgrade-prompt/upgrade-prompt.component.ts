@@ -9,13 +9,13 @@ import { UpgradePromptService } from '../../../core/upgrade/upgrade-prompt.servi
   template: `
     @if (service.current(); as req) {
       <div
-        class="fixed inset-0 z-50 flex items-center justify-center p-6"
+        class="fixed inset-0 z-50 flex items-center justify-center p-6 sf-fade-in"
         style="background: var(--color-overlay);"
         (click)="service.close()"
         data-testid="upgrade-backdrop"
       >
         <div
-          class="max-w-sm w-full rounded-lg p-6"
+          class="max-w-sm w-full rounded-lg p-6 sf-modal-in"
           style="background: var(--color-bg-2); border: 1px solid var(--color-border-strong);"
           (click)="$event.stopPropagation()"
           data-testid="upgrade-dialog"

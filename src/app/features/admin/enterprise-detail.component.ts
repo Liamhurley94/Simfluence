@@ -14,12 +14,12 @@ interface MemberRow { id: string; email: string | null; tier: string | null; }
   imports: [DatePipe],
   template: `
     <div
-      class="fixed inset-0 z-40 flex items-start justify-center p-6 overflow-auto"
+      class="fixed inset-0 z-40 flex items-start justify-center p-6 overflow-auto sf-fade-in"
       style="background: var(--color-overlay);"
       (click)="close()"
     >
       <div
-        class="sf-card max-w-2xl w-full p-6 flex flex-col gap-4 mt-12"
+        class="sf-card max-w-2xl w-full p-6 flex flex-col gap-4 mt-12 sf-modal-in"
         (click)="$event.stopPropagation()"
         data-testid="enterprise-detail"
       >

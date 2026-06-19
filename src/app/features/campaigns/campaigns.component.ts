@@ -14,56 +14,58 @@ import { SpinnerComponent } from '../../shared/spinner/spinner.component';
   standalone: true,
   imports: [DecimalPipe, RouterLink, SpinnerComponent],
   template: `
-    <div class="flex items-center justify-between mb-6">
-      <h1 class="text-xl font-bold" style="color: var(--color-text);">Campaigns</h1>
-      <button
-        type="button"
-        (click)="createAndOpen()"
-        class="sf-btn sf-btn-primary text-xs uppercase tracking-wider"
-        data-testid="campaigns-new"
-      >
-        + New campaign
-      </button>
-    </div>
-
-    @if (svc.error()) {
-      <div
-        class="p-3 mb-4 rounded-lg text-xs"
-        style="background: rgba(230,0,35,0.08); border: 1px solid var(--color-sf-red); color: var(--color-sf-red);"
-        data-testid="campaigns-error"
-      >
-        {{ svc.error() }}
+    <div class="sf-appear">
+      <div class="flex items-center justify-between mb-6">
+        <h1 class="text-xl font-bold" style="color: var(--color-text);">Campaigns</h1>
+        <button
+          type="button"
+          (click)="createAndOpen()"
+          class="sf-btn sf-btn-primary text-xs uppercase tracking-wider"
+          data-testid="campaigns-new"
+        >
+          + New campaign
+        </button>
       </div>
-    }
 
-    @if (svc.loading()) {
-      <div class="flex justify-center py-12">
-        <app-spinner label="Loading campaigns…" />
-      </div>
-    } @else if (svc.campaigns().length === 0) {
-      <div
-        class="sf-card p-12 text-center"
-        data-testid="campaigns-empty"
-      >
-        <div class="text-sm font-semibold mb-2" style="color: var(--color-text);">
-          No campaigns yet
+      @if (svc.error()) {
+        <div
+          class="p-3 mb-4 rounded-lg text-xs"
+          style="background: rgba(230,0,35,0.08); border: 1px solid var(--color-sf-red); color: var(--color-sf-red);"
+          data-testid="campaigns-error"
+        >
+          {{ svc.error() }}
         </div>
-        <p class="text-xs mb-4" style="color: var(--color-text-muted);">
-          Create a new campaign or save one from the simulator to get started.
-        </p>
-      </div>
-    } @else {
-      <div
-        class="grid gap-3"
-        style="grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));"
-        data-testid="campaigns-grid"
-      >
-        @for (c of svc.campaigns(); track c.id) {
-          <article
-            class="sf-card p-4 cursor-pointer hover:opacity-90"
-            [routerLink]="['/app/campaigns', c.id]"
-            [attr.data-testid]="'campaign-' + c.id"
-          >
+      }
+
+      @if (svc.loading()) {
+        <div class="flex justify-center py-12">
+          <app-spinner label="Loading campaigns…" />
+        </div>
+      } @else if (svc.campaigns().length === 0) {
+        <div
+          class="sf-card p-12 text-center"
+          data-testid="campaigns-empty"
+        >
+          <div class="text-sm font-semibold mb-2" style="color: var(--color-text);">
+            No campaigns yet
+          </div>
+          <p class="text-xs mb-4" style="color: var(--color-text-muted);">
+            Create a new campaign or save one from the simulator to get started.
+          </p>
+        </div>
+      } @else {
+        <div
+          class="grid gap-3"
+          style="grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));"
+          data-testid="campaigns-grid"
+        >
+          @for (c of svc.campaigns(); track c.id; let i = $index) {
+            <article
+              class="sf-card p-4 cursor-pointer hover:opacity-90 sf-appear"
+              [style.animation-delay.ms]="(i < 12 ? i : 12) * 30"
+              [routerLink]="['/app/campaigns', c.id]"
+              [attr.data-testid]="'campaign-' + c.id"
+            >
             <div class="flex items-start justify-between gap-2 mb-1">
               <div class="min-w-0">
                 <div class="font-bold truncate" style="color: var(--color-text);">{{ c.name }}</div>
@@ -140,10 +142,11 @@ import { SpinnerComponent } from '../../shared/spinner/spinner.component';
                 Delete
               </button>
             </div>
-          </article>
-        }
-      </div>
-    }
+            </article>
+          }
+        </div>
+      }
+    </div>
   `,
 })
 export class CampaignsComponent {

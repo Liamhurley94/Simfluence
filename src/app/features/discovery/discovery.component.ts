@@ -26,7 +26,7 @@ const EMPTY_PAGE: PagedCreators = { creators: [], total: 0, pageCount: 1, page: 
   standalone: true,
   imports: [CreatorCardComponent, FilterPanelComponent, PaginationComponent, DecimalPipe, BudgetPickerComponent, IconComponent, SpinnerComponent],
   template: `
-    <div class="flex gap-6">
+    <div class="flex gap-6 sf-appear">
       <aside class="w-72 shrink-0">
         <app-filter-panel (queryChange)="onQuery($event)" />
       </aside>
@@ -102,8 +102,10 @@ const EMPTY_PAGE: PagedCreators = { creators: [], total: 0, pageCount: 1, page: 
             style="grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));"
             data-testid="creator-grid"
           >
-            @for (c of results.value().creators; track c.id) {
+            @for (c of results.value().creators; track c.id; let i = $index) {
               <app-creator-card
+                class="sf-appear"
+                [style.animation-delay.ms]="(i < 12 ? i : 12) * 30"
                 [creator]="c"
                 [selected]="selection.has(c.id)"
                 [canSeeRates]="canSeeRates()"
