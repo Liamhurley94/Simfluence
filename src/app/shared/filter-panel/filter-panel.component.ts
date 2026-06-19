@@ -6,6 +6,7 @@ import { CreatorFilters, CreatorTier, SortKey } from '../../core/data/creator.ty
 import { Format } from '../../core/simulation/simulation.types';
 import { tierRank } from '../../core/types';
 import { UpgradePromptService } from '../../core/upgrade/upgrade-prompt.service';
+import { IconComponent } from '../icon/icon.component';
 
 export interface DiscoveryQuery extends CreatorFilters {
   sort: SortKey;
@@ -40,7 +41,7 @@ const ALL_PLATFORMS = 'All platforms';
 @Component({
   selector: 'app-filter-panel',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, IconComponent],
   template: `
     <div
       class="sf-card p-4 flex flex-col gap-4"
@@ -258,7 +259,7 @@ const ALL_PLATFORMS = 'All platforms';
           style="background: color-mix(in srgb, var(--color-sf-gold) 8%, transparent); border: 1px solid color-mix(in srgb, var(--color-sf-gold) 30%, transparent); color: var(--color-sf-gold);"
           data-testid="filter-score-upgrade"
         >
-          ★ Gold+ — unlock score filters
+          <app-icon name="star" [size]="12" style="display:inline-block;vertical-align:middle;" /> Gold+ — unlock score filters
         </button>
       }
 

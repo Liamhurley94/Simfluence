@@ -3,6 +3,7 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { UpgradePromptService } from '../../core/upgrade/upgrade-prompt.service';
 import { Tier, tierRank } from '../../core/types';
+import { IconComponent } from '../../shared/icon/icon.component';
 
 interface Tab {
   label: string;
@@ -25,7 +26,7 @@ const TABS: Tab[] = [
 @Component({
   selector: 'app-side-nav',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive],
+  imports: [RouterLink, RouterLinkActive, IconComponent],
   template: `
     <nav class="flex flex-col gap-1">
       @for (tab of visibleTabs(); track tab.route) {
@@ -46,7 +47,7 @@ const TABS: Tab[] = [
               style="color: var(--color-sf-gold);"
               data-testid="nav-lock"
             >
-              🔒 {{ tab.minTier }}
+              <app-icon name="lock" [size]="10" style="display:inline-block;vertical-align:middle;" /> {{ tab.minTier }}
             </span>
           }
         </a>

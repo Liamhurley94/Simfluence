@@ -2,6 +2,7 @@ import { Component, computed, inject, resource, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { IconComponent } from '../../shared/icon/icon.component';
 
 import { AuthService } from '../../core/auth/auth.service';
 import { CampaignContextService } from '../../core/context/campaign-context.service';
@@ -24,7 +25,7 @@ const FORMATS: Format[] = ['Integrated', 'Mixed', 'Dedicated'];
 @Component({
   selector: 'app-simulator',
   standalone: true,
-  imports: [DecimalPipe, FormsModule, RouterLink],
+  imports: [DecimalPipe, FormsModule, RouterLink, IconComponent],
   template: `
     <div class="flex items-center justify-between mb-6">
       <h1 class="text-xl font-bold" style="color: var(--color-text);">Simulator</h1>
@@ -171,7 +172,10 @@ const FORMATS: Format[] = ['Integrated', 'Mixed', 'Dedicated'];
           style="background: var(--color-sf-orange); color: var(--color-bg);"
           data-testid="sim-run"
         >
-          {{ pending() ? 'Running…' : result() ? '▶ Re-run' : '▶ Run simulation' }}
+          @if (!pending()) {
+              <app-icon name="play" [size]="12" style="display:inline-block;vertical-align:middle;" />
+            }
+            {{ pending() ? 'Running…' : result() ? 'Re-run' : 'Run simulation' }}
         </button>
         <button
           type="button"

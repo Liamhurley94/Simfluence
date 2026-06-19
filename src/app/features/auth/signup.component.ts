@@ -2,11 +2,12 @@ import { Component, effect, inject, input, output, signal } from '@angular/core'
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from '../../core/auth/auth.service';
 import { EnterpriseService } from '../../core/enterprise/enterprise.service';
+import { IconComponent } from '../../shared/icon/icon.component';
 
 @Component({
   selector: 'app-signup',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, IconComponent],
   template: `
     <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-3" novalidate>
       @if (inviteToken()) {
@@ -60,7 +61,7 @@ import { EnterpriseService } from '../../core/enterprise/enterprise.service';
           style="color: var(--color-sf-gold);"
           data-testid="signup-demo-link"
         >
-          📅 BOOK A LIVE DEMO INSTEAD
+          <app-icon name="calendar" [size]="12" style="display:inline-block;vertical-align:middle;" /> BOOK A LIVE DEMO INSTEAD
         </a>
       }
     </form>

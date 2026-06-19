@@ -2,11 +2,12 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { AuthService } from '../../core/auth/auth.service';
 import { ThemeService } from '../../core/theme/theme.service';
 import { ProfileDropdownComponent } from './profile-dropdown.component';
+import { IconComponent } from '../../shared/icon/icon.component';
 
 @Component({
   selector: 'app-top-nav',
   standalone: true,
-  imports: [ProfileDropdownComponent],
+  imports: [ProfileDropdownComponent, IconComponent],
   template: `
     <header
       class="flex items-center justify-between px-4 py-3 border-b"
@@ -25,7 +26,7 @@ import { ProfileDropdownComponent } from './profile-dropdown.component';
           [attr.aria-label]="'Switch to ' + (theme.theme() === 'dark' ? 'light' : 'dark') + ' mode'"
           data-testid="theme-toggle"
         >
-          {{ theme.theme() === 'dark' ? '🌙' : '☀️' }}
+          <app-icon [name]="theme.theme() === 'dark' ? 'moon' : 'sun'" [size]="14" />
         </button>
 
         <div class="relative">

@@ -10,6 +10,7 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
+import { IconComponent } from '../../../shared/icon/icon.component';
 
 import { CreatorsService } from '../../../core/creators/creators.service';
 import { CreatorFilters, PagedCreators } from '../../../core/data/creator.types';
@@ -20,7 +21,7 @@ const PAGE_SIZE = 20;
 @Component({
   selector: 'app-browse-creators-modal',
   standalone: true,
-  imports: [FormsModule, DecimalPipe],
+  imports: [FormsModule, DecimalPipe, IconComponent],
   template: `
     <div
       class="fixed inset-0 z-40 flex items-center justify-center p-4"
@@ -78,7 +79,7 @@ const PAGE_SIZE = 20;
               data-testid="browse-creators-genre-toggle"
             >
               {{ campaignGenre }}
-              @if (genreActive()) { <span class="ml-1 opacity-70">✓</span> }
+              @if (genreActive()) { <app-icon name="check" [size]="10" class="ml-1 opacity-70" style="display:inline-block;vertical-align:middle;" /> }
             </button>
           }
         </div>

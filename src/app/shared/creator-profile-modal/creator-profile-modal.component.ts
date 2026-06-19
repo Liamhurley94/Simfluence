@@ -1,5 +1,6 @@
 import { Component, computed, inject, resource } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
+import { IconComponent } from '../icon/icon.component';
 
 import { MetricSourceBadgeComponent } from '../metric-source/metric-source-badge.component';
 import { CreatorProfileService } from '../../core/creator-profile/creator-profile.service';
@@ -68,7 +69,7 @@ function sponsorColor(pct: number): string {
 @Component({
   selector: 'app-creator-profile-modal',
   standalone: true,
-  imports: [DecimalPipe, MetricSourceBadgeComponent],
+  imports: [DecimalPipe, MetricSourceBadgeComponent, IconComponent],
   template: `
     @if (creator(); as c) {
       <div
@@ -108,7 +109,7 @@ function sponsorColor(pct: number): string {
               style="color: var(--color-text-muted);"
               data-testid="creator-profile-close"
             >
-              ✕
+              <app-icon name="x" [size]="16" />
             </button>
           </div>
 
@@ -494,7 +495,7 @@ function sponsorColor(pct: number): string {
                         style="background: color-mix(in srgb, var(--color-sf-red) 8%, transparent); border: 1px solid color-mix(in srgb, var(--color-sf-red) 30%, transparent);"
                         data-testid="creator-profile-twitch-inactivity"
                       >
-                        <span style="font-size: 16px;">⚠️</span>
+                        <app-icon name="alert-triangle" [size]="16" style="color: var(--color-sf-red); flex-shrink: 0;" />
                         <div>
                           <div class="text-[11px] font-bold" style="color: var(--color-sf-red);">
                             INACTIVE — {{ d.daysSinceStream }} days since last stream
@@ -510,7 +511,7 @@ function sponsorColor(pct: number): string {
                       </div>
                     } @else if (activityState() === 'active') {
                       <div class="text-[10px]" style="color: var(--color-sf-green);" data-testid="creator-profile-twitch-active">
-                        ✓ Active — last stream {{ d.daysSinceStream }} days ago
+                        <app-icon name="check" [size]="12" style="display:inline-block;vertical-align:middle;" /> Active — last stream {{ d.daysSinceStream }} days ago
                       </div>
                     }
 
@@ -522,7 +523,7 @@ function sponsorColor(pct: number): string {
                       style="background: var(--color-twitch); color: var(--color-bg); text-decoration: none;"
                       data-testid="creator-profile-twitch-link"
                     >
-                      ▶ View on Twitch
+                      <app-icon name="external-link" [size]="12" style="display:inline-block;vertical-align:middle;" /> View on Twitch
                     </a>
                   }
                 </div>

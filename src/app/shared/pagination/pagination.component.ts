@@ -1,8 +1,10 @@
 import { Component, computed, input, output } from '@angular/core';
+import { IconComponent } from '../icon/icon.component';
 
 @Component({
   selector: 'app-pagination',
   standalone: true,
+  imports: [IconComponent],
   template: `
     <div class="flex items-center justify-center gap-2" data-testid="pagination">
       <button
@@ -13,7 +15,7 @@ import { Component, computed, input, output } from '@angular/core';
         style="background: var(--color-bg-3); color: var(--color-text);"
         data-testid="page-prev"
       >
-        ← Prev
+        <app-icon name="chevron-left" [size]="12" style="display:inline-block;vertical-align:middle;" /> Prev
       </button>
       <span class="text-xs" style="color: var(--color-text-muted);" data-testid="page-indicator">
         Page {{ page() + 1 }} of {{ pageCount() }}
@@ -26,7 +28,7 @@ import { Component, computed, input, output } from '@angular/core';
         style="background: var(--color-bg-3); color: var(--color-text);"
         data-testid="page-next"
       >
-        Next →
+        Next <app-icon name="chevron-right" [size]="12" style="display:inline-block;vertical-align:middle;" />
       </button>
     </div>
   `,

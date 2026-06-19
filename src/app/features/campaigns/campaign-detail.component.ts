@@ -1,6 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { IconComponent } from '../../shared/icon/icon.component';
 
 import { AuthService } from '../../core/auth/auth.service';
 import { CampaignsService } from '../../core/campaigns/campaigns.service';
@@ -23,6 +24,7 @@ import { SectionForecastComponent } from './sections/section-forecast.component'
   standalone: true,
   imports: [
     RouterLink,
+    IconComponent,
     SectionBasicsComponent,
     SectionTargetingComponent,
     SectionBudgetComponent,
@@ -37,7 +39,7 @@ import { SectionForecastComponent } from './sections/section-forecast.component'
         class="text-xs inline-block mb-4"
         style="color: var(--color-text-muted);"
       >
-        ← All campaigns
+        <app-icon name="arrow-left" [size]="12" style="display:inline-block;vertical-align:middle;" /> All campaigns
       </a>
 
       @if (loading()) {

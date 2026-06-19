@@ -1,6 +1,7 @@
 import { Component, computed, inject, resource, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { Router } from '@angular/router';
+import { IconComponent } from '../../shared/icon/icon.component';
 
 import { CreatorsService } from '../../core/creators/creators.service';
 import { SelectionService } from '../../core/selection/selection.service';
@@ -22,7 +23,7 @@ const EMPTY_PAGE: PagedCreators = { creators: [], total: 0, pageCount: 1, page: 
 @Component({
   selector: 'app-discovery',
   standalone: true,
-  imports: [CreatorCardComponent, FilterPanelComponent, PaginationComponent, DecimalPipe, BudgetPickerComponent],
+  imports: [CreatorCardComponent, FilterPanelComponent, PaginationComponent, DecimalPipe, BudgetPickerComponent, IconComponent],
   template: `
     <div class="flex gap-6">
       <aside class="w-72 shrink-0">
@@ -62,7 +63,7 @@ const EMPTY_PAGE: PagedCreators = { creators: [], total: 0, pageCount: 1, page: 
                 class="sf-btn sf-btn-primary text-xs"
                 data-testid="selection-score"
               >
-                Score selected →
+                Score selected <app-icon name="arrow-right" [size]="12" style="display:inline-block;vertical-align:middle;" />
               </button>
               <button
                 type="button"

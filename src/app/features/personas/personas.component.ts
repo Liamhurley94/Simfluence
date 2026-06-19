@@ -1,6 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { IconComponent } from '../../shared/icon/icon.component';
 
 import { CampaignContextService } from '../../core/context/campaign-context.service';
 import { CreatorsService } from '../../core/creators/creators.service';
@@ -13,7 +14,7 @@ const AUTO_SELECT_COUNTS = [5, 10, 25, 50, 100, 250];
 @Component({
   selector: 'app-personas',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, IconComponent],
   template: `
     <div class="flex items-center justify-between mb-6">
       <h1 class="text-xl font-bold" style="color: var(--color-text);">Personas</h1>
@@ -91,7 +92,7 @@ const AUTO_SELECT_COUNTS = [5, 10, 25, 50, 100, 250];
         style="background: var(--color-sf-blue); color: white;"
         data-testid="auto-select-run"
       >
-        ⚡ Auto-select {{ autoCount() }} creators
+        <app-icon name="bolt" [size]="12" style="display:inline-block;vertical-align:middle;" /> Auto-select {{ autoCount() }} creators
       </button>
       <div class="text-xs ml-auto" style="color: var(--color-text-muted);" data-testid="selection-count">
         {{ selection.count() }} currently selected

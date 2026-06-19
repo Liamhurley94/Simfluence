@@ -4,6 +4,7 @@ import { CreatorProfileService } from '../../core/creator-profile/creator-profil
 import { computeRateRanges } from '../../core/rates/rate-estimate';
 import { Format } from '../../core/simulation/simulation.types';
 import { MetricSourceBadgeComponent } from '../metric-source/metric-source-badge.component';
+import { IconComponent } from '../icon/icon.component';
 
 const PLATFORM_COLORS: Record<string, string> = {
   YouTube: '#FF0000',
@@ -17,7 +18,7 @@ const PLATFORM_COLORS: Record<string, string> = {
 @Component({
   selector: 'app-creator-card',
   standalone: true,
-  imports: [MetricSourceBadgeComponent],
+  imports: [MetricSourceBadgeComponent, IconComponent],
   template: `
     <div
       class="sf-card p-4 cursor-pointer"
@@ -162,7 +163,7 @@ const PLATFORM_COLORS: Record<string, string> = {
             </div>
             <div class="p-1.5 rounded" style="background: var(--color-bg-3);">
               <div class="text-[9px] uppercase tracking-wider flex items-center justify-center gap-1" style="color: var(--color-text-muted);">
-                <span style="color: #FF0000;">●</span> YouTube CPI
+                <span style="color: var(--color-sf-red);">●</span> YouTube CPI
               </div>
               <div class="text-xs font-bold" [style.color]="scoreColor(ytCpi()!)">
                 {{ ytCpi() }}
@@ -239,7 +240,11 @@ const PLATFORM_COLORS: Record<string, string> = {
         (click)="onToggle(); $event.stopPropagation()"
         data-testid="creator-toggle"
       >
-        {{ selected() ? '✓ Selected' : '+ Select' }}
+        @if (selected()) {
+          <app-icon name="check" [size]="12" style="display:inline-block;vertical-align:middle;" /> Selected
+        } @else {
+          <app-icon name="plus" [size]="12" style="display:inline-block;vertical-align:middle;" /> Select
+        }
       </button>
     </div>
   `,
