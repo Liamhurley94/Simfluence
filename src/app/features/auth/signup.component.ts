@@ -23,10 +23,10 @@ import { IconComponent } from '../../shared/icon/icon.component';
         type="email"
         formControlName="email"
         placeholder="Email"
-        autocomplete="email"
+        autocomplete="username"
         [readonly]="!!inviteToken()"
         class="w-full px-3 py-2 rounded text-sm"
-        style="background: rgba(255,255,255,0.05); border: 1px solid var(--color-border); color: var(--color-text);"
+        style="background: var(--color-bg-3); border: 1px solid var(--color-border); color: var(--color-text);"
         data-testid="signup-email"
       />
       <input
@@ -35,7 +35,7 @@ import { IconComponent } from '../../shared/icon/icon.component';
         placeholder="Create password (min 8 chars)"
         autocomplete="new-password"
         class="w-full px-3 py-2 rounded text-sm"
-        style="background: rgba(255,255,255,0.05); border: 1px solid var(--color-border); color: var(--color-text);"
+        style="background: var(--color-bg-3); border: 1px solid var(--color-border); color: var(--color-text);"
         data-testid="signup-password"
       />
       @if (error()) {
