@@ -2,6 +2,7 @@ import { Component, computed, inject, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/auth/auth.service';
 import { CreatorsService } from '../../core/creators/creators.service';
+import { CampaignContextService } from '../../core/context/campaign-context.service';
 import { CreatorFilters, CreatorTier, SortKey } from '../../core/data/creator.types';
 import { Format } from '../../core/simulation/simulation.types';
 import { tierRank } from '../../core/types';
@@ -84,6 +85,26 @@ const ALL_PLATFORMS = 'All platforms';
           }
         </select>
       </div>
+
+      <!-- Sub-mode (genre-dependent; shared via CampaignContext) -->
+      @if (subModes().length) {
+        <div>
+          <label class="text-[10px] uppercase tracking-wider mb-1 block" style="color: var(--color-text-muted);">
+            Sub-mode
+          </label>
+          <select
+            [ngModel]="context.subMode()"
+            (ngModelChange)="onSubMode($event)"
+            class="sf-select"
+            data-testid="filter-submode"
+          >
+            <option [ngValue]="''">All sub-modes</option>
+            @for (sm of subModes(); track sm.subMode) {
+              <option [ngValue]="sm.subMode">{{ sm.subMode }}{{ sm.hasKeywords ? '' : ' (beta)' }}</option>
+            }
+          </select>
+        </div>
+      }
 
       <!-- Platform -->
       <div>
@@ -300,6 +321,7 @@ export class FilterPanelComponent {
   private svc = inject(CreatorsService);
   private auth = inject(AuthService);
   private upgrade = inject(UpgradePromptService);
+  protected readonly context = inject(CampaignContextService);
 
   readonly queryChange = output<DiscoveryQuery>();
 
@@ -316,6 +338,12 @@ export class FilterPanelComponent {
   readonly tierOptions = TIER_OPTIONS;
   readonly formatOptions = FORMAT_OPTIONS;
   readonly allPlatforms = ALL_PLATFORMS;
+
+  // Sub-modes for the currently-selected genre (empty when no genre / none configured).
+  protected readonly subModes = computed(() => {
+    const g = this.genre();
+    return g ? (this.svc.submodesByGenre()[g] ?? []) : [];
+  });
 
   readonly genre = signal<string | undefined>(undefined);
   readonly platform_ = signal<string>(ALL_PLATFORMS);
@@ -340,6 +368,11 @@ export class FilterPanelComponent {
 
   onGenre(g: string | undefined): void {
     this.genre.set(g);
+    // Reset sub-mode if it doesn't belong to the new genre (or genre cleared).
+    const valid = g
+      ? (this.svc.submodesByGenre()[g] ?? []).some((s) => s.subMode === this.context.subMode())
+      : false;
+    if (!valid) this.context.subMode.set('');
     // GFI sort + minGfi filter require a genre. If the user clears the genre
     // while either is active, fall back to defaults so the emitted query is
     // never in an "impossible" state for the cache.
@@ -348,6 +381,11 @@ export class FilterPanelComponent {
       if (this.minGfi() > 0) this.minGfi.set(0);
     }
     this.emit();
+  }
+
+  onSubMode(sm: string): void {
+    this.context.subMode.set(sm);
+    // Discovery's resource tracks context.subMode directly; no emit needed.
   }
 
   onSearch(s: string): void {

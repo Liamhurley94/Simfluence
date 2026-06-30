@@ -142,12 +142,13 @@ export class DiscoveryComponent {
   protected readonly creatingCampaign = signal(false);
 
   // Server-side filtered + paginated query. Reloads automatically when
-  // `query` or `page` signals change. When `query.genre` is set, each creator
-  // carries a per-genre `gfi` via a join against `creator_genre_scores`.
-  protected readonly results = resource<PagedCreators, { q: DiscoveryQuery; page: number }>({
-    params: () => ({ q: this.query(), page: this.page() }),
+  // `query`, `page`, or `context.subMode` signals change. When `query.genre`
+  // is set, each creator carries a per-genre `gfi` via a join against
+  // `creator_genre_scores`.
+  protected readonly results = resource<PagedCreators, { q: DiscoveryQuery; page: number; subMode: string }>({
+    params: () => ({ q: this.query(), page: this.page(), subMode: this.context.subMode() }),
     loader: ({ params }) =>
-      this.creators.list(params.q, params.q.sort, params.page),
+      this.creators.list({ ...params.q, subMode: params.subMode }, params.q.sort, params.page),
     defaultValue: EMPTY_PAGE,
   });
 

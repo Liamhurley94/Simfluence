@@ -15,6 +15,7 @@ const creatorsStub = {
   genres: signal(['Gaming & Esports', 'Music']),
   platforms: signal(['YouTube', 'Twitch']),
   languages: signal(['English', 'Spanish']),
+  submodesByGenre: signal<Record<string, { subMode: string; hasKeywords: boolean }[]>>({}),
 };
 
 function authStub(tier: Tier = 'gold') {

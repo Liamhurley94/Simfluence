@@ -36,6 +36,7 @@ function mkCreator(id: number): Creator {
 describe('DiscoveryComponent', () => {
   let router: { navigateByUrl: ReturnType<typeof vi.fn>; navigate: ReturnType<typeof vi.fn> };
   let tier: ReturnType<typeof signal<string>>;
+  let listMock: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     router = {
@@ -52,11 +53,13 @@ describe('DiscoveryComponent', () => {
       pageCount: 1,
       page: 0,
     };
+    listMock = vi.fn().mockResolvedValue(paged);
     const creatorsStub = {
-      list: vi.fn().mockResolvedValue(paged),
+      list: listMock,
       genres: signal(['Gaming & Esports', 'Music']),
       platforms: signal(['YouTube', 'Twitch']),
       languages: signal(['English']),
+      submodesByGenre: signal<Record<string, { subMode: string; hasKeywords: boolean }[]>>({}),
     };
 
     const campaignsRepoStub = {
@@ -210,5 +213,18 @@ describe('DiscoveryComponent', () => {
     fixture.detectChanges();
     const firstRate = fixture.nativeElement.querySelector('[data-testid="creator-rate"]');
     expect(firstRate?.classList.contains('blur-sm')).toBe(false);
+  });
+
+  it('passes the shared sub-mode into the creator query', async () => {
+    const context = TestBed.inject(CampaignContextService);
+    context.genre.set('Gaming & Esports');
+    context.subMode.set('Battle Royale');
+
+    const fixture = TestBed.createComponent(DiscoveryComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const lastFilters = listMock.mock.calls.at(-1)![0];
+    expect(lastFilters.subMode).toBe('Battle Royale');
   });
 });
