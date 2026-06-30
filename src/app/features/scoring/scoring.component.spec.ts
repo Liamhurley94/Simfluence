@@ -54,6 +54,7 @@ function setup({ selectedIds = [] as number[], tier = 'silver' } = {}) {
     genres: signal(['Gaming & Esports', 'Beauty & Skincare']),
     platforms: signal(['YouTube', 'Twitch']),
     languages: signal(['English']),
+    submodesByGenre: signal<Record<string, { subMode: string; hasKeywords: boolean }[]>>({}),
   };
 
   TestBed.resetTestingModule();
@@ -177,5 +178,22 @@ describe('ScoringComponent', () => {
     const confidence = fixture.nativeElement.querySelector('[data-testid="summary-confidence"]');
     // Creators 2 and 14 both have verifiedDeals:2 in the stub → 100%.
     expect(confidence?.textContent).toContain('100');
+  });
+
+  it('refetches with the new sub-mode when it changes', async () => {
+    const { post, context } = setup({ selectedIds: [2, 14] });
+    const fixture = TestBed.createComponent(ScoringComponent);
+    fixture.detectChanges();
+    TestBed.flushEffects();
+    await fixture.whenStable();
+
+    post.mockClear();
+    context.subMode.set('Battle Royale');
+    TestBed.flushEffects();
+    await fixture.whenStable();
+
+    expect(post).toHaveBeenCalledTimes(1);
+    const payload = post.mock.calls[0][1] as { subMode: string };
+    expect(payload.subMode).toBe('Battle Royale');
   });
 });

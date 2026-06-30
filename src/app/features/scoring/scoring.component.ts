@@ -49,6 +49,23 @@ interface ScoredRow {
           }
         </select>
 
+        @if (subModes().length) {
+          <label class="text-[10px] uppercase tracking-wider ml-2" style="color: var(--color-text-muted);">
+            Sub-mode
+          </label>
+          <select
+            [ngModel]="context.subMode()"
+            (ngModelChange)="onSubModeChange($event)"
+            class="sf-select w-auto"
+            data-testid="scoring-submode"
+          >
+            <option [ngValue]="''">All sub-modes</option>
+            @for (sm of subModes(); track sm.subMode) {
+              <option [ngValue]="sm.subMode">{{ sm.subMode }}{{ sm.hasKeywords ? '' : ' (beta)' }}</option>
+            }
+          </select>
+        }
+
         <label class="text-[10px] uppercase tracking-wider ml-2" style="color: var(--color-text-muted);">
           Format
         </label>
@@ -383,6 +400,11 @@ export class ScoringComponent {
 
   protected readonly genres = this.creatorsSvc.genres;
 
+  protected readonly subModes = computed(() => {
+    const g = this.context.genre();
+    return this.creatorsSvc.submodesByGenre()[g] ?? [];
+  });
+
   // Async batch fetch of selected creators; re-runs when selection changes.
   private readonly selectedCreatorsRes = resource<Creator[], number[]>({
     params: () => Array.from(this.selection.ids()),
@@ -486,6 +508,14 @@ export class ScoringComponent {
 
   onGenreChange(g: string): void {
     this.context.genre.set(g);
+    const valid = (this.creatorsSvc.submodesByGenre()[g] ?? []).some(
+      (s) => s.subMode === this.context.subMode(),
+    );
+    if (!valid) this.context.subMode.set('');
+  }
+
+  onSubModeChange(sm: string): void {
+    this.context.subMode.set(sm);
   }
 
   toggleBreakdown(id: number): void {
