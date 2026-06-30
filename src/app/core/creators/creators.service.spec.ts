@@ -169,6 +169,16 @@ describe('CreatorsService.list', () => {
     expect(query.gte).toHaveBeenCalledWith('creator_genre_scores.gfi', 65);
   });
 
+  it('filters the genre-score embed on sub_mode (defaults to baseline "")', async () => {
+    const { svc, query } = setup();
+    await svc.list({ genre: 'Gaming & Esports' }, 'cpi', 0, 10);
+    expect(query.eq).toHaveBeenCalledWith('creator_genre_scores.sub_mode', '');
+
+    const { svc: svc2, query: query2 } = setup();
+    await svc2.list({ genre: 'Gaming & Esports', subMode: 'Battle Royale' }, 'cpi', 0, 10);
+    expect(query2.eq).toHaveBeenCalledWith('creator_genre_scores.sub_mode', 'Battle Royale');
+  });
+
   it('minCpi/minGfi=0 is treated as no filter', async () => {
     const { svc, query } = setup();
     await svc.list({ minCpi: 0, minGfi: 0 }, 'cpi', 0, 10);

@@ -109,6 +109,9 @@ export interface CreatorFilters {
   tier?: CreatorTier;
   minCpi?: number;
   minGfi?: number;
+  /** Campaign sub-mode (refines GFI within a genre). '' / undefined = all sub-modes
+   *  → reads the sub_mode='' baseline cache row. */
+  subMode?: string;
   /**
    * Campaign-budget ceiling. Filters creators whose typical reach (subs) implies
    * a deal cost likely to fit within the budget. Heuristic — see

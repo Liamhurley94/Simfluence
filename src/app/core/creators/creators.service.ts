@@ -144,22 +144,30 @@ export class CreatorsService {
   private readonly _genres = signal<string[]>([]);
   private readonly _platforms = signal<string[]>([]);
   private readonly _languages = signal<string[]>([]);
+  private readonly _submodesByGenre = signal<Record<string, { subMode: string; hasKeywords: boolean }[]>>({});
 
   readonly genres = this._genres.asReadonly();
   readonly platforms = this._platforms.asReadonly();
   readonly languages = this._languages.asReadonly();
+  readonly submodesByGenre = this._submodesByGenre.asReadonly();
   readonly loaded = signal(false);
 
   /** Called by APP_INITIALIZER on boot. Populates filter dropdowns. */
   async loadFilterOptions(): Promise<void> {
-    const [g, p, l] = await Promise.all([
+    const [g, p, l, sm] = await Promise.all([
       this.supabase.client.rpc('get_creator_genres'),
       this.supabase.client.rpc('get_creator_platforms'),
       this.supabase.client.rpc('get_creator_languages'),
+      this.supabase.client.rpc('get_genre_submodes'),
     ]);
     this._genres.set((g.data as string[] | null) ?? []);
     this._platforms.set((p.data as string[] | null) ?? []);
     this._languages.set((l.data as string[] | null) ?? []);
+    const byGenre: Record<string, { subMode: string; hasKeywords: boolean }[]> = {};
+    for (const row of (sm.data as Array<{ genre: string; sub_mode: string; has_keywords: boolean }> | null) ?? []) {
+      (byGenre[row.genre] ??= []).push({ subMode: row.sub_mode, hasKeywords: row.has_keywords });
+    }
+    this._submodesByGenre.set(byGenre);
     this.loaded.set(true);
   }
 
@@ -207,6 +215,7 @@ export class CreatorsService {
     if (filters.genre) {
       q = q.eq('genre', filters.genre);
       q = q.eq('creator_genre_scores.campaign_genre', filters.genre);
+      q = q.eq('creator_genre_scores.sub_mode', filters.subMode || '');
     }
     if (filters.languages?.length) {
       q = q.in('language', filters.languages);
@@ -291,6 +300,7 @@ export class CreatorsService {
     if (filters.genre) {
       q = q.eq('genre', filters.genre);
       q = q.eq('creator_genre_scores.campaign_genre', filters.genre);
+      q = q.eq('creator_genre_scores.sub_mode', filters.subMode || '');
     }
     if (filters.languages?.length) {
       q = q.in('language', filters.languages);
