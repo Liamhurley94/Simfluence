@@ -39,6 +39,11 @@ describe('MainShellComponent', () => {
     expect(fixture.nativeElement.querySelector('app-side-nav')).toBeTruthy();
     expect(fixture.nativeElement.querySelector('app-upgrade-prompt')).toBeTruthy();
     expect(fixture.nativeElement.querySelector('router-outlet')).toBeTruthy();
+    // Compliance footer (YouTube III.E.4h) mounts in the shell, so it shows on
+    // every /app page but never on public/marketing routes.
+    const footer = fixture.nativeElement.querySelector('[data-testid="compliance-footer"]');
+    expect(footer).toBeTruthy();
+    expect(footer.textContent).toContain('not derived from YouTube');
   });
 
   it('opens the upgrade prompt when ?upgrade=silver is present on the route', () => {

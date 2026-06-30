@@ -6,6 +6,7 @@ import { SideNavComponent } from './side-nav.component';
 import { TopNavComponent } from './top-nav.component';
 import { UpgradePromptComponent } from '../../shared/ui/upgrade-prompt/upgrade-prompt.component';
 import { CreatorProfileModalComponent } from '../../shared/creator-profile-modal/creator-profile-modal.component';
+import { ComplianceFooterComponent } from '../../shared/compliance/compliance-footer.component';
 import { UpgradePromptService } from '../../core/upgrade/upgrade-prompt.service';
 import { Tier, TIER_LEVELS } from '../../core/types';
 
@@ -20,6 +21,7 @@ const VALID_TIERS = new Set<string>(Object.keys(TIER_LEVELS));
     TopNavComponent,
     UpgradePromptComponent,
     CreatorProfileModalComponent,
+    ComplianceFooterComponent,
   ],
   template: `
     <div class="min-h-screen flex flex-col">
@@ -28,12 +30,13 @@ const VALID_TIERS = new Set<string>(Object.keys(TIER_LEVELS));
         <aside class="p-4 border-r" style="background: var(--color-bg-2); border-color: var(--color-border);">
           <app-side-nav />
         </aside>
-        <main class="p-6">
+        <main class="p-6 pb-16">
           <router-outlet />
         </main>
       </div>
       <app-upgrade-prompt />
       <app-creator-profile-modal />
+      <app-compliance-footer />
     </div>
   `,
 })
