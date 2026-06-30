@@ -123,14 +123,19 @@ describe('CreatorCardComponent', () => {
     expect(el.querySelector('[data-testid="creator-stats-unavailable"]')).toBeNull();
   });
 
-  it('labels the unified scores section as Simfluence (divider, not per-tile badges)', () => {
+  it('separates platform data from a Source: Simfluence zone with the proprietary disclaimer', () => {
     const fixture = TestBed.createComponent(HostComponent);
     fixture.detectChanges();
     const el = fixture.nativeElement;
-    // After the redesign the CPI/GFI tiles live under one "Simfluence Scores"
-    // divider; there are no per-tile source badges.
-    expect(el.textContent).toContain('Simfluence Scores');
+    // YouTube III.E.4h: the CPI/GFI/rate tiles live under a "Source: Simfluence"
+    // zone header (a simfluence source badge) with an always-visible proprietary
+    // disclaimer. Raw platform stats sit under their own "Source: YouTube API".
     expect(el.querySelector('[data-testid="creator-scores"]')).toBeTruthy();
+    expect(el.querySelector('[data-testid="metric-source-simfluence"]')).toBeTruthy();
+    const note = el.querySelector('[data-testid="proprietary-note"]');
+    expect(note).toBeTruthy();
+    expect(note.textContent).toContain('independently calculated by Simfluence');
+    expect(el.textContent).toContain('YouTube API');
   });
 
   it('clicking the card body opens the profile modal', () => {
@@ -295,5 +300,18 @@ describe('CreatorCardComponent — show-all (CPI-only) mode', () => {
     // Per-platform CPI labels present.
     expect(text).toContain('YouTube');
     expect(text).toContain('Twitch');
+  });
+
+  it('labels per-platform CPI by data source, not as a "YouTube CPI" metric', () => {
+    const fixture = TestBed.createComponent(ShowAllHost);
+    fixture.detectChanges();
+    const text = fixture.nativeElement.textContent;
+    // YouTube III.E.4h: CPI is a Simfluence score computed *from* platform data,
+    // not a platform-provided metric. The label must read "CPI · YouTube-based",
+    // never the bare "YouTube CPI" (which reads as a YouTube-provided metric).
+    expect(text).toContain('CPI · YouTube-based');
+    expect(text).toContain('CPI · Twitch-based');
+    expect(text).not.toContain('YouTube CPI');
+    expect(text).not.toContain('Twitch CPI');
   });
 });
