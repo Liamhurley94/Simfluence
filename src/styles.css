@@ -307,6 +307,16 @@ h6 {
     background-color: currentColor;
     flex: none;
   }
+
+  /* Compliance disclaimer text (YouTube III.E.4h) — muted in dark, a darker
+     grey in light so the notice stays legible on the pale canvas. */
+  .sf-disclaimer {
+    color: var(--color-text-muted);
+  }
+
+  body.light .sf-disclaimer {
+    color: var(--color-text-dim);
+  }
 }
 
 /* ----------------------------------------------------------------------------

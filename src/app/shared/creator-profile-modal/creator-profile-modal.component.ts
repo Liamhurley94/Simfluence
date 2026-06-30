@@ -2,7 +2,8 @@ import { Component, computed, inject, resource } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { IconComponent } from '../icon/icon.component';
 
-import { MetricSourceBadgeComponent } from '../metric-source/metric-source-badge.component';
+import { ProprietaryNoteComponent } from '../compliance/proprietary-note.component';
+import { SourceZoneHeaderComponent } from '../compliance/source-zone-header.component';
 import { CreatorProfileService } from '../../core/creator-profile/creator-profile.service';
 import { YoutubeCreatorService } from '../../core/youtube/youtube-creator.service';
 import { TwitchLiveService } from '../../core/twitch/twitch-live.service';
@@ -70,7 +71,7 @@ function sponsorColor(pct: number): string {
 @Component({
   selector: 'app-creator-profile-modal',
   standalone: true,
-  imports: [DecimalPipe, MetricSourceBadgeComponent, IconComponent],
+  imports: [DecimalPipe, IconComponent, ProprietaryNoteComponent, SourceZoneHeaderComponent],
   template: `
     @if (creator(); as c) {
       <div
@@ -138,7 +139,7 @@ function sponsorColor(pct: number): string {
                     <span class="text-[10px] uppercase tracking-wider font-bold leading-none" style="color: var(--color-sf-green);">
                       YouTube Data
                     </span>
-                    <app-metric-source-badge source="youtube" />
+                    <app-source-zone-header source="youtube" label="YouTube API" />
                   </div>
                   @if (yt.isLoading()) {
                     <span class="text-[9px]" style="color: var(--color-text-muted);">Loading…</span>
@@ -256,7 +257,7 @@ function sponsorColor(pct: number): string {
                     <span class="text-[10px] uppercase tracking-wider font-bold leading-none" style="color: var(--color-sf-gold);">
                       Simfluence Analysis
                     </span>
-                    <app-metric-source-badge source="simfluence" />
+                    <app-source-zone-header source="simfluence" />
                   </div>
                   <div class="p-3">
                     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
@@ -282,7 +283,10 @@ function sponsorColor(pct: number): string {
                     <span class="text-[10px] uppercase tracking-wider font-bold leading-none" style="color: var(--color-sf-gold);">
                       Simfluence Analysis
                     </span>
-                    <app-metric-source-badge source="simfluence" />
+                    <app-source-zone-header source="simfluence" />
+                  </div>
+                  <div class="px-3 pt-2">
+                    <app-proprietary-note />
                   </div>
                   <div class="p-3 flex flex-col gap-3">
                     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
@@ -338,7 +342,10 @@ function sponsorColor(pct: number): string {
                 <span class="text-[10px] uppercase tracking-wider font-bold leading-none" style="color: var(--color-sf-gold);">
                   Estimated Budget Range
                 </span>
-                <app-metric-source-badge source="simfluence" />
+                <app-source-zone-header source="simfluence" />
+              </div>
+              <div class="px-3 pt-2">
+                <app-proprietary-note />
               </div>
               <div class="p-3">
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
@@ -392,7 +399,7 @@ function sponsorColor(pct: number): string {
                     <span class="text-[10px] uppercase tracking-wider font-bold leading-none" style="color: var(--color-sf-gold);">
                       Category Benchmarking
                     </span>
-                    <app-metric-source-badge source="simfluence" />
+                    <app-source-zone-header source="simfluence" />
                   </div>
                   <div class="sf-skeleton h-2 w-28"></div>
                 </div>
@@ -424,11 +431,14 @@ function sponsorColor(pct: number): string {
                     <span class="text-[10px] uppercase tracking-wider font-bold leading-none" style="color: var(--color-sf-gold);">
                       Category Benchmarking
                     </span>
-                    <app-metric-source-badge source="simfluence" />
+                    <app-source-zone-header source="simfluence" />
                   </div>
                   <span class="text-[9px]" style="color: var(--color-text-muted);">
                     {{ b.genre }} ({{ b.total_creators | number }} creators)
                   </span>
+                </div>
+                <div class="px-3 pt-2">
+                  <app-proprietary-note />
                 </div>
                 <div class="p-3">
                   <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
@@ -508,9 +518,7 @@ function sponsorColor(pct: number): string {
                   class="px-3 py-2 flex items-center justify-between"
                   style="background: var(--color-bg-3);"
                 >
-                  <span class="text-[10px] uppercase tracking-wider font-bold leading-none" style="color: var(--color-twitch);">
-                    ● Twitch
-                  </span>
+                  <app-source-zone-header source="twitch" label="Twitch API" />
                   @if (tw.isLoading()) {
                     <span class="text-[9px]" style="color: var(--color-text-muted);">Fetching…</span>
                   }
@@ -537,9 +545,6 @@ function sponsorColor(pct: number): string {
                         Top game: <strong>{{ ts.primaryGameName }}</strong>
                       </div>
                     }
-                    <div class="flex justify-end">
-                      <app-metric-source-badge source="twitch" />
-                    </div>
                   }
                   @if (!tw.isLoading() && !twData()) {
                     <div class="text-xs" style="color: var(--color-text-muted);">
