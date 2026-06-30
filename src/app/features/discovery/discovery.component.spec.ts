@@ -8,6 +8,7 @@ import { AuthService } from '../../core/auth/auth.service';
 import { SelectionService } from '../../core/selection/selection.service';
 import { CreatorsService } from '../../core/creators/creators.service';
 import { CampaignsRepository } from '../../core/campaigns/campaigns.repository';
+import { CampaignContextService } from '../../core/context/campaign-context.service';
 import { Creator, PagedCreators } from '../../core/data/creator.types';
 
 function mkCreator(id: number): Creator {
@@ -143,6 +144,52 @@ describe('DiscoveryComponent', () => {
     );
     btn.click();
     expect(router.navigateByUrl).toHaveBeenCalledWith('/app/scoring');
+  });
+
+  it('score-selected carries the active genre filter into the scoring context', () => {
+    const selection = TestBed.inject(SelectionService);
+    selection.add(1);
+    const context = TestBed.inject(CampaignContextService);
+
+    const fixture = TestBed.createComponent(DiscoveryComponent);
+    fixture.detectChanges();
+
+    // User narrowed Discovery to Music before scoring their shortlist. Without
+    // the carry-over, scoring defaults to 'Gaming & Esports' and these creators
+    // would all floor at GFI 5 (no gaming affinity).
+    fixture.componentInstance.onQuery({
+      sort: 'cpi',
+      format: 'Mixed',
+      platform: 'All platforms',
+      genre: 'Music',
+    });
+
+    const btn: HTMLButtonElement = fixture.nativeElement.querySelector(
+      '[data-testid="selection-score"]',
+    );
+    btn.click();
+
+    expect(context.genre()).toBe('Music');
+    expect(router.navigateByUrl).toHaveBeenCalledWith('/app/scoring');
+  });
+
+  it('score-selected leaves the scoring genre untouched when no genre filter is set', () => {
+    const selection = TestBed.inject(SelectionService);
+    selection.add(1);
+    const context = TestBed.inject(CampaignContextService);
+    context.genre.set('Tech & Gadgets');
+
+    const fixture = TestBed.createComponent(DiscoveryComponent);
+    fixture.detectChanges();
+
+    // Discovery query has no genre (browsing "All genres") — don't clobber a
+    // genre the user may have already chosen on the scoring screen.
+    const btn: HTMLButtonElement = fixture.nativeElement.querySelector(
+      '[data-testid="selection-score"]',
+    );
+    btn.click();
+
+    expect(context.genre()).toBe('Tech & Gadgets');
   });
 
   it('free tier shows blurred rate labels on cards', async () => {

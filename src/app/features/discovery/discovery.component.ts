@@ -8,6 +8,7 @@ import { SelectionService } from '../../core/selection/selection.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { CampaignsService } from '../../core/campaigns/campaigns.service';
 import { CampaignCreatorsService } from '../../core/campaigns/campaign-creators.service';
+import { CampaignContextService } from '../../core/context/campaign-context.service';
 import { tierRank } from '../../core/types';
 import { PagedCreators } from '../../core/data/creator.types';
 import { CreatorCardComponent } from '../../shared/creator-card/creator-card.component';
@@ -131,6 +132,7 @@ export class DiscoveryComponent {
   private router = inject(Router);
   private campaignsSvc = inject(CampaignsService);
   private campaignCreators = inject(CampaignCreatorsService);
+  private context = inject(CampaignContextService);
 
   protected readonly selection = inject(SelectionService);
 
@@ -171,6 +173,13 @@ export class DiscoveryComponent {
   }
 
   goToScoring(): void {
+    // GFI on the scoring screen is genre-relative: each creator is scored against
+    // the active campaign genre. Carry over the genre the user narrowed Discovery
+    // to so their shortlist isn't scored against the default ('Gaming & Esports'),
+    // which floors non-gaming creators at GFI 5. Skip when no genre filter is set
+    // ("All genres") so we don't clobber a genre already chosen on the scoring screen.
+    const genre = this.query().genre;
+    if (genre) this.context.genre.set(genre);
     void this.router.navigateByUrl('/app/scoring');
   }
 
