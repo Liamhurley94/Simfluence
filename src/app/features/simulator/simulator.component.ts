@@ -109,7 +109,7 @@ const FORMATS: Format[] = ['Integrated', 'Mixed', 'Dedicated'];
           </label>
           <select
             [ngModel]="context.genre()"
-            (ngModelChange)="context.genre.set($event)"
+            (ngModelChange)="context.setGenre($event)"
             class="sf-select"
             data-testid="sim-genre"
           >

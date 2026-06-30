@@ -507,11 +507,7 @@ export class ScoringComponent {
   }
 
   onGenreChange(g: string): void {
-    this.context.genre.set(g);
-    const valid = (this.creatorsSvc.submodesByGenre()[g] ?? []).some(
-      (s) => s.subMode === this.context.subMode(),
-    );
-    if (!valid) this.context.subMode.set('');
+    this.context.setGenre(g);
   }
 
   onSubModeChange(sm: string): void {

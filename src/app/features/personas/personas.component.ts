@@ -24,7 +24,7 @@ const AUTO_SELECT_COUNTS = [5, 10, 25, 50, 100, 250];
         </label>
         <select
           [ngModel]="context.genre()"
-          (ngModelChange)="context.genre.set($event)"
+          (ngModelChange)="context.setGenre($event)"
           class="sf-select w-auto"
           data-testid="personas-genre"
         >
