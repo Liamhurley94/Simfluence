@@ -109,7 +109,7 @@ export class SimulatorComponent {
       p90: r.p90,
     };
 
-    // Path B: standalone save — create a new campaign with the basics + forecast.
+    // Standalone save — create a new campaign with the basics + forecast.
     // Use the budget from the simulation result (the budget the sim was actually run with).
     const created = await this.campaignsSvc.create({
       name: `${this.context.genre()} campaign — ${new Date().toLocaleDateString()}`,
