@@ -17,7 +17,7 @@ import { SectionTargetingComponent } from './sections/section-targeting.componen
 import { SectionBudgetComponent } from './sections/section-budget.component';
 import { SectionCreatorsComponent } from './sections/section-creators.component';
 import { SectionOutreachComponent } from './sections/section-outreach.component';
-import { SectionForecastComponent } from './sections/section-forecast.component';
+import { CampaignSimulatorComponent } from './sections/campaign-simulator.component';
 
 @Component({
   selector: 'app-campaign-detail',
@@ -30,7 +30,7 @@ import { SectionForecastComponent } from './sections/section-forecast.component'
     SectionBudgetComponent,
     SectionCreatorsComponent,
     SectionOutreachComponent,
-    SectionForecastComponent,
+    CampaignSimulatorComponent,
   ],
   template: `
     <div class="max-w-4xl mx-auto pb-12">
@@ -129,10 +129,7 @@ import { SectionForecastComponent } from './sections/section-forecast.component'
           }
 
           @if (showForecast()) {
-            <app-section-forecast
-              [campaign]="c"
-              [readonly]="readonly()"
-            />
+            <app-campaign-simulator [campaign]="c" />
           }
         </div>
       } @else {
