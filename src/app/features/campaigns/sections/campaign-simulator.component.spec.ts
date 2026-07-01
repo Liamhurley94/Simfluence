@@ -1,7 +1,7 @@
 // campaign-simulator.component.spec.ts
 import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { CampaignSimulatorComponent } from './campaign-simulator.component';
 import { CampaignCreatorsService } from '../../../core/campaigns/campaign-creators.service';
 import { CreatorsService } from '../../../core/creators/creators.service';

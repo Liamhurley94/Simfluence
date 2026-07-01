@@ -75,8 +75,11 @@ export class CampaignSimulatorComponent {
     const r = this.result();
     if (!r || this.forecastLocked()) return;
     this.saving.set(true);
-    const forecast: CampaignForecast = { impressions: r.impressions, ctr: r.ctr, roas: r.roas, cvr: r.cvr, p10: r.p10, p50: r.p50, p90: r.p90 };
-    await this.campaignsSvc.update(this.campaign().id, { forecast });
-    this.saving.set(false);
+    try {
+      const forecast: CampaignForecast = { impressions: r.impressions, ctr: r.ctr, roas: r.roas, cvr: r.cvr, p10: r.p10, p50: r.p50, p90: r.p90 };
+      await this.campaignsSvc.update(this.campaign().id, { forecast });
+    } finally {
+      this.saving.set(false);
+    }
   }
 }
