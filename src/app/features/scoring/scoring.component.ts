@@ -498,12 +498,27 @@ export class ScoringComponent {
       const secondaryGenres = this.context.secondaryGenres();
       const ids = untracked(() => Array.from(this.selection.ids()));
       if (ids.length === 0) return;
+      const key = this.scoreKey(ids, genre, subMode, secondaryGenres);
+      // Skip the redundant re-score (and its clear -> blank flash) when returning
+      // to the screen with the same inputs already scored in the persisted cache.
+      if (this.score.hasFreshScores(key)) return;
       void this.creatorsSvc.byIds(ids).then((creators) => {
         if (creators.length === 0) return;
         this.score.clear();
-        void this.score.scoreBulk({ creators, campaignGenre: genre, subMode, secondaryGenres });
+        void this.score.scoreBulk({ creators, campaignGenre: genre, subMode, secondaryGenres, key });
       });
     });
+  }
+
+  // Stable identity of the current scoring inputs — selection + genre + sub-mode
+  // + secondary genres — so the effect can tell whether a re-score is needed.
+  private scoreKey(ids: number[], genre: string, subMode: string, secondaryGenres: string[]): string {
+    return [
+      [...ids].sort((a, b) => a - b).join(','),
+      genre,
+      subMode,
+      [...secondaryGenres].sort().join('|'),
+    ].join('::');
   }
 
   onGenreChange(g: string): void {
