@@ -417,15 +417,15 @@ export class ScoringComponent {
   protected readonly creatorsLoading = computed(
     () => this.selection.hasAny() && this.selectedCreatorsRes.isLoading(),
   );
-  // Full loading state: creators still loading, OR the first score is in flight
-  // and no GFIs are available yet — so we show a spinner instead of a table full
-  // of zeros. Incremental re-scores that keep prior GFIs fall through to the
-  // inline "Scoring…" hint instead of blanking the page.
-  protected readonly loading = computed(
-    () =>
-      this.creatorsLoading() ||
-      (this.score.pending() && !this.rows().some((r) => r.gfi !== null)),
-  );
+  // Set the moment the effect decides a (re)score is needed — synchronously,
+  // BEFORE the async byIds/scoreBulk — so there's no gap where the table renders
+  // with zeros between "creators loaded" and "scoring started" (visible on slow
+  // networks). Cleared when the score settles, success or failure.
+  private readonly rescoring = signal(false);
+  // Full loading state: creators still loading, OR a score is in flight. Shows a
+  // spinner instead of a table of zeros; gap-free because `rescoring` is set
+  // synchronously, not derived from the async `pending` flag.
+  protected readonly loading = computed(() => this.creatorsLoading() || this.rescoring());
 
   protected readonly rows = computed<ScoredRow[]>(() => {
     // Tie in `score.version` so rows re-render when bulk score completes.
@@ -511,11 +511,17 @@ export class ScoringComponent {
       // Skip the redundant re-score (and its clear -> blank flash) when returning
       // to the screen with the same inputs already scored in the persisted cache.
       if (this.score.hasFreshScores(key)) return;
-      void this.creatorsSvc.byIds(ids).then((creators) => {
-        if (creators.length === 0) return;
-        this.score.clear();
-        void this.score.scoreBulk({ creators, campaignGenre: genre, subMode, secondaryGenres, key });
-      });
+      // Mark loading synchronously so the page shows a spinner (not zeros) for the
+      // whole round-trip; settle it when the score resolves or fails.
+      this.rescoring.set(true);
+      void this.creatorsSvc
+        .byIds(ids)
+        .then((creators) => {
+          if (creators.length === 0) return;
+          this.score.clear();
+          return this.score.scoreBulk({ creators, campaignGenre: genre, subMode, secondaryGenres, key });
+        })
+        .finally(() => this.rescoring.set(false));
     });
   }
 
