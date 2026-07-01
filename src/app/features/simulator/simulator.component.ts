@@ -1,5 +1,5 @@
 import { Component, computed, inject, resource, signal } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { SpinnerComponent } from '../../shared/spinner/spinner.component';
 import { SimulationPanelComponent } from '../../shared/simulation/simulation-panel.component';
 
@@ -65,15 +65,15 @@ import { Creator } from '../../core/data/creator.types';
         [initialGenre]="context.genre()"
         [genres]="genres()"
         [subMode]="context.subMode() || undefined"
+        [autoRun]="autoRun"
         (simulated)="onSimulated($event)"
-      />
-      <div class="flex items-center gap-2 mt-4" data-testid="sim-actions">
+      >
         <button type="button" (click)="saveToCampaigns()" [disabled]="!result()"
           class="sf-btn text-xs uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
           style="background: var(--color-sf-green); color: var(--color-bg);" data-testid="sim-save">
           Save to campaigns
         </button>
-      </div>
+      </app-simulation-panel>
     }
     </div>
   `,
@@ -82,11 +82,16 @@ export class SimulatorComponent {
   private selection = inject(SelectionService);
   private creatorsSvc = inject(CreatorsService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private campaignsSvc = inject(CampaignsService);
   private campaignCreators = inject(CampaignCreatorsService);
   private profile = inject(CreatorProfileService);
 
   protected readonly context = inject(CampaignContextService);
+
+  // Discovery's "Simulate selected" navigates with ?run=1 to request one
+  // automatic run on arrival (the nav tab, without the flag, does not).
+  protected readonly autoRun = this.route.snapshot.queryParamMap.get('run') === '1';
 
   protected readonly genres = this.creatorsSvc.genres;
 

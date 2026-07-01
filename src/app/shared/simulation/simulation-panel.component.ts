@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, linkedSignal, output, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, linkedSignal, output, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IconComponent } from '../icon/icon.component';
@@ -123,7 +123,7 @@ const FORMATS: Format[] = ['Integrated', 'Mixed', 'Dedicated'];
       }
 
       <!-- Actions -->
-      <div class="flex items-center gap-2 mb-6" data-testid="sim-actions">
+      <div class="flex items-center justify-end gap-2 mb-6" data-testid="sim-actions">
         <button
           type="button"
           (click)="run()"
@@ -137,6 +137,7 @@ const FORMATS: Format[] = ['Integrated', 'Mixed', 'Dedicated'];
           }
           {{ pending() ? 'Running…' : result() ? 'Re-run' : 'Run simulation' }}
         </button>
+        <ng-content></ng-content>
       </div>
     }
 
@@ -289,6 +290,7 @@ export class SimulationPanelComponent {
   readonly genres = input<string[]>([]);
   readonly subMode = input<string | undefined>(undefined);
   readonly readonly = input<boolean>(false);
+  readonly autoRun = input<boolean>(false);
   readonly simulated = output<SimResult>();
 
   protected readonly objectives = OBJECTIVES;
@@ -306,6 +308,20 @@ export class SimulationPanelComponent {
   protected readonly runDisabled = computed(
     () => this.readonly() || this.limit().blocked || this.pending() || this.creators().length === 0,
   );
+
+  // Fire one automatic run when the host opts in (autoRun) and the creators have
+  // loaded — e.g. arriving from Discovery's "Simulate selected". Deferred to a
+  // microtask so `pending` isn't written synchronously inside the effect, and
+  // guarded so it never fires twice or while the rate limit blocks it.
+  private autoRan = false;
+  constructor() {
+    effect(() => {
+      if (this.autoRun() && !this.autoRan && this.creators().length > 0 && !this.runDisabled()) {
+        this.autoRan = true;
+        queueMicrotask(() => void this.run());
+      }
+    });
+  }
 
   async run(): Promise<void> {
     if (this.runDisabled()) return;

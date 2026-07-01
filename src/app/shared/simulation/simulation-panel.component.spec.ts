@@ -23,9 +23,9 @@ const RESULT: SimResult = { impressions: 100, ctr: 2, cpM: 6, cvr: 0.5, conversi
 @Component({
   standalone: true, imports: [SimulationPanelComponent],
   template: `<app-simulation-panel [creators]="creators()" [initialGenre]="'Gaming & Esports'"
-    [genres]="['Gaming & Esports']" [readonly]="readonly()" (simulated)="last.set($event)" />`,
+    [genres]="['Gaming & Esports']" [readonly]="readonly()" [autoRun]="autoRun()" (simulated)="last.set($event)" />`,
 })
-class Host { creators = signal<Creator[]>([mkCreator(1)]); readonly = signal(false); last = signal<SimResult | null>(null); }
+class Host { creators = signal<Creator[]>([mkCreator(1)]); readonly = signal(false); autoRun = signal(false); last = signal<SimResult | null>(null); }
 
 function setup(tier = 'silver') {
   localStorage.clear();
@@ -67,5 +67,18 @@ describe('SimulationPanelComponent', () => {
     f.componentInstance.readonly.set(true); f.detectChanges();
     expect(f.nativeElement.querySelector('[data-testid="sim-controls"]')).toBeNull();
     expect(f.nativeElement.querySelector('[data-testid="sim-run"]')).toBeNull();
+  });
+
+  it('auto-runs once when autoRun is set and creators are present', async () => {
+    const { post } = setup();
+    const f = TestBed.createComponent(Host);
+    f.componentInstance.autoRun.set(true);
+    f.detectChanges();
+    // Macrotask flush drains the whole deferred chain (queueMicrotask -> run ->
+    // edge post -> result.set) before we assert the rendered bands.
+    await new Promise((r) => setTimeout(r));
+    f.detectChanges();
+    expect(post).toHaveBeenCalledOnce();
+    expect(f.nativeElement.querySelector('[data-testid="sim-bands"]')).toBeTruthy();
   });
 });

@@ -198,7 +198,7 @@ export class DiscoveryComponent {
     // so the sim seeds its genre from the user's narrowed selection.
     const genre = this.query().genre;
     if (genre) this.context.setGenre(genre);
-    void this.router.navigateByUrl('/app/simulator');
+    void this.router.navigateByUrl('/app/simulator?run=1');
   }
 
   setBudget(value: number | null): void {
