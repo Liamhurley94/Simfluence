@@ -5,6 +5,7 @@ import { SimulationPanelComponent } from '../../shared/simulation/simulation-pan
 
 import { CampaignContextService } from '../../core/context/campaign-context.service';
 import { CreatorsService } from '../../core/creators/creators.service';
+import { CreatorProfileService } from '../../core/creator-profile/creator-profile.service';
 import { SelectionService } from '../../core/selection/selection.service';
 import { SimResult } from '../../core/simulation/simulation.types';
 import { CampaignsService } from '../../core/campaigns/campaigns.service';
@@ -17,12 +18,7 @@ import { Creator } from '../../core/data/creator.types';
   imports: [RouterLink, SpinnerComponent, SimulationPanelComponent],
   template: `
     <div class="sf-appear">
-    <div class="flex items-center justify-between mb-6">
-      <h1 class="text-xl font-bold" style="color: var(--color-text);">Simulator</h1>
-      <div class="text-xs" style="color: var(--color-text-muted);" data-testid="sim-selection-count">
-        {{ creators().length }} creator{{ creators().length === 1 ? '' : 's' }} in shortlist
-      </div>
-    </div>
+    <h1 class="text-xl font-bold mb-6" style="color: var(--color-text);">Simulator</h1>
 
     @if (creatorsLoading()) {
       <div class="flex justify-center py-12">
@@ -37,7 +33,7 @@ import { Creator } from '../../core/data/creator.types';
           No creators selected
         </div>
         <p class="text-xs mb-4" style="color: var(--color-text-muted);">
-          Pick a shortlist on Discovery or use a persona auto-select.
+          Select creators on Discovery to simulate.
         </p>
         <a
           routerLink="/app/discovery"
@@ -47,6 +43,23 @@ import { Creator } from '../../core/data/creator.types';
         </a>
       </div>
     } @else {
+      <div class="sf-panel p-3 mb-6" data-testid="sim-selected">
+        <div class="text-[10px] uppercase tracking-wider mb-2" style="color: var(--color-text-muted);">
+          Creators selected from Discovery ({{ creators().length }})
+        </div>
+        <div class="flex flex-wrap gap-1.5">
+          @for (c of creators(); track c.id) {
+            <button
+              type="button"
+              (click)="openProfile(c)"
+              class="sf-chip cursor-pointer"
+              data-testid="sim-selected-chip"
+            >
+              {{ c.name }}
+            </button>
+          }
+        </div>
+      </div>
       <app-simulation-panel
         [creators]="creators()"
         [initialGenre]="context.genre()"
@@ -71,6 +84,7 @@ export class SimulatorComponent {
   private router = inject(Router);
   private campaignsSvc = inject(CampaignsService);
   private campaignCreators = inject(CampaignCreatorsService);
+  private profile = inject(CreatorProfileService);
 
   protected readonly context = inject(CampaignContextService);
 
@@ -93,6 +107,10 @@ export class SimulatorComponent {
 
   onSimulated(r: SimResult): void {
     this.result.set(r);
+  }
+
+  openProfile(c: Creator): void {
+    this.profile.open(c);
   }
 
   async saveToCampaigns(): Promise<void> {

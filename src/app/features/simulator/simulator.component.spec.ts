@@ -10,6 +10,7 @@ import { CreatorsService } from '../../core/creators/creators.service';
 import { EdgeClient } from '../../core/api/edge.client';
 import { RateLimitService } from '../../core/simulation/rate-limit.service';
 import { CampaignsRepository } from '../../core/campaigns/campaigns.repository';
+import { CreatorProfileService } from '../../core/creator-profile/creator-profile.service';
 import { Creator } from '../../core/data/creator.types';
 
 function mkCreator(id: number): Creator {
@@ -197,5 +198,23 @@ describe('SimulatorComponent', () => {
     fixture.detectChanges();
     // Style flips background — inspect the attr for the blue class indicator.
     expect(btn.style.background).toContain('color-sf-blue');
+  });
+
+  it('renders clickable selected-creator chips that open the profile modal', async () => {
+    setup({ selectedIds: [2, 14] });
+    const fixture = TestBed.createComponent(SimulatorComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('[data-testid="sim-selected"]')).toBeTruthy();
+    const chips = fixture.nativeElement.querySelectorAll('[data-testid="sim-selected-chip"]');
+    expect(chips.length).toBe(2);
+
+    const openSpy = vi
+      .spyOn(TestBed.inject(CreatorProfileService), 'open')
+      .mockImplementation(() => {});
+    (chips[0] as HTMLButtonElement).click();
+    expect(openSpy).toHaveBeenCalledWith(expect.objectContaining({ id: 2 }));
   });
 });
