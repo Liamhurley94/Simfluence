@@ -18,12 +18,27 @@ import { SimResult } from '../../../core/simulation/simulation.types';
 
       @if (campaign().forecast; as fc) {
         <div class="grid grid-cols-3 gap-4 text-center mb-4" data-testid="campaign-forecast-summary">
-          <div><div class="text-[10px] uppercase tracking-wider" style="color: var(--color-text-muted);">P50 Impressions</div>
-            <div class="text-lg font-bold" style="color: var(--color-text);">{{ fc.p50.impressions | number: '1.0-0' }}</div></div>
-          <div><div class="text-[10px] uppercase tracking-wider" style="color: var(--color-text-muted);">CTR</div>
-            <div class="text-lg font-bold" style="color: var(--color-text);">{{ fc.p50.ctr }}%</div></div>
-          <div><div class="text-[10px] uppercase tracking-wider" style="color: var(--color-text-muted);">ROAS</div>
-            <div class="text-lg font-bold" style="color: var(--color-sf-gold);">{{ fc.p50.roas }}×</div></div>
+          <div>
+            <div class="text-[10px] uppercase tracking-wider" style="color: var(--color-text-muted);">P50 Impressions</div>
+            <div class="text-lg font-bold" style="color: var(--color-text);">{{ fc.p50.impressions | number: '1.0-0' }}</div>
+            <div class="text-[10px]" style="color: var(--color-text-muted);">
+              P10 {{ fc.p10.impressions | number: '1.0-0' }} · P90 {{ fc.p90.impressions | number: '1.0-0' }}
+            </div>
+          </div>
+          <div>
+            <div class="text-[10px] uppercase tracking-wider" style="color: var(--color-text-muted);">CTR</div>
+            <div class="text-lg font-bold" style="color: var(--color-text);">{{ fc.p50.ctr }}%</div>
+            <div class="text-[10px]" style="color: var(--color-text-muted);">
+              P10 {{ fc.p10.ctr }}% · P90 {{ fc.p90.ctr }}%
+            </div>
+          </div>
+          <div>
+            <div class="text-[10px] uppercase tracking-wider" style="color: var(--color-text-muted);">ROAS</div>
+            <div class="text-lg font-bold" style="color: var(--color-sf-gold);">{{ fc.p50.roas }}×</div>
+            <div class="text-[10px]" style="color: var(--color-text-muted);">
+              P10 {{ fc.p10.roas }}× · P90 {{ fc.p90.roas }}×
+            </div>
+          </div>
         </div>
       }
 
