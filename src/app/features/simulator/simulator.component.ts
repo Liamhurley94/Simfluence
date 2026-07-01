@@ -1,6 +1,5 @@
 import { Component, computed, inject, resource, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { SpinnerComponent } from '../../shared/spinner/spinner.component';
 import { SimulationPanelComponent } from '../../shared/simulation/simulation-panel.component';
 
@@ -70,14 +69,9 @@ export class SimulatorComponent {
   private selection = inject(SelectionService);
   private creatorsSvc = inject(CreatorsService);
   private router = inject(Router);
-  private route = inject(ActivatedRoute);
   private campaignsSvc = inject(CampaignsService);
   private campaignCreators = inject(CampaignCreatorsService);
 
-  // When the simulator is opened via /simulator?campaign=:id (e.g. from the
-  // campaign detail page's "Run simulation" link), Save updates that campaign
-  // instead of creating a new one. Captured once at init.
-  protected readonly attachedCampaignId = this.route.snapshot.queryParamMap.get('campaign');
   protected readonly context = inject(CampaignContextService);
 
   protected readonly genres = this.creatorsSvc.genres;
@@ -114,23 +108,6 @@ export class SimulatorComponent {
       p50: r.p50,
       p90: r.p90,
     };
-
-    // Path A: attached to an existing campaign — update its forecast, add any
-    // newly-simulated creators to its campaign_creators with source='simulator'.
-    if (this.attachedCampaignId) {
-      const id = this.attachedCampaignId;
-      await this.campaignsSvc.update(id, { forecast });
-      await this.campaignCreators.loadFor(id);
-      const existingCreatorIds = new Set(this.campaignCreators.records().map((cc) => cc.creatorId));
-      const toAdd = this.creators().map((c) => c.id).filter((cid) => !existingCreatorIds.has(cid));
-      await Promise.all(
-        toAdd.map((cid) =>
-          this.campaignCreators.add({ campaignId: id, creatorId: cid, source: 'simulator' }),
-        ),
-      );
-      void this.router.navigate(['/app/campaigns', id]);
-      return;
-    }
 
     // Path B: standalone save — create a new campaign with the basics + forecast.
     // Use the budget from the simulation result (the budget the sim was actually run with).
