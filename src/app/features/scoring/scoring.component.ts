@@ -88,9 +88,9 @@ interface ScoredRow {
       </div>
     </div>
 
-    @if (creatorsLoading()) {
+    @if (loading()) {
       <div class="flex justify-center py-12">
-        <app-spinner label="Loading creators…" />
+        <app-spinner [label]="creatorsLoading() ? 'Loading creators…' : 'Scoring creators…'" />
       </div>
     } @else if (rows().length === 0) {
       <div
@@ -416,6 +416,15 @@ export class ScoringComponent {
   // the spinner on the genuine "nothing selected" empty state.
   protected readonly creatorsLoading = computed(
     () => this.selection.hasAny() && this.selectedCreatorsRes.isLoading(),
+  );
+  // Full loading state: creators still loading, OR the first score is in flight
+  // and no GFIs are available yet — so we show a spinner instead of a table full
+  // of zeros. Incremental re-scores that keep prior GFIs fall through to the
+  // inline "Scoring…" hint instead of blanking the page.
+  protected readonly loading = computed(
+    () =>
+      this.creatorsLoading() ||
+      (this.score.pending() && !this.rows().some((r) => r.gfi !== null)),
   );
 
   protected readonly rows = computed<ScoredRow[]>(() => {
