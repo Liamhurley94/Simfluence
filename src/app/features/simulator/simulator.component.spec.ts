@@ -154,6 +154,9 @@ describe('SimulatorComponent', () => {
 
     const rateLimit = TestBed.inject(RateLimitService);
     expect(rateLimit.read()).toBe(1);
+
+    const save: HTMLButtonElement = fixture.nativeElement.querySelector('[data-testid="sim-save"]');
+    expect(save.disabled).toBe(false);
   });
 
   it('free tier hitting limit disables the run button and shows banner', async () => {
