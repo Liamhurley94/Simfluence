@@ -195,6 +195,42 @@ describe('DiscoveryComponent', () => {
     expect(context.genre()).toBe('Tech & Gadgets');
   });
 
+  it('simulate-selected button routes to /app/simulator', () => {
+    const selection = TestBed.inject(SelectionService);
+    selection.add(1);
+
+    const fixture = TestBed.createComponent(DiscoveryComponent);
+    fixture.detectChanges();
+    const btn: HTMLButtonElement = fixture.nativeElement.querySelector(
+      '[data-testid="selection-simulate"]',
+    );
+    btn.click();
+    expect(router.navigateByUrl).toHaveBeenCalledWith('/app/simulator?run=1');
+  });
+
+  it('simulate-selected carries the active genre filter into the shared context', () => {
+    const selection = TestBed.inject(SelectionService);
+    selection.add(1);
+    const context = TestBed.inject(CampaignContextService);
+
+    const fixture = TestBed.createComponent(DiscoveryComponent);
+    fixture.detectChanges();
+    fixture.componentInstance.onQuery({
+      sort: 'cpi',
+      format: 'Mixed',
+      platform: 'All platforms',
+      genre: 'Music',
+    });
+
+    const btn: HTMLButtonElement = fixture.nativeElement.querySelector(
+      '[data-testid="selection-simulate"]',
+    );
+    btn.click();
+
+    expect(context.genre()).toBe('Music');
+    expect(router.navigateByUrl).toHaveBeenCalledWith('/app/simulator?run=1');
+  });
+
   it('free tier shows blurred rate labels on cards', async () => {
     tier.set('free');
     const fixture = TestBed.createComponent(DiscoveryComponent);

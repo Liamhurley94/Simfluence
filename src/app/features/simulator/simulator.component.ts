@@ -1,40 +1,24 @@
 import { Component, computed, inject, resource, signal } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { IconComponent } from '../../shared/icon/icon.component';
 import { SpinnerComponent } from '../../shared/spinner/spinner.component';
+import { SimulationPanelComponent } from '../../shared/simulation/simulation-panel.component';
 
-import { AuthService } from '../../core/auth/auth.service';
 import { CampaignContextService } from '../../core/context/campaign-context.service';
 import { CreatorsService } from '../../core/creators/creators.service';
+import { CreatorProfileService } from '../../core/creator-profile/creator-profile.service';
 import { SelectionService } from '../../core/selection/selection.service';
-import { RunSimulationService } from '../../core/simulation/run-simulation.service';
-import { RateLimitService } from '../../core/simulation/rate-limit.service';
-import {
-  Format,
-  OBJECTIVES,
-  Objective,
-  SimResult,
-} from '../../core/simulation/simulation.types';
+import { SimResult } from '../../core/simulation/simulation.types';
 import { CampaignsService } from '../../core/campaigns/campaigns.service';
 import { CampaignCreatorsService } from '../../core/campaigns/campaign-creators.service';
 import { Creator } from '../../core/data/creator.types';
 
-const FORMATS: Format[] = ['Integrated', 'Mixed', 'Dedicated'];
-
 @Component({
   selector: 'app-simulator',
   standalone: true,
-  imports: [DecimalPipe, FormsModule, RouterLink, IconComponent, SpinnerComponent],
+  imports: [RouterLink, SpinnerComponent, SimulationPanelComponent],
   template: `
     <div class="sf-appear">
-    <div class="flex items-center justify-between mb-6">
-      <h1 class="text-xl font-bold" style="color: var(--color-text);">Simulator</h1>
-      <div class="text-xs" style="color: var(--color-text-muted);" data-testid="sim-selection-count">
-        {{ creators().length }} creator{{ creators().length === 1 ? '' : 's' }} in shortlist
-      </div>
-    </div>
+    <h1 class="text-xl font-bold mb-6" style="color: var(--color-text);">Simulator</h1>
 
     @if (creatorsLoading()) {
       <div class="flex justify-center py-12">
@@ -49,7 +33,7 @@ const FORMATS: Format[] = ['Integrated', 'Mixed', 'Dedicated'];
           No creators selected
         </div>
         <p class="text-xs mb-4" style="color: var(--color-text-muted);">
-          Pick a shortlist on Discovery or use a persona auto-select.
+          Select creators on Discovery to simulate.
         </p>
         <a
           routerLink="/app/discovery"
@@ -59,281 +43,37 @@ const FORMATS: Format[] = ['Integrated', 'Mixed', 'Dedicated'];
         </a>
       </div>
     } @else {
-      <!-- Controls -->
-      <div
-        class="sf-panel p-4 mb-6 grid gap-4"
-        style="grid-template-columns: repeat(3, minmax(0,1fr));"
-        data-testid="sim-controls"
-      >
-        <div>
-          <label
-            class="text-[10px] uppercase tracking-wider mb-1 block"
-            style="color: var(--color-text-muted);"
-          >
-            Budget (USD)
-          </label>
-          <input
-            type="number"
-            min="0"
-            step="1000"
-            [ngModel]="budget()"
-            (ngModelChange)="budget.set($event || 0)"
-            class="sf-input"
-            data-testid="sim-budget"
-          />
+      <div class="sf-panel p-3 mb-6" data-testid="sim-selected">
+        <div class="text-[10px] uppercase tracking-wider mb-2" style="color: var(--color-text-muted);">
+          Creators selected from Discovery ({{ creators().length }})
         </div>
-        <div>
-          <label
-            class="text-[10px] uppercase tracking-wider mb-1 block"
-            style="color: var(--color-text-muted);"
-          >
-            Format
-          </label>
-          <select
-            [ngModel]="format()"
-            (ngModelChange)="format.set($event)"
-            class="sf-select"
-            data-testid="sim-format"
-          >
-            @for (f of formats; track f) {
-              <option [ngValue]="f">{{ f }}</option>
-            }
-          </select>
-        </div>
-        <div>
-          <label
-            class="text-[10px] uppercase tracking-wider mb-1 block"
-            style="color: var(--color-text-muted);"
-          >
-            Genre
-          </label>
-          <select
-            [ngModel]="context.genre()"
-            (ngModelChange)="context.setGenre($event)"
-            class="sf-select"
-            data-testid="sim-genre"
-          >
-            @for (g of genres(); track g) {
-              <option [ngValue]="g">{{ g }}</option>
-            }
-          </select>
-        </div>
-      </div>
-
-      <!-- Objectives -->
-      <div class="mb-6" data-testid="sim-objectives">
-        <div
-          class="text-[10px] uppercase tracking-wider mb-2"
-          style="color: var(--color-text-muted);"
-        >
-          Campaign objectives
-        </div>
-        <div class="flex flex-wrap gap-1">
-          @for (o of objectives; track o) {
+        <div class="flex flex-wrap gap-1.5">
+          @for (c of creators(); track c.id) {
             <button
               type="button"
-              (click)="toggleObjective(o)"
+              (click)="openProfile(c)"
               class="sf-chip cursor-pointer"
-              [style.background]="selectedObjectives().includes(o) ? 'var(--color-sf-blue)' : ''"
-              [style.color]="selectedObjectives().includes(o) ? 'white' : ''"
-              [style.border-color]="selectedObjectives().includes(o) ? 'var(--color-sf-blue)' : ''"
-              [attr.data-testid]="'sim-obj-' + slug(o)"
+              data-testid="sim-selected-chip"
             >
-              {{ o }}
+              {{ c.name }}
             </button>
           }
         </div>
       </div>
-
-      <!-- Rate limit banner -->
-      @if (limit().blocked) {
-        <div
-          class="p-3 mb-4 rounded-lg text-xs"
-          style="background: color-mix(in srgb, var(--color-sf-red) 8%, transparent); border: 1px solid var(--color-sf-red); color: var(--color-sf-red);"
-          data-testid="sim-rate-limit"
-        >
-          You've used all {{ limit().limit }} simulations for this month. Upgrade your tier for more
-          runs.
-        </div>
-      } @else if (!isUnlimited()) {
-        <div
-          class="text-xs mb-4"
-          style="color: var(--color-text-muted);"
-          data-testid="sim-rate-usage"
-        >
-          {{ limit().remaining }} of {{ limit().limit }} simulations remaining this month.
-        </div>
-      }
-
-      <!-- Actions -->
-      <div class="flex items-center gap-2 mb-6" data-testid="sim-actions">
-        <button
-          type="button"
-          (click)="run()"
-          [disabled]="runDisabled()"
+      <app-simulation-panel
+        [creators]="creators()"
+        [initialGenre]="context.genre()"
+        [genres]="genres()"
+        [subMode]="context.subMode() || undefined"
+        [autoRun]="autoRun"
+        (simulated)="onSimulated($event)"
+      >
+        <button type="button" (click)="saveToCampaigns()" [disabled]="!result()"
           class="sf-btn text-xs uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
-          style="background: var(--color-sf-orange); color: var(--color-bg);"
-          data-testid="sim-run"
-        >
-          @if (!pending()) {
-              <app-icon name="play" [size]="12" style="display:inline-block;vertical-align:middle;" />
-            }
-            {{ pending() ? 'Running…' : result() ? 'Re-run' : 'Run simulation' }}
-        </button>
-        <button
-          type="button"
-          (click)="saveToCampaigns()"
-          [disabled]="!result()"
-          class="sf-btn text-xs uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
-          style="background: var(--color-sf-green); color: var(--color-bg);"
-          data-testid="sim-save"
-        >
+          style="background: var(--color-sf-green); color: var(--color-bg);" data-testid="sim-save">
           Save to campaigns
         </button>
-        @if (result()) {
-          <span class="text-xs" style="color: var(--color-text-muted);">
-            Last run: genre {{ context.genre() }} · {{ result()!.budget | number }} budget ·
-            {{ creators().length }} creators
-          </span>
-        }
-      </div>
-
-      @if (result(); as r) {
-        <!-- Bands -->
-        <div class="grid grid-cols-3 gap-3 mb-6" data-testid="sim-bands">
-          <div
-            class="sf-card p-4"
-            style="border-color: var(--color-sf-red); border-width: 2px;"
-            data-testid="sim-p10"
-          >
-            <div class="text-[10px] uppercase tracking-wider mb-2" style="color: var(--color-sf-red);">
-              P10 · Worst case
-            </div>
-            <div class="text-3xl font-bold" style="color: var(--color-text);">
-              {{ r.p10.impressions | number: '1.0-0' }}
-            </div>
-            <div class="text-xs mb-3" style="color: var(--color-text-muted);">impressions</div>
-            <div class="grid grid-cols-2 gap-2 text-xs">
-              <div>
-                <div class="text-[9px] uppercase" style="color: var(--color-text-muted);">CTR</div>
-                <div class="font-bold" style="color: var(--color-text);">{{ r.p10.ctr }}%</div>
-              </div>
-              <div>
-                <div class="text-[9px] uppercase" style="color: var(--color-text-muted);">ROAS</div>
-                <div class="font-bold" style="color: var(--color-text);">{{ r.p10.roas }}×</div>
-              </div>
-            </div>
-          </div>
-          <div
-            class="sf-card p-4"
-            style="border-color: var(--color-sf-gold); border-width: 2px;"
-            data-testid="sim-p50"
-          >
-            <div
-              class="text-[10px] uppercase tracking-wider mb-2"
-              style="color: var(--color-sf-gold);"
-            >
-              P50 · Base case
-            </div>
-            <div class="text-3xl font-bold" style="color: var(--color-text);">
-              {{ r.p50.impressions | number: '1.0-0' }}
-            </div>
-            <div class="text-xs mb-3" style="color: var(--color-text-muted);">impressions</div>
-            <div class="grid grid-cols-2 gap-2 text-xs">
-              <div>
-                <div class="text-[9px] uppercase" style="color: var(--color-text-muted);">CTR</div>
-                <div class="font-bold" style="color: var(--color-text);">{{ r.p50.ctr }}%</div>
-              </div>
-              <div>
-                <div class="text-[9px] uppercase" style="color: var(--color-text-muted);">ROAS</div>
-                <div class="font-bold" style="color: var(--color-text);">{{ r.p50.roas }}×</div>
-              </div>
-            </div>
-          </div>
-          <div
-            class="sf-card p-4"
-            style="border-color: var(--color-sf-green); border-width: 2px;"
-            data-testid="sim-p90"
-          >
-            <div
-              class="text-[10px] uppercase tracking-wider mb-2"
-              style="color: var(--color-sf-green);"
-            >
-              P90 · Best case
-            </div>
-            <div class="text-3xl font-bold" style="color: var(--color-text);">
-              {{ r.p90.impressions | number: '1.0-0' }}
-            </div>
-            <div class="text-xs mb-3" style="color: var(--color-text-muted);">impressions</div>
-            <div class="grid grid-cols-2 gap-2 text-xs">
-              <div>
-                <div class="text-[9px] uppercase" style="color: var(--color-text-muted);">CTR</div>
-                <div class="font-bold" style="color: var(--color-text);">{{ r.p90.ctr }}%</div>
-              </div>
-              <div>
-                <div class="text-[9px] uppercase" style="color: var(--color-text-muted);">ROAS</div>
-                <div class="font-bold" style="color: var(--color-text);">{{ r.p90.roas }}×</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Core metrics grid -->
-        <div
-          class="sf-card overflow-hidden"
-          data-testid="sim-metrics"
-        >
-          <div
-            class="px-4 py-3 text-[10px] uppercase tracking-wider font-semibold"
-            style="background: var(--color-sf-blue); color: var(--color-bg);"
-          >
-            Base case metrics
-          </div>
-          <div class="grid grid-cols-6 gap-0">
-            <div class="p-4 border-r" style="border-color: var(--color-border);">
-              <div class="text-[10px] uppercase" style="color: var(--color-text-muted);">
-                Impressions
-              </div>
-              <div class="text-lg font-bold" style="color: var(--color-text);">
-                {{ r.impressions | number: '1.0-0' }}
-              </div>
-            </div>
-            <div class="p-4 border-r" style="border-color: var(--color-border);">
-              <div class="text-[10px] uppercase" style="color: var(--color-text-muted);">Clicks</div>
-              <div class="text-lg font-bold" style="color: var(--color-text);">
-                {{ r.clicks | number: '1.0-0' }}
-              </div>
-            </div>
-            <div class="p-4 border-r" style="border-color: var(--color-border);">
-              <div class="text-[10px] uppercase" style="color: var(--color-text-muted);">CTR</div>
-              <div class="text-lg font-bold" style="color: var(--color-text);">{{ r.ctr }}%</div>
-            </div>
-            <div class="p-4 border-r" style="border-color: var(--color-border);">
-              <div class="text-[10px] uppercase" style="color: var(--color-text-muted);">CVR</div>
-              <div class="text-lg font-bold" style="color: var(--color-text);">{{ r.cvr }}%</div>
-            </div>
-            <div class="p-4 border-r" style="border-color: var(--color-border);">
-              <div class="text-[10px] uppercase" style="color: var(--color-text-muted);">
-                Conversions
-              </div>
-              <div class="text-lg font-bold" style="color: var(--color-text);">
-                {{ r.conversions | number: '1.0-0' }}
-              </div>
-            </div>
-            <div class="p-4">
-              <div class="text-[10px] uppercase" style="color: var(--color-text-muted);">
-                ROAS (indicative)
-              </div>
-              <div class="text-lg font-bold" style="color: var(--color-sf-gold);" data-testid="sim-roas-range">
-                {{ r.roasRange }}
-              </div>
-              <div class="text-[9px] mt-0.5" style="color: var(--color-text-muted);">
-                Range — depends on attribution &amp; product price
-              </div>
-            </div>
-          </div>
-        </div>
-      }
+      </app-simulation-panel>
     }
     </div>
   `,
@@ -341,27 +81,20 @@ const FORMATS: Format[] = ['Integrated', 'Mixed', 'Dedicated'];
 export class SimulatorComponent {
   private selection = inject(SelectionService);
   private creatorsSvc = inject(CreatorsService);
-  private auth = inject(AuthService);
-  private rateLimitSvc = inject(RateLimitService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private campaignsSvc = inject(CampaignsService);
   private campaignCreators = inject(CampaignCreatorsService);
+  private profile = inject(CreatorProfileService);
 
-  // When the simulator is opened via /simulator?campaign=:id (e.g. from the
-  // campaign detail page's "Run simulation" link), Save updates that campaign
-  // instead of creating a new one. Captured once at init.
-  protected readonly attachedCampaignId = this.route.snapshot.queryParamMap.get('campaign');
-  protected readonly runSim = inject(RunSimulationService);
   protected readonly context = inject(CampaignContextService);
 
-  protected readonly objectives = OBJECTIVES;
-  protected readonly formats = FORMATS;
+  // Discovery's "Simulate selected" navigates with ?run=1 to request one
+  // automatic run on arrival (the nav tab, without the flag, does not).
+  protected readonly autoRun = this.route.snapshot.queryParamMap.get('run') === '1';
+
   protected readonly genres = this.creatorsSvc.genres;
 
-  protected readonly budget = signal(85_000);
-  protected readonly format = signal<Format>('Integrated');
-  protected readonly selectedObjectives = signal<Objective[]>([]);
   protected readonly result = signal<SimResult | null>(null);
 
   // Async batch fetch of selected creators; re-runs when selection changes.
@@ -377,43 +110,12 @@ export class SimulatorComponent {
     () => this.selection.ids().size > 0 && this.creatorsRes.isLoading(),
   );
 
-  protected readonly pending = this.runSim.pending;
-
-  protected readonly limit = computed(() =>
-    this.rateLimitSvc.check(this.auth.tier()),
-  );
-
-  protected readonly isUnlimited = computed(() => !Number.isFinite(this.limit().limit));
-
-  protected readonly runDisabled = computed(
-    () => this.limit().blocked || this.creators().length === 0 || this.pending(),
-  );
-
-  async run(): Promise<void> {
-    if (this.runDisabled()) return;
-
-    const inputs = {
-      creators: this.creators(),
-      budget: this.budget(),
-      format: this.format(),
-      genre: this.context.genre(),
-      objectives: this.selectedObjectives(),
-      subMode: this.context.subMode() || undefined,
-    };
-
-    this.rateLimitSvc.increment();
-
-    // Server-only: simulator math is proprietary, lives behind the edge fn
-    // (not shipped to the browser). `pending` drives the "Running…" state in
-    // the template; result only renders when the server returns.
-    const server = await this.runSim.run(inputs);
-    if (server) this.result.set(server);
+  onSimulated(r: SimResult): void {
+    this.result.set(r);
   }
 
-  toggleObjective(o: Objective): void {
-    this.selectedObjectives.update((list) =>
-      list.includes(o) ? list.filter((x) => x !== o) : [...list, o],
-    );
+  openProfile(c: Creator): void {
+    this.profile.open(c);
   }
 
   async saveToCampaigns(): Promise<void> {
@@ -430,28 +132,12 @@ export class SimulatorComponent {
       p90: r.p90,
     };
 
-    // Path A: attached to an existing campaign — update its forecast, add any
-    // newly-simulated creators to its campaign_creators with source='simulator'.
-    if (this.attachedCampaignId) {
-      const id = this.attachedCampaignId;
-      await this.campaignsSvc.update(id, { forecast });
-      await this.campaignCreators.loadFor(id);
-      const existingCreatorIds = new Set(this.campaignCreators.records().map((cc) => cc.creatorId));
-      const toAdd = this.creators().map((c) => c.id).filter((cid) => !existingCreatorIds.has(cid));
-      await Promise.all(
-        toAdd.map((cid) =>
-          this.campaignCreators.add({ campaignId: id, creatorId: cid, source: 'simulator' }),
-        ),
-      );
-      void this.router.navigate(['/app/campaigns', id]);
-      return;
-    }
-
-    // Path B: standalone save — create a new campaign with the basics + forecast.
+    // Standalone save — create a new campaign with the basics + forecast.
+    // Use the budget from the simulation result (the budget the sim was actually run with).
     const created = await this.campaignsSvc.create({
       name: `${this.context.genre()} campaign — ${new Date().toLocaleDateString()}`,
       genre: this.context.genre(),
-      budget: this.budget(),
+      budget: r.budget,
     });
     if (!created) return;
     await this.campaignsSvc.update(created.id, { forecast });
@@ -462,9 +148,5 @@ export class SimulatorComponent {
       ),
     );
     void this.router.navigate(['/app/campaigns', created.id]);
-  }
-
-  slug(s: string): string {
-    return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
   }
 }

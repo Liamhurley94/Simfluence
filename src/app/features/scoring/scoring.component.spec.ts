@@ -132,6 +132,25 @@ describe('ScoringComponent', () => {
     expect(secondPayload.campaignGenre).toBe('Beauty & Skincare');
   });
 
+  it('does not re-score on re-mount when selection + context are unchanged', async () => {
+    const { post } = setup({ selectedIds: [2, 14] });
+
+    const f1 = TestBed.createComponent(ScoringComponent);
+    f1.detectChanges();
+    TestBed.flushEffects();
+    await f1.whenStable();
+    expect(post).toHaveBeenCalledTimes(1);
+    f1.destroy();
+
+    // Returning to the screen (component re-created) with the same selection +
+    // context must reuse the cached scores, not clear + re-score (the flicker).
+    const f2 = TestBed.createComponent(ScoringComponent);
+    f2.detectChanges();
+    TestBed.flushEffects();
+    await f2.whenStable();
+    expect(post).toHaveBeenCalledTimes(1);
+  });
+
   it('applies scored GFI from the service when rendering rows', async () => {
     const { score, selection } = setup({ selectedIds: [2] });
     const fixture = TestBed.createComponent(ScoringComponent);

@@ -69,6 +69,14 @@ const EMPTY_PAGE: PagedCreators = { creators: [], total: 0, pageCount: 1, page: 
               </button>
               <button
                 type="button"
+                (click)="goToSimulator()"
+                class="sf-btn sf-btn-ghost text-xs"
+                data-testid="selection-simulate"
+              >
+                Simulate selected <app-icon name="arrow-right" [size]="12" style="display:inline-block;vertical-align:middle;" />
+              </button>
+              <button
+                type="button"
                 (click)="createCampaignFromSelection()"
                 [disabled]="creatingCampaign()"
                 class="text-xs px-3 py-1.5 rounded font-semibold disabled:opacity-50"
@@ -182,6 +190,15 @@ export class DiscoveryComponent {
     const genre = this.query().genre;
     if (genre) this.context.genre.set(genre);
     void this.router.navigateByUrl('/app/scoring');
+  }
+
+  goToSimulator(): void {
+    // The standalone simulator runs on the Discovery selection. Carry the active
+    // genre into shared context via setGenre (which clears a now-stale sub-mode)
+    // so the sim seeds its genre from the user's narrowed selection.
+    const genre = this.query().genre;
+    if (genre) this.context.setGenre(genre);
+    void this.router.navigateByUrl('/app/simulator?run=1');
   }
 
   setBudget(value: number | null): void {

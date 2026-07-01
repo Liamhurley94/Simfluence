@@ -88,9 +88,9 @@ interface ScoredRow {
       </div>
     </div>
 
-    @if (creatorsLoading()) {
+    @if (loading()) {
       <div class="flex justify-center py-12">
-        <app-spinner label="Loading creators…" />
+        <app-spinner [label]="creatorsLoading() ? 'Loading creators…' : 'Scoring creators…'" />
       </div>
     } @else if (rows().length === 0) {
       <div
@@ -417,6 +417,15 @@ export class ScoringComponent {
   protected readonly creatorsLoading = computed(
     () => this.selection.hasAny() && this.selectedCreatorsRes.isLoading(),
   );
+  // Full loading state: creators still loading, OR the first score is in flight
+  // and no GFIs are available yet — so we show a spinner instead of a table full
+  // of zeros. Incremental re-scores that keep prior GFIs fall through to the
+  // inline "Scoring…" hint instead of blanking the page.
+  protected readonly loading = computed(
+    () =>
+      this.creatorsLoading() ||
+      (this.score.pending() && !this.rows().some((r) => r.gfi !== null)),
+  );
 
   protected readonly rows = computed<ScoredRow[]>(() => {
     // Tie in `score.version` so rows re-render when bulk score completes.
@@ -498,12 +507,27 @@ export class ScoringComponent {
       const secondaryGenres = this.context.secondaryGenres();
       const ids = untracked(() => Array.from(this.selection.ids()));
       if (ids.length === 0) return;
+      const key = this.scoreKey(ids, genre, subMode, secondaryGenres);
+      // Skip the redundant re-score (and its clear -> blank flash) when returning
+      // to the screen with the same inputs already scored in the persisted cache.
+      if (this.score.hasFreshScores(key)) return;
       void this.creatorsSvc.byIds(ids).then((creators) => {
         if (creators.length === 0) return;
         this.score.clear();
-        void this.score.scoreBulk({ creators, campaignGenre: genre, subMode, secondaryGenres });
+        void this.score.scoreBulk({ creators, campaignGenre: genre, subMode, secondaryGenres, key });
       });
     });
+  }
+
+  // Stable identity of the current scoring inputs — selection + genre + sub-mode
+  // + secondary genres — so the effect can tell whether a re-score is needed.
+  private scoreKey(ids: number[], genre: string, subMode: string, secondaryGenres: string[]): string {
+    return [
+      [...ids].sort((a, b) => a - b).join(','),
+      genre,
+      subMode,
+      [...secondaryGenres].sort().join('|'),
+    ].join('::');
   }
 
   onGenreChange(g: string): void {

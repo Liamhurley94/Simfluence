@@ -25,6 +25,9 @@ export interface ScoreBulkInput {
   campaignGenre: string;
   subMode?: string;
   secondaryGenres?: string[];
+  /** Stable identity of the inputs; set on a completed score so callers can skip
+   *  a redundant re-score for the same key. */
+  key?: string;
 }
 
 interface EdgePayload {
@@ -57,6 +60,8 @@ export class ScoreCreatorService {
 
   private gfiCache = new Map<number, number>();
   private cpiBreakdownCache = new Map<number, CpiBreakdown>();
+  // Identity of the inputs behind the current cache, set on a completed score.
+  private lastKey: string | null = null;
 
   readonly pending = signal(false);
   /** Bumps on each completed fetch so consumers can bind to reactive signals. */
@@ -65,7 +70,15 @@ export class ScoreCreatorService {
   clear(): void {
     this.gfiCache.clear();
     this.cpiBreakdownCache.clear();
+    this.lastKey = null;
     this.version.update((v) => v + 1);
+  }
+
+  /** True if a score for this exact input key has already completed — lets the
+   *  scoring screen skip a redundant re-score (and its clear -> blank flash) when
+   *  the user navigates back with the same selection + context. */
+  hasFreshScores(key: string): boolean {
+    return this.lastKey === key;
   }
 
   getGfi(id: number): number | undefined {
@@ -114,6 +127,7 @@ export class ScoreCreatorService {
         }
       }
 
+      this.lastKey = input.key ?? null;
       this.version.update((v) => v + 1);
       return map;
     } finally {
