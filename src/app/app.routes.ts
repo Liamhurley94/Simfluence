@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/auth/auth.guard';
+import { guestGuard } from './core/auth/guest.guard';
 import { tierGuard } from './core/auth/tier.guard';
 import { adminGuard } from './core/auth/admin.guard';
 import { FEATURES } from './core/features';
@@ -14,7 +15,11 @@ export const routes: Routes = [
       import('./features/landing/landing.component').then((m) => m.LandingComponent),
   },
   {
+    // guestGuard redirects already-authenticated users to /app before the auth
+    // shell mounts — prevents the sign-in form flashing then vanishing when a
+    // logged-in user clicks "Log in" from the public landing.
     path: 'login',
+    canActivate: [guestGuard],
     loadComponent: () =>
       import('./features/auth/auth-shell.component').then((m) => m.AuthShellComponent),
   },
