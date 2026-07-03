@@ -287,6 +287,7 @@ export class SimulationPanelComponent {
   readonly creators = input.required<Creator[]>();
   readonly initialBudget = input<number>(85_000);
   readonly initialGenre = input<string>('');
+  readonly initialObjectives = input<string[]>([]);
   readonly genres = input<string[]>([]);
   readonly subMode = input<string | undefined>(undefined);
   readonly readonly = input<boolean>(false);
@@ -299,7 +300,11 @@ export class SimulationPanelComponent {
   protected readonly budget = linkedSignal(() => this.initialBudget());
   protected readonly genre = linkedSignal(() => this.initialGenre());
   protected readonly format = signal<Format>('Integrated');
-  protected readonly selectedObjectives = signal<Objective[]>([]);
+  // Seeded from the campaign's persisted objectives (mirrors budget/genre).
+  // Filter to the canonical buckets so stale/legacy values are ignored.
+  protected readonly selectedObjectives = linkedSignal<Objective[]>(() =>
+    OBJECTIVES.filter((o) => this.initialObjectives().includes(o)),
+  );
   protected readonly result = signal<SimResult | null>(null);
 
   protected readonly pending = this.runSim.pending;

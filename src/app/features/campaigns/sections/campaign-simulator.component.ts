@@ -53,6 +53,7 @@ import { SimResult } from '../../../core/simulation/simulation.types';
           [creators]="creators()"
           [initialBudget]="campaign().budget ?? 85000"
           [initialGenre]="campaign().genre ?? ''"
+          [initialObjectives]="campaign().objectives"
           [genres]="genres()"
           (simulated)="result.set($event)"
         />

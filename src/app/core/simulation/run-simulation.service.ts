@@ -30,7 +30,6 @@ export class RunSimulationService {
           avgViews: c.avgViews || '',
           language: c.language || 'English',
           realCVR: c.realCVR !== undefined ? String(c.realCVR) : undefined,
-          realCPA: c.realCPA !== undefined ? String(c.realCPA) : undefined,
         })),
         budget: inputs.budget,
         format: inputs.format,

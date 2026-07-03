@@ -24,6 +24,7 @@ const sampleCreator: Creator = {
   sponsorHistory: [],
   bio: 'bio',
   realCVR: 1.2,
+  realCPA: 3.5,
 };
 
 const sampleInputs: SimInputs = {
@@ -90,6 +91,8 @@ describe('RunSimulationService', () => {
     expect(c['gfi']).toBeUndefined();
     expect(c['language']).toBe('English');
     expect(c['realCVR']).toBe('1.2');
+    // realCPA is dropped from the payload — the edge fn never reads it, even
+    // when the creator carries a value (here 3.5). See run-simulation.service.ts.
     expect(c['realCPA']).toBeUndefined();
     expect(body.budget).toBe(50_000);
     expect(body.format).toBe('Dedicated');

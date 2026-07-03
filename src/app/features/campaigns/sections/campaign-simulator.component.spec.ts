@@ -16,9 +16,9 @@ function mkCreator(id: number): Creator {
     subs: '100K', subsParsed: 100_000, avgViews: '20K', eng: '3.0%', genre: 'Gaming & Esports',
     cpi: 80, gfi: 75, color: '#fff', verifiedDeals: 0, sponsorHistory: [], bio: '' };
 }
-function mkCampaign(status: Campaign['status'] = 'planning'): Campaign {
+function mkCampaign(status: Campaign['status'] = 'planning', objectives: string[] = []): Campaign {
   return { id: 'c1', createdBy: 'u', enterpriseId: null, status, name: 'Acme', client: null,
-    genre: 'Gaming & Esports', budget: 50_000, notes: null, objectives: [], forecast: null,
+    genre: 'Gaming & Esports', budget: 50_000, notes: null, objectives, forecast: null,
     startedAt: null, completedAt: null, createdAt: '', updatedAt: '' };
 }
 const RESULT = { impressions: 100, ctr: 2, cpM: 6, cvr: 0.5, conversions: 1, roas: 0.1, roasP10: 0.07,
@@ -56,6 +56,19 @@ describe('CampaignSimulatorComponent', () => {
     (f.nativeElement.querySelector('[data-testid="campaign-forecast-save"]') as HTMLButtonElement).click();
     await f.whenStable();
     expect(update).toHaveBeenCalledWith('c1', expect.objectContaining({ forecast: expect.objectContaining({ impressions: 100 }) }));
+  });
+
+  it('forwards campaign.objectives to the panel as initialObjectives (chips selected)', async () => {
+    setup('planning');
+    const f = TestBed.createComponent(CampaignSimulatorComponent);
+    f.componentRef.setInput('campaign', mkCampaign('planning', ['Awareness', 'Sales']));
+    f.detectChanges(); await f.whenStable(); f.detectChanges();
+    const awareness: HTMLButtonElement = f.nativeElement.querySelector('[data-testid="sim-obj-awareness"]');
+    const sales: HTMLButtonElement = f.nativeElement.querySelector('[data-testid="sim-obj-sales"]');
+    const engagement: HTMLButtonElement = f.nativeElement.querySelector('[data-testid="sim-obj-engagement"]');
+    expect(awareness.style.background).toContain('color-sf-blue');
+    expect(sales.style.background).toContain('color-sf-blue');
+    expect(engagement.style.background).not.toContain('color-sf-blue');
   });
 
   it('active: forecast is locked — no run/save controls', async () => {

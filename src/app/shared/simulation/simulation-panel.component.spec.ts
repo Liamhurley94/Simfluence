@@ -23,9 +23,11 @@ const RESULT: SimResult = { impressions: 100, ctr: 2, cpM: 6, cvr: 0.5, conversi
 @Component({
   standalone: true, imports: [SimulationPanelComponent],
   template: `<app-simulation-panel [creators]="creators()" [initialGenre]="'Gaming & Esports'"
-    [genres]="['Gaming & Esports']" [readonly]="readonly()" [autoRun]="autoRun()" (simulated)="last.set($event)" />`,
+    [genres]="['Gaming & Esports']" [initialObjectives]="initialObjectives()"
+    [readonly]="readonly()" [autoRun]="autoRun()" (simulated)="last.set($event)" />`,
 })
-class Host { creators = signal<Creator[]>([mkCreator(1)]); readonly = signal(false); autoRun = signal(false); last = signal<SimResult | null>(null); }
+class Host { creators = signal<Creator[]>([mkCreator(1)]); readonly = signal(false); autoRun = signal(false);
+  initialObjectives = signal<string[]>([]); last = signal<SimResult | null>(null); }
 
 function setup(tier = 'silver') {
   localStorage.clear();
@@ -71,6 +73,19 @@ describe('SimulationPanelComponent', () => {
     expect(f.nativeElement.querySelector('[data-testid="sim-obj-awareness"]')).toBeTruthy();
     expect(f.nativeElement.querySelector('[data-testid="sim-obj-sales"]')).toBeTruthy();
     expect(f.nativeElement.querySelector('[data-testid="sim-obj-engagement"]')).toBeTruthy();
+  });
+
+  it('seeds selectedObjectives from initialObjectives (chips render selected)', () => {
+    setup();
+    const f = TestBed.createComponent(Host);
+    f.componentInstance.initialObjectives.set(['Awareness', 'Engagement']);
+    f.detectChanges();
+    const awareness: HTMLButtonElement = f.nativeElement.querySelector('[data-testid="sim-obj-awareness"]');
+    const sales: HTMLButtonElement = f.nativeElement.querySelector('[data-testid="sim-obj-sales"]');
+    const engagement: HTMLButtonElement = f.nativeElement.querySelector('[data-testid="sim-obj-engagement"]');
+    expect(awareness.style.background).toContain('color-sf-blue');
+    expect(engagement.style.background).toContain('color-sf-blue');
+    expect(sales.style.background).not.toContain('color-sf-blue');
   });
 
   it('readonly hides the controls/run', () => {
