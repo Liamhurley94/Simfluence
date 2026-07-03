@@ -3,43 +3,13 @@ import { GenreBenchmark } from '../data/benchmarks.data';
 
 export type Format = 'Integrated' | 'Mixed' | 'Dedicated';
 
-export const OBJECTIVES = [
-  'Brand Awareness',
-  'Reach & Impressions',
-  'Content Virality',
-  'Sentiment Shift',
-  'Direct Sales',
-  'App Install',
-  'Promo / Affiliate',
-  'Lead Generation',
-  'Community Growth',
-  'Engagement Rate',
-  'Pre-launch Sign-up',
-  'Retention',
-] as const;
+// The forecast engine (`run-simulation` getObjWeights) only distinguishes these
+// 3 buckets, so the objective picker is a multi-select of exactly these. Must
+// match the backend's canonical values. See docs/superpowers/specs/
+// 2026-07-03-objectives-and-format-honesty.md §2.
+export const OBJECTIVES = ['Awareness', 'Sales', 'Engagement'] as const;
 
 export type Objective = (typeof OBJECTIVES)[number];
-
-export const AWARENESS_OBJECTIVES: readonly Objective[] = [
-  'Brand Awareness',
-  'Reach & Impressions',
-  'Content Virality',
-  'Sentiment Shift',
-];
-
-export const SALES_OBJECTIVES: readonly Objective[] = [
-  'Direct Sales',
-  'App Install',
-  'Promo / Affiliate',
-  'Lead Generation',
-];
-
-export const ENGAGEMENT_OBJECTIVES: readonly Objective[] = [
-  'Community Growth',
-  'Engagement Rate',
-  'Pre-launch Sign-up',
-  'Retention',
-];
 
 export interface SimInputs {
   creators: Creator[];

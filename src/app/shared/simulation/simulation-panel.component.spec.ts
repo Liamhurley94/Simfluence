@@ -61,6 +61,18 @@ describe('SimulationPanelComponent', () => {
     expect(f.componentInstance.last()?.impressions).toBe(100);
   });
 
+  it('renders exactly the 3 objective buckets', () => {
+    setup();
+    const f = TestBed.createComponent(Host); f.detectChanges();
+    const chips = f.nativeElement.querySelectorAll('[data-testid^="sim-obj-"]');
+    expect([...chips].map((c: HTMLElement) => c.textContent?.trim())).toEqual([
+      'Awareness', 'Sales', 'Engagement',
+    ]);
+    expect(f.nativeElement.querySelector('[data-testid="sim-obj-awareness"]')).toBeTruthy();
+    expect(f.nativeElement.querySelector('[data-testid="sim-obj-sales"]')).toBeTruthy();
+    expect(f.nativeElement.querySelector('[data-testid="sim-obj-engagement"]')).toBeTruthy();
+  });
+
   it('readonly hides the controls/run', () => {
     setup();
     const f = TestBed.createComponent(Host);

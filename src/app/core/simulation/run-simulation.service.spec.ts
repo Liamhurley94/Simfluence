@@ -31,7 +31,7 @@ const sampleInputs: SimInputs = {
   budget: 50_000,
   format: 'Dedicated',
   genre: 'Gaming & Esports',
-  objectives: ['Direct Sales'],
+  objectives: ['Sales'],
   subMode: 'RPG / Open World',
 };
 
@@ -94,7 +94,7 @@ describe('RunSimulationService', () => {
     expect(body.budget).toBe(50_000);
     expect(body.format).toBe('Dedicated');
     expect(body.subMode).toBe('RPG / Open World');
-    expect(body.objectives).toEqual(['Direct Sales']);
+    expect(body.objectives).toEqual(['Sales']);
   });
 
   it('caches the result in `latest` signal on success', async () => {

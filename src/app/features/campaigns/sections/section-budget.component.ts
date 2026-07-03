@@ -2,13 +2,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Campaign, UpdateCampaign } from '../../../core/campaigns/campaign.types';
 
-const OBJECTIVE_OPTIONS = [
-  'Brand awareness',
-  'Engagement',
-  'Conversions',
-  'App installs',
-  'Sign-ups',
-];
+const OBJECTIVE_OPTIONS = ['Awareness', 'Sales', 'Engagement'];
 
 @Component({
   selector: 'app-section-budget',

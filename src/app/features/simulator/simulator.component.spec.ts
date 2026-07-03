@@ -192,7 +192,7 @@ describe('SimulatorComponent', () => {
     await fixture.whenStable();
     fixture.detectChanges();
     const btn: HTMLButtonElement = fixture.nativeElement.querySelector(
-      '[data-testid="sim-obj-direct-sales"]',
+      '[data-testid="sim-obj-sales"]',
     );
     btn.click();
     fixture.detectChanges();
