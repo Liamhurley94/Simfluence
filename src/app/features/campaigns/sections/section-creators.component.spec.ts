@@ -38,7 +38,12 @@ function matchResult(overrides: Partial<MatchResult> = {}): MatchResult {
   };
 }
 
-function setup(campaign = makeCampaign(), records: any[] = [], result = matchResult()) {
+function setup(
+  campaign = makeCampaign(),
+  records: any[] = [],
+  result = matchResult(),
+  inputs: { readonly?: boolean; rosterLocked?: boolean } = {},
+) {
   const recordsSig = signal<any[]>(records);
   const campaignCreatorsStub = {
     records: recordsSig, loading: signal(false), error: signal(null),
@@ -61,6 +66,8 @@ function setup(campaign = makeCampaign(), records: any[] = [], result = matchRes
 
   const fixture = TestBed.createComponent(SectionCreatorsComponent);
   fixture.componentRef.setInput('campaign', campaign);
+  if (inputs.readonly !== undefined) fixture.componentRef.setInput('readonly', inputs.readonly);
+  if (inputs.rosterLocked !== undefined) fixture.componentRef.setInput('rosterLocked', inputs.rosterLocked);
   fixture.detectChanges();
   return { fixture, campaignCreatorsStub, creatorsStub, match };
 }
@@ -132,5 +139,40 @@ describe('SectionCreatorsComponent', () => {
         rateEstimate: 1800, // midpoint of [1200, 2400]
       }),
     );
+  });
+
+  describe('roster locking (rosterLocked input)', () => {
+    const roster = [{ id: 'cc-1', creatorId: 11, source: 'manual' }];
+
+    it('enables Browse all + Remove and shows the Matcher on a planning campaign', () => {
+      const { fixture } = setup(
+        makeCampaign({ status: 'planning', genre: 'Gaming & Esports', budget: 50_000 }),
+        roster,
+        matchResult(),
+        { rosterLocked: false },
+      );
+      const browse: HTMLButtonElement = fixture.nativeElement.querySelector('[data-testid="creators-browse"]');
+      const remove: HTMLButtonElement = fixture.nativeElement.querySelector('[data-testid="campaign-creator-remove-cc-1"]');
+
+      expect(browse.disabled).toBe(false);
+      expect(remove.disabled).toBe(false);
+      expect(fixture.nativeElement.querySelector('[data-testid="creator-matcher-panel"]')).toBeTruthy();
+    });
+
+    it('disables Browse all + Remove and hides the Matcher when the roster is locked (active campaign)', () => {
+      const { fixture } = setup(
+        makeCampaign({ status: 'active', genre: 'Gaming & Esports', budget: 50_000 }),
+        roster,
+        matchResult(),
+        { rosterLocked: true },
+      );
+      const browse: HTMLButtonElement = fixture.nativeElement.querySelector('[data-testid="creators-browse"]');
+      const remove: HTMLButtonElement = fixture.nativeElement.querySelector('[data-testid="campaign-creator-remove-cc-1"]');
+
+      expect(browse.disabled).toBe(true);
+      expect(remove.disabled).toBe(true);
+      expect(fixture.nativeElement.querySelector('[data-testid="creator-matcher-panel"]')).toBeNull();
+      expect(fixture.nativeElement.querySelector('[data-testid="matcher-need-settings"]')).toBeNull();
+    });
   });
 });

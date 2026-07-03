@@ -24,7 +24,7 @@ import { CreatorMatcherPanelComponent } from '../creator-matcher/creator-matcher
         <button
           type="button"
           (click)="openBrowse()"
-          [disabled]="readonly()"
+          [disabled]="editingLocked()"
           class="sf-btn sf-btn-ghost text-xs disabled:opacity-40"
           data-testid="creators-browse"
         >
@@ -66,7 +66,7 @@ import { CreatorMatcherPanelComponent } from '../creator-matcher/creator-matcher
                 <button
                   type="button"
                   (click)="remove(cc.id)"
-                  [disabled]="readonly()"
+                  [disabled]="editingLocked()"
                   class="sf-btn text-[10px] disabled:opacity-40"
                   style="background: transparent; border-color: var(--color-sf-red); color: var(--color-sf-red);"
                   [attr.data-testid]="'campaign-creator-remove-' + cc.id"
@@ -89,7 +89,7 @@ import { CreatorMatcherPanelComponent } from '../creator-matcher/creator-matcher
           [budget]="campaign().budget"
           [objectives]="campaign().objectives"
           [excludeIds]="existingCreatorIdList()"
-          [disabled]="readonly()"
+          [disabled]="editingLocked()"
           (add)="onMatcherAdd($event)"
         />
       } @else if (matcherNeedsSettings()) {
@@ -110,9 +110,17 @@ export class SectionCreatorsComponent {
 
   readonly campaign = input.required<Campaign>();
   readonly readonly = input(false);
+  // Locks manual roster editing (Browse/Remove) + hides the Matcher once the
+  // campaign leaves "planning". Distinct from `readonly` (completed/archived):
+  // an active campaign's roster is frozen but its detail is still viewable.
+  readonly rosterLocked = input(false);
 
   protected readonly creatorById = signal<Map<number, Creator>>(new Map());
   protected readonly browseOpen = signal(false);
+
+  // Manual add/remove is disabled when the campaign is fully readonly OR its
+  // roster is locked (past planning).
+  protected readonly editingLocked = computed(() => this.readonly() || this.rosterLocked());
 
   protected readonly existingCreatorIds = computed(
     () => new Set(this.campaignCreators.records().map((r) => r.creatorId)),
@@ -123,13 +131,26 @@ export class SectionCreatorsComponent {
 
   // The Matcher only makes sense while planning and needs a genre + budget to
   // produce a meaningful shortlist (§5.2). Otherwise show a lightweight prompt.
+  // Also hidden when the roster is locked (redundant with the planning check,
+  // but explicit so locking can't leak the panel).
   protected readonly showMatcher = computed(() => {
     const c = this.campaign();
-    return FEATURES.creatorMatcher && c.status === 'planning' && !!c.genre && c.budget != null;
+    return (
+      FEATURES.creatorMatcher &&
+      !this.rosterLocked() &&
+      c.status === 'planning' &&
+      !!c.genre &&
+      c.budget != null
+    );
   });
   protected readonly matcherNeedsSettings = computed(() => {
     const c = this.campaign();
-    return FEATURES.creatorMatcher && c.status === 'planning' && (!c.genre || c.budget == null);
+    return (
+      FEATURES.creatorMatcher &&
+      !this.rosterLocked() &&
+      c.status === 'planning' &&
+      (!c.genre || c.budget == null)
+    );
   });
 
   constructor() {

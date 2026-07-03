@@ -118,6 +118,7 @@ import { CampaignSimulatorComponent } from './sections/campaign-simulator.compon
             <app-section-creators
               [campaign]="c"
               [readonly]="readonly()"
+              [rosterLocked]="rosterLocked()"
             />
           }
 
@@ -155,6 +156,11 @@ export class CampaignDetailComponent {
     const c = this.campaign();
     return c?.status === 'completed' || c?.status === 'archived';
   });
+
+  // The creator roster is editable only while planning. Once a campaign is
+  // started (active) — or completed/archived — the roster is frozen. Mirrors
+  // the simulator's `forecastLocked` (status !== 'planning').
+  protected readonly rosterLocked = computed(() => this.campaign()?.status !== 'planning');
 
   protected readonly showTargeting = computed(() => !!this.campaign()?.name);
   protected readonly showBudget = computed(() => !!this.campaign()?.genre);
