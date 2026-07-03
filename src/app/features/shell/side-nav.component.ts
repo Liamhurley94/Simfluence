@@ -4,23 +4,18 @@ import { AuthService } from '../../core/auth/auth.service';
 import { UpgradePromptService } from '../../core/upgrade/upgrade-prompt.service';
 import { Tier, tierRank } from '../../core/types';
 import { IconComponent } from '../../shared/icon/icon.component';
-import { FEATURES } from '../../core/features';
 
 interface Tab {
   label: string;
   route: string;
   minTier?: Tier;
   requiresAdmin?: boolean; // hidden entirely from non-admins
-  feature?: keyof typeof FEATURES; // hidden unless the feature flag is on
 }
 
 const TABS: Tab[] = [
   { label: 'Dashboard', route: '/app/dashboard' },
   { label: 'Discovery', route: '/app/discovery' },
   { label: 'Scoring', route: '/app/scoring' },
-  // Personas — gated by FEATURES.personas (hidden pending review; same flag as
-  // the campaign suggestions + the /app/personas route).
-  { label: 'Personas', route: '/app/personas', feature: 'personas' },
   { label: 'Simulator', route: '/app/simulator' },
   { label: 'Campaigns', route: '/app/campaigns', minTier: 'silver' },
   { label: 'Account', route: '/app/account' },
@@ -64,9 +59,7 @@ export class SideNavComponent {
   private upgrade = inject(UpgradePromptService);
 
   protected readonly visibleTabs = computed<Tab[]>(() =>
-    TABS.filter(
-      (t) => (!t.requiresAdmin || this.auth.isAdmin()) && (!t.feature || FEATURES[t.feature]),
-    ),
+    TABS.filter((t) => !t.requiresAdmin || this.auth.isAdmin()),
   );
 
   isLocked(tab: Tab): boolean {

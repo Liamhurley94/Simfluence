@@ -3,7 +3,6 @@ import { authGuard } from './core/auth/auth.guard';
 import { guestGuard } from './core/auth/guest.guard';
 import { tierGuard } from './core/auth/tier.guard';
 import { adminGuard } from './core/auth/admin.guard';
-import { FEATURES } from './core/features';
 
 export const routes: Routes = [
   // Public marketing landing — the pre-auth face of the app. Lives at the root
@@ -53,15 +52,10 @@ export const routes: Routes = [
           import('./features/scoring/scoring.component').then((m) => m.ScoringComponent),
       },
       {
-        // Personas — gated by FEATURES.personas (hidden pending review; same flag
-        // as the nav tab + campaign suggestions). When off, redirect to discovery.
+        // Personas feature was retired (superseded by the Creator Matcher). Keep
+        // the path as a redirect so any stale bookmarks/links land on Discovery.
         path: 'personas',
-        ...(FEATURES.personas
-          ? {
-              loadComponent: () =>
-                import('./features/personas/personas.component').then((m) => m.PersonasComponent),
-            }
-          : { redirectTo: '/app/discovery' }),
+        redirectTo: '/app/discovery',
       },
       {
         path: 'simulator',

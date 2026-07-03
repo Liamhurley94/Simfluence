@@ -1,7 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 
 /**
- * Shared campaign context used by Scoring, Simulator, Personas, etc.
+ * Shared campaign context used by Scoring, Simulator, etc.
  * Holds the "active" genre + sub-mode that server-side scoring/simulation
  * endpoints need.
  */

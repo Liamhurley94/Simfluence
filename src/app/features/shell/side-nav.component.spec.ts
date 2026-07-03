@@ -32,12 +32,12 @@ describe('SideNavComponent', () => {
     localStorage.clear();
   });
 
-  it('renders 6 tabs for a non-admin (Personas hidden; Outreach removed; Admin hidden)', () => {
+  it('renders 6 tabs for a non-admin (Personas retired; Outreach removed; Admin hidden)', () => {
     const { fixture } = setup('free');
     const anchors = fixture.nativeElement.querySelectorAll('a[data-testid^="nav-"]');
     expect(anchors.length).toBe(6);
     expect(fixture.nativeElement.querySelector('[data-testid="nav-admin"]')).toBeNull();
-    // Personas tab is hidden pending product review — see simfluence-backend/docs/persona-feature-review.md
+    // Personas was retired (superseded by the Creator Matcher) — no nav entry.
     expect(fixture.nativeElement.querySelector('[data-testid="nav-personas"]')).toBeNull();
   });
 
@@ -50,7 +50,7 @@ describe('SideNavComponent', () => {
 
   it('marks silver+ tabs as locked for free tier', () => {
     const { fixture } = setup('free');
-    // Personas is hidden from nav; Campaigns is the remaining silver-gated tab
+    // Campaigns is the only silver-gated tab in the nav.
     const lockedLabels = ['campaigns'];
     for (const label of lockedLabels) {
       const anchor = fixture.nativeElement.querySelector(`[data-testid="nav-${label}"]`);
@@ -61,7 +61,7 @@ describe('SideNavComponent', () => {
 
   it('does not lock silver+ tabs for silver tier', () => {
     const { fixture } = setup('silver');
-    // Campaigns is the visible silver-gated tab (Personas is hidden from nav)
+    // Campaigns is the visible silver-gated tab.
     const anchor = fixture.nativeElement.querySelector('[data-testid="nav-campaigns"]');
     expect(anchor?.getAttribute('aria-disabled')).toBe('false');
     expect(anchor?.querySelector('[data-testid="nav-lock"]')).toBeNull();
