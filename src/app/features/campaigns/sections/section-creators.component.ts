@@ -1,26 +1,17 @@
 import { Component, computed, effect, inject, input, signal } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
 import { CampaignCreatorsService } from '../../../core/campaigns/campaign-creators.service';
-import {
-  CampaignSuggestionGroup,
-  CampaignSuggestion,
-  CampaignSuggestionsService,
-} from '../../../core/campaigns/campaign-suggestions.service';
 import { FEATURES } from '../../../core/features';
 import { CreatorsService } from '../../../core/creators/creators.service';
 import { Creator } from '../../../core/data/creator.types';
 import { Campaign } from '../../../core/campaigns/campaign.types';
+import { MatchedCreator } from '../../../core/creator-matcher/creator-matcher.service';
 import { BrowseCreatorsModalComponent } from './browse-creators-modal.component';
-
-interface MatchBand {
-  label: string;
-  color: string;
-}
+import { CreatorMatcherPanelComponent } from '../creator-matcher/creator-matcher-panel.component';
 
 @Component({
   selector: 'app-section-creators',
   standalone: true,
-  imports: [BrowseCreatorsModalComponent, DecimalPipe],
+  imports: [BrowseCreatorsModalComponent, CreatorMatcherPanelComponent],
   template: `
     <section
       class="sf-panel p-5"
@@ -70,7 +61,7 @@ interface MatchBand {
               </div>
               <div class="flex items-center gap-2 shrink-0">
                 <span class="sf-chip">
-                  {{ cc.source === 'persona_suggestion' ? 'Suggested' : (cc.source === 'manual' ? 'Manual' : cc.source) }}
+                  {{ sourceLabel(cc.source) }}
                 </span>
                 <button
                   type="button"
@@ -88,224 +79,27 @@ interface MatchBand {
         </ul>
       }
 
-      <!-- Persona-grouped suggestions HIDDEN pending product review — see
-           simfluence-backend/docs/persona-feature-review.md. Guarded by a falsy
-           flag so the markup + auto-fetch stay intact for easy re-enable. -->
-      @if (showSuggestions) {
-      <div class="mt-2">
+      <!-- Creator Matcher — planning-only auto creator-selector. Gated on a
+           genre + budget being set (backend needs the genre; budget drives the
+           budget-fill). See simfluence-backend/docs/superpowers/specs/
+           2026-07-03-creator-matcher-design.md §5. -->
+      @if (showMatcher()) {
+        <app-creator-matcher-panel
+          [genre]="campaign().genre!"
+          [budget]="campaign().budget"
+          [objectives]="campaign().objectives"
+          [excludeIds]="existingCreatorIdList()"
+          [disabled]="readonly()"
+          (add)="onMatcherAdd($event)"
+        />
+      } @else if (matcherNeedsSettings()) {
         <div
-          class="text-[10px] uppercase tracking-wider mb-3 flex items-center gap-2"
-          style="color: var(--color-text-muted);"
+          class="mt-2 p-4 rounded-lg text-xs text-center"
+          style="background: var(--color-bg-3); color: var(--color-text-muted);"
+          data-testid="matcher-need-settings"
         >
-          <span>Audience-aligned suggestions</span>
-          @if (loadingSuggestions()) {
-            <span data-testid="suggestions-loading">· loading…</span>
-          }
+          Set a genre and budget to get creator suggestions.
         </div>
-
-        @if (!campaign().genre) {
-          <div
-            class="p-6 rounded-lg text-xs text-center"
-            style="background: var(--color-bg-3); color: var(--color-text-muted);"
-            data-testid="suggestions-need-genre"
-          >
-            Set a campaign genre above to see audience-matched creator suggestions.
-          </div>
-        } @else if (!loadingSuggestions() && groups().length === 0) {
-          <div
-            class="p-6 rounded-lg text-xs text-center"
-            style="background: var(--color-bg-3); color: var(--color-text-muted);"
-            data-testid="suggestions-empty"
-          >
-            No persona matches for this genre yet. Try "Browse all" to pick creators directly.
-          </div>
-        } @else {
-          <div
-            class="grid gap-4"
-            style="grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));"
-            data-testid="suggestion-groups"
-          >
-            @for (g of groups(); track g.persona.name; let idx = $index) {
-              <article
-                class="rounded-xl p-5 relative overflow-hidden"
-                [style.background]="'var(--color-bg-3)'"
-                [style.border]="idx === 0 ? '2px solid ' + g.persona.color : '1px solid var(--color-border)'"
-                [attr.data-testid]="'persona-group-' + slugify(g.persona.name)"
-              >
-                <!-- Match band badge -->
-                <div
-                  class="absolute top-3 right-3 text-[9px] uppercase tracking-wider px-2 py-0.5 rounded"
-                  [style.background]="bandFor(g.personaScore).color + '22'"
-                  [style.color]="bandFor(g.personaScore).color"
-                  [style.border]="'1px solid ' + bandFor(g.personaScore).color + '44'"
-                  [attr.data-testid]="'persona-band-' + slugify(g.persona.name)"
-                >
-                  {{ bandFor(g.personaScore).label }}
-                </div>
-
-                <!-- Icon -->
-                <div class="text-3xl mb-3" aria-hidden="true">{{ g.persona.icon }}</div>
-
-                <!-- Name + demographics -->
-                <div
-                  class="text-base font-bold mb-1"
-                  [style.color]="g.persona.color"
-                >
-                  {{ g.persona.name }}
-                </div>
-                <div
-                  class="text-[10px] uppercase tracking-wider mb-3"
-                  style="color: var(--color-text-muted);"
-                >
-                  {{ g.persona.demo }}
-                </div>
-
-                <!-- Description -->
-                <p
-                  class="text-xs leading-relaxed mb-4"
-                  style="color: var(--color-text);"
-                >
-                  {{ g.persona.desc }}
-                </p>
-
-                <!-- Match progress bar -->
-                <div class="mb-4">
-                  <div class="flex items-center justify-between mb-1">
-                    <span class="text-[9px] uppercase tracking-wider" style="color: var(--color-text-muted);">
-                      Campaign match
-                    </span>
-                    <span
-                      class="text-[11px] font-bold"
-                      [style.color]="bandFor(g.personaScore).color"
-                      [attr.data-testid]="'persona-score-' + slugify(g.persona.name)"
-                    >
-                      {{ g.personaScore }}%
-                    </span>
-                  </div>
-                  <div class="h-1 rounded overflow-hidden" style="background: var(--color-bg-2);">
-                    <div
-                      class="h-full transition-all"
-                      [style.width.%]="g.personaScore"
-                      [style.background]="bandFor(g.personaScore).color"
-                    ></div>
-                  </div>
-                </div>
-
-                <!-- Purchase + Brand fit grid -->
-                <div class="grid grid-cols-2 gap-2 mb-4">
-                  <div class="rounded p-2" style="background: var(--color-bg-2); border: 1px solid var(--color-border);">
-                    <div class="text-[8px] uppercase tracking-wider mb-1" style="color: var(--color-text-muted);">
-                      Purchase behaviour
-                    </div>
-                    <div class="text-[11px] leading-snug" style="color: var(--color-text);">
-                      {{ g.persona.purchase }}
-                    </div>
-                  </div>
-                  <div class="rounded p-2" style="background: var(--color-bg-2); border: 1px solid var(--color-border);">
-                    <div class="text-[8px] uppercase tracking-wider mb-1" style="color: var(--color-text-muted);">
-                      Brand fit
-                    </div>
-                    <div class="text-[11px] leading-snug" style="color: var(--color-text);">
-                      {{ g.persona.brands }}
-                    </div>
-                  </div>
-                </div>
-
-                <!-- CTA callout -->
-                <div
-                  class="rounded px-3 py-2 mb-4"
-                  [style.background]="g.persona.color + '15'"
-                  [style.border]="'1px solid ' + g.persona.color + '33'"
-                >
-                  <div
-                    class="text-[8px] uppercase tracking-wider mb-0.5"
-                    [style.color]="g.persona.color"
-                  >
-                    Suggested CTA
-                  </div>
-                  <div
-                    class="text-xs font-semibold"
-                    [style.color]="g.persona.color"
-                  >
-                    {{ g.persona.cta }}
-                  </div>
-                </div>
-
-                <!-- Matched creators -->
-                <div class="text-[8px] uppercase tracking-wider mb-2" style="color: var(--color-text-muted);">
-                  Matched creators
-                </div>
-                <div class="flex flex-col gap-1.5">
-                  @for (s of g.creators; track s.creator.id) {
-                    <div
-                      class="flex items-center gap-2.5 p-2 rounded"
-                      style="background: var(--color-bg-2);"
-                      [attr.data-testid]="'suggest-' + s.creator.id"
-                    >
-                      <div
-                        class="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0"
-                        [style.background]="s.creator.color + '22'"
-                        [style.color]="s.creator.color"
-                      >
-                        {{ initialsOf(s.creator.name) }}
-                      </div>
-                      <div class="flex-1 min-w-0">
-                        <div class="text-xs font-semibold truncate" style="color: var(--color-text);">
-                          {{ s.creator.name }}
-                        </div>
-                        <div class="text-[9px] truncate" style="color: var(--color-text-muted);">
-                          {{ '@' + (s.creator.handle || '—') }} · {{ s.creator.platform }}
-                          @if (s.creator.ytStats; as yt) {
-                            · {{ liveSubsLabel(yt.subscriberCount) }} subs
-                          } @else if (s.creator.twitchStats; as tw) {
-                            · {{ tw.avgCcv | number: '1.0-0' }} avg viewers
-                          }
-                        </div>
-                      </div>
-                      <div class="flex items-center gap-2 shrink-0">
-                        <div class="text-center">
-                          <div class="text-[8px]" style="color: var(--color-text-muted);">CPI</div>
-                          <div class="text-sm font-bold" [style.color]="cpiColor(s.creator.cpi)">{{ s.creator.cpi }}</div>
-                        </div>
-                        @if (s.gfi !== null) {
-                          <div class="text-center">
-                            <div class="text-[8px]" style="color: var(--color-text-muted);">GFI</div>
-                            <div
-                              class="text-xs font-bold px-1.5 rounded"
-                              style="color: var(--color-bg);"
-                              [style.background]="bandFor(s.gfi).color"
-                            >
-                              {{ s.gfi }}%
-                            </div>
-                          </div>
-                        }
-                      </div>
-                      @if (existingCreatorIds().has(s.creator.id)) {
-                        <span
-                          class="sf-chip shrink-0"
-                          data-testid="suggest-added-badge"
-                        >
-                          Added
-                        </span>
-                      } @else {
-                        <button
-                          type="button"
-                          (click)="acceptSuggestion(s, g.persona.name)"
-                          [disabled]="readonly()"
-                          class="sf-btn sf-btn-ghost text-[9px] shrink-0 disabled:opacity-40"
-                          [attr.data-testid]="'suggest-add-' + s.creator.id"
-                        >
-                          + Add
-                        </button>
-                      }
-                    </div>
-                  }
-                </div>
-              </article>
-            }
-          </div>
-        }
-      </div>
       }
     </section>
   `,
@@ -313,47 +107,32 @@ interface MatchBand {
 export class SectionCreatorsComponent {
   protected campaignCreators = inject(CampaignCreatorsService);
   private creatorsSvc = inject(CreatorsService);
-  private suggestionsSvc = inject(CampaignSuggestionsService);
 
   readonly campaign = input.required<Campaign>();
   readonly readonly = input(false);
 
   protected readonly creatorById = signal<Map<number, Creator>>(new Map());
-  protected readonly groups = signal<CampaignSuggestionGroup[]>([]);
-  protected readonly loadingSuggestions = signal(false);
   protected readonly browseOpen = signal(false);
-  private readonly skipped = signal<Set<number>>(new Set());
-
-  // Persona-grouped "audience-aligned suggestions" — gated by the central
-  // FEATURES.personas flag (same flag as the standalone Personas page/nav), so
-  // both hide/show together. The template block + auto-fetch effect stay intact.
-  protected readonly showSuggestions = FEATURES.personas;
 
   protected readonly existingCreatorIds = computed(
     () => new Set(this.campaignCreators.records().map((r) => r.creatorId)),
   );
+  protected readonly existingCreatorIdList = computed(
+    () => this.campaignCreators.records().map((r) => r.creatorId),
+  );
 
-  // Only inputs that actually change persona scoring should re-trigger a
-  // refetch — not every campaign mutation. Stringify keeps signal equality
-  // straightforward.
-  private readonly suggestionsKey = computed(() => {
+  // The Matcher only makes sense while planning and needs a genre + budget to
+  // produce a meaningful shortlist (§5.2). Otherwise show a lightweight prompt.
+  protected readonly showMatcher = computed(() => {
     const c = this.campaign();
-    if (!c.genre) return '';
-    return `${c.id}|${c.genre}|${(c.objectives ?? []).join(',')}`;
+    return FEATURES.creatorMatcher && c.status === 'planning' && !!c.genre && c.budget != null;
+  });
+  protected readonly matcherNeedsSettings = computed(() => {
+    const c = this.campaign();
+    return FEATURES.creatorMatcher && c.status === 'planning' && (!c.genre || c.budget == null);
   });
 
   constructor() {
-    // Auto-fetch suggestions on mount + whenever genre/objectives change.
-    effect(() => {
-      if (!this.showSuggestions) return; // suggestions hidden — skip the fetch
-      const key = this.suggestionsKey();
-      if (!key) {
-        this.groups.set([]);
-        return;
-      }
-      void this.loadSuggestions();
-    });
-
     // Hydrate creator info for the "added creators" list.
     effect(async () => {
       const ids = this.campaignCreators.records().map((r) => r.creatorId);
@@ -368,28 +147,22 @@ export class SectionCreatorsComponent {
     });
   }
 
-  private async loadSuggestions(): Promise<void> {
-    this.loadingSuggestions.set(true);
-    try {
-      const fetched = await this.suggestionsSvc.suggest(this.campaign().id);
-      const skipped = this.skipped();
-      const filtered = fetched
-        .map((g) => ({ ...g, creators: g.creators.filter((s) => !skipped.has(s.creator.id)) }))
-        .filter((g) => g.creators.length > 0);
-      this.groups.set(filtered);
-    } finally {
-      this.loadingSuggestions.set(false);
-    }
-  }
-
-  async acceptSuggestion(s: CampaignSuggestion, personaName: string): Promise<void> {
+  /** Add a Matcher-suggested creator to the roster (source: 'auto_match'). */
+  async onMatcherAdd(m: MatchedCreator): Promise<void> {
     await this.campaignCreators.add({
       campaignId: this.campaign().id,
-      creatorId: s.creator.id,
-      source: 'persona_suggestion',
-      cpiAtAdd: s.creator.cpi ?? null,
-      notes: `Matched to "${personaName}" persona`,
+      creatorId: m.creator.id,
+      source: 'auto_match',
+      cpiAtAdd: m.best_cpi ?? null,
+      rateEstimate: this.rateMidpoint(m),
     });
+  }
+
+  /** Midpoint of the mixed-format rate range (the stored single-number estimate). */
+  private rateMidpoint(m: MatchedCreator): number | null {
+    const mix = m.rateEstimate?.ranges?.mix;
+    if (!mix || mix.length !== 2) return null;
+    return Math.round((mix[0] + mix[1]) / 2);
   }
 
   openBrowse(): void {
@@ -408,37 +181,12 @@ export class SectionCreatorsComponent {
     await this.campaignCreators.remove(id);
   }
 
-  /** Match band copy + colour. Mirrors prod's thresholds (85/70/55). */
-  protected bandFor(score: number): MatchBand {
-    if (score >= 85) return { label: 'Primary match', color: 'var(--color-sf-green)' };
-    if (score >= 70) return { label: 'Strong fit',    color: 'var(--color-sf-green)' };
-    if (score >= 55) return { label: 'Moderate fit',  color: 'var(--color-sf-orange)' };
-    return { label: 'Partial fit', color: 'var(--color-sf-red)' };
-  }
-
-  protected cpiColor(cpi: number): string {
-    if (cpi >= 80) return 'var(--color-sf-green)';
-    if (cpi >= 60) return 'var(--color-sf-orange)';
-    return 'var(--color-sf-red)';
-  }
-
-  protected slugify(name: string): string {
-    return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-  }
-
-  protected initialsOf(name: string): string {
-    return (name || '')
-      .trim()
-      .split(/\s+/)
-      .slice(0, 2)
-      .map((p) => p[0] ?? '')
-      .join('')
-      .toUpperCase();
-  }
-
-  protected liveSubsLabel(n: number): string {
-    if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
-    if (n >= 1_000) return Math.round(n / 1_000) + 'K';
-    return String(n);
+  protected sourceLabel(source: string): string {
+    switch (source) {
+      case 'persona_suggestion': return 'Suggested';
+      case 'auto_match': return 'Matched';
+      case 'manual': return 'Manual';
+      default: return source;
+    }
   }
 }

@@ -12,6 +12,7 @@ export const CAMPAIGN_CREATOR_SOURCES = [
   'simulator',
   'persona_suggestion',
   'discovery',
+  'auto_match',
 ] as const;
 export type CampaignCreatorSource = (typeof CAMPAIGN_CREATOR_SOURCES)[number];
 

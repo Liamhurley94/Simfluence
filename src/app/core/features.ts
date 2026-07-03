@@ -6,4 +6,10 @@ export const FEATURES = {
   // compliance review (simfluence-backend/docs/persona-feature-review.md).
   // Flip to `true` to re-enable everything in one move.
   personas: false,
+
+  // Creator Matcher: the in-campaign auto creator-selector that replaces the
+  // hidden personas block (planning-only). Ships on; keep the flag for one
+  // release then remove. See
+  // simfluence-backend/docs/superpowers/specs/2026-07-03-creator-matcher-design.md.
+  creatorMatcher: true,
 } as const;
