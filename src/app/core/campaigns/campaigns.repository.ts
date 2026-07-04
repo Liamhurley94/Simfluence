@@ -15,6 +15,7 @@ interface CampaignRow {
   notes: string | null;
   objectives: string[] | null;
   forecast: CampaignForecast | null;
+  debrief_notes: string | null;
   started_at: string | null;
   completed_at: string | null;
   created_at: string;
@@ -47,6 +48,7 @@ function rowToCampaign(r: CampaignRow): Campaign {
     notes: r.notes,
     objectives: r.objectives ?? [],
     forecast: r.forecast,
+    debriefNotes: r.debrief_notes,
     startedAt: r.started_at,
     completedAt: r.completed_at,
     createdAt: r.created_at,
@@ -56,7 +58,7 @@ function rowToCampaign(r: CampaignRow): Campaign {
 
 const SELECT_COLS =
   'id, created_by, enterprise_id, status, name, client, genre, budget, notes, ' +
-  'objectives, forecast, started_at, completed_at, created_at, updated_at';
+  'objectives, forecast, debrief_notes, started_at, completed_at, created_at, updated_at';
 
 @Injectable()
 export class SupabaseCampaignsRepository extends CampaignsRepository {
@@ -119,6 +121,7 @@ export class SupabaseCampaignsRepository extends CampaignsRepository {
     if (dto.objectives !== undefined) patch['objectives'] = dto.objectives;
     if (dto.status !== undefined) patch['status'] = dto.status;
     if (dto.forecast !== undefined) patch['forecast'] = dto.forecast;
+    if (dto.debriefNotes !== undefined) patch['debrief_notes'] = dto.debriefNotes;
     if (dto.startedAt !== undefined) patch['started_at'] = dto.startedAt;
     if (dto.completedAt !== undefined) patch['completed_at'] = dto.completedAt;
 

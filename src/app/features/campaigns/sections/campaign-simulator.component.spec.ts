@@ -18,7 +18,7 @@ function mkCreator(id: number): Creator {
 }
 function mkCampaign(status: Campaign['status'] = 'planning', objectives: string[] = []): Campaign {
   return { id: 'c1', createdBy: 'u', enterpriseId: null, status, name: 'Acme', client: null,
-    genre: 'Gaming & Esports', budget: 50_000, notes: null, objectives, forecast: null,
+    genre: 'Gaming & Esports', budget: 50_000, notes: null, objectives, forecast: null, debriefNotes: null,
     startedAt: null, completedAt: null, createdAt: '', updatedAt: '' };
 }
 const RESULT = { impressions: 100, ctr: 2, cpM: 6, cvr: 0.5, conversions: 1, roas: 0.1, roasP10: 0.07,

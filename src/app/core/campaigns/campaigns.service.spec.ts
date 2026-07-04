@@ -18,6 +18,7 @@ function sampleCampaign(overrides: Partial<Campaign> = {}): Campaign {
     notes: null,
     objectives: [],
     forecast: null,
+    debriefNotes: null,
     startedAt: null,
     completedAt: null,
     createdAt: '2026-04-23T10:00:00.000Z',
@@ -135,5 +136,12 @@ describe('CampaignsService', () => {
     const updated = await service.start('a');
     expect(updated?.status).toBe('active');
     expect(updated?.startedAt).toBeTruthy();
+  });
+
+  it('update forwards debriefNotes to the repository', async () => {
+    const { service, repo } = setup();
+    repo.update.mockResolvedValue(sampleCampaign({ debriefNotes: 'EMEA underperformed' }));
+    await service.update('cmp-1', { debriefNotes: 'EMEA underperformed' });
+    expect(repo.update).toHaveBeenCalledWith('cmp-1', { debriefNotes: 'EMEA underperformed' });
   });
 });

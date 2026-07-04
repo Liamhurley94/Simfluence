@@ -69,6 +69,7 @@ function makeCampaign(overrides: Partial<Campaign> = {}): Campaign {
     notes: null,
     objectives: [],
     forecast: null,
+    debriefNotes: null,
     startedAt: null,
     completedAt: null,
     createdAt: '2026-04-23T10:00:00.000Z',

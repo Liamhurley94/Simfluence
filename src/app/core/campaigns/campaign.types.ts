@@ -41,6 +41,10 @@ export interface Campaign {
 
   forecast: CampaignForecast | null;
 
+  // Retrospective note about the campaign overall (Results section). Distinct
+  // from `notes` (the planning brief, which flows into the client brief PDF).
+  debriefNotes: string | null;
+
   startedAt: string | null;         // ISO timestamp, set when Start campaign button is pressed
   completedAt: string | null;       // ISO timestamp, set when Mark complete is pressed
   createdAt: string;                // ISO timestamp
@@ -54,7 +58,7 @@ export type NewCampaign = Pick<Campaign, 'name'>
 
 export type UpdateCampaign = Partial<Pick<Campaign,
   'name' | 'client' | 'genre' | 'budget' | 'notes' | 'objectives' | 'status'
-  | 'forecast' | 'startedAt' | 'completedAt'
+  | 'forecast' | 'startedAt' | 'completedAt' | 'debriefNotes'
 >>;
 
 export const CAMPAIGN_STATUS_LABELS: Record<CampaignStatus, string> = {

@@ -22,6 +22,7 @@ const SAMPLE: Campaign = {
     p50: { impressions: 1_562_500, ctr: 1.9, roas: 0.3 },
     p90: { impressions: 2_218_750, ctr: 2.7, roas: 0.4 },
   },
+  debriefNotes: null,
   startedAt: '2026-06-01T12:00:00.000Z',
   completedAt: null,
   createdAt: '2026-04-23T10:00:00.000Z',

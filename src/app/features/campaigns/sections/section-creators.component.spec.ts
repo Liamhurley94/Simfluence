@@ -13,6 +13,7 @@ function makeCampaign(overrides: Partial<Campaign> = {}): Campaign {
     createdBy: 'user-uuid', enterpriseId: null,
     client: null, genre: null, objectives: [], budget: null, notes: null,
     forecast: null,
+    debriefNotes: null,
     startedAt: null, completedAt: null,
     createdAt: '2026-01-01T00:00:00Z', updatedAt: '2026-01-01T00:00:00Z',
     ...overrides,
