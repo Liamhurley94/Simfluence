@@ -3,6 +3,15 @@ import { SimBand } from '../simulation/simulation.types';
 export const CAMPAIGN_STATUSES = ['planning', 'active', 'completed', 'archived'] as const;
 export type CampaignStatus = (typeof CAMPAIGN_STATUSES)[number];
 
+export interface CampaignForecastCreator {
+  id: number;
+  impressions: number;
+  clicks: number;
+  conversions: number;
+  spend: number;
+  revenue: number;
+}
+
 export interface CampaignForecast {
   impressions: number;
   ctr: number;
@@ -11,6 +20,9 @@ export interface CampaignForecast {
   p10: SimBand;
   p50: SimBand;
   p90: SimBand;
+  // Slim per-creator snapshot captured at Save time, for the debrief's per-creator
+  // rows. Optional so pre-existing saved forecasts still load.
+  creatorBreakdowns?: CampaignForecastCreator[];
 }
 
 export interface Campaign {

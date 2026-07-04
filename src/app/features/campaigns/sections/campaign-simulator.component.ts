@@ -174,7 +174,18 @@ export class CampaignSimulatorComponent {
     if (!r || this.forecastLocked()) return;
     this.saving.set(true);
     try {
-      const forecast: CampaignForecast = { impressions: r.impressions, ctr: r.ctr, roas: r.roas, cvr: r.cvr, p10: r.p10, p50: r.p50, p90: r.p90 };
+      const forecast: CampaignForecast = {
+        impressions: r.impressions, ctr: r.ctr, roas: r.roas, cvr: r.cvr,
+        p10: r.p10, p50: r.p50, p90: r.p90,
+        creatorBreakdowns: (r.creatorBreakdowns ?? []).map((b) => ({
+          id: b.id,
+          impressions: b.impressions,
+          clicks: b.clicks,
+          conversions: b.conversions,
+          spend: b.budgetShare,
+          revenue: Math.round(b.roas * b.budgetShare),
+        })),
+      };
       await this.campaignsSvc.update(this.campaign().id, { forecast });
     } finally {
       this.saving.set(false);

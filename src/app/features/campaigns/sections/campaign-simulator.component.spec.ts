@@ -25,7 +25,8 @@ const RESULT = { impressions: 100, ctr: 2, cpM: 6, cvr: 0.5, conversions: 1, roa
   roasP50: 0.1, roasP90: 0.15, roasRange: '0.1–0.4×', engRate: 3, clicks: 2, budget: 50_000, reachableCount: 1,
   bench: { ctrBase: 2, cpmBase: 8, cvrBase: 0.5, roasBase: 2, engBase: 4 },
   p10: { impressions: 68, ctr: 1.3, roas: 0.07 }, p50: { impressions: 100, ctr: 2, roas: 0.1 },
-  p90: { impressions: 142, ctr: 2.8, roas: 0.15 } };
+  p90: { impressions: 142, ctr: 2.8, roas: 0.15 },
+  creatorBreakdowns: [{ id: 7, impressions: 90, clicks: 3, conversions: 1, budgetShare: 40000, roas: 2 }] };
 
 function setup(
   status: Campaign['status'] = 'planning',
@@ -61,6 +62,22 @@ describe('CampaignSimulatorComponent', () => {
     // No prior forecast → save immediately, dialog never shows.
     expect(f.nativeElement.querySelector('[data-testid="forecast-overwrite-confirm"]')).toBeNull();
     expect(update).toHaveBeenCalledWith('c1', expect.objectContaining({ forecast: expect.objectContaining({ impressions: 100 }) }));
+  });
+
+  it('Save snapshots the per-creator breakdown into forecast.creatorBreakdowns', async () => {
+    const { update } = setup('planning');
+    const f = TestBed.createComponent(CampaignSimulatorComponent);
+    f.componentRef.setInput('campaign', mkCampaign('planning'));
+    f.detectChanges(); await f.whenStable(); f.detectChanges();
+    (f.nativeElement.querySelector('[data-testid="sim-run"]') as HTMLButtonElement).click();
+    await f.whenStable(); f.detectChanges();
+    (f.nativeElement.querySelector('[data-testid="campaign-forecast-save"]') as HTMLButtonElement).click();
+    await f.whenStable(); f.detectChanges();
+    expect(update).toHaveBeenCalledWith('c1', expect.objectContaining({
+      forecast: expect.objectContaining({
+        creatorBreakdowns: [{ id: 7, impressions: 90, clicks: 3, conversions: 1, spend: 40000, revenue: 80000 }],
+      }),
+    }));
   });
 
   it('Save is projected into the panel actions row next to Run', async () => {

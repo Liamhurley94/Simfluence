@@ -31,6 +31,15 @@ export interface SimBand {
   roas: number;
 }
 
+export interface SimCreatorBreakdown {
+  id: number;
+  impressions: number;
+  clicks: number;
+  conversions: number;
+  budgetShare: number;   // per-creator spend basis
+  roas: number;
+}
+
 export interface SimResult {
   impressions: number;
   ctr: number;
@@ -50,6 +59,9 @@ export interface SimResult {
   p10: SimBand;
   p50: SimBand;
   p90: SimBand;
+  // Per-creator breakdown returned by the edge fn. Optional: absent on older
+  // cached results and on test stubs that don't provide it.
+  creatorBreakdowns?: SimCreatorBreakdown[];
 }
 
 export interface ObjectiveWeights {
