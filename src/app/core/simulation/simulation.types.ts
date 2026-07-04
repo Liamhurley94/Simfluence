@@ -18,6 +18,11 @@ export interface SimInputs {
   genre: string;
   objectives: Objective[];
   subMode?: string;
+  // Optional per-creator sponsorship format (creatorId → format). When set for a
+  // creator, it's sent on that creator's payload entry; the edge fn falls back to
+  // the top-level `format` for creators without one. Used by the campaign forecast
+  // (per-creator formats from campaign_creators); the standalone sim leaves it unset.
+  creatorFormats?: Record<number, string>;
 }
 
 export interface SimBand {

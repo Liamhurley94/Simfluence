@@ -98,6 +98,23 @@ describe('RunSimulationService', () => {
     expect(body.format).toBe('Dedicated');
     expect(body.subMode).toBe('RPG / Open World');
     expect(body.objectives).toEqual(['Sales']);
+    // No creatorFormats supplied → each creator entry omits `format`.
+    expect(c['format']).toBeUndefined();
+  });
+
+  it('attaches per-creator `format` from creatorFormats when present, omits it otherwise', async () => {
+    const { service, post } = setup({ error: null });
+    const c1 = { ...sampleCreator, id: 42 };
+    const c2 = { ...sampleCreator, id: 43 };
+
+    // Only creator 42 has a format mapped; 43 has none.
+    await service.run({ ...sampleInputs, creators: [c1, c2], creatorFormats: { 42: 'Dedicated' } });
+
+    const body = post.mock.calls[0][1] as { creators: Array<Record<string, unknown>> };
+    const entry42 = body.creators.find((e) => e['id'] === '42')!;
+    const entry43 = body.creators.find((e) => e['id'] === '43')!;
+    expect(entry42['format']).toBe('Dedicated');
+    expect(entry43['format']).toBeUndefined();
   });
 
   it('caches the result in `latest` signal on success', async () => {
