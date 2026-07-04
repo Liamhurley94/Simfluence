@@ -24,10 +24,13 @@ const RESULT: SimResult = { impressions: 100, ctr: 2, cpM: 6, cvr: 0.5, conversi
   standalone: true, imports: [SimulationPanelComponent],
   template: `<app-simulation-panel [creators]="creators()" [initialGenre]="'Gaming & Esports'"
     [genres]="['Gaming & Esports']" [initialObjectives]="initialObjectives()"
-    [readonly]="readonly()" [autoRun]="autoRun()" (simulated)="last.set($event)" />`,
+    [readonly]="readonly()" [autoRun]="autoRun()"
+    [perCreatorFormat]="perCreatorFormat()" [creatorFormats]="creatorFormats()"
+    (simulated)="last.set($event)" />`,
 })
 class Host { creators = signal<Creator[]>([mkCreator(1)]); readonly = signal(false); autoRun = signal(false);
-  initialObjectives = signal<string[]>([]); last = signal<SimResult | null>(null); }
+  initialObjectives = signal<string[]>([]); last = signal<SimResult | null>(null);
+  perCreatorFormat = signal(false); creatorFormats = signal<Record<number, string>>({}); }
 
 function setup(tier = 'silver') {
   localStorage.clear();
@@ -107,5 +110,51 @@ describe('SimulationPanelComponent', () => {
     f.detectChanges();
     expect(post).toHaveBeenCalledOnce();
     expect(f.nativeElement.querySelector('[data-testid="sim-bands"]')).toBeTruthy();
+  });
+
+  it('shows the global Format dropdown by default (perCreatorFormat false)', () => {
+    setup();
+    const f = TestBed.createComponent(Host); f.detectChanges();
+    expect(f.nativeElement.querySelector('[data-testid="sim-format"]')).toBeTruthy();
+  });
+
+  it('hides the global Format dropdown when perCreatorFormat is true', () => {
+    setup();
+    const f = TestBed.createComponent(Host);
+    f.componentInstance.perCreatorFormat.set(true);
+    f.detectChanges();
+    expect(f.nativeElement.querySelector('[data-testid="sim-format"]')).toBeNull();
+  });
+
+  it('per-creator mode: payload carries each creator\'s format from creatorFormats, top-level stays Integrated', async () => {
+    const { post } = setup();
+    const f = TestBed.createComponent(Host);
+    f.componentInstance.creators.set([mkCreator(1), mkCreator(2)]);
+    f.componentInstance.perCreatorFormat.set(true);
+    f.componentInstance.creatorFormats.set({ 1: 'Dedicated' }); // 2 has none
+    f.detectChanges();
+    (f.nativeElement.querySelector('[data-testid="sim-run"]') as HTMLButtonElement).click();
+    await f.whenStable(); f.detectChanges();
+
+    const body = post.mock.calls[0][1] as { creators: Array<Record<string, unknown>>; format: string };
+    const c1 = body.creators.find((e) => e['id'] === '1')!;
+    const c2 = body.creators.find((e) => e['id'] === '2')!;
+    expect(c1['format']).toBe('Dedicated');
+    expect(c2['format']).toBeUndefined();
+    // Top-level fallback stays the default in per-creator mode.
+    expect(body.format).toBe('Integrated');
+  });
+
+  it('standalone mode: no per-creator formats sent even if creatorFormats is set', async () => {
+    const { post } = setup();
+    const f = TestBed.createComponent(Host);
+    // perCreatorFormat stays false; creatorFormats provided but must be ignored.
+    f.componentInstance.creatorFormats.set({ 1: 'Dedicated' });
+    f.detectChanges();
+    (f.nativeElement.querySelector('[data-testid="sim-run"]') as HTMLButtonElement).click();
+    await f.whenStable(); f.detectChanges();
+
+    const body = post.mock.calls[0][1] as { creators: Array<Record<string, unknown>> };
+    expect(body.creators[0]['format']).toBeUndefined();
   });
 });

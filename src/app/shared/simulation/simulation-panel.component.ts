@@ -39,24 +39,26 @@ const FORMATS: Format[] = ['Integrated', 'Mixed', 'Dedicated'];
             data-testid="sim-budget"
           />
         </div>
-        <div>
-          <label
-            class="text-[10px] uppercase tracking-wider mb-1 block"
-            style="color: var(--color-text-muted);"
-          >
-            Format
-          </label>
-          <select
-            [ngModel]="format()"
-            (ngModelChange)="format.set($event)"
-            class="sf-select"
-            data-testid="sim-format"
-          >
-            @for (f of formats; track f) {
-              <option [ngValue]="f">{{ f }}</option>
-            }
-          </select>
-        </div>
+        @if (!perCreatorFormat()) {
+          <div>
+            <label
+              class="text-[10px] uppercase tracking-wider mb-1 block"
+              style="color: var(--color-text-muted);"
+            >
+              Format
+            </label>
+            <select
+              [ngModel]="format()"
+              (ngModelChange)="format.set($event)"
+              class="sf-select"
+              data-testid="sim-format"
+            >
+              @for (f of formats; track f) {
+                <option [ngValue]="f">{{ f }}</option>
+              }
+            </select>
+          </div>
+        }
         <div>
           <label
             class="text-[10px] uppercase tracking-wider mb-1 block"
@@ -292,6 +294,12 @@ export class SimulationPanelComponent {
   readonly subMode = input<string | undefined>(undefined);
   readonly readonly = input<boolean>(false);
   readonly autoRun = input<boolean>(false);
+  // Per-creator format mode (campaign forecast): hides the global Format dropdown
+  // and sends each creator's own format instead. `creatorFormats` maps creatorId
+  // → format; the top-level format stays the default fallback. Standalone sim
+  // leaves both defaulted (global dropdown, single format).
+  readonly perCreatorFormat = input<boolean>(false);
+  readonly creatorFormats = input<Record<number, string>>({});
   readonly simulated = output<SimResult>();
 
   protected readonly objectives = OBJECTIVES;
@@ -334,10 +342,14 @@ export class SimulationPanelComponent {
     const r = await this.runSim.run({
       creators: this.creators(),
       budget: this.budget(),
+      // In per-creator mode the top-level format is only the fallback; each
+      // creator's own format rides on `creatorFormats`. Otherwise the global
+      // dropdown's format applies to everyone (no per-creator formats sent).
       format: this.format(),
       genre: this.genre(),
       objectives: this.selectedObjectives(),
       subMode: this.subMode(),
+      creatorFormats: this.perCreatorFormat() ? this.creatorFormats() : undefined,
     });
     if (r) { this.result.set(r); this.simulated.emit(r); }
   }
