@@ -49,7 +49,7 @@ function setup(
 }
 
 describe('CampaignSimulatorComponent', () => {
-  it('planning: runs the campaign creators and Save writes the forecast', async () => {
+  it('planning with no existing forecast: Save writes directly (no confirm dialog)', async () => {
     const { update } = setup('planning');
     const f = TestBed.createComponent(CampaignSimulatorComponent);
     f.componentRef.setInput('campaign', mkCampaign('planning'));
@@ -57,8 +57,71 @@ describe('CampaignSimulatorComponent', () => {
     (f.nativeElement.querySelector('[data-testid="sim-run"]') as HTMLButtonElement).click();
     await f.whenStable(); f.detectChanges();
     (f.nativeElement.querySelector('[data-testid="campaign-forecast-save"]') as HTMLButtonElement).click();
-    await f.whenStable();
+    await f.whenStable(); f.detectChanges();
+    // No prior forecast → save immediately, dialog never shows.
+    expect(f.nativeElement.querySelector('[data-testid="forecast-overwrite-confirm"]')).toBeNull();
     expect(update).toHaveBeenCalledWith('c1', expect.objectContaining({ forecast: expect.objectContaining({ impressions: 100 }) }));
+  });
+
+  it('Save is projected into the panel actions row next to Run', async () => {
+    setup('planning');
+    const f = TestBed.createComponent(CampaignSimulatorComponent);
+    f.componentRef.setInput('campaign', mkCampaign('planning'));
+    f.detectChanges(); await f.whenStable(); f.detectChanges();
+    const actions: HTMLElement = f.nativeElement.querySelector('[data-testid="sim-actions"]');
+    expect(actions).toBeTruthy();
+    // The Save button lands in the panel's <ng-content> actions row, beside Run.
+    expect(actions.querySelector('[data-testid="campaign-forecast-save"]')).toBeTruthy();
+  });
+
+  it('existing forecast: Save opens the confirm dialog and only updates on confirm', async () => {
+    const withForecast: Campaign = { ...mkCampaign('planning'), forecast: {
+      impressions: 50, ctr: 1, roas: 0.2, cvr: 0.3,
+      p10: { impressions: 40, ctr: 0.8, roas: 0.15 },
+      p50: { impressions: 50, ctr: 1, roas: 0.2 },
+      p90: { impressions: 60, ctr: 1.2, roas: 0.25 },
+    } };
+    const { update } = setup('planning');
+    const f = TestBed.createComponent(CampaignSimulatorComponent);
+    f.componentRef.setInput('campaign', withForecast);
+    f.detectChanges(); await f.whenStable(); f.detectChanges();
+    (f.nativeElement.querySelector('[data-testid="sim-run"]') as HTMLButtonElement).click();
+    await f.whenStable(); f.detectChanges();
+
+    // Clicking Save opens the confirm dialog — no update yet.
+    (f.nativeElement.querySelector('[data-testid="campaign-forecast-save"]') as HTMLButtonElement).click();
+    f.detectChanges();
+    expect(f.nativeElement.querySelector('[data-testid="forecast-overwrite-confirm"]')).toBeTruthy();
+    expect(update).not.toHaveBeenCalled();
+
+    // Confirming runs the save.
+    (f.nativeElement.querySelector('[data-testid="forecast-overwrite-confirm-yes"]') as HTMLButtonElement).click();
+    await f.whenStable(); f.detectChanges();
+    expect(update).toHaveBeenCalledWith('c1', expect.objectContaining({ forecast: expect.objectContaining({ impressions: 100 }) }));
+    // Dialog dismisses after confirm.
+    expect(f.nativeElement.querySelector('[data-testid="forecast-overwrite-confirm"]')).toBeNull();
+  });
+
+  it('existing forecast: canceling the confirm dialog does not update', async () => {
+    const withForecast: Campaign = { ...mkCampaign('planning'), forecast: {
+      impressions: 50, ctr: 1, roas: 0.2, cvr: 0.3,
+      p10: { impressions: 40, ctr: 0.8, roas: 0.15 },
+      p50: { impressions: 50, ctr: 1, roas: 0.2 },
+      p90: { impressions: 60, ctr: 1.2, roas: 0.25 },
+    } };
+    const { update } = setup('planning');
+    const f = TestBed.createComponent(CampaignSimulatorComponent);
+    f.componentRef.setInput('campaign', withForecast);
+    f.detectChanges(); await f.whenStable(); f.detectChanges();
+    (f.nativeElement.querySelector('[data-testid="sim-run"]') as HTMLButtonElement).click();
+    await f.whenStable(); f.detectChanges();
+
+    (f.nativeElement.querySelector('[data-testid="campaign-forecast-save"]') as HTMLButtonElement).click();
+    f.detectChanges();
+    (f.nativeElement.querySelector('[data-testid="forecast-overwrite-confirm-cancel"]') as HTMLButtonElement).click();
+    await f.whenStable(); f.detectChanges();
+    expect(update).not.toHaveBeenCalled();
+    expect(f.nativeElement.querySelector('[data-testid="forecast-overwrite-confirm"]')).toBeNull();
   });
 
   it('forwards campaign.objectives to the panel as initialObjectives (chips selected)', async () => {

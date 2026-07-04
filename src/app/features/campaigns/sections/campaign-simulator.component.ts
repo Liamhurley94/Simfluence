@@ -65,13 +65,45 @@ import { SimResult } from '../../../core/simulation/simulation.types';
           [perCreatorFormat]="true"
           [creatorFormats]="creatorFormats()"
           (simulated)="result.set($event)"
-        />
-        <div class="mt-4">
-          <button type="button" (click)="saveForecast()" [disabled]="!result() || saving()"
+        >
+          <button type="button" (click)="onSaveClick()" [disabled]="!result() || saving()"
             class="sf-btn text-xs uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
             style="background: var(--color-sf-green); color: var(--color-bg);" data-testid="campaign-forecast-save">
             {{ saving() ? 'Saving…' : 'Save forecast' }}
           </button>
+        </app-simulation-panel>
+      }
+
+      @if (confirmingOverwrite()) {
+        <div
+          class="fixed inset-0 z-40 flex items-center justify-center p-4 sf-fade-in"
+          style="background: var(--color-overlay);"
+          (click)="cancelOverwrite()"
+          data-testid="forecast-overwrite-confirm"
+        >
+          <div
+            class="sf-card w-full max-w-sm p-5 sf-modal-in"
+            (click)="$event.stopPropagation()"
+          >
+            <div class="text-sm font-bold mb-2" style="color: var(--color-text);">Overwrite saved forecast?</div>
+            <p class="text-xs mb-4" style="color: var(--color-text-muted);">
+              This campaign already has a saved forecast. Saving overwrites it — only one forecast is
+              kept per campaign. Continue?
+            </p>
+            <div class="flex items-center justify-end gap-2">
+              <button type="button" (click)="cancelOverwrite()"
+                class="sf-btn sf-btn-ghost text-xs uppercase tracking-wider"
+                data-testid="forecast-overwrite-confirm-cancel">
+                Cancel
+              </button>
+              <button type="button" (click)="confirmOverwrite()" [disabled]="saving()"
+                class="sf-btn text-xs uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
+                style="background: var(--color-sf-green); color: var(--color-bg);"
+                data-testid="forecast-overwrite-confirm-yes">
+                {{ saving() ? 'Saving…' : 'Save' }}
+              </button>
+            </div>
+          </div>
         </div>
       }
     </section>
@@ -86,6 +118,9 @@ export class CampaignSimulatorComponent {
   protected readonly genres = this.creatorsSvc.genres;
   protected readonly result = signal<SimResult | null>(null);
   protected readonly saving = signal(false);
+  // Guards the one-forecast-per-campaign overwrite: true while the confirm
+  // dialog is open (only when a forecast already exists).
+  protected readonly confirmingOverwrite = signal(false);
 
   protected readonly forecastLocked = computed(() => this.campaign().status !== 'planning');
 
@@ -112,6 +147,27 @@ export class CampaignSimulatorComponent {
     const formats = this.creatorFormats();
     return this.creators().filter((c) => !formats[c.id]).length;
   });
+
+  // Save entry point. Overwriting an existing forecast is destructive (only one
+  // is kept per campaign), so gate that behind a confirm dialog. First save goes
+  // straight through.
+  onSaveClick(): void {
+    if (!this.result() || this.forecastLocked()) return;
+    if (this.campaign().forecast) {
+      this.confirmingOverwrite.set(true);
+    } else {
+      void this.saveForecast();
+    }
+  }
+
+  async confirmOverwrite(): Promise<void> {
+    await this.saveForecast();
+    this.confirmingOverwrite.set(false);
+  }
+
+  cancelOverwrite(): void {
+    this.confirmingOverwrite.set(false);
+  }
 
   async saveForecast(): Promise<void> {
     const r = this.result();
