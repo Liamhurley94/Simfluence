@@ -18,6 +18,7 @@ import { SectionBudgetComponent } from './sections/section-budget.component';
 import { SectionCreatorsComponent } from './sections/section-creators.component';
 import { SectionOutreachComponent } from './sections/section-outreach.component';
 import { CampaignSimulatorComponent } from './sections/campaign-simulator.component';
+import { SectionResultsComponent } from './sections/section-results.component';
 
 @Component({
   selector: 'app-campaign-detail',
@@ -31,6 +32,7 @@ import { CampaignSimulatorComponent } from './sections/campaign-simulator.compon
     SectionCreatorsComponent,
     SectionOutreachComponent,
     CampaignSimulatorComponent,
+    SectionResultsComponent,
   ],
   template: `
     <div class="max-w-4xl mx-auto pb-12">
@@ -132,6 +134,10 @@ import { CampaignSimulatorComponent } from './sections/campaign-simulator.compon
           @if (showForecast()) {
             <app-campaign-simulator [campaign]="c" />
           }
+
+          @if (showResults()) {
+            <app-section-results [campaign]="c" />
+          }
         </div>
       } @else {
         <div class="text-sm" style="color: var(--color-text-muted);">
@@ -167,6 +173,9 @@ export class CampaignDetailComponent {
   protected readonly showCreators = computed(() => this.campaign()?.budget != null);
   protected readonly showOutreach = computed(() => this.creators.records().length > 0);
   protected readonly showForecast = computed(() => this.creators.records().length > 0);
+
+  // Results/debrief appears once the campaign is past planning and has a roster.
+  protected readonly showResults = computed(() => this.campaign()?.status !== 'planning' && this.creators.records().length > 0);
 
   protected readonly canStart = computed(() => {
     const c = this.campaign();
