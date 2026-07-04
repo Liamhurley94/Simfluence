@@ -129,4 +129,35 @@ describe('CreatorMatcherPanelComponent', () => {
     expect(fixture.nativeElement.querySelector('[data-testid="matcher-empty"]')).toBeTruthy();
     expect(fixture.nativeElement.querySelectorAll('[data-testid^="matcher-card-"]')).toHaveLength(0);
   });
+
+  it('renders skeleton placeholders while loading and no result cards', () => {
+    // match() never resolves → loading stays true through the first render.
+    const match = vi.fn().mockReturnValue(new Promise<MatchResult>(() => {}));
+    const matcherStub = { match } as unknown as CreatorMatcherService;
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      imports: [CreatorMatcherPanelComponent],
+      providers: [{ provide: CreatorMatcherService, useValue: matcherStub }],
+    });
+    const fixture = TestBed.createComponent(CreatorMatcherPanelComponent);
+    fixture.componentRef.setInput('genre', 'Gaming & Esports');
+    fixture.componentRef.setInput('budget', 50_000);
+    fixture.detectChanges();
+
+    const skeletons = fixture.nativeElement.querySelectorAll('[data-testid="matcher-skeleton-card"]');
+    expect(skeletons).toHaveLength(4);
+    // The real results container / cards should not render while loading.
+    expect(fixture.nativeElement.querySelector('[data-testid="matcher-cards"]')).toBeNull();
+    expect(fixture.nativeElement.querySelectorAll('[data-testid^="matcher-card-"]')).toHaveLength(0);
+  });
+
+  it('caps the results container with a scroll (max-height + overflow)', async () => {
+    const { fixture } = setup(makeResult());
+    fixture.detectChanges();
+    await settle(fixture);
+
+    const cards: HTMLElement = fixture.nativeElement.querySelector('[data-testid="matcher-cards"]');
+    expect(cards.className).toContain('overflow-y-auto');
+    expect(cards.className).toContain('max-h-[22rem]');
+  });
 });

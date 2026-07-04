@@ -23,12 +23,19 @@ import {
         style="color: var(--color-text-muted);"
       >
         <span>Creator Matcher</span>
-        @if (loading()) {
-          <span data-testid="matcher-loading">· loading…</span>
-        }
       </div>
 
-      @if (!loading()) {
+      @if (loading()) {
+        <div class="flex flex-col gap-3" data-testid="matcher-skeletons">
+          @for (i of [1, 2, 3, 4]; track i) {
+            <div
+              class="h-16 rounded animate-pulse"
+              style="background: var(--color-bg-3);"
+              data-testid="matcher-skeleton-card"
+            ></div>
+          }
+        </div>
+      } @else {
         <div
           class="rounded px-3 py-2 mb-3 text-xs font-medium"
           style="background: var(--color-bg-2); border: 1px solid var(--color-border); color: var(--color-text);"
@@ -46,7 +53,7 @@ import {
             No creator matches for these settings yet. Try "Browse all" to pick creators directly.
           </div>
         } @else {
-          <div class="flex flex-col gap-2" data-testid="matcher-cards">
+          <div class="flex flex-col gap-3 max-h-[22rem] overflow-y-auto pr-1" data-testid="matcher-cards">
             @for (m of result().creators; track m.creator.id) {
               <div
                 class="flex items-center gap-2.5 p-2.5 rounded"
@@ -74,37 +81,18 @@ import {
                   </div>
                 </div>
 
-                <div class="flex items-start gap-3 shrink-0">
-                  <div class="flex flex-col items-center leading-none">
-                    <span class="text-[8px] mb-0.5" style="color: var(--color-text-muted);">CPI</span>
-                    <span class="text-sm font-bold" [style.color]="cpiColor(m.best_cpi)">
-                      {{ m.best_cpi ?? '—' }}
-                    </span>
+                <div class="flex items-center gap-3 shrink-0">
+                  <div class="flex items-baseline gap-1">
+                    <span class="text-[9px] uppercase tracking-wide" style="color: var(--color-text-muted);">CPI</span>
+                    <span class="text-sm font-bold" [style.color]="cpiColor(m.best_cpi)">{{ m.best_cpi ?? '—' }}</span>
                   </div>
                   @if (m.gfi !== null) {
-                    <div class="flex flex-col items-center leading-none">
-                      <span class="text-[8px] mb-0.5" style="color: var(--color-text-muted);">GFI</span>
-                      <span
-                        class="text-xs font-bold px-1.5 py-0.5 rounded"
-                        style="color: var(--color-bg);"
-                        [style.background]="gfiColor(m.gfi)"
-                      >
-                        {{ m.gfi }}%
-                      </span>
+                    <div class="flex items-center gap-1">
+                      <span class="text-[9px] uppercase tracking-wide" style="color: var(--color-text-muted);">GFI</span>
+                      <span class="text-xs font-bold px-1.5 py-0.5 rounded" style="color: var(--color-bg);" [style.background]="gfiColor(m.gfi)">{{ m.gfi }}%</span>
                     </div>
                   }
-                  <div class="flex flex-col items-center leading-none">
-                    <span class="text-[8px] mb-0.5 invisible" aria-hidden="true">Add</span>
-                    <button
-                      type="button"
-                      (click)="add.emit(m)"
-                      [disabled]="disabled()"
-                      class="sf-btn sf-btn-ghost text-[9px] disabled:opacity-40"
-                      [attr.data-testid]="'matcher-add-' + m.creator.id"
-                    >
-                      + Add
-                    </button>
-                  </div>
+                  <button type="button" (click)="add.emit(m)" [disabled]="disabled()" class="sf-btn sf-btn-ghost text-[9px] disabled:opacity-40" [attr.data-testid]="'matcher-add-' + m.creator.id">+ Add</button>
                 </div>
               </div>
             }
