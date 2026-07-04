@@ -74,7 +74,7 @@ import {
                   </div>
                 </div>
 
-                <div class="flex items-center gap-3 shrink-0">
+                <div class="flex items-start gap-3 shrink-0">
                   <div class="flex flex-col items-center leading-none">
                     <span class="text-[8px] mb-0.5" style="color: var(--color-text-muted);">CPI</span>
                     <span class="text-sm font-bold" [style.color]="cpiColor(m.best_cpi)">
@@ -93,15 +93,18 @@ import {
                       </span>
                     </div>
                   }
-                  <button
-                    type="button"
-                    (click)="add.emit(m)"
-                    [disabled]="disabled()"
-                    class="sf-btn sf-btn-ghost text-[9px] disabled:opacity-40"
-                    [attr.data-testid]="'matcher-add-' + m.creator.id"
-                  >
-                    + Add
-                  </button>
+                  <div class="flex flex-col items-center leading-none">
+                    <span class="text-[8px] mb-0.5 invisible" aria-hidden="true">Add</span>
+                    <button
+                      type="button"
+                      (click)="add.emit(m)"
+                      [disabled]="disabled()"
+                      class="sf-btn sf-btn-ghost text-[9px] disabled:opacity-40"
+                      [attr.data-testid]="'matcher-add-' + m.creator.id"
+                    >
+                      + Add
+                    </button>
+                  </div>
                 </div>
               </div>
             }
