@@ -27,10 +27,13 @@ const RESULT = { impressions: 100, ctr: 2, cpM: 6, cvr: 0.5, conversions: 1, roa
   p10: { impressions: 68, ctr: 1.3, roas: 0.07 }, p50: { impressions: 100, ctr: 2, roas: 0.1 },
   p90: { impressions: 142, ctr: 2.8, roas: 0.15 } };
 
-function setup(status: Campaign['status'] = 'planning') {
+function setup(
+  status: Campaign['status'] = 'planning',
+  records = signal<any[]>([{ id: 'cc1', campaignId: 'c1', creatorId: 7, status: 'shortlisted', format: null }]),
+) {
   localStorage.clear();
   const update = vi.fn().mockResolvedValue(mkCampaign(status));
-  const records = signal([{ id: 'cc1', campaignId: 'c1', creatorId: 7, status: 'shortlisted' }]);
+  const post = vi.fn().mockResolvedValue(RESULT);
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({
     imports: [CampaignSimulatorComponent],
@@ -39,10 +42,10 @@ function setup(status: Campaign['status'] = 'planning') {
       { provide: CreatorsService, useValue: { byIds: vi.fn(async (ids: number[]) => ids.map(mkCreator)), genres: signal(['Gaming & Esports']) } },
       { provide: CampaignsService, useValue: { update } },
       { provide: AuthService, useValue: { tier: signal('silver') } },
-      { provide: EdgeClient, useValue: { post: vi.fn().mockResolvedValue(RESULT), get: vi.fn() } },
+      { provide: EdgeClient, useValue: { post, get: vi.fn() } },
     ],
   });
-  return { update };
+  return { update, post };
 }
 
 describe('CampaignSimulatorComponent', () => {
@@ -78,5 +81,66 @@ describe('CampaignSimulatorComponent', () => {
     f.detectChanges(); await f.whenStable(); f.detectChanges();
     expect(f.nativeElement.querySelector('[data-testid="sim-run"]')).toBeNull();
     expect(f.nativeElement.querySelector('[data-testid="campaign-forecast-save"]')).toBeNull();
+  });
+
+  it('runs in per-creator mode: sends each record\'s format, hides the global dropdown', async () => {
+    const records = signal<any[]>([
+      { id: 'cc1', campaignId: 'c1', creatorId: 1, status: 'confirmed', format: 'Dedicated' },
+      { id: 'cc2', campaignId: 'c1', creatorId: 2, status: 'shortlisted', format: null },
+    ]);
+    const { post } = setup('planning', records);
+    const f = TestBed.createComponent(CampaignSimulatorComponent);
+    f.componentRef.setInput('campaign', mkCampaign('planning'));
+    f.detectChanges(); await f.whenStable(); f.detectChanges();
+    // Per-creator mode hides the global Format dropdown.
+    expect(f.nativeElement.querySelector('[data-testid="sim-format"]')).toBeNull();
+    (f.nativeElement.querySelector('[data-testid="sim-run"]') as HTMLButtonElement).click();
+    await f.whenStable(); f.detectChanges();
+
+    const body = post.mock.calls[0][1] as { creators: Array<Record<string, unknown>>; format: string };
+    const c1 = body.creators.find((e) => e['id'] === '1')!;
+    const c2 = body.creators.find((e) => e['id'] === '2')!;
+    expect(c1['format']).toBe('Dedicated'); // mapped from the record
+    expect(c2['format']).toBeUndefined();   // null record format → omitted
+    expect(body.format).toBe('Integrated'); // top-level fallback stays default
+  });
+
+  it('shows the defaulted note with the count of creators lacking a format', async () => {
+    const records = signal<any[]>([
+      { id: 'cc1', campaignId: 'c1', creatorId: 1, status: 'confirmed', format: 'Dedicated' },
+      { id: 'cc2', campaignId: 'c1', creatorId: 2, status: 'shortlisted', format: null },
+      { id: 'cc3', campaignId: 'c1', creatorId: 3, status: 'shortlisted', format: null },
+    ]);
+    setup('planning', records);
+    const f = TestBed.createComponent(CampaignSimulatorComponent);
+    f.componentRef.setInput('campaign', mkCampaign('planning'));
+    f.detectChanges(); await f.whenStable(); f.detectChanges();
+    const note = f.nativeElement.querySelector('[data-testid="forecast-format-default-note"]');
+    expect(note).toBeTruthy();
+    expect(note.textContent).toContain('2'); // two creators lack a format
+    expect(note.textContent).toContain('Integrated');
+  });
+
+  it('hides the defaulted note when every creator has a format', async () => {
+    const records = signal<any[]>([
+      { id: 'cc1', campaignId: 'c1', creatorId: 1, status: 'confirmed', format: 'Dedicated' },
+      { id: 'cc2', campaignId: 'c1', creatorId: 2, status: 'confirmed', format: 'Integrated' },
+    ]);
+    setup('planning', records);
+    const f = TestBed.createComponent(CampaignSimulatorComponent);
+    f.componentRef.setInput('campaign', mkCampaign('planning'));
+    f.detectChanges(); await f.whenStable(); f.detectChanges();
+    expect(f.nativeElement.querySelector('[data-testid="forecast-format-default-note"]')).toBeNull();
+  });
+
+  it('hides the defaulted note when the forecast is locked (non-planning)', async () => {
+    const records = signal<any[]>([
+      { id: 'cc1', campaignId: 'c1', creatorId: 1, status: 'confirmed', format: null },
+    ]);
+    setup('active', records);
+    const f = TestBed.createComponent(CampaignSimulatorComponent);
+    f.componentRef.setInput('campaign', mkCampaign('active'));
+    f.detectChanges(); await f.whenStable(); f.detectChanges();
+    expect(f.nativeElement.querySelector('[data-testid="forecast-format-default-note"]')).toBeNull();
   });
 });

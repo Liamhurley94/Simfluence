@@ -49,12 +49,21 @@ import { SimResult } from '../../../core/simulation/simulation.types';
       } @else if (creators().length === 0) {
         <p class="text-xs" style="color: var(--color-text-muted);">Add creators to this campaign to run a forecast.</p>
       } @else {
+        @if (defaultedFormatCount() > 0) {
+          <p class="text-xs mb-4" style="color: var(--color-text-muted);"
+            data-testid="forecast-format-default-note">
+            {{ defaultedFormatCount() }} creator{{ defaultedFormatCount() === 1 ? '' : 's' }} default to
+            Integrated — set per-creator formats in Outreach.
+          </p>
+        }
         <app-simulation-panel
           [creators]="creators()"
           [initialBudget]="campaign().budget ?? 85000"
           [initialGenre]="campaign().genre ?? ''"
           [initialObjectives]="campaign().objectives"
           [genres]="genres()"
+          [perCreatorFormat]="true"
+          [creatorFormats]="creatorFormats()"
           (simulated)="result.set($event)"
         />
         <div class="mt-4">
@@ -86,6 +95,23 @@ export class CampaignSimulatorComponent {
     defaultValue: [],
   });
   protected readonly creators = computed(() => this.creatorsRes.value());
+
+  // creatorId → sponsorship format, only for records that have one set. Fed to the
+  // panel's per-creator mode; creators absent here fall back to Integrated server-side.
+  protected readonly creatorFormats = computed<Record<number, string>>(() => {
+    const map: Record<number, string> = {};
+    for (const cc of this.campaignCreators.records()) {
+      if (cc.format) map[cc.creatorId] = cc.format;
+    }
+    return map;
+  });
+
+  // Count of hydrated roster creators with no format set (they'll default to
+  // Integrated). Drives the forecast note.
+  protected readonly defaultedFormatCount = computed(() => {
+    const formats = this.creatorFormats();
+    return this.creators().filter((c) => !formats[c.id]).length;
+  });
 
   async saveForecast(): Promise<void> {
     const r = this.result();
