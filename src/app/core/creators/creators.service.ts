@@ -119,8 +119,6 @@ function fromDb(row: Record<string, any>, cpiSource: 'best' | 'yt' | 'tw' = 'bes
     sponsorHistory: Array.isArray(row['sponsor_history']) ? row['sponsor_history'] : [],
     bio: row['bio'],
     language: row['language'],
-    realCVR: row['real_cvr'],
-    realCPA: row['real_cpa'],
     rates: row['rates'] ?? undefined,
     ytStats: parseYtStats(row),
     twitchStats: parseTwitchStats(row),

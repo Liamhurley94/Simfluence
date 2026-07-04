@@ -23,8 +23,6 @@ const sampleCreator: Creator = {
   verifiedDeals: 1,
   sponsorHistory: [],
   bio: 'bio',
-  realCVR: 1.2,
-  realCPA: 3.5,
 };
 
 const sampleInputs: SimInputs = {
@@ -90,9 +88,8 @@ describe('RunSimulationService', () => {
     // (or falls back to score-creator on a miss). See run-simulation.service.ts.
     expect(c['gfi']).toBeUndefined();
     expect(c['language']).toBe('English');
-    expect(c['realCVR']).toBe('1.2');
-    // realCPA is dropped from the payload — the edge fn never reads it, even
-    // when the creator carries a value (here 3.5). See run-simulation.service.ts.
+    // realCVR/realCPA retired (prototype leftovers) — neither is sent anymore.
+    expect(c['realCVR']).toBeUndefined();
     expect(c['realCPA']).toBeUndefined();
     expect(body.budget).toBe(50_000);
     expect(body.format).toBe('Dedicated');

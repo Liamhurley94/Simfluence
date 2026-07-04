@@ -53,8 +53,6 @@ export interface Creator {
 
   // optional enrichment fields
   language?: string;
-  realCVR?: number;
-  realCPA?: number;
   rates?: {
     int?: [number, number];
     ded?: [number, number];

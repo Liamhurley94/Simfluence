@@ -29,7 +29,6 @@ export class RunSimulationService {
           subs: c.subs || '',
           avgViews: c.avgViews || '',
           language: c.language || 'English',
-          realCVR: c.realCVR !== undefined ? String(c.realCVR) : undefined,
           // Per-creator sponsorship format when the caller mapped one; omitted
           // otherwise so the edge fn falls back to the top-level `format`.
           format: inputs.creatorFormats?.[c.id],
