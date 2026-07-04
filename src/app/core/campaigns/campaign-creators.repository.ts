@@ -22,6 +22,12 @@ interface CampaignCreatorRow {
   last_contact_at: string | null;
   rate_estimate: number | string | null;
   cpi_at_add: number | null;
+  actual_impressions: number | null;
+  actual_clicks: number | null;
+  actual_conversions: number | null;
+  actual_spend: number | string | null;
+  actual_revenue: number | string | null;
+  debrief_notes: string | null;
   added_at: string;
   updated_at: string;
 }
@@ -40,6 +46,12 @@ function rowToRecord(r: CampaignCreatorRow): CampaignCreator {
     lastContactAt: r.last_contact_at,
     rateEstimate: r.rate_estimate == null ? null : Number(r.rate_estimate),
     cpiAtAdd: r.cpi_at_add,
+    actualImpressions: r.actual_impressions,
+    actualClicks: r.actual_clicks,
+    actualConversions: r.actual_conversions,
+    actualSpend: r.actual_spend == null ? null : Number(r.actual_spend),
+    actualRevenue: r.actual_revenue == null ? null : Number(r.actual_revenue),
+    debriefNotes: r.debrief_notes,
     addedAt: r.added_at,
     updatedAt: r.updated_at,
   };
@@ -47,7 +59,9 @@ function rowToRecord(r: CampaignCreatorRow): CampaignCreator {
 
 const SELECT_COLS =
   'id, campaign_id, creator_id, status, source, format, contact_email, contact_handle, ' +
-  'notes, last_contact_at, rate_estimate, cpi_at_add, added_at, updated_at';
+  'notes, last_contact_at, rate_estimate, cpi_at_add, ' +
+  'actual_impressions, actual_clicks, actual_conversions, actual_spend, actual_revenue, debrief_notes, ' +
+  'added_at, updated_at';
 
 @Injectable({ providedIn: 'root' })
 export class CampaignCreatorsRepository {
@@ -94,6 +108,12 @@ export class CampaignCreatorsRepository {
     if (dto.notes !== undefined) patch['notes'] = dto.notes;
     if (dto.lastContactAt !== undefined) patch['last_contact_at'] = dto.lastContactAt;
     if (dto.rateEstimate !== undefined) patch['rate_estimate'] = dto.rateEstimate;
+    if (dto.actualImpressions !== undefined) patch['actual_impressions'] = dto.actualImpressions;
+    if (dto.actualClicks !== undefined) patch['actual_clicks'] = dto.actualClicks;
+    if (dto.actualConversions !== undefined) patch['actual_conversions'] = dto.actualConversions;
+    if (dto.actualSpend !== undefined) patch['actual_spend'] = dto.actualSpend;
+    if (dto.actualRevenue !== undefined) patch['actual_revenue'] = dto.actualRevenue;
+    if (dto.debriefNotes !== undefined) patch['debrief_notes'] = dto.debriefNotes;
 
     const { data, error } = await this.supabase.client
       .from('campaign_creators')

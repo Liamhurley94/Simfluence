@@ -39,6 +39,16 @@ export interface CampaignCreator {
   rateEstimate: number | null;
   cpiAtAdd: number | null;
 
+  // Measured post-campaign actuals (entered in the Results section). Null until set.
+  actualImpressions: number | null;
+  actualClicks: number | null;
+  actualConversions: number | null;
+  actualSpend: number | null;
+  actualRevenue: number | null;
+  // Retrospective note about THIS creator's performance. Distinct from `notes`
+  // (outreach) — not shown to clients.
+  debriefNotes: string | null;
+
   addedAt: string;
   updatedAt: string;
 }
@@ -51,6 +61,8 @@ export type NewCampaignCreator = Pick<CampaignCreator, 'campaignId' | 'creatorId
 export type UpdateCampaignCreator = Partial<Pick<CampaignCreator,
   'status' | 'format' | 'contactEmail' | 'contactHandle' | 'notes' | 'lastContactAt'
   | 'rateEstimate'
+  | 'actualImpressions' | 'actualClicks' | 'actualConversions' | 'actualSpend' | 'actualRevenue'
+  | 'debriefNotes'
 >>;
 
 export const STATUS_LABELS: Record<CampaignCreatorStatus, string> = {

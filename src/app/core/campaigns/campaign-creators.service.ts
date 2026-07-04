@@ -73,6 +73,18 @@ export class CampaignCreatorsService {
     return this.patch(id, fields);
   }
 
+  async updateActuals(
+    id: string,
+    fields: Partial<Pick<UpdateCampaignCreator,
+      'actualImpressions' | 'actualClicks' | 'actualConversions' | 'actualSpend' | 'actualRevenue'>>,
+  ): Promise<CampaignCreator | null> {
+    return this.patch(id, fields);
+  }
+
+  async updateDebriefNotes(id: string, debriefNotes: string | null): Promise<CampaignCreator | null> {
+    return this.patch(id, { debriefNotes });
+  }
+
   async remove(id: string): Promise<void> {
     const snapshot = this.records();
     this.records.update((list) => list.filter((r) => r.id !== id));
