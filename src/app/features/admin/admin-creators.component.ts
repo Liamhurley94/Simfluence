@@ -165,6 +165,36 @@ const STATUS_BG: Record<PlatformSyncStatus, string> = {
           }
         }
       </section>
+
+      <!-- Offline / needs attention — monitoring only for v1 (re-sync is a follow-up). -->
+      @if (offline().length > 0) {
+        <section class="sf-card overflow-hidden">
+          <header class="px-4 py-3">
+            <h2 class="text-sm font-bold uppercase tracking-wider" style="color: var(--color-text);">Offline / needs attention</h2>
+            <p class="text-xs mt-1" style="color: var(--color-text-muted);">Monitoring only — re-sync coming soon.</p>
+          </header>
+          <table class="w-full text-sm">
+            <thead>
+              <tr style="color: var(--color-text-muted); background: var(--color-bg-3);">
+                <th class="${TH}">Name</th>
+                <th class="${TH}">Platform</th>
+                <th class="${TH}">Offline since</th>
+                <th class="${TH}">Reason</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (o of offline(); track o.platform + o.id) {
+                <tr data-testid="admin-offline-row" style="color: var(--color-text); border-top: 1px solid var(--color-border);">
+                  <td class="px-3 py-2 font-medium">{{ o.name ?? '—' }}</td>
+                  <td class="px-3 py-2">{{ o.platform }}</td>
+                  <td class="px-3 py-2 text-xs" style="color: var(--color-text-muted);">{{ o.offlineAt ? (o.offlineAt | date:'short') : '—' }}</td>
+                  <td class="px-3 py-2">{{ o.reason ?? '—' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </section>
+      }
     </div>
   `,
 })

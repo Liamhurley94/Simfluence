@@ -87,3 +87,20 @@ describe('AdminCreatorsComponent added list', () => {
     expect(fixture.nativeElement.textContent).toContain('Resolved');
   });
 });
+
+describe('AdminCreatorsComponent offline list', () => {
+  it('renders offline creators (monitoring only, no re-sync button)', async () => {
+    const { listCreators } = setup();
+    listCreators.mockResolvedValue({
+      added: [],
+      offline: [{ id: 9, name: 'Gone', platform: 'YouTube', offlineAt: '2026-07-01T00:00:00Z', reason: 'channel not found' }],
+    });
+    const fixture = TestBed.createComponent(AdminCreatorsComponent);
+    await fixture.componentInstance.loadList();
+    fixture.detectChanges();
+    const rows = fixture.nativeElement.querySelectorAll('[data-testid="admin-offline-row"]');
+    expect(rows.length).toBe(1);
+    expect(fixture.nativeElement.textContent).toContain('Gone');
+    expect(fixture.nativeElement.querySelector('[data-testid="admin-resync"]')).toBeNull();
+  });
+});
