@@ -7,6 +7,7 @@ import { RunSimulationService } from '../../core/simulation/run-simulation.servi
 import { RateLimitService } from '../../core/simulation/rate-limit.service';
 import { Format, OBJECTIVES, Objective, SimResult } from '../../core/simulation/simulation.types';
 import { Creator } from '../../core/data/creator.types';
+import { partitionByLiveData } from '../../core/simulation/live-stats';
 
 const FORMATS: Format[] = ['Integrated', 'Mixed', 'Dedicated'];
 
@@ -141,6 +142,12 @@ const FORMATS: Format[] = ['Integrated', 'Mixed', 'Dedicated'];
         </button>
         <ng-content></ng-content>
       </div>
+    }
+
+    @if (excludedNoData().length > 0) {
+      <p class="text-xs mb-3" style="color: var(--color-text-muted);" data-testid="sim-excluded-note">
+        {{ excludedNoData().length }} creator{{ excludedNoData().length === 1 ? '' : 's' }} excluded — no live data yet (pending sync).
+      </p>
     }
 
     @if (result(); as r) {
@@ -287,6 +294,9 @@ export class SimulationPanelComponent {
   private auth = inject(AuthService);
 
   readonly creators = input.required<Creator[]>();
+  // Creators with no live view metric are excluded from the forecast (no stale
+  // fallback); surfaced so the omission is explicit to the user.
+  protected readonly excludedNoData = computed(() => partitionByLiveData(this.creators()).excluded);
   readonly initialBudget = input<number>(85_000);
   readonly initialGenre = input<string>('');
   readonly initialObjectives = input<string[]>([]);

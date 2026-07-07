@@ -158,4 +158,22 @@ describe('SimulationPanelComponent', () => {
     const body = post.mock.calls[0][1] as { creators: Array<Record<string, unknown>> };
     expect(body.creators[0]['format']).toBeUndefined();
   });
+
+  it('shows an excluded-no-live-data note counting creators dropped for missing live stats', () => {
+    setup();
+    const f = TestBed.createComponent(Host);
+    f.componentInstance.creators.set([mkCreator(1), { ...mkCreator(2), ytStats: undefined }]);
+    f.detectChanges();
+    const note = f.nativeElement.querySelector('[data-testid="sim-excluded-note"]');
+    expect(note).toBeTruthy();
+    expect(note.textContent).toContain('1 creator');
+  });
+
+  it('shows no excluded note when every creator has live stats', () => {
+    setup();
+    const f = TestBed.createComponent(Host);
+    f.componentInstance.creators.set([mkCreator(1)]);
+    f.detectChanges();
+    expect(f.nativeElement.querySelector('[data-testid="sim-excluded-note"]')).toBeNull();
+  });
 });
