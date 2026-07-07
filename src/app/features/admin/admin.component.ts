@@ -3,19 +3,46 @@ import { DatePipe } from '@angular/common';
 import { RouterLink, RouterOutlet } from '@angular/router';
 import { EnterpriseService } from '../../core/enterprise/enterprise.service';
 import { EnterpriseWithStats } from '../../core/enterprise/enterprise.types';
+import { AdminCreatorsComponent } from './admin-creators.component';
 
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [RouterLink, RouterOutlet, DatePipe],
+  imports: [RouterLink, RouterOutlet, DatePipe, AdminCreatorsComponent],
   template: `
     <section class="py-8 sf-appear">
       <header class="mb-6">
         <h1 class="text-2xl font-bold" style="color: var(--color-text);">Admin</h1>
-        <p class="text-sm mt-1" style="color: var(--color-text-muted);">Enterprise approvals.</p>
+        <p class="text-sm mt-1" style="color: var(--color-text-muted);">Manage enterprises and creators.</p>
       </header>
 
       <router-outlet />
+
+      <div class="flex gap-4 mb-6 text-[10px] uppercase tracking-[0.12em]" role="tablist">
+        <button
+          type="button"
+          role="tab"
+          [attr.aria-selected]="tab() === 'enterprises'"
+          (click)="tab.set('enterprises')"
+          [class.font-bold]="tab() === 'enterprises'"
+          [class.opacity-40]="tab() !== 'enterprises'"
+          style="color: var(--color-text);"
+          data-testid="admin-tab-enterprises"
+        >Enterprises</button>
+        <button
+          type="button"
+          role="tab"
+          [attr.aria-selected]="tab() === 'creators'"
+          (click)="tab.set('creators')"
+          [class.font-bold]="tab() === 'creators'"
+          [class.opacity-40]="tab() !== 'creators'"
+          style="color: var(--color-text);"
+          data-testid="admin-tab-creators"
+        >Creators</button>
+      </div>
+
+      @switch (tab()) {
+      @case ('enterprises') {
 
       @if (loading()) {
         <p class="text-sm" style="color: var(--color-text-muted);">Loading enterprises…</p>
@@ -62,6 +89,12 @@ import { EnterpriseWithStats } from '../../core/enterprise/enterprise.types';
           </table>
         </div>
       }
+
+      }
+      @case ('creators') {
+        <app-admin-creators />
+      }
+      }
     </section>
   `,
 })
@@ -71,6 +104,10 @@ export class AdminComponent {
   protected readonly enterprises = signal<EnterpriseWithStats[]>([]);
   protected readonly loading = signal(false);
   protected readonly error = signal<string | null>(null);
+
+  /** Active admin tab. The enterprise-detail `<router-outlet />` renders a modal
+   *  overlay, so it stays outside the switch and works regardless of active tab. */
+  readonly tab = signal<'enterprises' | 'creators'>('enterprises');
 
   constructor() {
     void this.load();
