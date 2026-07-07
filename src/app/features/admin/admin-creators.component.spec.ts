@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AdminCreatorsComponent } from './admin-creators.component';
 import { AdminCreatorService } from '../../core/admin/admin-creator.service';
 import { CreatorsService } from '../../core/creators/creators.service';
+import { AddedCreator } from '../../core/admin/admin-creator.types';
 
 function setup(
   addCreators = vi.fn().mockResolvedValue({ created: [{ id: 1, name: 'A', platforms: ['YouTube'] }] }),
@@ -56,5 +57,33 @@ describe('AdminCreatorsComponent add form', () => {
     await c.onSubmit();
     expect(c.error()).toBe('dup');
     expect(addCreators).toHaveBeenCalled();
+  });
+});
+
+const mkAdded = (over: Partial<AddedCreator> = {}): AddedCreator => ({
+  id: 1, name: 'A', genre: 'Gaming', platforms: ['YouTube'], addedAt: '2026-07-07T00:00:00Z',
+  youtube: 'resolved', twitch: null, gfi: true, cpi: 42, ...over,
+});
+
+describe('AdminCreatorsComponent added list', () => {
+  it('anyResolving: true while resolving or GFI missing, false once settled', () => {
+    setup();
+    const c = TestBed.createComponent(AdminCreatorsComponent).componentInstance;
+    expect(c.anyResolving([mkAdded({ youtube: 'resolving' })])).toBe(true);
+    expect(c.anyResolving([mkAdded({ youtube: 'resolved', gfi: false })])).toBe(true);
+    expect(c.anyResolving([mkAdded({ youtube: 'resolved', gfi: true })])).toBe(false);
+    expect(c.anyResolving([mkAdded({ youtube: 'synced', gfi: true })])).toBe(false);
+    expect(c.anyResolving([mkAdded({ youtube: 'offline', gfi: true })])).toBe(false);
+  });
+
+  it('renders one row per added creator with a status label', async () => {
+    const { listCreators } = setup();
+    listCreators.mockResolvedValue({ added: [mkAdded(), mkAdded({ id: 2, name: 'B' })], offline: [] });
+    const fixture = TestBed.createComponent(AdminCreatorsComponent);
+    await fixture.componentInstance.loadList();
+    fixture.detectChanges();
+    const rows = fixture.nativeElement.querySelectorAll('[data-testid="admin-added-row"]');
+    expect(rows.length).toBe(2);
+    expect(fixture.nativeElement.textContent).toContain('Resolved');
   });
 });

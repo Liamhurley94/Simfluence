@@ -1,15 +1,36 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { DatePipe, DecimalPipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AdminCreatorService } from '../../core/admin/admin-creator.service';
 import { CreatorsService } from '../../core/creators/creators.service';
-import { AddCreatorInput, AddedCreator, OfflineCreator } from '../../core/admin/admin-creator.types';
+import {
+  AddCreatorInput,
+  AddedCreator,
+  OfflineCreator,
+  PlatformSyncStatus,
+} from '../../core/admin/admin-creator.types';
 
 const LABEL = 'text-[10px] uppercase tracking-wider mb-1 block';
+const TH = 'text-left px-3 py-2 text-[10px] uppercase tracking-wider font-medium';
+
+const STATUS_LABELS: Record<PlatformSyncStatus, string> = {
+  resolving: 'Resolving…', resolved: 'Resolved', synced: 'Synced', offline: 'Offline',
+};
+const STATUS_FG: Record<PlatformSyncStatus, string> = {
+  resolving: 'var(--color-sf-gold)', resolved: 'var(--color-sf-blue)',
+  synced: 'var(--color-sf-green)', offline: 'var(--color-sf-red)',
+};
+const STATUS_BG: Record<PlatformSyncStatus, string> = {
+  resolving: 'color-mix(in srgb, var(--color-sf-gold) 15%, transparent)',
+  resolved: 'color-mix(in srgb, var(--color-sf-blue) 15%, transparent)',
+  synced: 'color-mix(in srgb, var(--color-sf-green) 15%, transparent)',
+  offline: 'color-mix(in srgb, var(--color-sf-red) 15%, transparent)',
+};
 
 @Component({
   selector: 'app-admin-creators',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, DatePipe, DecimalPipe],
   template: `
     <div data-testid="admin-creators" class="flex flex-col gap-6">
       <!-- Add form -->
@@ -84,6 +105,66 @@ const LABEL = 'text-[10px] uppercase tracking-wider mb-1 block';
           </button>
         </div>
       </form>
+
+      <!-- Added creators -->
+      <section class="sf-card overflow-hidden">
+        <header class="flex items-center justify-between px-4 py-3">
+          <h2 class="text-sm font-bold uppercase tracking-wider" style="color: var(--color-text);">Added creators</h2>
+          <button
+            type="button"
+            (click)="loadList()"
+            [disabled]="listLoading()"
+            class="sf-btn sf-btn-ghost text-xs"
+            data-testid="added-refresh"
+          >{{ listLoading() ? 'Refreshing…' : 'Refresh' }}</button>
+        </header>
+
+        @if (listError()) {
+          <p class="text-sm px-4 pb-3" style="color: var(--color-sf-red);">{{ listError() }}</p>
+        } @else if (added().length === 0) {
+          <p class="text-sm px-4 pb-3" style="color: var(--color-text-muted);">No creators added yet.</p>
+        } @else {
+          <table class="w-full text-sm">
+            <thead>
+              <tr style="color: var(--color-text-muted); background: var(--color-bg-3);">
+                <th class="${TH}">Name</th>
+                <th class="${TH}">Genre</th>
+                <th class="${TH}">YouTube</th>
+                <th class="${TH}">Twitch</th>
+                <th class="${TH}">GFI</th>
+                <th class="${TH}">CPI</th>
+                <th class="${TH}">Added</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (c of added(); track c.id) {
+                <tr data-testid="admin-added-row" style="color: var(--color-text); border-top: 1px solid var(--color-border);">
+                  <td class="px-3 py-2 font-medium">{{ c.name }}</td>
+                  <td class="px-3 py-2">{{ c.genre }}</td>
+                  <td class="px-3 py-2">
+                    @if (c.youtube) {
+                      <span class="sf-chip" [style.background]="statusBg(c.youtube)" [style.color]="statusFg(c.youtube)">{{ statusLabel(c.youtube) }}</span>
+                    } @else { <span style="color: var(--color-text-muted);">—</span> }
+                  </td>
+                  <td class="px-3 py-2">
+                    @if (c.twitch) {
+                      <span class="sf-chip" [style.background]="statusBg(c.twitch)" [style.color]="statusFg(c.twitch)">{{ statusLabel(c.twitch) }}</span>
+                    } @else { <span style="color: var(--color-text-muted);">—</span> }
+                  </td>
+                  <td class="px-3 py-2">{{ c.gfi ? '✓' : '—' }}</td>
+                  <td class="px-3 py-2">{{ c.cpi !== null ? (c.cpi | number:'1.0-0') : '—' }}</td>
+                  <td class="px-3 py-2 text-xs" style="color: var(--color-text-muted);">{{ c.addedAt | date:'short' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+          @if (anyResolving()) {
+            <p class="text-xs px-4 py-2" style="color: var(--color-text-muted);" data-testid="added-syncing">
+              Syncing new creators… this list updates automatically. Full stats & CPI land at the nightly refresh.
+            </p>
+          }
+        }
+      </section>
     </div>
   `,
 })
@@ -117,7 +198,16 @@ export class AdminCreatorsComponent {
   readonly listLoading = signal(false);
   readonly listError = signal<string | null>(null);
 
+  // Poll while creators are still resolving — id-resolution + GFI land within ~a
+  // minute. Bounded so it can't spin forever if something stalls; 'synced'/CPI
+  // only arrive at the nightly refresh, so we deliberately don't wait for them.
+  private pollHandle: ReturnType<typeof setInterval> | null = null;
+  private pollAttempts = 0;
+  private readonly POLL_MS = 5000;
+  private readonly MAX_POLLS = 36; // ~3 min ceiling
+
   constructor() {
+    inject(DestroyRef).onDestroy(() => this.stopPolling());
     void this.loadList();
   }
 
@@ -165,12 +255,41 @@ export class AdminCreatorsComponent {
       const { added, offline } = await this.svc.listCreators();
       this.added.set(added);
       this.offline.set(offline);
+      this.syncPolling();
     } catch (err) {
       this.listError.set(this.errorMessage(err, 'Failed to load creators'));
     } finally {
       this.listLoading.set(false);
     }
   }
+
+  /** A creator is still settling while any platform is 'resolving' or its GFI is
+   *  missing. 'resolved'/'synced'/'offline' + GFI present = settled. */
+  anyResolving(list: AddedCreator[] = this.added()): boolean {
+    return list.some((c) => c.youtube === 'resolving' || c.twitch === 'resolving' || !c.gfi);
+  }
+
+  private syncPolling(): void {
+    if (this.anyResolving() && this.pollAttempts < this.MAX_POLLS) {
+      this.pollHandle ??= setInterval(() => {
+        this.pollAttempts++;
+        void this.loadList();
+      }, this.POLL_MS);
+    } else {
+      this.stopPolling();
+    }
+  }
+
+  private stopPolling(): void {
+    if (this.pollHandle) {
+      clearInterval(this.pollHandle);
+      this.pollHandle = null;
+    }
+  }
+
+  protected statusLabel(s: PlatformSyncStatus): string { return STATUS_LABELS[s]; }
+  protected statusBg(s: PlatformSyncStatus): string { return STATUS_BG[s]; }
+  protected statusFg(s: PlatformSyncStatus): string { return STATUS_FG[s]; }
 
   /** Prefer the edge fn's JSON `{ error }` (HttpErrorResponse.error.error) over the
    *  generic HttpClient message; fall back to the raw Error message or a default. */
