@@ -31,6 +31,7 @@ function mkCreator(id: number): Creator {
     verifiedDeals: 2,
     sponsorHistory: [],
     bio: 'bio',
+    ytStats: { subscriberCount: 100_000, avgViews: 20_000, engagementRate: 3, sponsorFreqPct: 5, statsRefreshedAt: null },
   };
 }
 

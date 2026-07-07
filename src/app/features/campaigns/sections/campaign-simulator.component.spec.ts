@@ -14,7 +14,8 @@ import { Creator } from '../../../core/data/creator.types';
 function mkCreator(id: number): Creator {
   return { id, name: `C${id}`, handle: `@c${id}`, platform: 'YouTube', allPlatforms: ['YouTube'],
     subs: '100K', subsParsed: 100_000, avgViews: '20K', eng: '3.0%', genre: 'Gaming & Esports',
-    cpi: 80, gfi: 75, color: '#fff', verifiedDeals: 0, sponsorHistory: [], bio: '' };
+    cpi: 80, gfi: 75, color: '#fff', verifiedDeals: 0, sponsorHistory: [], bio: '',
+    ytStats: { subscriberCount: 100_000, avgViews: 20_000, engagementRate: 3, sponsorFreqPct: 5, statsRefreshedAt: null } };
 }
 function mkCampaign(status: Campaign['status'] = 'planning', objectives: string[] = []): Campaign {
   return { id: 'c1', createdBy: 'u', enterpriseId: null, status, name: 'Acme', client: null,

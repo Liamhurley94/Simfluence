@@ -1,6 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { EdgeClient } from '../api/edge.client';
 import { SimInputs, SimResult } from './simulation.types';
+import { partitionByLiveData } from './live-stats';
 
 /**
  * Wraps the `/functions/v1/run-simulation` edge function.
@@ -18,16 +19,24 @@ export class RunSimulationService {
   async run(inputs: SimInputs): Promise<SimResult | null> {
     this.pending.set(true);
     try {
+      const included = partitionByLiveData(inputs.creators).included;
+      // No creator has live data → nothing honest to forecast; don't call the edge fn.
+      if (included.length === 0) {
+        this.latest.set(null);
+        return null;
+      }
       const payload = {
         // GFI is no longer sent — the edge fn reads it from
         // `creator_genre_scores` (or falls back to score-creator on miss).
-        creators: inputs.creators.map((c) => ({
+        // subs/avgViews come from LIVE stats (live-stats.ts); creators without
+        // live data were dropped above and are reported by the panel.
+        creators: included.map(({ creator: c, live }) => ({
           id: String(c.id),
           cpi: String(c.cpi || 50),
           genre: c.genre || '',
           platform: c.platform || '',
-          subs: c.subs || '',
-          avgViews: c.avgViews || '',
+          subs: live.subs,
+          avgViews: live.avgViews,
           language: c.language || 'English',
           // Per-creator sponsorship format when the caller mapped one; omitted
           // otherwise so the edge fn falls back to the top-level `format`.

@@ -23,6 +23,7 @@ const sampleCreator: Creator = {
   verifiedDeals: 1,
   sponsorHistory: [],
   bio: 'bio',
+  ytStats: { subscriberCount: 120000, avgViews: 24000, engagementRate: 3.1, sponsorFreqPct: 10, statsRefreshedAt: null },
 };
 
 const sampleInputs: SimInputs = {
@@ -88,6 +89,9 @@ describe('RunSimulationService', () => {
     // (or falls back to score-creator on a miss). See run-simulation.service.ts.
     expect(c['gfi']).toBeUndefined();
     expect(c['language']).toBe('English');
+    // subs/avgViews now come from LIVE ytStats, not the static '100K'/'20K'.
+    expect(c['subs']).toBe('120000');
+    expect(c['avgViews']).toBe('24000');
     // realCVR/realCPA retired (prototype leftovers) — neither is sent anymore.
     expect(c['realCVR']).toBeUndefined();
     expect(c['realCPA']).toBeUndefined();
@@ -173,5 +177,29 @@ describe('RunSimulationService', () => {
     resolveIt({ error: 'done' });
     await p;
     expect(service.pending()).toBe(false);
+  });
+
+  it('excludes creators with no live stats and returns null when none remain', async () => {
+    const { service, post } = setup({ error: null });
+    const noLive: Creator = { ...sampleCreator, ytStats: undefined };
+    const res = await service.run({ ...sampleInputs, creators: [noLive] });
+    expect(post).not.toHaveBeenCalled();
+    expect(res).toBeNull();
+  });
+
+  it("sends a Twitch creator's avg_ccv as avgViews (empty subs)", async () => {
+    const { service, post } = setup({
+      impressions: 1, ctr: 1, cpM: 1, cvr: 1, conversions: 1, roas: 1, engRate: 1, clicks: 1, budget: 50_000,
+      bench: { ctrBase: 2, cpmBase: 8, cvrBase: 0.5, roasBase: 2, engBase: 4 },
+      p10: { impressions: 1, ctr: 1, roas: 1 }, p50: { impressions: 1, ctr: 1, roas: 1 }, p90: { impressions: 1, ctr: 1, roas: 1 },
+    });
+    const tw: Creator = {
+      ...sampleCreator, platform: 'Twitch', ytStats: undefined,
+      twitchStats: { avgCcv: 1800, peakCcv: 4000, streams30d: 10, hoursStreamed30d: 30, lastStreamAt: null, primaryGameName: null, liveRefreshedAt: null },
+    };
+    await service.run({ ...sampleInputs, creators: [tw] });
+    const c = (post.mock.calls[0][1] as { creators: Array<Record<string, unknown>> }).creators[0];
+    expect(c['avgViews']).toBe('1800');
+    expect(c['subs']).toBe('');
   });
 });
