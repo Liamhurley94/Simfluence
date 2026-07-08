@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Creator } from '../data/creator.types';
-import { liveStatsFor, partitionByLiveData } from './live-stats';
+import { hasLiveYoutubeStats, liveStatsFor, partitionByLiveData } from './live-stats';
 
 function mk(o: Partial<Creator> = {}): Creator {
   return {
@@ -14,12 +14,18 @@ const YT = { subscriberCount: 120000, avgViews: 24000, engagementRate: 3.1, spon
 const TW = { avgCcv: 2000, peakCcv: 5000, streams30d: 12, hoursStreamed30d: 40, lastStreamAt: null, primaryGameName: null, liveRefreshedAt: null };
 
 describe('live-stats', () => {
-  it('YouTube: live subscriberCount + avgViews as strings', () => {
-    expect(liveStatsFor(mk({ platform: 'YouTube', ytStats: YT }))).toEqual({ subs: '120000', avgViews: '24000' });
+  it('YouTube: live subscriberCount + avgViews + engagementRate as strings', () => {
+    expect(liveStatsFor(mk({ platform: 'YouTube', ytStats: YT }))).toEqual({ subs: '120000', avgViews: '24000', eng: '3.1' });
   });
 
-  it('Twitch: avg_ccv as avgViews (model reads Twitch avgViews as CCV), empty subs', () => {
-    expect(liveStatsFor(mk({ platform: 'Twitch', ytStats: undefined, twitchStats: TW }))).toEqual({ subs: '', avgViews: '2000' });
+  it('Twitch: avg_ccv as avgViews, empty subs + empty eng (no live YouTube-style fields)', () => {
+    expect(liveStatsFor(mk({ platform: 'Twitch', ytStats: undefined, twitchStats: TW }))).toEqual({ subs: '', avgViews: '2000', eng: '' });
+  });
+
+  it('hasLiveYoutubeStats: true only for a YouTube creator carrying ytStats', () => {
+    expect(hasLiveYoutubeStats(mk({ platform: 'YouTube', ytStats: YT }))).toBe(true);
+    expect(hasLiveYoutubeStats(mk({ platform: 'YouTube', ytStats: undefined }))).toBe(false);
+    expect(hasLiveYoutubeStats(mk({ platform: 'Twitch', ytStats: undefined, twitchStats: TW }))).toBe(false);
   });
 
   it('no live stats for the primary platform → null', () => {
@@ -32,7 +38,7 @@ describe('live-stats', () => {
     const off = mk({ id: 2, platform: 'YouTube', ytStats: undefined });
     const { included, excluded } = partitionByLiveData([yt, off]);
     expect(included.map((i) => i.creator.id)).toEqual([1]);
-    expect(included[0].live).toEqual({ subs: '100', avgViews: '50' });
+    expect(included[0].live).toEqual({ subs: '100', avgViews: '50', eng: '3.1' });
     expect(excluded.map((e) => e.id)).toEqual([2]);
   });
 });
