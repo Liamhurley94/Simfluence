@@ -9,15 +9,16 @@ function setup(
   addCreators = vi.fn().mockResolvedValue({ created: [{ id: 1, name: 'A', platforms: ['YouTube'] }] }),
 ) {
   const listCreators = vi.fn().mockResolvedValue({ added: [], offline: [] });
+  const resyncCreator = vi.fn().mockResolvedValue({ resynced: { creatorId: 9, platform: 'YouTube' } });
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({
     imports: [AdminCreatorsComponent],
     providers: [
-      { provide: AdminCreatorService, useValue: { addCreators, listCreators } },
+      { provide: AdminCreatorService, useValue: { addCreators, listCreators, resyncCreator } },
       { provide: CreatorsService, useValue: { submodesByGenre: () => ({ Gaming: [], Music: [] }) } },
     ],
   });
-  return { addCreators, listCreators };
+  return { addCreators, listCreators, resyncCreator };
 }
 
 describe('AdminCreatorsComponent add form', () => {
@@ -89,18 +90,32 @@ describe('AdminCreatorsComponent added list', () => {
 });
 
 describe('AdminCreatorsComponent offline list', () => {
-  it('renders offline creators (monitoring only, no re-sync button)', async () => {
+  const mkOffline = () => ({
+    added: [],
+    offline: [{ id: 9, name: 'Gone', platform: 'YouTube', offlineAt: '2026-07-01T00:00:00Z', reason: 'channel not found' }],
+  });
+
+  it('renders offline creators with a re-sync button', async () => {
     const { listCreators } = setup();
-    listCreators.mockResolvedValue({
-      added: [],
-      offline: [{ id: 9, name: 'Gone', platform: 'YouTube', offlineAt: '2026-07-01T00:00:00Z', reason: 'channel not found' }],
-    });
+    listCreators.mockResolvedValue(mkOffline());
     const fixture = TestBed.createComponent(AdminCreatorsComponent);
     await fixture.componentInstance.loadList();
     fixture.detectChanges();
     const rows = fixture.nativeElement.querySelectorAll('[data-testid="admin-offline-row"]');
     expect(rows.length).toBe(1);
     expect(fixture.nativeElement.textContent).toContain('Gone');
-    expect(fixture.nativeElement.querySelector('[data-testid="admin-resync"]')).toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-testid="admin-resync"]')).not.toBeNull();
+  });
+
+  it('onResync calls resyncCreator(id, platform) and reloads the list', async () => {
+    const { listCreators, resyncCreator } = setup();
+    listCreators.mockResolvedValue(mkOffline());
+    const fixture = TestBed.createComponent(AdminCreatorsComponent);
+    const c = fixture.componentInstance;
+    await c.loadList();
+    const before = listCreators.mock.calls.length;
+    await c.onResync({ id: 9, name: 'Gone', platform: 'YouTube', offlineAt: null, reason: null });
+    expect(resyncCreator).toHaveBeenCalledWith(9, 'YouTube');
+    expect(listCreators.mock.calls.length).toBe(before + 1); // reloaded after resync
   });
 });

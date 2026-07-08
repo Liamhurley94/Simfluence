@@ -19,4 +19,11 @@ export class AdminCreatorService {
   async listCreators(): Promise<ListCreatorsResult> {
     return this.edge.get('admin-list-creators');
   }
+
+  /** Re-sync an offline (creator, platform): clears the offline flag server-side
+   *  and re-fires the platform's refresh kick. Platform comes from an offline-list
+   *  row, so it's always 'YouTube' or 'Twitch'. */
+  async resyncCreator(creatorId: number, platform: string): Promise<{ resynced: { creatorId: number; platform: string } }> {
+    return this.edge.post('admin-resync-creator', { creatorId, platform });
+  }
 }

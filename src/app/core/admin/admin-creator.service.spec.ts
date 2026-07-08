@@ -28,4 +28,9 @@ describe('AdminCreatorService', () => {
     await svc.listCreators();
     expect(get).toHaveBeenCalledWith('admin-list-creators');
   });
+
+  it('resyncCreator POSTs admin-resync-creator with creatorId + platform', async () => {
+    await svc.resyncCreator(9, 'YouTube');
+    expect(post).toHaveBeenCalledWith('admin-resync-creator', { creatorId: 9, platform: 'YouTube' });
+  });
 });

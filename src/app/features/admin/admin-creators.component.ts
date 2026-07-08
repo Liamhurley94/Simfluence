@@ -166,12 +166,12 @@ const STATUS_BG: Record<PlatformSyncStatus, string> = {
         }
       </section>
 
-      <!-- Offline / needs attention — monitoring only for v1 (re-sync is a follow-up). -->
+      <!-- Offline / needs attention. Re-sync clears the offline flag + re-fires the kick. -->
       @if (offline().length > 0) {
         <section class="sf-card overflow-hidden">
           <header class="px-4 py-3">
             <h2 class="text-sm font-bold uppercase tracking-wider" style="color: var(--color-text);">Offline / needs attention</h2>
-            <p class="text-xs mt-1" style="color: var(--color-text-muted);">Monitoring only — re-sync coming soon.</p>
+            <p class="text-xs mt-1" style="color: var(--color-text-muted);">Re-sync clears the offline flag and re-checks the platform. A still-broken creator reappears after the next refresh.</p>
           </header>
           <table class="w-full text-sm">
             <thead>
@@ -180,6 +180,7 @@ const STATUS_BG: Record<PlatformSyncStatus, string> = {
                 <th class="${TH}">Platform</th>
                 <th class="${TH}">Offline since</th>
                 <th class="${TH}">Reason</th>
+                <th class="${TH}"></th>
               </tr>
             </thead>
             <tbody>
@@ -189,6 +190,15 @@ const STATUS_BG: Record<PlatformSyncStatus, string> = {
                   <td class="px-3 py-2">{{ o.platform }}</td>
                   <td class="px-3 py-2 text-xs" style="color: var(--color-text-muted);">{{ o.offlineAt ? (o.offlineAt | date:'short') : '—' }}</td>
                   <td class="px-3 py-2">{{ o.reason ?? '—' }}</td>
+                  <td class="px-3 py-2 text-right">
+                    <button
+                      type="button"
+                      (click)="onResync(o)"
+                      [disabled]="isResyncing(o)"
+                      class="sf-btn sf-btn-ghost text-xs"
+                      data-testid="admin-resync"
+                    >{{ isResyncing(o) ? 'Re-syncing…' : 'Re-sync' }}</button>
+                  </td>
                 </tr>
               }
             </tbody>
@@ -320,6 +330,26 @@ export class AdminCreatorsComponent {
   protected statusLabel(s: PlatformSyncStatus): string { return STATUS_LABELS[s]; }
   protected statusBg(s: PlatformSyncStatus): string { return STATUS_BG[s]; }
   protected statusFg(s: PlatformSyncStatus): string { return STATUS_FG[s]; }
+
+  // Which offline row (by `${id}:${platform}`) is mid-resync — for the button's busy state.
+  readonly resyncingKey = signal<string | null>(null);
+  protected isResyncing(o: OfflineCreator): boolean { return this.resyncingKey() === `${o.id}:${o.platform}`; }
+
+  /** Re-sync one offline (creator, platform): clears the offline flag + re-fires the
+   *  platform kick server-side, then reloads. A cleared row drops off this list; a
+   *  still-broken one reappears after the next refresh. */
+  async onResync(o: OfflineCreator): Promise<void> {
+    this.resyncingKey.set(`${o.id}:${o.platform}`);
+    this.listError.set(null);
+    try {
+      await this.svc.resyncCreator(o.id, o.platform);
+      await this.loadList();
+    } catch (err) {
+      this.listError.set(this.errorMessage(err, 'Re-sync failed'));
+    } finally {
+      this.resyncingKey.set(null);
+    }
+  }
 
   /** Prefer the edge fn's JSON `{ error }` (HttpErrorResponse.error.error) over the
    *  generic HttpClient message; fall back to the raw Error message or a default. */
