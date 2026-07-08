@@ -33,7 +33,7 @@ function mkCreator(id: number): Creator {
   };
 }
 
-function setup({ selectedIds = [] as number[], tier = 'silver' } = {}) {
+function setup({ selectedIds = [] as number[], tier = 'silver', creators = null as Creator[] | null } = {}) {
   const tierSignal = signal(tier);
   const authStub = {
     tier: tierSignal,
@@ -47,7 +47,7 @@ function setup({ selectedIds = [] as number[], tier = 'silver' } = {}) {
   // Creator data now loads server-side via CreatorsService.byIds (async),
   // consumed both by the component's resource() and its rescore effect.
   const byIds = vi.fn(async (ids: Iterable<number>) =>
-    Array.from(ids, (id) => mkCreator(id)),
+    Array.from(ids, (id) => creators?.find((c) => c.id === id) ?? mkCreator(id)),
   );
   const creatorsStub = {
     byIds,
@@ -197,6 +197,30 @@ describe('ScoringComponent', () => {
     const confidence = fixture.nativeElement.querySelector('[data-testid="summary-confidence"]');
     // Creators 2 and 14 both have verifiedDeals:2 in the stub → 100%.
     expect(confidence?.textContent).toContain('100');
+  });
+
+  it('reports how many selected creators lack a live YouTube breakdown', async () => {
+    const ytLive: Creator = {
+      ...mkCreator(1),
+      ytStats: { subscriberCount: 120_000, avgViews: 24_000, engagementRate: 3.1, sponsorFreqPct: 5, statsRefreshedAt: null },
+    };
+    const twitch: Creator = {
+      ...mkCreator(2),
+      platform: 'Twitch',
+      allPlatforms: ['Twitch'],
+      twitchStats: { avgCcv: 2000, peakCcv: 5000, streams30d: 12, hoursStreamed30d: 40, lastStreamAt: null, primaryGameName: null, liveRefreshedAt: null },
+    };
+    const noData: Creator = mkCreator(3); // YouTube, no ytStats
+
+    setup({ selectedIds: [1, 2, 3], creators: [ytLive, twitch, noData] });
+    const fixture = TestBed.createComponent(ScoringComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    // Twitch + no-live-data excluded from the YouTube-shaped breakdown; ytLive kept.
+    expect(fixture.componentInstance.breakdownExcludedCount()).toBe(2);
+    expect(fixture.nativeElement.querySelector('[data-testid="scoring-breakdown-note"]')).toBeTruthy();
   });
 
   it('refetches with the new sub-mode when it changes', async () => {

@@ -12,6 +12,7 @@ import { GENRE_BENCHMARKS } from '../../core/data/benchmarks.data';
 import { Creator } from '../../core/data/creator.types';
 import { computeRateRanges, RateRanges } from '../../core/rates/rate-estimate';
 import { Format } from '../../core/simulation/simulation.types';
+import { hasLiveYoutubeStats } from '../../core/simulation/live-stats';
 import { tierRank } from '../../core/types';
 import { MetricSourceBadgeComponent } from '../../shared/metric-source/metric-source-badge.component';
 import { SpinnerComponent } from '../../shared/spinner/spinner.component';
@@ -353,6 +354,14 @@ interface ScoredRow {
         </table>
       </div>
 
+      @if (breakdownExcludedCount() > 0) {
+        <p class="text-xs mt-2 mb-4" style="color: var(--color-text-muted);" data-testid="scoring-breakdown-note">
+          The CPI breakdown (“why this score?”) reflects <strong style="color: var(--color-text);">live YouTube stats</strong>.
+          {{ breakdownExcludedCount() }} selected creator(s) don't have one — Twitch creators are scored on live viewership,
+          and unresolved/offline creators have no live data yet. Their CPI and genre-fit scores are unaffected.
+        </p>
+      }
+
       <!-- Genre benchmark — 5-card layout, mirrors prod. -->
       <div
         class="sf-card overflow-hidden"
@@ -473,6 +482,14 @@ export class ScoringComponent {
     const verified = list.filter((r) => (r.creator.verifiedDeals ?? 0) > 0).length;
     return (verified / list.length) * 100;
   });
+
+  // Selected creators without a live YouTube breakdown — Twitch (scored on live
+  // viewership) or unresolved/offline (no live data yet). Their CPI + genre-fit
+  // are unaffected; only the YouTube-shaped "why this score?" breakdown is
+  // suppressed. Drives the explanatory note below the table.
+  readonly breakdownExcludedCount = computed(
+    () => this.selectedCreators().filter((c) => !hasLiveYoutubeStats(c)).length,
+  );
 
   // Industry-average benchmarks per genre — drives the bottom benchmark cards.
   protected readonly benchmark = computed(
