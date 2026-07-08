@@ -22,6 +22,19 @@ const SAMPLE: Creator = {
   verifiedDeals: 1,
   sponsorHistory: [],
   bio: 'bio',
+  // Live YouTube stats — the CPI breakdown now feeds off these, not the static
+  // subs/avgViews/eng above. Deliberately different from the static values so
+  // tests can prove the switch.
+  ytStats: { subscriberCount: 120_000, avgViews: 24_000, engagementRate: 3.1, sponsorFreqPct: 5, statsRefreshedAt: null },
+};
+
+const TWITCH: Creator = {
+  ...SAMPLE,
+  id: 99,
+  platform: 'Twitch',
+  allPlatforms: ['Twitch'],
+  ytStats: undefined,
+  twitchStats: { avgCcv: 2000, peakCcv: 5000, streams30d: 12, hoursStreamed30d: 40, lastStreamAt: null, primaryGameName: null, liveRefreshedAt: null },
 };
 
 function setup(postResult: unknown = { results: [] }) {
@@ -123,6 +136,27 @@ describe('ScoreCreatorService', () => {
     expect(service.getGfi(42)).toBeUndefined();
     expect(service.getBreakdown(42)).toBeUndefined();
     expect(service.version()).toBeGreaterThan(before);
+  });
+
+  it('sends LIVE subs/avgViews/eng from ytStats, never the static columns', async () => {
+    const { service, post } = setup({ results: [] });
+    await service.scoreBulk({ creators: [SAMPLE], campaignGenre: 'Gaming & Esports' });
+    const c = post.mock.calls[0][1].creators[0];
+    expect(c).toMatchObject({ subs: '120000', avgViews: '24000', eng: '3.1' });
+    expect(c.subs).not.toBe('100K'); // not the static column
+  });
+
+  it('caches the breakdown for a YouTube-live creator but suppresses it for Twitch', async () => {
+    const { service } = setup({
+      results: [
+        { id: 42, gfi: 88, cpiBreakdown: { factors: [] } },
+        { id: 99, gfi: 60, cpiBreakdown: { factors: [] } },
+      ],
+    });
+    await service.scoreBulk({ creators: [SAMPLE, TWITCH], campaignGenre: 'Gaming & Esports' });
+    expect(service.getBreakdown(42)).toBeDefined();   // YouTube-live → breakdown kept
+    expect(service.getBreakdown(99)).toBeUndefined();  // Twitch → suppressed (YouTube-shaped breakdown N/A)
+    expect(service.getGfi(99)).toBe(60);               // GFI + CPI unaffected for Twitch
   });
 
   it('pending signal is true during in-flight request, false after', async () => {

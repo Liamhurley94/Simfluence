@@ -1,6 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { EdgeClient } from '../api/edge.client';
 import { Creator } from '../data/creator.types';
+import { hasLiveYoutubeStats, liveStatsFor } from '../simulation/live-stats';
 
 export interface CpiFactor {
   label: string;
@@ -92,25 +93,39 @@ export class ScoreCreatorService {
   async scoreBulk(input: ScoreBulkInput): Promise<Map<number, number>> {
     this.pending.set(true);
     try {
+      // The CPI breakdown feeds off subs/avgViews/eng — send LIVE stats, never the
+      // stale static columns. A creator with no live view metric sends '' (its
+      // breakdown is suppressed below); GFI + headline CPI don't use these fields.
       const payload: EdgePayload = {
-        creators: input.creators.map((c) => ({
-          id: String(c.id),
-          genre: c.genre ?? '',
-          bio: c.bio ?? '',
-          handle: c.handle ?? '',
-          name: c.name ?? '',
-          platform: c.platform ?? '',
-          subs: c.subs ?? '',
-          avgViews: c.avgViews ?? '',
-          eng: c.eng ?? '',
-          language: c.language ?? 'English',
-          verifiedDeals: String(c.verifiedDeals ?? 0),
-          cpi: String(c.cpi ?? 50),
-        })),
+        creators: input.creators.map((c) => {
+          const live = liveStatsFor(c);
+          return {
+            id: String(c.id),
+            genre: c.genre ?? '',
+            bio: c.bio ?? '',
+            handle: c.handle ?? '',
+            name: c.name ?? '',
+            platform: c.platform ?? '',
+            subs: live?.subs ?? '',
+            avgViews: live?.avgViews ?? '',
+            eng: live?.eng ?? '',
+            language: c.language ?? 'English',
+            verifiedDeals: String(c.verifiedDeals ?? 0),
+            cpi: String(c.cpi ?? 50),
+          };
+        }),
         campaignGenre: input.campaignGenre || 'Gaming & Esports',
         subMode: input.subMode ?? '',
         secondaryGenres: input.secondaryGenres ?? [],
       };
+
+      // The breakdown's factors (engagement / view-to-sub / channel authority) are
+      // YouTube-shaped. Only keep it for YouTube creators with live stats; Twitch
+      // (scored on viewership) and unresolved/offline creators would show
+      // misleading zeros, so their breakdown is suppressed (the UI notes why).
+      const breakdownEligible = new Set(
+        input.creators.filter(hasLiveYoutubeStats).map((c) => c.id),
+      );
 
       const res = await this.edge.post<EdgeResponse>('score-creator', payload);
       const map = new Map<number, number>();
@@ -122,7 +137,7 @@ export class ScoreCreatorService {
           this.gfiCache.set(id, r.gfi);
           map.set(id, r.gfi);
         }
-        if (r.cpiBreakdown) {
+        if (r.cpiBreakdown && breakdownEligible.has(id)) {
           this.cpiBreakdownCache.set(id, r.cpiBreakdown);
         }
       }
