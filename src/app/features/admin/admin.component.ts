@@ -18,28 +18,34 @@ import { AdminCreatorsComponent } from './admin-creators.component';
 
       <router-outlet />
 
-      <div class="flex gap-4 mb-6 text-[10px] uppercase tracking-[0.12em]" role="tablist">
-        <button
-          type="button"
-          role="tab"
-          [attr.aria-selected]="tab() === 'enterprises'"
-          (click)="tab.set('enterprises')"
-          [class.font-bold]="tab() === 'enterprises'"
-          [class.opacity-40]="tab() !== 'enterprises'"
-          style="color: var(--color-text);"
-          data-testid="admin-tab-enterprises"
-        >Enterprises</button>
-        <button
-          type="button"
-          role="tab"
-          [attr.aria-selected]="tab() === 'creators'"
-          (click)="tab.set('creators')"
-          [class.font-bold]="tab() === 'creators'"
-          [class.opacity-40]="tab() !== 'creators'"
-          style="color: var(--color-text);"
-          data-testid="admin-tab-creators"
-        >Creators</button>
-      </div>
+      <div class="rounded-xl overflow-hidden" style="border: 1px solid var(--color-border);">
+        <div class="flex" role="tablist" style="border-bottom: 1px solid var(--color-border);">
+          <button
+            type="button"
+            role="tab"
+            [attr.aria-selected]="tab() === 'enterprises'"
+            (click)="tab.set('enterprises')"
+            class="px-5 py-3 text-sm transition-colors"
+            style="border-bottom-width: 2px; border-bottom-style: solid; margin-bottom: -1px;"
+            [style.border-bottom-color]="tab() === 'enterprises' ? 'var(--color-sf-gold)' : 'transparent'"
+            [style.color]="tab() === 'enterprises' ? 'var(--color-text)' : 'var(--color-text-muted)'"
+            [style.font-weight]="tab() === 'enterprises' ? '600' : '400'"
+            data-testid="admin-tab-enterprises"
+          >Enterprises</button>
+          <button
+            type="button"
+            role="tab"
+            [attr.aria-selected]="tab() === 'creators'"
+            (click)="tab.set('creators')"
+            class="px-5 py-3 text-sm transition-colors"
+            style="border-bottom-width: 2px; border-bottom-style: solid; margin-bottom: -1px;"
+            [style.border-bottom-color]="tab() === 'creators' ? 'var(--color-sf-gold)' : 'transparent'"
+            [style.color]="tab() === 'creators' ? 'var(--color-text)' : 'var(--color-text-muted)'"
+            [style.font-weight]="tab() === 'creators' ? '600' : '400'"
+            data-testid="admin-tab-creators"
+          >Creators</button>
+        </div>
+        <div class="p-5">
 
       @switch (tab()) {
       @case ('enterprises') {
@@ -95,6 +101,8 @@ import { AdminCreatorsComponent } from './admin-creators.component';
         <app-admin-creators />
       }
       }
+        </div>
+      </div>
     </section>
   `,
 })
