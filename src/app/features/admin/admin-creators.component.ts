@@ -1,6 +1,7 @@
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { SpinnerComponent } from '../../shared/spinner/spinner.component';
 import { AdminCreatorService } from '../../core/admin/admin-creator.service';
 import { CreatorsService } from '../../core/creators/creators.service';
 import {
@@ -30,7 +31,7 @@ const STATUS_BG: Record<PlatformSyncStatus, string> = {
 @Component({
   selector: 'app-admin-creators',
   standalone: true,
-  imports: [ReactiveFormsModule, DatePipe, DecimalPipe],
+  imports: [ReactiveFormsModule, DatePipe, DecimalPipe, SpinnerComponent],
   template: `
     <div data-testid="admin-creators" class="flex flex-col gap-6">
       <!-- Add form -->
@@ -119,7 +120,9 @@ const STATUS_BG: Record<PlatformSyncStatus, string> = {
           >{{ listLoading() ? 'Refreshing…' : 'Refresh' }}</button>
         </header>
 
-        @if (listError()) {
+        @if (!loaded() && listLoading()) {
+          <div class="px-4 pb-4" data-testid="added-loading"><app-spinner label="Loading creators…" /></div>
+        } @else if (listError()) {
           <p class="text-sm px-4 pb-3" style="color: var(--color-sf-red);">{{ listError() }}</p>
         } @else if (added().length === 0) {
           <p class="text-sm px-4 pb-3" style="color: var(--color-text-muted);">No creators added yet.</p>
@@ -167,12 +170,14 @@ const STATUS_BG: Record<PlatformSyncStatus, string> = {
       </section>
 
       <!-- Offline / needs attention. Re-sync clears the offline flag + re-fires the kick. -->
-      @if (offline().length > 0) {
-        <section class="sf-card overflow-hidden">
-          <header class="px-4 py-3">
-            <h2 class="text-sm font-bold uppercase tracking-wider" style="color: var(--color-text);">Offline / needs attention</h2>
-            <p class="text-xs mt-1" style="color: var(--color-text-muted);">Re-sync clears the offline flag and re-checks the platform. A still-broken creator reappears after the next refresh.</p>
-          </header>
+      <section class="sf-card overflow-hidden">
+        <header class="px-4 py-3">
+          <h2 class="text-sm font-bold uppercase tracking-wider" style="color: var(--color-text);">Offline / needs attention</h2>
+        </header>
+        @if (!loaded() && listLoading()) {
+          <div class="px-4 pb-4" data-testid="offline-loading"><app-spinner label="Checking for offline creators…" /></div>
+        } @else if (offline().length > 0) {
+          <p class="text-xs px-4 pb-2" style="color: var(--color-text-muted);">Re-sync clears the offline flag and re-checks the platform. A still-broken creator reappears after the next refresh.</p>
           <table class="w-full text-sm">
             <thead>
               <tr style="color: var(--color-text-muted); background: var(--color-bg-3);">
@@ -203,8 +208,10 @@ const STATUS_BG: Record<PlatformSyncStatus, string> = {
               }
             </tbody>
           </table>
-        </section>
-      }
+        } @else {
+          <p class="text-sm px-4 pb-4" style="color: var(--color-text-muted);">No creators need attention right now.</p>
+        }
+      </section>
     </div>
   `,
 })
@@ -237,6 +244,10 @@ export class AdminCreatorsComponent {
   readonly offline = signal<OfflineCreator[]>([]);
   readonly listLoading = signal(false);
   readonly listError = signal<string | null>(null);
+  // False until the first loadList() settles — lets the lists show a real loading
+  // state on first paint instead of flashing their empty states. Stays true across
+  // later refreshes/polls (those keep the existing data + the "Refreshing…" button).
+  readonly loaded = signal(false);
 
   // Poll while creators are still resolving — id-resolution + GFI land within ~a
   // minute. Bounded so it can't spin forever if something stalls; 'synced'/CPI
@@ -300,6 +311,7 @@ export class AdminCreatorsComponent {
       this.listError.set(this.errorMessage(err, 'Failed to load creators'));
     } finally {
       this.listLoading.set(false);
+      this.loaded.set(true);
     }
   }
 

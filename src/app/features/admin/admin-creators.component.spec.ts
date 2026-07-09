@@ -7,8 +7,8 @@ import { AddedCreator } from '../../core/admin/admin-creator.types';
 
 function setup(
   addCreators = vi.fn().mockResolvedValue({ created: [{ id: 1, name: 'A', platforms: ['YouTube'] }] }),
+  listCreators = vi.fn().mockResolvedValue({ added: [], offline: [] }),
 ) {
-  const listCreators = vi.fn().mockResolvedValue({ added: [], offline: [] });
   const resyncCreator = vi.fn().mockResolvedValue({ resynced: { creatorId: 9, platform: 'YouTube' } });
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({
@@ -86,6 +86,30 @@ describe('AdminCreatorsComponent added list', () => {
     const rows = fixture.nativeElement.querySelectorAll('[data-testid="admin-added-row"]');
     expect(rows.length).toBe(2);
     expect(fixture.nativeElement.textContent).toContain('Resolved');
+  });
+});
+
+describe('AdminCreatorsComponent loading states', () => {
+  it('shows a spinner on first load (not the empty state), then resolves', async () => {
+    let resolve!: (v: { added: unknown[]; offline: unknown[] }) => void;
+    const deferred = vi.fn().mockImplementation(
+      () => new Promise((r) => { resolve = r as (v: { added: unknown[]; offline: unknown[] }) => void; }),
+    );
+    setup(undefined, deferred);
+    const fixture = TestBed.createComponent(AdminCreatorsComponent);
+    fixture.detectChanges();
+
+    // First load in flight: spinner shown, empty-state hidden.
+    expect(fixture.nativeElement.querySelector('[data-testid="added-loading"]')).toBeTruthy();
+    expect(fixture.nativeElement.textContent).not.toContain('No creators added yet');
+
+    resolve({ added: [], offline: [] });
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    // Loaded + empty: spinner gone, empty-state shown.
+    expect(fixture.nativeElement.querySelector('[data-testid="added-loading"]')).toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('No creators added yet');
   });
 });
 
