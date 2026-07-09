@@ -28,6 +28,38 @@ const STATUS_BG: Record<PlatformSyncStatus, string> = {
   offline: 'color-mix(in srgb, var(--color-sf-red) 15%, transparent)',
 };
 
+/** Friendly, admin-facing status + tooltip for an offline creator, mapped from the
+ *  raw `offline_reason` the refresh pipeline stored (e.g. `bootstrap_no_channel`).
+ *  Exported for testing. */
+export interface OfflineStatus {
+  label: string;
+  tip: string;
+}
+
+const OFFLINE_STATUS: Record<string, OfflineStatus> = {
+  bootstrap_no_channel: {
+    label: 'Handle didn’t resolve',
+    tip: 'We couldn’t find a channel for this handle — it’s likely mistyped, renamed, or the channel was deleted. Re-sync retries the lookup, but if the handle is wrong it will keep failing.',
+  },
+  channels_list_empty_2x: {
+    label: 'Channel went dark',
+    tip: 'This YouTube channel resolved before but now returns no data twice in a row — likely deleted, made private, or terminated. Re-sync re-checks in case it’s back.',
+  },
+  get_users_empty_2x: {
+    label: 'Channel went dark',
+    tip: 'This Twitch channel returned no data twice in a row — likely renamed, deleted, or banned. Re-sync re-checks in case it’s back.',
+  },
+};
+
+const OFFLINE_STATUS_FALLBACK: OfflineStatus = {
+  label: 'Offline',
+  tip: 'This creator’s platform data couldn’t be refreshed. Re-sync re-checks the platform.',
+};
+
+export function offlineStatusFor(reason: string | null): OfflineStatus {
+  return (reason ? OFFLINE_STATUS[reason] : undefined) ?? OFFLINE_STATUS_FALLBACK;
+}
+
 @Component({
   selector: 'app-admin-creators',
   standalone: true,
@@ -184,7 +216,7 @@ const STATUS_BG: Record<PlatformSyncStatus, string> = {
                 <th class="${TH}">Name</th>
                 <th class="${TH}">Platform</th>
                 <th class="${TH}">Offline since</th>
-                <th class="${TH}">Reason</th>
+                <th class="${TH}">Status</th>
                 <th class="${TH}"></th>
               </tr>
             </thead>
@@ -194,7 +226,14 @@ const STATUS_BG: Record<PlatformSyncStatus, string> = {
                   <td class="px-3 py-2 font-medium">{{ o.name ?? '—' }}</td>
                   <td class="px-3 py-2">{{ o.platform }}</td>
                   <td class="px-3 py-2 text-xs" style="color: var(--color-text-muted);">{{ o.offlineAt ? (o.offlineAt | date:'short') : '—' }}</td>
-                  <td class="px-3 py-2">{{ o.reason ?? '—' }}</td>
+                  <td class="px-3 py-2">
+                    <span
+                      class="sf-chip cursor-help"
+                      style="background: color-mix(in srgb, var(--color-sf-gold) 15%, transparent); color: var(--color-sf-gold);"
+                      [title]="offlineStatus(o.reason).tip"
+                      data-testid="offline-status"
+                    >{{ offlineStatus(o.reason).label }}</span>
+                  </td>
                   <td class="px-3 py-2 text-right">
                     <button
                       type="button"
@@ -346,6 +385,9 @@ export class AdminCreatorsComponent {
   // Which offline row (by `${id}:${platform}`) is mid-resync — for the button's busy state.
   readonly resyncingKey = signal<string | null>(null);
   protected isResyncing(o: OfflineCreator): boolean { return this.resyncingKey() === `${o.id}:${o.platform}`; }
+
+  /** Friendly status + tooltip for an offline row, from its raw offline_reason. */
+  protected readonly offlineStatus = offlineStatusFor;
 
   /** Re-sync one offline (creator, platform): clears the offline flag + re-fires the
    *  platform kick server-side, then reloads. A cleared row drops off this list; a
