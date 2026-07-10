@@ -197,7 +197,7 @@ export class DiscoverySweepsComponent {
   private pollHandle: ReturnType<typeof setInterval> | null = null;
   private pollAttempts = 0;
   private readonly POLL_MS = 5000;
-  private readonly MAX_POLLS = 120; // ~10 min ceiling
+  private readonly MAX_POLLS = 120; // ~10 min ceiling per polling episode
 
   constructor() {
     inject(DestroyRef).onDestroy(() => this.stopPolling());
@@ -259,7 +259,9 @@ export class DiscoverySweepsComponent {
   }
 
   progressPct(run: DiscoveryRun): number {
-    return run.query_total > 0 ? (run.query_done / run.query_total) * 100 : 0;
+    // Clamped: the backend freezes query_total at run creation, so mid-sweep
+    // query additions can push query_done past it.
+    return run.query_total > 0 ? Math.min(100, (run.query_done / run.query_total) * 100) : 0;
   }
 
   protected isCancellable(run: DiscoveryRun): boolean {
@@ -293,6 +295,10 @@ export class DiscoverySweepsComponent {
       clearInterval(this.pollHandle);
       this.pollHandle = null;
     }
+    // Reset so MAX_POLLS bounds each polling episode, not the component's
+    // lifetime — otherwise ~10 cumulative minutes of polling would permanently
+    // refuse to re-arm and progress would silently stop updating.
+    this.pollAttempts = 0;
   }
 
   /** Prefer the edge fn's JSON `{ error }` (HttpErrorResponse.error.error) over the

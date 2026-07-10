@@ -157,10 +157,12 @@ describe('DiscoverySweepsComponent — runs table + progress', () => {
     expect(bar.style.width).toBe('25%');
   });
 
-  it('progressPct guards against a zero query_total instead of NaN/Infinity', () => {
+  it('progressPct guards a zero query_total (no NaN/Infinity) and clamps overshoot to 100', () => {
     setup();
     const c = TestBed.createComponent(DiscoverySweepsComponent).componentInstance;
     expect(c.progressPct(mkRun({ query_done: 0, query_total: 0 }))).toBe(0);
+    // query_total is frozen at run creation — mid-sweep query additions can overshoot it.
+    expect(c.progressPct(mkRun({ query_done: 15, query_total: 10 }))).toBe(100);
   });
 
   it('scope label: "All genres" for no genre, "Genre · Sub-mode" for both, genre alone otherwise', () => {
@@ -253,6 +255,28 @@ describe('DiscoverySweepsComponent — polling', () => {
 
     await vi.advanceTimersByTimeAsync(5000);
     expect(listRuns).toHaveBeenCalledTimes(1);
+  });
+
+  it('MAX_POLLS bounds each polling episode, not the component lifetime: polling re-arms after the ceiling', async () => {
+    const listRuns = vi.fn().mockResolvedValue([mkRun({ id: 'r1', status: 'running' })]);
+    setup({ listRuns });
+    const fixture = await create();
+    // Jump to one tick before the ceiling instead of ticking MAX_POLLS times.
+    const internals = fixture.componentInstance as unknown as { pollAttempts: number; MAX_POLLS: number };
+    internals.pollAttempts = internals.MAX_POLLS - 1;
+
+    await vi.advanceTimersByTimeAsync(5000); // final tick: ceiling hit → polling stops
+    const callsAtStop = listRuns.mock.calls.length;
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(listRuns.mock.calls.length).toBe(callsAtStop); // interval disarmed
+
+    // New episode: the start reload sees the still-active run and must re-arm
+    // (regression: a lifetime-cumulative pollAttempts kept this disarmed forever).
+    await fixture.componentInstance.startSweep();
+    const callsAfterStart = listRuns.mock.calls.length;
+    expect(callsAfterStart).toBe(callsAtStop + 1); // the reload itself
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(listRuns.mock.calls.length).toBe(callsAfterStart + 1); // polling ticked again
   });
 
   it('starting a sweep triggers an immediate reload and polling picks up the new active run', async () => {
