@@ -117,7 +117,12 @@ export function offlineStatusFor(reason: string | null): OfflineStatus {
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="${LABEL}" style="color: var(--color-text-muted);">Language (optional)</label>
-            <input formControlName="language" class="sf-input" />
+            <select formControlName="language" class="sf-input" data-testid="add-language">
+              <option value="">Any / unspecified</option>
+              @for (l of languageOptions(); track l) {
+                <option [value]="l">{{ l }}</option>
+              }
+            </select>
           </div>
           <div>
             <label class="${LABEL}" style="color: var(--color-text-muted);">Color (optional)</label>
@@ -264,6 +269,10 @@ export class AdminCreatorsComponent {
   // Genres the backend will accept = distinct genre_submodes.genre. submodesByGenre
   // is keyed on exactly that, so its keys are the canonical addable-genre list.
   readonly genreOptions = computed(() => Object.keys(this.creators.submodesByGenre()).sort());
+
+  // Supported languages — the same list Discovery filters on, so a new creator's
+  // language value always matches a filter option (freeform text would drift).
+  readonly languageOptions = computed(() => [...this.creators.languages()].sort());
 
   readonly form = this.fb.nonNullable.group({
     name: ['', Validators.required],

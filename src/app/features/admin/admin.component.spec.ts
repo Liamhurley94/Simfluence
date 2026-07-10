@@ -16,7 +16,7 @@ describe('AdminComponent tabs', () => {
         provideRouter([]),
         { provide: EnterpriseService, useValue: { adminListEnterprises: vi.fn().mockResolvedValue({ enterprises: [] }) } },
         { provide: AdminCreatorService, useValue: { listCreators: vi.fn().mockResolvedValue({ added: [], offline: [] }), addCreators: vi.fn() } },
-        { provide: CreatorsService, useValue: { submodesByGenre: () => ({ Gaming: [] }) } },
+        { provide: CreatorsService, useValue: { submodesByGenre: () => ({ Gaming: [] }), languages: () => [] } },
         { provide: AdminUsageService, useValue: { usage: vi.fn().mockResolvedValue([]), youtubeQuotaStatus: vi.fn().mockResolvedValue(null) } },
       ],
     });
