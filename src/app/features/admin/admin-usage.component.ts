@@ -134,17 +134,24 @@ export class AdminUsageComponent {
     await this.load();
   }
 
+  // Monotonic token so a slow earlier request (e.g. 30-day) can't overwrite a newer
+  // one (e.g. a quick switch back to 14-day) when it resolves out of order.
+  private loadSeq = 0;
+
   async load(): Promise<void> {
+    const seq = ++this.loadSeq;
     this.loading.set(true);
     this.error.set(null);
     try {
       const [daily, status] = await Promise.all([this.svc.usage(this.range()), this.svc.youtubeQuotaStatus()]);
+      if (seq !== this.loadSeq) return; // superseded by a newer load — drop this stale result
       this.daily.set(daily);
       this.status.set(status);
     } catch (err) {
+      if (seq !== this.loadSeq) return;
       this.error.set(err instanceof Error ? err.message : 'Failed to load usage');
     } finally {
-      this.loading.set(false);
+      if (seq === this.loadSeq) this.loading.set(false);
     }
   }
 }

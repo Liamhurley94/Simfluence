@@ -56,4 +56,25 @@ describe('AdminUsageComponent', () => {
     await f.whenStable();
     expect(f.componentInstance.isElevated()).toBe(false);
   });
+
+  it('drops a stale response — the latest range wins even if an earlier request resolves later', async () => {
+    const { usage } = setup();
+    const f = TestBed.createComponent(AdminUsageComponent);
+    await f.whenStable(); // initial 7-day load settled
+
+    let resolveSlow!: (v: unknown) => void;
+    usage.mockReset();
+    usage
+      .mockImplementationOnce(() => new Promise((r) => { resolveSlow = r as (v: unknown) => void; })) // 30d (slow)
+      .mockResolvedValueOnce([{ day: 'd14', yt_units: 14, tw_calls: 0 }]); // 14d (fast)
+
+    const p30 = f.componentInstance.setRange(30);
+    const p14 = f.componentInstance.setRange(14);
+    await p14;
+    expect(f.componentInstance.daily()).toEqual([{ day: 'd14', yt_units: 14, tw_calls: 0 }]);
+
+    resolveSlow([{ day: 'd30', yt_units: 30, tw_calls: 0 }]); // stale 30d resolves last
+    await p30;
+    expect(f.componentInstance.daily()).toEqual([{ day: 'd14', yt_units: 14, tw_calls: 0 }]);
+  });
 });
