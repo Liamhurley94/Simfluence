@@ -1,5 +1,4 @@
 import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { AdminCreatorService } from '../../core/admin/admin-creator.service';
 import { CreatorsService } from '../../core/creators/creators.service';
@@ -64,15 +63,13 @@ export function seedFrom(c: DiscoveredChannel): StatsSeed {
               }
             </select>
           </div>
-          @if (subModeOptions().length) {
+          @if (candidate().sub_mode) {
             <div>
               <label class="${LABEL}" style="color: var(--color-text-muted);">Sub-mode</label>
-              <select formControlName="subMode" class="sf-select" data-testid="dialog-submode">
-                <option value="">Unspecified</option>
-                @for (sm of subModeOptions(); track sm.subMode) {
-                  <option [value]="sm.subMode">{{ sm.subMode }}{{ sm.hasKeywords ? '' : ' (beta)' }}</option>
-                }
-              </select>
+              <input formControlName="subMode" class="sf-input" data-testid="dialog-submode" />
+              <p class="text-xs mt-1" style="color: var(--color-text-muted);">
+                Detected from the search that found this channel — not saved; sub-mode isn't part of the add-creator API yet.
+              </p>
             </div>
           }
           <div class="grid grid-cols-2 gap-3">
@@ -143,19 +140,17 @@ export class DiscoveryAddDialogComponent {
   readonly form = this.fb.nonNullable.group({
     name: '',
     genre: '',
-    subMode: '',
+    // Display-only provenance: shows the sub-mode the candidate was found
+    // under, but it is NOT submitted — admin-add-creator has no sub_mode
+    // field (the backend deliberately writes '' on insert). Disabled so the
+    // admin can't edit a value that would be silently discarded.
+    subMode: { value: '', disabled: true },
     language: '',
     bio: '',
     twitch: '',
     color: '',
     creatorId: this.fb.control<number | null>(null),
   });
-
-  // Sub-mode options track the form's own genre control (not just the
-  // candidate's original classification) so they update live if the admin
-  // changes genre before submitting.
-  private readonly genreValue = toSignal(this.form.controls.genre.valueChanges, { initialValue: this.form.controls.genre.value });
-  readonly subModeOptions = computed(() => this.creators.submodesByGenre()[this.genreValue()] ?? []);
 
   readonly error = signal<string | null>(null);
   readonly busy = signal(false);

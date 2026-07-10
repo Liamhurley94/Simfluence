@@ -97,6 +97,19 @@ describe('DiscoveryAddDialogComponent', () => {
       });
     });
 
+    it('renders the detected sub-mode as a disabled display-only control (never submitted)', async () => {
+      const { addCreators } = setup();
+      const fixture = create('add', mkCandidate());
+      const c = fixture.componentInstance;
+      expect(c.form.controls.subMode.disabled).toBe(true);
+      const el: HTMLInputElement = fixture.nativeElement.querySelector('[data-testid="dialog-submode"]');
+      expect(el.disabled).toBe(true);
+      await c.onSubmit();
+      // Payload carries no sub-mode in any spelling — the API has no such field.
+      const [input] = addCreators.mock.calls[0];
+      expect(JSON.stringify(input)).not.toMatch(/sub_?mode/i);
+    });
+
     it('blocks submit without a name and genre, and does not call the service', async () => {
       const { addCreators } = setup();
       const fixture = create('add', mkCandidate());
