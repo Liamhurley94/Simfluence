@@ -1,18 +1,309 @@
-import { Component, output } from '@angular/core';
+import { Component, computed, inject, signal, output } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
+import { AdminDiscoveryService } from '../../core/admin/admin-discovery.service';
+import { CreatorsService } from '../../core/creators/creators.service';
+import { CandidateStatus, DiscoveredChannel, SearchResult } from '../../core/admin/admin-discovery.types';
+import { DiscoveryDrawerComponent } from './discovery-drawer.component';
+import { DiscoveryAddDialogComponent } from './discovery-add-dialog.component';
 
-/** Search sub-view of the Add-creators tab — placeholder shell so the tab
- *  wires and builds ahead of the real implementation (Task 6/7 backend +
- *  a later frontend task). Emits `staged` whenever a candidate gets added
- *  to the queue, so the shell can refresh its badge counts. */
+const TH = 'text-left px-3 py-2 text-[10px] uppercase tracking-wider font-medium';
+const LABEL = 'text-[10px] uppercase tracking-wider mb-1 block';
+
+type RosterRow = SearchResult['alreadyInRoster'][number];
+
+// 'new' is never actually rendered (rows in that state show row actions
+// instead of a chip) — included so the maps stay total functions.
+const STATUS_LABEL: Record<CandidateStatus, string> = {
+  new: 'New', shortlisted: 'Shortlisted', rejected: 'Rejected', added: 'Added',
+};
+const STATUS_FG: Record<CandidateStatus, string> = {
+  new: 'var(--color-text-muted)', shortlisted: 'var(--color-sf-gold)',
+  rejected: 'var(--color-sf-red)', added: 'var(--color-sf-green)',
+};
+const STATUS_BG: Record<CandidateStatus, string> = {
+  new: 'transparent',
+  shortlisted: 'color-mix(in srgb, var(--color-sf-gold) 15%, transparent)',
+  rejected: 'color-mix(in srgb, var(--color-sf-red) 15%, transparent)',
+  added: 'color-mix(in srgb, var(--color-sf-green) 15%, transparent)',
+};
+
+/**
+ * Search sub-view of the Add-creators tab. Genre+sub-mode drives the
+ * preset query bank; a free-text query bypasses it entirely and wins when
+ * present (backend: admin-discover-creators mode 'search'). Candidates are
+ * upserted into discovered_channels server-side on every search, so `staged`
+ * fires after any completed search (not just after Add) — the shell's queue
+ * badge count can only go up, never down, from this view.
+ *
+ * The results table merges three shapes from `SearchResult`: fresh
+ * candidates and already-staged channels are both full `DiscoveredChannel`
+ * rows and render identically — a still-'new' staged row is exactly as
+ * actionable as a fresh one, so they share one array (`resultRows`) keyed
+ * only off `status`. `alreadyInRoster` rows carry no stats (zero-quota dedup
+ * lookup), so they get their own no-action row shape.
+ */
 @Component({
   selector: 'app-discovery-search',
   standalone: true,
+  imports: [DecimalPipe, DiscoveryDrawerComponent, DiscoveryAddDialogComponent],
   template: `
-    <div data-testid="discovery-search" class="text-sm" style="color: var(--color-text-muted);">
-      Search — coming in the next task.
+    <div data-testid="discovery-search" class="flex flex-col gap-4">
+      <div class="sf-card p-4 flex flex-wrap items-end gap-3">
+        <div>
+          <label class="${LABEL}" style="color: var(--color-text-muted);">Genre</label>
+          <select
+            [value]="genre()"
+            (change)="onGenre($any($event.target).value)"
+            class="sf-select"
+            style="min-width: 170px;"
+            data-testid="discovery-search-genre"
+          >
+            <option value="">Select a genre…</option>
+            @for (g of genreOptions(); track g) {
+              <option [value]="g">{{ g }}</option>
+            }
+          </select>
+        </div>
+        <div>
+          <label class="${LABEL}" style="color: var(--color-text-muted);">Sub-mode</label>
+          <select
+            [value]="subMode()"
+            (change)="subMode.set($any($event.target).value)"
+            [disabled]="!genre()"
+            class="sf-select"
+            style="min-width: 170px;"
+            data-testid="discovery-search-submode"
+          >
+            <option value="">Select a sub-mode…</option>
+            @for (sm of subModeOptions(); track sm.subMode) {
+              <option [value]="sm.subMode">{{ sm.subMode }}{{ sm.hasKeywords ? '' : ' (beta)' }}</option>
+            }
+          </select>
+        </div>
+        <div class="flex-1" style="min-width: 220px;">
+          <label class="${LABEL}" style="color: var(--color-text-muted);">Free-text query</label>
+          <input
+            [value]="query()"
+            (input)="query.set($any($event.target).value)"
+            placeholder="…or free-text query"
+            class="sf-input"
+            data-testid="discovery-search-query"
+          />
+        </div>
+        <button
+          type="button"
+          (click)="search()"
+          [disabled]="busy() || !canSearch()"
+          class="sf-btn sf-btn-primary text-xs"
+          data-testid="discovery-search-submit"
+        >{{ busy() ? 'Searching…' : 'Search' }}</button>
+      </div>
+
+      @if (error()) {
+        <p class="text-sm" style="color: var(--color-sf-red);" data-testid="discovery-search-error">{{ error() }}</p>
+      }
+
+      @if (lastResult(); as r) {
+        <p class="text-xs" style="color: var(--color-text-muted);" data-testid="discovery-search-summary">
+          {{ r.candidates.length }} new candidates · {{ r.alreadyInRoster.length }} already in roster · {{ r.alreadyStaged.length }} already staged · {{ r.unitsSpent }} units
+        </p>
+
+        @if (resultRows().length > 0 || rosterRows().length > 0) {
+          <div class="sf-card overflow-hidden" data-testid="discovery-results">
+            <table class="w-full text-sm">
+              <thead>
+                <tr style="color: var(--color-text-muted); background: var(--color-bg-3);">
+                  <th class="${TH}">Name</th>
+                  <th class="${TH}">Handle</th>
+                  <th class="${TH}">Subs</th>
+                  <th class="${TH}">Avg views</th>
+                  <th class="${TH}">Eng %</th>
+                  <th class="${TH}">Sponsored %</th>
+                  <th class="${TH}">Language</th>
+                  <th class="${TH}"></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of resultRows(); track row.channel_id) {
+                  <tr
+                    (click)="openDrawer(row)"
+                    class="cursor-pointer"
+                    [style.color]="row.status === 'new' ? 'var(--color-text)' : 'var(--color-text-muted)'"
+                    style="border-top: 1px solid var(--color-border);"
+                    data-testid="discovery-result-row"
+                  >
+                    <td class="px-3 py-2 font-medium">
+                      @if (row.status === 'new') { ✚ }
+                      {{ row.name }}
+                      @if (row.match_type === 'name_hint') {
+                        <span
+                          class="sf-chip ml-1"
+                          style="background: color-mix(in srgb, var(--color-sf-gold) 15%, transparent); color: var(--color-sf-gold);"
+                          data-testid="result-name-match"
+                        >⚭ name match</span>
+                      }
+                    </td>
+                    <td class="px-3 py-2">{{ row.handle ? '@' + row.handle : '—' }}</td>
+                    <td class="px-3 py-2">{{ row.subscriber_count | number }}</td>
+                    <td class="px-3 py-2">{{ row.avg_views | number }}</td>
+                    <td class="px-3 py-2">{{ row.engagement_rate | number:'1.0-1' }}%</td>
+                    <td class="px-3 py-2">{{ row.sponsor_freq_pct | number:'1.0-0' }}%</td>
+                    <td class="px-3 py-2">{{ row.language || '—' }}</td>
+                    <td class="px-3 py-2 text-right" (click)="$event.stopPropagation()">
+                      @if (row.status === 'new') {
+                        <div class="flex justify-end gap-1">
+                          <button type="button" (click)="openAdd(row)" class="sf-btn sf-btn-primary text-xs" data-testid="result-add">✚ Add</button>
+                          <button type="button" (click)="applyStatus(row, 'shortlisted')" class="sf-btn sf-btn-ghost text-xs" data-testid="result-shortlist">☆ Shortlist</button>
+                          <button type="button" (click)="applyStatus(row, 'rejected')" class="sf-btn sf-btn-ghost text-xs" data-testid="result-reject">✕ Reject</button>
+                        </div>
+                      } @else {
+                        <span class="sf-chip" [style.background]="statusBg(row.status)" [style.color]="statusFg(row.status)" data-testid="result-status">{{ statusLabel(row.status) }}</span>
+                      }
+                    </td>
+                  </tr>
+                }
+                @for (rr of rosterRows(); track rr.channelId) {
+                  <tr style="border-top: 1px solid var(--color-border); color: var(--color-text);" data-testid="discovery-roster-row">
+                    <td class="px-3 py-2 font-medium">{{ rr.name }}</td>
+                    <td class="px-3 py-2 text-xs" style="color: var(--color-text-muted);" colspan="7">✓ already in roster</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <p class="text-sm" style="color: var(--color-text-muted);">No candidates found for this query.</p>
+        }
+      }
     </div>
+
+    @if (drawerCandidate(); as c) {
+      <app-discovery-drawer [candidate]="c" (closed)="drawerCandidate.set(null)" (act)="onDrawerAct($event)" />
+    }
+    @if (dialogCandidate(); as c) {
+      <app-discovery-add-dialog [candidate]="c" [mode]="dialogMode()" (done)="onDialogDone()" (cancelled)="dialogCandidate.set(null)" />
+    }
   `,
 })
 export class DiscoverySearchComponent {
+  private svc = inject(AdminDiscoveryService);
+  private creators = inject(CreatorsService);
+
   readonly staged = output<void>();
+
+  protected readonly genreOptions = computed(() => Object.keys(this.creators.submodesByGenre()).sort());
+  protected readonly subModeOptions = computed(() => {
+    const g = this.genre();
+    return g ? (this.creators.submodesByGenre()[g] ?? []) : [];
+  });
+
+  readonly genre = signal('');
+  readonly subMode = signal('');
+  readonly query = signal('');
+  protected readonly canSearch = computed(() => !!this.query().trim() || (!!this.genre() && !!this.subMode()));
+
+  readonly busy = signal(false);
+  readonly error = signal<string | null>(null);
+
+  // Last completed search, for the summary line — a static snapshot, never
+  // mutated by row actions (only resultRows/rosterRows are).
+  readonly lastResult = signal<SearchResult | null>(null);
+  readonly resultRows = signal<DiscoveredChannel[]>([]);
+  readonly rosterRows = signal<RosterRow[]>([]);
+
+  readonly drawerCandidate = signal<DiscoveredChannel | null>(null);
+  readonly dialogCandidate = signal<DiscoveredChannel | null>(null);
+  readonly dialogMode = signal<'add' | 'link'>('add');
+
+  onGenre(g: string): void {
+    this.genre.set(g);
+    const valid = g ? (this.creators.submodesByGenre()[g] ?? []).some((s) => s.subMode === this.subMode()) : false;
+    if (!valid) this.subMode.set('');
+  }
+
+  async search(): Promise<void> {
+    if (this.busy() || !this.canSearch()) return;
+    this.busy.set(true);
+    this.error.set(null);
+    try {
+      const q = this.query().trim();
+      const result = q
+        ? await this.svc.search({ query: q })
+        : await this.svc.search({ genre: this.genre(), subMode: this.subMode() });
+      this.lastResult.set(result);
+      this.resultRows.set([...result.candidates, ...result.alreadyStaged]);
+      this.rosterRows.set(result.alreadyInRoster);
+      this.staged.emit();
+    } catch (err) {
+      this.error.set(this.errorMessage(err, 'Search failed'));
+    } finally {
+      this.busy.set(false);
+    }
+  }
+
+  async applyStatus(row: DiscoveredChannel, status: 'shortlisted' | 'rejected'): Promise<void> {
+    try {
+      await this.svc.setStatus([row.channel_id], status);
+      this.updateRowStatus(row.channel_id, status);
+    } catch (err) {
+      this.error.set(this.errorMessage(err, 'Update failed'));
+    }
+  }
+
+  openDrawer(row: DiscoveredChannel): void {
+    this.drawerCandidate.set(row);
+  }
+
+  openAdd(row: DiscoveredChannel): void {
+    this.drawerCandidate.set(null);
+    this.dialogCandidate.set(row);
+    this.dialogMode.set('add');
+  }
+
+  openLink(row: DiscoveredChannel): void {
+    this.drawerCandidate.set(null);
+    this.dialogCandidate.set(row);
+    this.dialogMode.set('link');
+  }
+
+  onDrawerAct(act: 'add' | 'shortlist' | 'reject' | 'link'): void {
+    const row = this.drawerCandidate();
+    if (!row) return;
+    switch (act) {
+      case 'add': this.openAdd(row); break;
+      case 'link': this.openLink(row); break;
+      case 'shortlist': void this.applyStatus(row, 'shortlisted'); break;
+      case 'reject': void this.applyStatus(row, 'rejected'); break;
+    }
+  }
+
+  onDialogDone(): void {
+    const row = this.dialogCandidate();
+    if (row) this.updateRowStatus(row.channel_id, 'added');
+    this.dialogCandidate.set(null);
+    this.staged.emit();
+  }
+
+  protected statusLabel(s: CandidateStatus): string { return STATUS_LABEL[s]; }
+  protected statusFg(s: CandidateStatus): string { return STATUS_FG[s]; }
+  protected statusBg(s: CandidateStatus): string { return STATUS_BG[s]; }
+
+  private updateRowStatus(channelId: string, status: CandidateStatus): void {
+    this.resultRows.update((rows) => rows.map((r) => (r.channel_id === channelId ? { ...r, status } : r)));
+    const d = this.drawerCandidate();
+    if (d && d.channel_id === channelId) this.drawerCandidate.set({ ...d, status });
+  }
+
+  /** Prefer the edge fn's JSON `{ error }` (HttpErrorResponse.error.error) over the
+   *  generic HttpClient message; fall back to the raw Error message or a default. */
+  private errorMessage(err: unknown, fallback: string): string {
+    if (err && typeof err === 'object' && 'error' in err) {
+      const inner = (err as { error?: unknown }).error;
+      if (inner && typeof inner === 'object' && 'error' in inner) {
+        const msg = (inner as { error?: unknown }).error;
+        if (typeof msg === 'string') return msg;
+      }
+    }
+    return err instanceof Error ? err.message : fallback;
+  }
 }
