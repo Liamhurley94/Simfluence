@@ -4,6 +4,7 @@ import { provideRouter } from '@angular/router';
 import { AdminComponent } from './admin.component';
 import { EnterpriseService } from '../../core/enterprise/enterprise.service';
 import { AdminCreatorService } from '../../core/admin/admin-creator.service';
+import { AdminUsageService } from '../../core/admin/admin-usage.service';
 import { CreatorsService } from '../../core/creators/creators.service';
 
 describe('AdminComponent tabs', () => {
@@ -16,6 +17,7 @@ describe('AdminComponent tabs', () => {
         { provide: EnterpriseService, useValue: { adminListEnterprises: vi.fn().mockResolvedValue({ enterprises: [] }) } },
         { provide: AdminCreatorService, useValue: { listCreators: vi.fn().mockResolvedValue({ added: [], offline: [] }), addCreators: vi.fn() } },
         { provide: CreatorsService, useValue: { submodesByGenre: () => ({ Gaming: [] }) } },
+        { provide: AdminUsageService, useValue: { usage: vi.fn().mockResolvedValue([]), youtubeQuotaStatus: vi.fn().mockResolvedValue(null) } },
       ],
     });
   });
@@ -35,5 +37,15 @@ describe('AdminComponent tabs', () => {
     fixture.detectChanges();
     expect(fixture.componentInstance.tab()).toBe('creators');
     expect(fixture.nativeElement.querySelector('[data-testid="admin-creators"]')).not.toBeNull();
+  });
+
+  it('switches to the Usage tab and renders the usage panel', () => {
+    const fixture = TestBed.createComponent(AdminComponent);
+    fixture.detectChanges();
+    const btn: HTMLButtonElement = fixture.nativeElement.querySelector('[data-testid="admin-tab-usage"]');
+    btn.click();
+    fixture.detectChanges();
+    expect(fixture.componentInstance.tab()).toBe('usage');
+    expect(fixture.nativeElement.querySelector('[data-testid="admin-usage"]')).not.toBeNull();
   });
 });

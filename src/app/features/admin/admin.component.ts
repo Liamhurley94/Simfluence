@@ -4,11 +4,12 @@ import { RouterLink, RouterOutlet } from '@angular/router';
 import { EnterpriseService } from '../../core/enterprise/enterprise.service';
 import { EnterpriseWithStats } from '../../core/enterprise/enterprise.types';
 import { AdminCreatorsComponent } from './admin-creators.component';
+import { AdminUsageComponent } from './admin-usage.component';
 
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [RouterLink, RouterOutlet, DatePipe, AdminCreatorsComponent],
+  imports: [RouterLink, RouterOutlet, DatePipe, AdminCreatorsComponent, AdminUsageComponent],
   template: `
     <section class="py-8 sf-appear">
       <header class="mb-6">
@@ -44,6 +45,18 @@ import { AdminCreatorsComponent } from './admin-creators.component';
             [style.font-weight]="tab() === 'creators' ? '600' : '400'"
             data-testid="admin-tab-creators"
           >Creators</button>
+          <button
+            type="button"
+            role="tab"
+            [attr.aria-selected]="tab() === 'usage'"
+            (click)="tab.set('usage')"
+            class="px-5 py-3 text-sm transition-colors"
+            style="border-bottom-width: 2px; border-bottom-style: solid; margin-bottom: -1px;"
+            [style.border-bottom-color]="tab() === 'usage' ? 'var(--color-sf-gold)' : 'transparent'"
+            [style.color]="tab() === 'usage' ? 'var(--color-text)' : 'var(--color-text-muted)'"
+            [style.font-weight]="tab() === 'usage' ? '600' : '400'"
+            data-testid="admin-tab-usage"
+          >Usage</button>
         </div>
         <div class="p-5">
 
@@ -100,6 +113,9 @@ import { AdminCreatorsComponent } from './admin-creators.component';
       @case ('creators') {
         <app-admin-creators />
       }
+      @case ('usage') {
+        <app-admin-usage />
+      }
       }
         </div>
       </div>
@@ -115,7 +131,7 @@ export class AdminComponent {
 
   /** Active admin tab. The enterprise-detail `<router-outlet />` renders a modal
    *  overlay, so it stays outside the switch and works regardless of active tab. */
-  readonly tab = signal<'enterprises' | 'creators'>('enterprises');
+  readonly tab = signal<'enterprises' | 'creators' | 'usage'>('enterprises');
 
   constructor() {
     void this.load();
