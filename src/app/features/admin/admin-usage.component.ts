@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, resource, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { AdminUsageService } from '../../core/admin/admin-usage.service';
 import { BarChartComponent } from '../../shared/bar-chart/bar-chart.component';
@@ -85,10 +85,25 @@ export class AdminUsageComponent {
   protected readonly ranges = RANGES;
 
   readonly range = signal<7 | 14 | 30>(7);
-  readonly daily = signal<DailyUsage[]>([]);
-  readonly status = signal<YoutubeQuotaStatus | null>(null);
-  readonly loading = signal(false);
-  readonly error = signal<string | null>(null);
+
+  // resource() keys the load on `range` and abandons a superseded request natively —
+  // switching ranges quickly can't apply a stale response, with no manual bookkeeping.
+  // Usage + quota status load together (status re-read so used_today stays current).
+  private readonly data = resource({
+    params: () => this.range(),
+    loader: async ({ params }) => {
+      const [daily, status] = await Promise.all([this.svc.usage(params), this.svc.youtubeQuotaStatus()]);
+      return { daily, status };
+    },
+  });
+
+  readonly daily = computed<DailyUsage[]>(() => this.data.value()?.daily ?? []);
+  readonly status = computed<YoutubeQuotaStatus | null>(() => this.data.value()?.status ?? null);
+  readonly loading = this.data.isLoading;
+  readonly error = computed(() => {
+    const e = this.data.error();
+    return e ? (e instanceof Error ? e.message : 'Failed to load usage') : null;
+  });
 
   readonly ytValues = computed(() => this.daily().map((d) => d.yt_units));
   readonly twValues = computed(() => this.daily().map((d) => d.tw_calls));
@@ -125,33 +140,9 @@ export class AdminUsageComponent {
     return pct >= 95 ? 'var(--color-sf-red)' : pct >= 80 ? 'var(--color-sf-gold)' : 'var(--color-sf-green)';
   };
 
-  constructor() {
-    void this.load();
-  }
-
-  async setRange(n: 7 | 14 | 30): Promise<void> {
+  /** Switch the window — resource() reloads on the param change and drops any
+   *  in-flight load for the previous range, so the latest selection always wins. */
+  setRange(n: 7 | 14 | 30): void {
     this.range.set(n);
-    await this.load();
-  }
-
-  // Monotonic token so a slow earlier request (e.g. 30-day) can't overwrite a newer
-  // one (e.g. a quick switch back to 14-day) when it resolves out of order.
-  private loadSeq = 0;
-
-  async load(): Promise<void> {
-    const seq = ++this.loadSeq;
-    this.loading.set(true);
-    this.error.set(null);
-    try {
-      const [daily, status] = await Promise.all([this.svc.usage(this.range()), this.svc.youtubeQuotaStatus()]);
-      if (seq !== this.loadSeq) return; // superseded by a newer load — drop this stale result
-      this.daily.set(daily);
-      this.status.set(status);
-    } catch (err) {
-      if (seq !== this.loadSeq) return;
-      this.error.set(err instanceof Error ? err.message : 'Failed to load usage');
-    } finally {
-      if (seq === this.loadSeq) this.loading.set(false);
-    }
   }
 }
