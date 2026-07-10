@@ -3,6 +3,7 @@ import { DatePipe, DecimalPipe } from '@angular/common';
 import { SpinnerComponent } from '../../shared/spinner/spinner.component';
 import { AdminCreatorService } from '../../core/admin/admin-creator.service';
 import { AddedCreator, OfflineCreator, PlatformSyncStatus } from '../../core/admin/admin-creator.types';
+import { edgeErrorMessage } from '../../core/api/edge-error';
 
 const TH = 'text-left px-3 py-2 text-[10px] uppercase tracking-wider font-medium';
 
@@ -276,7 +277,7 @@ export class AdminCreatorsComponent {
       this.offline.set(offline);
       this.syncPolling();
     } catch (err) {
-      this.listError.set(this.errorMessage(err, 'Failed to load creators'));
+      this.listError.set(edgeErrorMessage(err, 'Failed to load creators'));
     } finally {
       this.listLoading.set(false);
       this.loaded.set(true);
@@ -332,7 +333,7 @@ export class AdminCreatorsComponent {
       await this.svc.resyncCreator(o.id, o.platform);
       await this.loadList();
     } catch (err) {
-      this.listError.set(this.errorMessage(err, 'Re-sync failed'));
+      this.listError.set(edgeErrorMessage(err, 'Re-sync failed'));
     } finally {
       this.resyncingKey.set(null);
     }
@@ -387,22 +388,9 @@ export class AdminCreatorsComponent {
       this.closePlatformDialog();
       await this.loadList();
     } catch (err) {
-      this.dialogError.set(this.errorMessage(err, 'Attach failed'));
+      this.dialogError.set(edgeErrorMessage(err, 'Attach failed'));
     } finally {
       this.dialogBusy.set(false);
     }
-  }
-
-  /** Prefer the edge fn's JSON `{ error }` (HttpErrorResponse.error.error) over the
-   *  generic HttpClient message; fall back to the raw Error message or a default. */
-  private errorMessage(err: unknown, fallback: string): string {
-    if (err && typeof err === 'object' && 'error' in err) {
-      const inner = (err as { error?: unknown }).error;
-      if (inner && typeof inner === 'object' && 'error' in inner) {
-        const msg = (inner as { error?: unknown }).error;
-        if (typeof msg === 'string') return msg;
-      }
-    }
-    return err instanceof Error ? err.message : fallback;
   }
 }

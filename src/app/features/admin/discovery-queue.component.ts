@@ -8,6 +8,7 @@ import { AddCreatorInput } from '../../core/admin/admin-creator.types';
 import { DiscoveryDrawerComponent } from './discovery-drawer.component';
 import { DiscoveryAddDialogComponent, seedFrom } from './discovery-add-dialog.component';
 import { SpinnerComponent } from '../../shared/spinner/spinner.component';
+import { edgeErrorMessage } from '../../core/api/edge-error';
 
 const TH = 'text-left px-3 py-2 text-[10px] uppercase tracking-wider font-medium';
 const PAGE_SIZE = 50;
@@ -223,7 +224,7 @@ export class DiscoveryQueueComponent {
       this.rows.set(rows);
       this.total.set(total);
     } catch (err) {
-      this.error.set(this.errorMessage(err, 'Failed to load queue'));
+      this.error.set(edgeErrorMessage(err, 'Failed to load queue'));
     } finally {
       this.loading.set(false);
     }
@@ -276,7 +277,7 @@ export class DiscoveryQueueComponent {
       await this.reload();
       this.changed.emit();
     } catch (err) {
-      this.error.set(this.errorMessage(err, 'Update failed'));
+      this.error.set(edgeErrorMessage(err, 'Update failed'));
     }
   }
 
@@ -290,7 +291,7 @@ export class DiscoveryQueueComponent {
       await this.reload();
       this.changed.emit();
     } catch (err) {
-      this.error.set(this.errorMessage(err, 'Update failed'));
+      this.error.set(edgeErrorMessage(err, 'Update failed'));
     } finally {
       this.busy.set(false);
     }
@@ -327,7 +328,7 @@ export class DiscoveryQueueComponent {
       this.warning.set(warning);
       this.changed.emit();
     } catch (err) {
-      this.error.set(this.errorMessage(err, 'Add failed'));
+      this.error.set(edgeErrorMessage(err, 'Add failed'));
     } finally {
       this.busy.set(false);
     }
@@ -400,18 +401,5 @@ export class DiscoveryQueueComponent {
       ...(row.language ? { language: row.language } : {}),
       statsSeed: seedFrom(row),
     };
-  }
-
-  /** Prefer the edge fn's JSON `{ error }` (HttpErrorResponse.error.error) over the
-   *  generic HttpClient message; fall back to the raw Error message or a default. */
-  private errorMessage(err: unknown, fallback: string): string {
-    if (err && typeof err === 'object' && 'error' in err) {
-      const inner = (err as { error?: unknown }).error;
-      if (inner && typeof inner === 'object' && 'error' in inner) {
-        const msg = (inner as { error?: unknown }).error;
-        if (typeof msg === 'string') return msg;
-      }
-    }
-    return err instanceof Error ? err.message : fallback;
   }
 }

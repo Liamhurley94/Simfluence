@@ -4,6 +4,7 @@ import { AdminCreatorService } from '../../core/admin/admin-creator.service';
 import { CreatorsService } from '../../core/creators/creators.service';
 import { AddCreatorInput } from '../../core/admin/admin-creator.types';
 import { DiscoveredChannel, StatsSeed } from '../../core/admin/admin-discovery.types';
+import { edgeErrorMessage } from '../../core/api/edge-error';
 
 const LABEL = 'text-[10px] uppercase tracking-wider mb-1 block';
 
@@ -196,7 +197,7 @@ export class DiscoveryAddDialogComponent {
         await this.svc.addCreators([input]);
         this.done.emit();
       } catch (err) {
-        this.error.set(this.errorMessage(err, 'Add failed'));
+        this.error.set(edgeErrorMessage(err, 'Add failed'));
       } finally {
         this.busy.set(false);
       }
@@ -215,7 +216,7 @@ export class DiscoveryAddDialogComponent {
         });
         this.done.emit();
       } catch (err) {
-        this.error.set(this.errorMessage(err, 'Link failed'));
+        this.error.set(edgeErrorMessage(err, 'Link failed'));
       } finally {
         this.busy.set(false);
       }
@@ -226,18 +227,5 @@ export class DiscoveryAddDialogComponent {
    *  guaranteed fallback for the rare candidate with no public handle. */
   private youtubeHandle(c: DiscoveredChannel): string {
     return c.handle || c.channel_id;
-  }
-
-  /** Prefer the edge fn's JSON `{ error }` (HttpErrorResponse.error.error) over the
-   *  generic HttpClient message; fall back to the raw Error message or a default. */
-  private errorMessage(err: unknown, fallback: string): string {
-    if (err && typeof err === 'object' && 'error' in err) {
-      const inner = (err as { error?: unknown }).error;
-      if (inner && typeof inner === 'object' && 'error' in inner) {
-        const msg = (inner as { error?: unknown }).error;
-        if (typeof msg === 'string') return msg;
-      }
-    }
-    return err instanceof Error ? err.message : fallback;
   }
 }

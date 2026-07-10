@@ -3,6 +3,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AdminCreatorService } from '../../core/admin/admin-creator.service';
 import { CreatorsService } from '../../core/creators/creators.service';
 import { AddCreatorInput } from '../../core/admin/admin-creator.types';
+import { edgeErrorMessage } from '../../core/api/edge-error';
 
 const LABEL = 'text-[10px] uppercase tracking-wider mb-1 block';
 
@@ -155,22 +156,9 @@ export class AdminAddFormComponent {
       this.form.reset();
       this.added.emit();
     } catch (err) {
-      this.error.set(this.errorMessage(err, 'Add failed'));
+      this.error.set(edgeErrorMessage(err, 'Add failed'));
     } finally {
       this.busy.set(false);
     }
-  }
-
-  /** Prefer the edge fn's JSON `{ error }` (HttpErrorResponse.error.error) over the
-   *  generic HttpClient message; fall back to the raw Error message or a default. */
-  private errorMessage(err: unknown, fallback: string): string {
-    if (err && typeof err === 'object' && 'error' in err) {
-      const inner = (err as { error?: unknown }).error;
-      if (inner && typeof inner === 'object' && 'error' in inner) {
-        const msg = (inner as { error?: unknown }).error;
-        if (typeof msg === 'string') return msg;
-      }
-    }
-    return err instanceof Error ? err.message : fallback;
   }
 }

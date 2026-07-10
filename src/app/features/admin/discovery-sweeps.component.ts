@@ -4,6 +4,7 @@ import { SpinnerComponent } from '../../shared/spinner/spinner.component';
 import { AdminDiscoveryService } from '../../core/admin/admin-discovery.service';
 import { CreatorsService } from '../../core/creators/creators.service';
 import { DiscoveryRun, RunStatus } from '../../core/admin/admin-discovery.types';
+import { edgeErrorMessage } from '../../core/api/edge-error';
 
 const TH = 'text-left px-3 py-2 text-[10px] uppercase tracking-wider font-medium';
 const LABEL = 'text-[10px] uppercase tracking-wider mb-1 block';
@@ -218,7 +219,7 @@ export class DiscoverySweepsComponent {
       await this.svc.startSweep({ genre: this.genre() || undefined, subMode: this.subMode() || undefined });
       await this.loadRuns();
     } catch (err) {
-      this.startError.set(this.errorMessage(err, 'Failed to start sweep'));
+      this.startError.set(edgeErrorMessage(err, 'Failed to start sweep'));
     } finally {
       this.starting.set(false);
     }
@@ -231,7 +232,7 @@ export class DiscoverySweepsComponent {
       this.runs.set(await this.svc.listRuns());
       this.syncPolling();
     } catch (err) {
-      this.runsError.set(this.errorMessage(err, 'Failed to load sweep runs'));
+      this.runsError.set(edgeErrorMessage(err, 'Failed to load sweep runs'));
     } finally {
       this.runsLoading.set(false);
       this.runsLoaded.set(true);
@@ -245,7 +246,7 @@ export class DiscoverySweepsComponent {
       await this.svc.cancelRun(runId);
       await this.loadRuns();
     } catch (err) {
-      this.runsError.set(this.errorMessage(err, 'Failed to cancel run'));
+      this.runsError.set(edgeErrorMessage(err, 'Failed to cancel run'));
     } finally {
       this.cancelingId.set(null);
     }
@@ -299,18 +300,5 @@ export class DiscoverySweepsComponent {
     // lifetime — otherwise ~10 cumulative minutes of polling would permanently
     // refuse to re-arm and progress would silently stop updating.
     this.pollAttempts = 0;
-  }
-
-  /** Prefer the edge fn's JSON `{ error }` (HttpErrorResponse.error.error) over the
-   *  generic HttpClient message; fall back to the raw Error message or a default. */
-  private errorMessage(err: unknown, fallback: string): string {
-    if (err && typeof err === 'object' && 'error' in err) {
-      const inner = (err as { error?: unknown }).error;
-      if (inner && typeof inner === 'object' && 'error' in inner) {
-        const msg = (inner as { error?: unknown }).error;
-        if (typeof msg === 'string') return msg;
-      }
-    }
-    return err instanceof Error ? err.message : fallback;
   }
 }

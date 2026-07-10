@@ -5,6 +5,7 @@ import { CreatorsService } from '../../core/creators/creators.service';
 import { CandidateStatus, DiscoveredChannel, SearchResult } from '../../core/admin/admin-discovery.types';
 import { DiscoveryDrawerComponent } from './discovery-drawer.component';
 import { DiscoveryAddDialogComponent } from './discovery-add-dialog.component';
+import { edgeErrorMessage } from '../../core/api/edge-error';
 
 const TH = 'text-left px-3 py-2 text-[10px] uppercase tracking-wider font-medium';
 const LABEL = 'text-[10px] uppercase tracking-wider mb-1 block';
@@ -235,7 +236,7 @@ export class DiscoverySearchComponent {
       this.rosterRows.set(result.alreadyInRoster);
       this.staged.emit();
     } catch (err) {
-      this.error.set(this.errorMessage(err, 'Search failed'));
+      this.error.set(edgeErrorMessage(err, 'Search failed'));
     } finally {
       this.busy.set(false);
     }
@@ -247,7 +248,7 @@ export class DiscoverySearchComponent {
       await this.svc.setStatus([row.channel_id], status);
       this.updateRowStatus(row.channel_id, status);
     } catch (err) {
-      this.error.set(this.errorMessage(err, 'Update failed'));
+      this.error.set(edgeErrorMessage(err, 'Update failed'));
     }
   }
 
@@ -305,18 +306,5 @@ export class DiscoverySearchComponent {
     this.resultRows.update((rows) => rows.map((r) => (r.channel_id === channelId ? { ...r, status } : r)));
     const d = this.drawerCandidate();
     if (d && d.channel_id === channelId) this.drawerCandidate.set({ ...d, status });
-  }
-
-  /** Prefer the edge fn's JSON `{ error }` (HttpErrorResponse.error.error) over the
-   *  generic HttpClient message; fall back to the raw Error message or a default. */
-  private errorMessage(err: unknown, fallback: string): string {
-    if (err && typeof err === 'object' && 'error' in err) {
-      const inner = (err as { error?: unknown }).error;
-      if (inner && typeof inner === 'object' && 'error' in inner) {
-        const msg = (inner as { error?: unknown }).error;
-        if (typeof msg === 'string') return msg;
-      }
-    }
-    return err instanceof Error ? err.message : fallback;
   }
 }
