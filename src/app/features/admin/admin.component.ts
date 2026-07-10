@@ -5,16 +5,17 @@ import { EnterpriseService } from '../../core/enterprise/enterprise.service';
 import { EnterpriseWithStats } from '../../core/enterprise/enterprise.types';
 import { AdminCreatorsComponent } from './admin-creators.component';
 import { AdminUsageComponent } from './admin-usage.component';
+import { AdminDiscoveryComponent } from './admin-discovery.component';
 
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [RouterLink, RouterOutlet, DatePipe, AdminCreatorsComponent, AdminUsageComponent],
+  imports: [RouterLink, RouterOutlet, DatePipe, AdminCreatorsComponent, AdminUsageComponent, AdminDiscoveryComponent],
   template: `
     <section class="py-8 sf-appear">
       <header class="mb-6">
         <h1 class="text-2xl font-bold" style="color: var(--color-text);">Admin</h1>
-        <p class="text-sm mt-1" style="color: var(--color-text-muted);">Manage enterprises and creators.</p>
+        <p class="text-sm mt-1" style="color: var(--color-text-muted);">Manage enterprises and creators, and discover new ones.</p>
       </header>
 
       <router-outlet />
@@ -33,6 +34,18 @@ import { AdminUsageComponent } from './admin-usage.component';
             [style.font-weight]="tab() === 'enterprises' ? '600' : '400'"
             data-testid="admin-tab-enterprises"
           >Enterprises</button>
+          <button
+            type="button"
+            role="tab"
+            [attr.aria-selected]="tab() === 'add'"
+            (click)="tab.set('add')"
+            class="px-5 py-3 text-sm transition-colors"
+            style="border-bottom-width: 2px; border-bottom-style: solid; margin-bottom: -1px;"
+            [style.border-bottom-color]="tab() === 'add' ? 'var(--color-sf-gold)' : 'transparent'"
+            [style.color]="tab() === 'add' ? 'var(--color-text)' : 'var(--color-text-muted)'"
+            [style.font-weight]="tab() === 'add' ? '600' : '400'"
+            data-testid="admin-tab-add"
+          >Add creators</button>
           <button
             type="button"
             role="tab"
@@ -110,6 +123,9 @@ import { AdminUsageComponent } from './admin-usage.component';
       }
 
       }
+      @case ('add') {
+        <app-admin-discovery />
+      }
       @case ('creators') {
         <app-admin-creators />
       }
@@ -131,7 +147,7 @@ export class AdminComponent {
 
   /** Active admin tab. The enterprise-detail `<router-outlet />` renders a modal
    *  overlay, so it stays outside the switch and works regardless of active tab. */
-  readonly tab = signal<'enterprises' | 'creators' | 'usage'>('enterprises');
+  readonly tab = signal<'enterprises' | 'creators' | 'usage' | 'add'>('enterprises');
 
   constructor() {
     void this.load();

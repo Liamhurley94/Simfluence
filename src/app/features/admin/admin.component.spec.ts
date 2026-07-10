@@ -5,6 +5,7 @@ import { AdminComponent } from './admin.component';
 import { EnterpriseService } from '../../core/enterprise/enterprise.service';
 import { AdminCreatorService } from '../../core/admin/admin-creator.service';
 import { AdminUsageService } from '../../core/admin/admin-usage.service';
+import { AdminDiscoveryService } from '../../core/admin/admin-discovery.service';
 import { CreatorsService } from '../../core/creators/creators.service';
 
 describe('AdminComponent tabs', () => {
@@ -18,6 +19,7 @@ describe('AdminComponent tabs', () => {
         { provide: AdminCreatorService, useValue: { listCreators: vi.fn().mockResolvedValue({ added: [], offline: [] }), addCreators: vi.fn() } },
         { provide: CreatorsService, useValue: { submodesByGenre: () => ({ Gaming: [] }), languages: () => [] } },
         { provide: AdminUsageService, useValue: { usage: vi.fn().mockResolvedValue([]), youtubeQuotaStatus: vi.fn().mockResolvedValue(null) } },
+        { provide: AdminDiscoveryService, useValue: { quotaStatus: vi.fn().mockResolvedValue(null), listQueue: vi.fn().mockResolvedValue({ rows: [], total: 0 }) } },
       ],
     });
   });
@@ -27,6 +29,16 @@ describe('AdminComponent tabs', () => {
     fixture.detectChanges();
     expect(fixture.componentInstance.tab()).toBe('enterprises');
     expect(fixture.nativeElement.querySelector('[data-testid="admin-creators"]')).toBeNull();
+  });
+
+  it('switches to the Add creators tab and renders the discovery shell', () => {
+    const fixture = TestBed.createComponent(AdminComponent);
+    fixture.detectChanges();
+    const btn: HTMLButtonElement = fixture.nativeElement.querySelector('[data-testid="admin-tab-add"]');
+    btn.click();
+    fixture.detectChanges();
+    expect(fixture.componentInstance.tab()).toBe('add');
+    expect(fixture.nativeElement.querySelector('[data-testid="admin-discovery"]')).not.toBeNull();
   });
 
   it('switches to the Creators tab and renders the creators panel', () => {
