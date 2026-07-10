@@ -1,21 +1,22 @@
 import { TestBed } from '@angular/core/testing';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AdminCreatorsComponent, offlineStatusFor } from './admin-creators.component';
 import { AdminCreatorService } from '../../core/admin/admin-creator.service';
 import { AddedCreator } from '../../core/admin/admin-creator.types';
 
 function setup(
   listCreators = vi.fn().mockResolvedValue({ added: [], offline: [] }),
+  attachPlatform = vi.fn().mockResolvedValue({ attached: { creatorId: 1, platform: 'twitch' } }),
 ) {
   const resyncCreator = vi.fn().mockResolvedValue({ resynced: { creatorId: 9, platform: 'YouTube' } });
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({
     imports: [AdminCreatorsComponent],
     providers: [
-      { provide: AdminCreatorService, useValue: { listCreators, resyncCreator } },
+      { provide: AdminCreatorService, useValue: { listCreators, resyncCreator, attachPlatform } },
     ],
   });
-  return { listCreators, resyncCreator };
+  return { listCreators, resyncCreator, attachPlatform };
 }
 
 const mkAdded = (over: Partial<AddedCreator> = {}): AddedCreator => ({
@@ -128,5 +129,100 @@ describe('AdminCreatorsComponent offline list', () => {
     await c.onResync({ id: 9, name: 'Gone', platform: 'YouTube', offlineAt: null, reason: null });
     expect(resyncCreator).toHaveBeenCalledWith(9, 'YouTube');
     expect(listCreators.mock.calls.length).toBe(before + 1); // reloaded after resync
+  });
+});
+
+describe('AdminCreatorsComponent — add platform', () => {
+  it('hides the button when both platforms are present, shows it when either is missing', async () => {
+    const { listCreators } = setup();
+    listCreators.mockResolvedValue({
+      added: [
+        mkAdded({ id: 1, youtube: 'synced', twitch: 'synced' }),
+        mkAdded({ id: 2, youtube: 'synced', twitch: null }),
+      ],
+      offline: [],
+    });
+    const fixture = TestBed.createComponent(AdminCreatorsComponent);
+    await fixture.componentInstance.loadList();
+    fixture.detectChanges();
+    const rows: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('[data-testid="admin-added-row"]'));
+    expect(rows[0].querySelector('[data-testid="add-platform"]')).toBeNull();
+    expect(rows[1].querySelector('[data-testid="add-platform"]')).not.toBeNull();
+  });
+
+  it('openAddPlatform preselects the sole missing platform', async () => {
+    const { listCreators } = setup();
+    listCreators.mockResolvedValue({ added: [mkAdded({ id: 5, youtube: 'synced', twitch: null })], offline: [] });
+    const fixture = TestBed.createComponent(AdminCreatorsComponent);
+    const c = fixture.componentInstance;
+    await c.loadList();
+
+    c.openAddPlatform(c.added()[0]);
+
+    expect(c.platformDialogFor()).toEqual(c.added()[0]);
+    expect(c.dialogPlatform()).toBe('twitch');
+  });
+
+  it('submits attachPlatform with creatorId + platform + bare handle (strips a leading @), then reloads and closes', async () => {
+    const { listCreators, attachPlatform } = setup();
+    listCreators.mockResolvedValue({ added: [mkAdded({ id: 5, youtube: 'synced', twitch: null })], offline: [] });
+    const fixture = TestBed.createComponent(AdminCreatorsComponent);
+    const c = fixture.componentInstance;
+    await c.loadList();
+    listCreators.mockClear();
+
+    c.openAddPlatform(c.added()[0]);
+    c.dialogHandle.set('@somehandle');
+    await c.submitPlatform();
+
+    expect(attachPlatform).toHaveBeenCalledWith({ creatorId: 5, platform: 'twitch', handle: 'somehandle' });
+    expect(c.platformDialogFor()).toBeNull(); // dialog closed
+    expect(listCreators).toHaveBeenCalledTimes(1); // reloaded after success
+  });
+
+  it('surfaces an attach failure inline via errorMessage() and leaves the dialog open', async () => {
+    const attachPlatform = vi.fn().mockRejectedValue({ error: { error: 'handle already attached elsewhere' } });
+    const listCreators = vi.fn().mockResolvedValue({ added: [mkAdded({ id: 5, youtube: 'synced', twitch: null })], offline: [] });
+    setup(listCreators, attachPlatform);
+    const fixture = TestBed.createComponent(AdminCreatorsComponent);
+    const c = fixture.componentInstance;
+    await c.loadList();
+
+    c.openAddPlatform(c.added()[0]);
+    c.dialogHandle.set('somehandle');
+    await c.submitPlatform();
+
+    expect(c.dialogError()).toBe('handle already attached elsewhere');
+    expect(c.platformDialogFor()).not.toBeNull(); // dialog stays open on failure
+  });
+});
+
+describe('AdminCreatorsComponent — polling', () => {
+  beforeEach(() => { vi.useFakeTimers(); });
+  afterEach(() => { vi.useRealTimers(); });
+
+  it('MAX_POLLS bounds each polling episode, not the component lifetime: a fresh resolving list re-arms polling after the ceiling', async () => {
+    const listCreators = vi.fn().mockResolvedValue({ added: [mkAdded({ youtube: 'resolving' })], offline: [] });
+    setup(listCreators);
+    const fixture = TestBed.createComponent(AdminCreatorsComponent);
+    await fixture.componentInstance.loadList();
+    listCreators.mockClear();
+
+    // Jump to one tick before the ceiling instead of ticking MAX_POLLS times.
+    const internals = fixture.componentInstance as unknown as { pollAttempts: number; MAX_POLLS: number };
+    internals.pollAttempts = internals.MAX_POLLS - 1;
+
+    await vi.advanceTimersByTimeAsync(5000); // final tick: ceiling hit → polling stops
+    const callsAtStop = listCreators.mock.calls.length;
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(listCreators.mock.calls.length).toBe(callsAtStop); // interval disarmed
+
+    // A fresh reload with the still-resolving list must re-arm polling
+    // (regression: a lifetime-cumulative pollAttempts kept this disarmed forever).
+    await fixture.componentInstance.loadList();
+    const callsAfterReload = listCreators.mock.calls.length;
+    expect(callsAfterReload).toBe(callsAtStop + 1); // the reload itself
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(listCreators.mock.calls.length).toBe(callsAfterReload + 1); // polling ticked again
   });
 });

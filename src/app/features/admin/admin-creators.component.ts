@@ -88,6 +88,7 @@ export function offlineStatusFor(reason: string | null): OfflineStatus {
                 <th class="${TH}">GFI</th>
                 <th class="${TH}">CPI</th>
                 <th class="${TH}">Added</th>
+                <th class="${TH}"></th>
               </tr>
             </thead>
             <tbody>
@@ -108,13 +109,23 @@ export function offlineStatusFor(reason: string | null): OfflineStatus {
                   <td class="px-3 py-2">{{ c.gfi ? '✓' : '—' }}</td>
                   <td class="px-3 py-2">{{ c.cpi !== null ? (c.cpi | number:'1.0-0') : '—' }}</td>
                   <td class="px-3 py-2 text-xs" style="color: var(--color-text-muted);">{{ c.addedAt | date:'short' }}</td>
+                  <td class="px-3 py-2 text-right">
+                    @if (!c.youtube || !c.twitch) {
+                      <button
+                        type="button"
+                        (click)="openAddPlatform(c)"
+                        class="sf-btn sf-btn-ghost text-xs"
+                        data-testid="add-platform"
+                      >Add platform</button>
+                    }
+                  </td>
                 </tr>
               }
             </tbody>
           </table>
           @if (anyResolving()) {
             <p class="text-xs px-4 py-2" style="color: var(--color-text-muted);" data-testid="added-syncing">
-              Syncing new creators… this list updates automatically. Full stats & CPI land at the nightly refresh.
+              Syncing new creators… id + stats land within ~a minute; Twitch CPI needs a first live capture.
             </p>
           }
         }
@@ -170,6 +181,64 @@ export function offlineStatusFor(reason: string | null): OfflineStatus {
           <p class="text-sm px-4 pb-4" style="color: var(--color-text-muted);">No creators need attention right now.</p>
         }
       </section>
+
+      <!-- Add-platform dialog: attaches the missing YouTube/Twitch row to an
+           already-added creator (same centered-overlay pattern as the discovery
+           add/link dialog). -->
+      @if (platformDialogFor(); as pc) {
+        <div
+          class="fixed inset-0 z-50 flex items-start justify-center p-6 overflow-auto sf-fade-in"
+          style="background: var(--color-overlay);"
+          (click)="closePlatformDialog()"
+        >
+          <div
+            class="sf-card max-w-md w-full p-6 flex flex-col gap-3 mt-12 sf-modal-in"
+            (click)="$event.stopPropagation()"
+            data-testid="add-platform-dialog"
+          >
+            <h2 class="text-sm font-bold uppercase tracking-wider" style="color: var(--color-text);">Add platform — {{ pc.name }}</h2>
+            <div>
+              <label class="text-[10px] uppercase tracking-wider mb-1 block" style="color: var(--color-text-muted);">Platform</label>
+              <select
+                [value]="dialogPlatform()"
+                (change)="dialogPlatform.set($any($event.target).value)"
+                class="sf-select"
+                data-testid="add-platform-select"
+              >
+                @if (missingPlatforms(pc).length > 1) {
+                  <option value="">Select a platform…</option>
+                }
+                @for (p of missingPlatforms(pc); track p) {
+                  <option [value]="p">{{ p === 'youtube' ? 'YouTube' : 'Twitch' }}</option>
+                }
+              </select>
+            </div>
+            <div>
+              <label class="text-[10px] uppercase tracking-wider mb-1 block" style="color: var(--color-text-muted);">Handle</label>
+              <input
+                [value]="dialogHandle()"
+                (input)="dialogHandle.set($any($event.target).value)"
+                placeholder="handle"
+                class="sf-input"
+                data-testid="add-platform-handle"
+              />
+            </div>
+            @if (dialogError()) {
+              <p class="text-sm" style="color: var(--color-sf-red);" data-testid="add-platform-error">{{ dialogError() }}</p>
+            }
+            <div class="flex justify-end gap-2 mt-2">
+              <button type="button" (click)="closePlatformDialog()" class="sf-btn sf-btn-ghost" data-testid="add-platform-cancel">Cancel</button>
+              <button
+                type="button"
+                (click)="submitPlatform()"
+                [disabled]="dialogBusy()"
+                class="sf-btn sf-btn-primary"
+                data-testid="add-platform-submit"
+              >{{ dialogBusy() ? 'Attaching…' : 'Attach' }}</button>
+            </div>
+          </div>
+        </div>
+      }
     </div>
   `,
 })
@@ -236,6 +305,10 @@ export class AdminCreatorsComponent {
       clearInterval(this.pollHandle);
       this.pollHandle = null;
     }
+    // Reset so MAX_POLLS bounds each polling episode, not the component's
+    // lifetime — otherwise ~3 cumulative minutes of polling would permanently
+    // refuse to re-arm and this list would stop updating.
+    this.pollAttempts = 0;
   }
 
   protected statusLabel(s: PlatformSyncStatus): string { return STATUS_LABELS[s]; }
@@ -262,6 +335,61 @@ export class AdminCreatorsComponent {
       this.listError.set(this.errorMessage(err, 'Re-sync failed'));
     } finally {
       this.resyncingKey.set(null);
+    }
+  }
+
+  // Add-platform dialog: attach a missing platform (YouTube or Twitch) to an
+  // already-added creator. Opened per-row; `openAddPlatform` captures the row
+  // as-is, so the dialog's platform choices don't shift under the admin if a
+  // background poll reloads the list while it's open.
+  readonly platformDialogFor = signal<AddedCreator | null>(null);
+  readonly dialogPlatform = signal<'youtube' | 'twitch' | ''>('');
+  readonly dialogHandle = signal('');
+  readonly dialogError = signal<string | null>(null);
+  readonly dialogBusy = signal(false);
+
+  protected missingPlatforms(c: AddedCreator): Array<'youtube' | 'twitch'> {
+    const missing: Array<'youtube' | 'twitch'> = [];
+    if (!c.youtube) missing.push('youtube');
+    if (!c.twitch) missing.push('twitch');
+    return missing;
+  }
+
+  openAddPlatform(c: AddedCreator): void {
+    const missing = this.missingPlatforms(c);
+    this.platformDialogFor.set(c);
+    // Only one platform can be missing in the common case — preselect it so
+    // the admin doesn't have to pick from a one-item list.
+    this.dialogPlatform.set(missing.length === 1 ? missing[0] : '');
+    this.dialogHandle.set('');
+    this.dialogError.set(null);
+  }
+
+  closePlatformDialog(): void {
+    this.platformDialogFor.set(null);
+  }
+
+  /** Attach the dialog's platform+handle to the creator it was opened for.
+   *  Any 2xx (including a same-handle heal re-attach) counts as success —
+   *  only a thrown error (409 conflict, etc.) surfaces inline. */
+  async submitPlatform(): Promise<void> {
+    const c = this.platformDialogFor();
+    const platform = this.dialogPlatform();
+    const handle = this.dialogHandle().trim().replace(/^@/, '');
+    if (!c || !platform || !handle) {
+      this.dialogError.set('Select a platform and enter a handle.');
+      return;
+    }
+    this.dialogBusy.set(true);
+    this.dialogError.set(null);
+    try {
+      await this.svc.attachPlatform({ creatorId: c.id, platform, handle });
+      this.closePlatformDialog();
+      await this.loadList();
+    } catch (err) {
+      this.dialogError.set(this.errorMessage(err, 'Attach failed'));
+    } finally {
+      this.dialogBusy.set(false);
     }
   }
 
