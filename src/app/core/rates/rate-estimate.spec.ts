@@ -98,10 +98,12 @@ describe('computeRateRanges — Twitch / Kick branch', () => {
     expect(dedMid / intMid).toBeLessThan(1.4);
   });
 
-  it('French streamers price lower than English (€2.25 vs €2.65)', () => {
-    const en = computeRateRanges(mk({ platform: 'Twitch', avgViews: '5K', language: 'English' }));
-    const fr = computeRateRanges(mk({ platform: 'Twitch', avgViews: '5K', language: 'French' }));
+  it('French streamers price lower than English (€2.25 vs €2.65), keyed on the code', () => {
+    const en = computeRateRanges(mk({ platform: 'Twitch', avgViews: '5K', language: 'en' }));
+    const fr = computeRateRanges(mk({ platform: 'Twitch', avgViews: '5K', language: 'fr' }));
     expect(fr.int[1]).toBeLessThan(en.int[1]);
+    // the old full name must no longer trigger the FR rate
+    expect(computeRateRanges(mk({ platform: 'Twitch', avgViews: '5K', language: 'french' })).int[1]).toBe(en.int[1]);
   });
 
   it('Kick uses a lower base rate than Twitch', () => {

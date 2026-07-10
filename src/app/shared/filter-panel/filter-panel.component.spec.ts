@@ -14,7 +14,8 @@ import { Tier } from '../../core/types';
 const creatorsStub = {
   genres: signal(['Gaming & Esports', 'Music']),
   platforms: signal(['YouTube', 'Twitch']),
-  languages: signal(['English', 'Spanish']),
+  languages: signal([{ code: 'en', name: 'English' }, { code: 'es', name: 'Spanish' }]),
+  usedLanguages: signal([{ code: 'en', name: 'English' }, { code: 'es', name: 'Spanish' }]),
   submodesByGenre: signal<Record<string, { subMode: string; hasKeywords: boolean }[]>>({}),
 };
 

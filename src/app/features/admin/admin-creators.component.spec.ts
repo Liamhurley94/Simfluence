@@ -15,7 +15,7 @@ function setup(
     imports: [AdminCreatorsComponent],
     providers: [
       { provide: AdminCreatorService, useValue: { addCreators, listCreators, resyncCreator } },
-      { provide: CreatorsService, useValue: { submodesByGenre: () => ({ Gaming: [], Music: [] }), languages: () => ['German', 'English'] } },
+      { provide: CreatorsService, useValue: { submodesByGenre: () => ({ Gaming: [], Music: [] }), languages: () => [{ code: 'de', name: 'German' }, { code: 'en', name: 'English' }] } },
     ],
   });
   return { addCreators, listCreators, resyncCreator };
@@ -28,10 +28,10 @@ describe('AdminCreatorsComponent add form', () => {
     expect(fixture.componentInstance.genreOptions()).toEqual(['Gaming', 'Music']);
   });
 
-  it('language options come from CreatorsService.languages (sorted)', () => {
+  it('language options come from CreatorsService.languages (sorted by name)', () => {
     setup();
     const fixture = TestBed.createComponent(AdminCreatorsComponent);
-    expect(fixture.componentInstance.languageOptions()).toEqual(['English', 'German']);
+    expect(fixture.componentInstance.languageOptions()).toEqual([{ code: 'en', name: 'English' }, { code: 'de', name: 'German' }]);
   });
 
   it('blocks submit with no platform handle and does not call the service', async () => {

@@ -136,16 +136,16 @@ const ALL_PLATFORMS = 'All platforms';
           Language
         </label>
         <div class="flex flex-wrap gap-1" data-testid="filter-languages">
-          @for (l of languages(); track l) {
+          @for (l of languages(); track l.code) {
             <button
               type="button"
-              (click)="toggleLanguage(l)"
+              (click)="toggleLanguage(l.code)"
               class="sf-chip cursor-pointer"
-              [style.background]="languages_().includes(l) ? 'var(--color-sf-blue)' : ''"
-              [style.color]="languages_().includes(l) ? 'white' : ''"
-              [style.border-color]="languages_().includes(l) ? 'var(--color-sf-blue)' : ''"
+              [style.background]="languages_().includes(l.code) ? 'var(--color-sf-blue)' : ''"
+              [style.color]="languages_().includes(l.code) ? 'white' : ''"
+              [style.border-color]="languages_().includes(l.code) ? 'var(--color-sf-blue)' : ''"
             >
-              {{ l }}
+              {{ l.name }}
             </button>
           }
         </div>
@@ -333,7 +333,7 @@ export class FilterPanelComponent {
   // RPC-fed lists populate after the APP_INITIALIZER fires.
   readonly genres = this.svc.genres;
   readonly platforms = this.svc.platforms;
-  readonly languages = this.svc.languages;
+  readonly languages = this.svc.usedLanguages;
   readonly sortOptions = SORT_OPTIONS;
   readonly tierOptions = TIER_OPTIONS;
   readonly formatOptions = FORMAT_OPTIONS;

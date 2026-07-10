@@ -119,8 +119,8 @@ export function offlineStatusFor(reason: string | null): OfflineStatus {
             <label class="${LABEL}" style="color: var(--color-text-muted);">Language (optional)</label>
             <select formControlName="language" class="sf-input" data-testid="add-language">
               <option value="">Any / unspecified</option>
-              @for (l of languageOptions(); track l) {
-                <option [value]="l">{{ l }}</option>
+              @for (l of languageOptions(); track l.code) {
+                <option [value]="l.code">{{ l.name }}</option>
               }
             </select>
           </div>
@@ -272,7 +272,8 @@ export class AdminCreatorsComponent {
 
   // Supported languages — the same list Discovery filters on, so a new creator's
   // language value always matches a filter option (freeform text would drift).
-  readonly languageOptions = computed(() => [...this.creators.languages()].sort());
+  readonly languageOptions = computed(() =>
+    [...this.creators.languages()].sort((a, b) => a.name.localeCompare(b.name)));
 
   readonly form = this.fb.nonNullable.group({
     name: ['', Validators.required],

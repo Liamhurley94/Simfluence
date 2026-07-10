@@ -267,18 +267,20 @@ describe('CreatorsService.byId', () => {
 });
 
 describe('CreatorsService.loadFilterOptions', () => {
-  it('fans out to three RPCs and populates signals', async () => {
+  it('fans out to the filter-option RPCs and populates signals', async () => {
     const rpc = vi.fn(async (name: string) => {
       if (name === 'get_creator_genres') return { data: ['Gaming', 'Music'] };
       if (name === 'get_creator_platforms') return { data: ['Twitch', 'YouTube'] };
-      if (name === 'get_creator_languages') return { data: ['English'] };
+      if (name === 'get_languages') return { data: [{ code: 'en', name: 'English' }, { code: 'de', name: 'German' }] };
+      if (name === 'get_creator_languages') return { data: [{ code: 'en', name: 'English' }] };
       return { data: null };
     });
     const { svc } = setup(makeQuery(), rpc as unknown as Mock);
     await svc.loadFilterOptions();
     expect(svc.genres()).toEqual(['Gaming', 'Music']);
     expect(svc.platforms()).toEqual(['Twitch', 'YouTube']);
-    expect(svc.languages()).toEqual(['English']);
+    expect(svc.languages()).toEqual([{ code: 'en', name: 'English' }, { code: 'de', name: 'German' }]);
+    expect(svc.usedLanguages()).toEqual([{ code: 'en', name: 'English' }]);
     expect(svc.loaded()).toBe(true);
   });
 });
@@ -318,5 +320,23 @@ describe('fromDb — twitchStats mapping', () => {
     const { svc } = setup(makeQuery({ data: row }));
     const creator = await svc.byId(11);
     expect(creator?.twitchStats).toBeUndefined();
+  });
+});
+
+describe('CreatorsService language lists', () => {
+  it('loadFilterOptions populates all + in-use languages and languageName maps codes', async () => {
+    const rpc = vi.fn().mockImplementation((name: string) => {
+      if (name === 'get_languages') return Promise.resolve({ data: [{ code: 'en', name: 'English' }, { code: 'de', name: 'German' }], error: null });
+      if (name === 'get_creator_languages') return Promise.resolve({ data: [{ code: 'en', name: 'English' }], error: null });
+      return Promise.resolve({ data: [], error: null });
+    });
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({ providers: [CreatorsService, { provide: SupabaseService, useValue: { client: { rpc } } }] });
+    const svc = TestBed.inject(CreatorsService);
+    await svc.loadFilterOptions();
+    expect(svc.languages()).toEqual([{ code: 'en', name: 'English' }, { code: 'de', name: 'German' }]);
+    expect(svc.usedLanguages()).toEqual([{ code: 'en', name: 'English' }]);
+    expect(svc.languageName('de')).toBe('German');
+    expect(svc.languageName('xx')).toBe('xx');
   });
 });

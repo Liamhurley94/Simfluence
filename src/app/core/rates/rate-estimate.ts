@@ -31,13 +31,13 @@ export function computeRateRanges(creator: Creator): RateRanges {
   const genre = creator.genre || 'Gaming & Esports';
   const cpms = NICHE_SPONSOR_CPM[genre] ?? DEFAULT_CPM;
   const platRaw = (creator.platform || 'YouTube').toLowerCase();
-  const lang = (creator.language || 'English').toLowerCase();
+  const lang = (creator.language || 'en').toLowerCase();
   const subsN = creator.subsParsed || parseSubs(creator.subs);
 
   // ── TWITCH / KICK ─────────────────────────────────────────────────
   if (platRaw.includes('twitch') || platRaw.includes('kick')) {
     const ccv = parseViews(creator.avgViews) || 100;
-    const baseRate = platRaw.includes('kick') ? 1.6 : lang === 'french' ? 2.25 : 2.65;
+    const baseRate = platRaw.includes('kick') ? 1.6 : lang === 'fr' ? 2.25 : 2.65;
     const nicheMult = Math.max(1.0, (cpms.dedMult || 1.6) / 1.6);
     const streamBase = Math.max(650, ccv * baseRate * nicheMult);
     const intLo = Math.max(500, roundTo(streamBase * 0.72, 50));
@@ -78,7 +78,7 @@ export function computeRateRanges(creator: Creator): RateRanges {
 
   // ── YOUTUBE / OTHER ───────────────────────────────────────────────
   const avgV = parseViews(creator.avgViews) || subsN * 0.08 || 0;
-  let baseCPV = lang === 'german' ? 0.085 : lang === 'french' ? 0.072 : 0.085;
+  let baseCPV = lang === 'de' ? 0.085 : lang === 'fr' ? 0.072 : 0.085;
   const nicheAdj = Math.max(1.0, (cpms.dedMult || 1.6) / 1.6);
   baseCPV *= nicheAdj;
 

@@ -1,4 +1,4 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
 import { CREATOR_TIER_RANGES, Creator, CreatorFilters, PagedCreators, SortKey, TwitchStats, YoutubeStats, maxSubsForBudget } from '../data/creator.types';
 import { SupabaseService } from '../supabase/supabase.service';
 
@@ -141,26 +141,38 @@ export class CreatorsService {
   // Exposed as readonly signals so components stay reactive when load completes.
   private readonly _genres = signal<string[]>([]);
   private readonly _platforms = signal<string[]>([]);
-  private readonly _languages = signal<string[]>([]);
+  // `languages` = all supported (admin add form + display map); `usedLanguages` = only
+  // those with ≥1 creator (Discovery filter — no dead options). Both { code, name }.
+  private readonly _languages = signal<{ code: string; name: string }[]>([]);
+  private readonly _usedLanguages = signal<{ code: string; name: string }[]>([]);
   private readonly _submodesByGenre = signal<Record<string, { subMode: string; hasKeywords: boolean }[]>>({});
 
   readonly genres = this._genres.asReadonly();
   readonly platforms = this._platforms.asReadonly();
   readonly languages = this._languages.asReadonly();
+  readonly usedLanguages = this._usedLanguages.asReadonly();
   readonly submodesByGenre = this._submodesByGenre.asReadonly();
   readonly loaded = signal(false);
 
+  private readonly _languageMap = computed(() => new Map(this._languages().map((l) => [l.code, l.name])));
+  /** English display name for a language code; falls back to the code itself. */
+  languageName(code: string | null | undefined): string {
+    return (code ? this._languageMap().get(code) : undefined) ?? code ?? '';
+  }
+
   /** Called by APP_INITIALIZER on boot. Populates filter dropdowns. */
   async loadFilterOptions(): Promise<void> {
-    const [g, p, l, sm] = await Promise.all([
+    const [g, p, allLang, usedLang, sm] = await Promise.all([
       this.supabase.client.rpc('get_creator_genres'),
       this.supabase.client.rpc('get_creator_platforms'),
+      this.supabase.client.rpc('get_languages'),
       this.supabase.client.rpc('get_creator_languages'),
       this.supabase.client.rpc('get_genre_submodes'),
     ]);
     this._genres.set((g.data as string[] | null) ?? []);
     this._platforms.set((p.data as string[] | null) ?? []);
-    this._languages.set((l.data as string[] | null) ?? []);
+    this._languages.set((allLang.data as { code: string; name: string }[] | null) ?? []);
+    this._usedLanguages.set((usedLang.data as { code: string; name: string }[] | null) ?? []);
     const byGenre: Record<string, { subMode: string; hasKeywords: boolean }[]> = {};
     for (const row of (sm.data as Array<{ genre: string; sub_mode: string; has_keywords: boolean }> | null) ?? []) {
       (byGenre[row.genre] ??= []).push({ subMode: row.sub_mode, hasKeywords: row.has_keywords });

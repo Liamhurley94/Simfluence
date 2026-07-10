@@ -58,7 +58,8 @@ describe('DiscoveryComponent', () => {
       list: listMock,
       genres: signal(['Gaming & Esports', 'Music']),
       platforms: signal(['YouTube', 'Twitch']),
-      languages: signal(['English']),
+      languages: signal([{ code: 'en', name: 'English' }]),
+      usedLanguages: signal([{ code: 'en', name: 'English' }]),
       submodesByGenre: signal<Record<string, { subMode: string; hasKeywords: boolean }[]>>({}),
     };
 
