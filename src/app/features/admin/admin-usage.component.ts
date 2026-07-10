@@ -47,7 +47,7 @@ const RANGES: Array<7 | 14 | 30> = [7, 14, 30];
             <div class="h-full transition-all" [style.width.%]="budgetPct()" [style.background]="budgetColor()" data-testid="yt-budget-bar"></div>
           </div>
 
-          <app-bar-chart [values]="ytValues()" [labels]="labels()" [threshold]="status()?.effective_ceiling" [colorFor]="ytColor" [height]="90" />
+          <app-bar-chart [values]="ytValues()" [labels]="labels()" [colorFor]="ytColor" [height]="100" />
 
           <p class="text-xs" style="color: var(--color-text-muted);" data-testid="yt-limit-line">
             @if (isElevated()) {
@@ -68,7 +68,7 @@ const RANGES: Array<7 | 14 | 30> = [7, 14, 30];
               today <strong style="color: var(--color-text);">{{ twToday() | number }}</strong> calls
             </span>
           </header>
-          <app-bar-chart [values]="twValues()" [labels]="labels()" [height]="90" />
+          <app-bar-chart [values]="twValues()" [labels]="labels()" color="#8b5cf6" [height]="100" />
           <p class="text-xs" style="color: var(--color-text-muted);">
             Informational — Twitch is rate-limited per-minute, not per-day, so there's no daily budget to track.
           </p>

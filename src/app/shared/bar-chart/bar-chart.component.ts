@@ -15,7 +15,15 @@ export function barScale(values: number[], max: number, height: number): number[
   selector: 'app-bar-chart',
   standalone: true,
   template: `
-    <svg [attr.viewBox]="'0 0 ' + width() + ' ' + (height() + 16)" class="w-full" role="img" preserveAspectRatio="none">
+    <!-- Fixed CSS height so w-full width can't auto-inflate the height via the
+         viewBox aspect ratio; preserveAspectRatio="none" stretches bars to fill. -->
+    <svg
+      [attr.viewBox]="'0 0 ' + width() + ' ' + height()"
+      class="w-full block"
+      [style.height.px]="height()"
+      role="img"
+      preserveAspectRatio="none"
+    >
       @if (threshold() !== undefined) {
         <line
           data-testid="threshold"
@@ -28,7 +36,7 @@ export function barScale(values: number[], max: number, height: number): number[
         <rect
           data-testid="bar"
           [attr.x]="b.x" [attr.y]="height() - b.h" [attr.width]="barWidth" [attr.height]="b.h"
-          [attr.fill]="b.color" rx="1"
+          [attr.fill]="b.color"
         >
           <title>{{ labels()[b.i] }}: {{ values()[b.i] }}</title>
         </rect>
@@ -41,6 +49,7 @@ export class BarChartComponent {
   readonly labels = input<string[]>([]);
   readonly threshold = input<number | undefined>(undefined);
   readonly colorFor = input<((v: number) => string) | undefined>(undefined);
+  readonly color = input<string>('var(--color-sf-gold)');
   readonly height = input<number>(80);
 
   protected readonly barWidth = 10;
@@ -53,12 +62,13 @@ export class BarChartComponent {
   );
   protected readonly bars = computed(() => {
     const hs = barScale(this.values(), this.max(), this.height());
-    const color = this.colorFor();
+    const colorFor = this.colorFor();
+    const solid = this.color();
     return this.values().map((v, i) => ({
       i,
       x: i * this.slot,
       h: hs[i],
-      color: color ? color(v) : 'var(--color-sf-gold)',
+      color: colorFor ? colorFor(v) : solid,
     }));
   });
 }

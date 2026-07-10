@@ -29,4 +29,22 @@ describe('BarChartComponent', () => {
     f.detectChanges();
     expect(f.nativeElement.querySelector('[data-testid="threshold"]')).toBeTruthy();
   });
+
+  it('renders at a bounded CSS pixel height (not viewBox-auto-sized)', () => {
+    TestBed.configureTestingModule({ imports: [BarChartComponent] });
+    const f = TestBed.createComponent(BarChartComponent);
+    f.componentRef.setInput('values', [1, 2]);
+    f.componentRef.setInput('height', 96);
+    f.detectChanges();
+    expect(f.nativeElement.querySelector('svg').style.height).toBe('96px');
+  });
+
+  it('uses the solid color input for bar fill when no colorFor is given', () => {
+    TestBed.configureTestingModule({ imports: [BarChartComponent] });
+    const f = TestBed.createComponent(BarChartComponent);
+    f.componentRef.setInput('values', [1, 2]);
+    f.componentRef.setInput('color', '#8b5cf6');
+    f.detectChanges();
+    expect(f.nativeElement.querySelector('[data-testid="bar"]').getAttribute('fill')).toBe('#8b5cf6');
+  });
 });
