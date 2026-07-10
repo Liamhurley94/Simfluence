@@ -290,6 +290,34 @@ describe('DiscoveryQueueComponent — bulk add', () => {
     expect(addCreators.mock.calls[0][0][0].platforms.youtube).toBe('UC9');
   });
 
+  it('skips already-added (and rejected) rows: only new/shortlisted rows go in the batch, warning names the rest', async () => {
+    const rows = [
+      mkRow({ channel_id: 'UC1', name: 'FreshOne', genre: 'Gaming', status: 'new' }),
+      mkRow({ channel_id: 'UC2', name: 'AlreadyAdded', genre: 'Gaming', status: 'added' }),
+      mkRow({ channel_id: 'UC3', name: 'WasRejected', genre: 'Gaming', status: 'rejected' }),
+    ];
+    const { addCreators } = setup({ listQueue: vi.fn().mockResolvedValue({ rows, total: 3 }) });
+    const fixture = await create();
+    const c = fixture.componentInstance;
+
+    c.toggleSelect('UC1');
+    c.toggleSelect('UC2');
+    c.toggleSelect('UC3');
+    await c.bulkAdd();
+    fixture.detectChanges();
+
+    expect(addCreators).toHaveBeenCalledTimes(1);
+    const [batch] = addCreators.mock.calls[0];
+    expect(batch).toHaveLength(1);
+    expect(batch[0].name).toBe('FreshOne');
+
+    const warning = fixture.nativeElement.querySelector('[data-testid="queue-bulk-add-warning"]');
+    expect(warning).toBeTruthy();
+    expect(warning.textContent).toContain('AlreadyAdded');
+    expect(warning.textContent).toContain('WasRejected');
+    expect(warning.textContent).not.toContain('FreshOne');
+  });
+
   it('when every selected row lacks a genre, addCreators is never called and a warning still shows', async () => {
     const rows = [mkRow({ channel_id: 'UC1', name: 'A', genre: '' }), mkRow({ channel_id: 'UC2', name: 'B', genre: '' })];
     const { addCreators } = setup({ listQueue: vi.fn().mockResolvedValue({ rows, total: 2 }) });

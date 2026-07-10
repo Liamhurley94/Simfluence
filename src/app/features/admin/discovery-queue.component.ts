@@ -298,18 +298,25 @@ export class DiscoveryQueueComponent {
 
   /** Dialog-less bulk add: each selected row's own genre/language/bio feeds
    *  one addCreators(batch) call (no per-row editing UI — that's what the
-   *  single-row Add dialog is for). The backend rejects an unknown genre for
-   *  the whole batch, so a row with no genre would take every other selected
-   *  row down with it — skip those up front and say so, rather than let one
-   *  bad row silently fail the rest. */
+   *  single-row Add dialog is for). One bad row fails the WHOLE batch
+   *  server-side (unknown genre is rejected batch-wide; an already-added
+   *  row's duplicate handle 409s the batch) — so skip ineligible rows up
+   *  front and say so, rather than let one bad row silently sink the rest.
+   *  Eligible = 'new'/'shortlisted' with a genre, matching the per-row Add
+   *  button's gating ('added' would re-add a roster creator; 'rejected'
+   *  needs an explicit Restore first). */
   async bulkAdd(): Promise<void> {
     const selectedRows = this.rows().filter((r) => this.selected().has(r.channel_id));
     if (!selectedRows.length) return;
     this.error.set(null);
-    const skipped = selectedRows.filter((r) => !r.genre);
-    const eligible = selectedRows.filter((r) => !!r.genre);
+    const addable = (r: DiscoveredChannel) => r.status === 'new' || r.status === 'shortlisted';
+    const eligible = selectedRows.filter((r) => addable(r) && !!r.genre);
+    const warning = this.skipWarning(
+      selectedRows.filter((r) => !addable(r)),
+      selectedRows.filter((r) => addable(r) && !r.genre),
+    );
     if (!eligible.length) {
-      this.warning.set(`Skipped — no genre set: ${skipped.map((r) => r.name).join(', ')}`);
+      this.warning.set(warning);
       return;
     }
     const batch: AddCreatorInput[] = eligible.map((r) => this.toAddInput(r));
@@ -317,13 +324,22 @@ export class DiscoveryQueueComponent {
     try {
       await this.creatorSvc.addCreators(batch);
       await this.reload();
-      if (skipped.length) this.warning.set(`Skipped — no genre set: ${skipped.map((r) => r.name).join(', ')}`);
+      this.warning.set(warning);
       this.changed.emit();
     } catch (err) {
       this.error.set(this.errorMessage(err, 'Add failed'));
     } finally {
       this.busy.set(false);
     }
+  }
+
+  /** One warning line naming every skipped row with its reason, or null if
+   *  nothing was skipped. */
+  private skipWarning(notAddable: DiscoveredChannel[], noGenre: DiscoveredChannel[]): string | null {
+    const parts: string[] = [];
+    if (notAddable.length) parts.push(`already added/rejected: ${notAddable.map((r) => r.name).join(', ')}`);
+    if (noGenre.length) parts.push(`no genre set: ${noGenre.map((r) => r.name).join(', ')}`);
+    return parts.length ? `Skipped — ${parts.join(' · ')}` : null;
   }
 
   openDrawer(row: DiscoveredChannel): void {
