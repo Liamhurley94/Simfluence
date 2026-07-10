@@ -278,6 +278,25 @@ describe('DiscoverySearchComponent — summary + results table', () => {
     expect(stillNewRow.querySelector('[data-testid="result-add"]')).toBeTruthy();
     expect(stillNewRow.querySelector('[data-testid="result-status"]')).toBeNull();
   });
+
+  it('the same channel_id in both candidates and alreadyStaged renders exactly one actionable row', async () => {
+    // Backend's sequential per-query upserts can double-report a channel
+    // within one response — the merge must dedup or track keys collide (NG0955).
+    setup({ search: vi.fn().mockResolvedValue(mkResult({
+      candidates: [mkCandidate({ channel_id: 'UC123', name: 'DoubleReported', status: 'new' })],
+      alreadyStaged: [mkCandidate({ channel_id: 'UC123', name: 'DoubleReported', status: 'shortlisted' })],
+    })) });
+    const fixture = create();
+    const c = fixture.componentInstance;
+    c.query.set('x');
+    await c.search();
+    fixture.detectChanges();
+    const rows: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('[data-testid="discovery-result-row"]'));
+    expect(rows.length).toBe(1);
+    // The candidates entry wins: row actions, not the staged status chip.
+    expect(rows[0].querySelector('[data-testid="result-add"]')).toBeTruthy();
+    expect(rows[0].querySelector('[data-testid="result-status"]')).toBeNull();
+  });
 });
 
 describe('DiscoverySearchComponent — row actions', () => {

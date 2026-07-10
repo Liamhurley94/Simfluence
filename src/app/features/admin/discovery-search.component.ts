@@ -231,7 +231,7 @@ export class DiscoverySearchComponent {
         ? await this.svc.search({ query: q })
         : await this.svc.search({ genre: this.genre(), subMode: this.subMode() });
       this.lastResult.set(result);
-      this.resultRows.set([...result.candidates, ...result.alreadyStaged]);
+      this.resultRows.set(this.mergeResultRows(result));
       this.rosterRows.set(result.alreadyInRoster);
       this.staged.emit();
     } catch (err) {
@@ -242,6 +242,7 @@ export class DiscoverySearchComponent {
   }
 
   async applyStatus(row: DiscoveredChannel, status: 'shortlisted' | 'rejected'): Promise<void> {
+    this.error.set(null);
     try {
       await this.svc.setStatus([row.channel_id], status);
       this.updateRowStatus(row.channel_id, status);
@@ -287,6 +288,18 @@ export class DiscoverySearchComponent {
   protected statusLabel(s: CandidateStatus): string { return STATUS_LABEL[s]; }
   protected statusFg(s: CandidateStatus): string { return STATUS_FG[s]; }
   protected statusBg(s: CandidateStatus): string { return STATUS_BG[s]; }
+
+  /** Merge candidates + alreadyStaged into one row list, unique by channel_id.
+   *  The backend processes a genre+subMode search's preset queries sequentially,
+   *  and each query's dedup sees the previous query's fresh upserts — so one
+   *  response can report the same channel in BOTH arrays (or in alreadyStaged
+   *  twice). Duplicate track keys would throw NG0955, so keep only the first
+   *  occurrence — candidates come first, so the actionable entry wins. */
+  private mergeResultRows(result: SearchResult): DiscoveredChannel[] {
+    const seen = new Set<string>();
+    return [...result.candidates, ...result.alreadyStaged]
+      .filter((r) => (seen.has(r.channel_id) ? false : (seen.add(r.channel_id), true)));
+  }
 
   private updateRowStatus(channelId: string, status: CandidateStatus): void {
     this.resultRows.update((rows) => rows.map((r) => (r.channel_id === channelId ? { ...r, status } : r)));
