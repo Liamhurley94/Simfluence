@@ -26,4 +26,16 @@ export class AdminCreatorService {
   async resyncCreator(creatorId: number, platform: string): Promise<{ resynced: { creatorId: number; platform: string } }> {
     return this.edge.post('admin-resync-creator', { creatorId, platform });
   }
+
+  /** Attach a second platform to an existing creator (spec decision #4).
+   *  With statsSeed (discovery "Link" flow) the platform row is born synced.
+   *  Note: the backend can return 200 (not only 409) on a same-handle
+   *  re-attach — it heals a previously half-completed attach rather than
+   *  treating it as a conflict. */
+  async attachPlatform(input: {
+    creatorId: number; platform: 'youtube' | 'twitch'; handle: string;
+    statsSeed?: import('./admin-discovery.types').StatsSeed;
+  }): Promise<{ attached: { creatorId: number; platform: string } }> {
+    return this.edge.post('admin-attach-platform', input);
+  }
 }

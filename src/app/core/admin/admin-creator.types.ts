@@ -8,6 +8,9 @@ export interface AddCreatorInput {
   bio?: string;
   language?: string;
   color?: string;
+  /** Present when adding from discovery: the candidate's just-fetched stats.
+   *  The backend births the youtube_creators row fully synced from it. */
+  statsSeed?: import('./admin-discovery.types').StatsSeed;
 }
 
 export interface AddCreatorResult {
