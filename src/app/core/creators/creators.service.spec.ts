@@ -1,8 +1,9 @@
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 
-import { CreatorsService, parseSubs } from './creators.service';
+import { CreatorsService, formatCompact, parseSubs } from './creators.service';
 import { SupabaseService } from '../supabase/supabase.service';
+import { computeRateRanges } from '../rates/rate-estimate';
 
 describe('parseSubs', () => {
   it('parses "1.5M" → 1_500_000', () => {
@@ -320,6 +321,103 @@ describe('fromDb — twitchStats mapping', () => {
     const { svc } = setup(makeQuery({ data: row }));
     const creator = await svc.byId(11);
     expect(creator?.twitchStats).toBeUndefined();
+  });
+});
+
+describe('formatCompact', () => {
+  it('formats millions with one decimal', () => {
+    expect(formatCompact(16_900_000)).toBe('16.9M');
+  });
+
+  it('formats thousands with no decimal', () => {
+    expect(formatCompact(913_385)).toBe('913K');
+  });
+
+  it('leaves sub-1000 values as plain integers', () => {
+    expect(formatCompact(950)).toBe('950');
+  });
+
+  it('roundtrips through parseSubs to ~the same magnitude', () => {
+    expect(parseSubs(formatCompact(16_900_000))).toBe(16_900_000);
+    expect(Math.abs(parseSubs(formatCompact(913_385)) - 913_385)).toBeLessThan(1_000);
+    expect(parseSubs(formatCompact(950))).toBe(950);
+  });
+});
+
+describe('fromDb — live-first stat overlay', () => {
+  it('YouTube-primary: overlays subs/subsParsed/avgViews/eng from ytStats over empty static columns', async () => {
+    const row = {
+      id: 20, name: 'Linus Tech Tips', handle: '@ltt', platform: 'YouTube',
+      all_platforms: ['YouTube'], subs: '', subs_parsed: 0,
+      avg_views: '', eng: '', genre: 'Tech & Gadgets', cpi: 80, gfi: null,
+      color: '#fff', verified_deals: 0, sponsor_history: [], bio: '',
+      youtube_creators: [{
+        subscriber_count: 16_900_000, avg_views: 913_385, engagement_rate: 3.4,
+        sponsor_freq_pct: 12, stats_refreshed_at: '2026-07-01T00:00:00Z',
+      }],
+    };
+    const { svc } = setup(makeQuery({ data: row }));
+    const creator = await svc.byId(20);
+    expect(creator?.subs).toBe('16.9M');
+    expect(creator?.subsParsed).toBe(16_900_000);
+    expect(creator?.avgViews).toBe('913K');
+    expect(creator?.eng).toBe('3.4%');
+  });
+
+  it('Twitch-primary: overlays avgViews from twitchStats.avgCcv, leaves subs/subsParsed/eng static', async () => {
+    const row = {
+      id: 21, name: 'StreamerGuy', handle: '@sg', platform: 'Twitch',
+      all_platforms: ['Twitch'], subs: '180K', subs_parsed: 180_000,
+      avg_views: '0', eng: '0%', genre: 'Gaming & Esports', cpi: 60, gfi: null,
+      color: '#9147ff', verified_deals: 0, sponsor_history: [], bio: '',
+      twitch_creators: [{
+        avg_ccv: 2500, peak_ccv: 5000, streams_30d: 10,
+        hours_streamed_30d: 30, last_stream_at: null, primary_game_name: null,
+        live_refreshed_at: null,
+      }],
+    };
+    const { svc } = setup(makeQuery({ data: row }));
+    const creator = await svc.byId(21);
+    expect(creator?.avgViews).toBe('3K');
+    expect(creator?.subs).toBe('180K');
+    expect(creator?.subsParsed).toBe(180_000);
+    expect(creator?.eng).toBe('0%');
+  });
+
+  it('legacy row (no embedded stats): all four fields identical to static values (regression)', async () => {
+    const row = {
+      id: 22, name: 'Legacy Creator', handle: '@legacy', platform: 'YouTube',
+      all_platforms: ['YouTube'], subs: '500K', subs_parsed: 500_000,
+      avg_views: '80K', eng: '4.1%', genre: 'Gaming & Esports', cpi: 70, gfi: null,
+      color: '#fff', verified_deals: 0, sponsor_history: [], bio: '',
+    };
+    const { svc } = setup(makeQuery({ data: row }));
+    const creator = await svc.byId(22);
+    expect(creator?.subs).toBe('500K');
+    expect(creator?.subsParsed).toBe(500_000);
+    expect(creator?.avgViews).toBe('80K');
+    expect(creator?.eng).toBe('4.1%');
+  });
+});
+
+describe('rate-estimate sanity — live overlay unblocks floor pricing', () => {
+  it('Linus-like creator with live YouTube stats prices well above the static-floor ($150/$300)', async () => {
+    const row = {
+      id: 23, name: 'Linus Tech Tips', handle: '@ltt', platform: 'YouTube',
+      all_platforms: ['YouTube'], subs: '', subs_parsed: 0,
+      avg_views: '', eng: '', genre: 'Tech & Gadgets', cpi: 80, gfi: null,
+      color: '#fff', verified_deals: 0, sponsor_history: [], bio: '',
+      youtube_creators: [{
+        subscriber_count: 16_900_000, avg_views: 913_385, engagement_rate: 3.4,
+        sponsor_freq_pct: 12, stats_refreshed_at: '2026-07-01T00:00:00Z',
+      }],
+    };
+    const { svc } = setup(makeQuery({ data: row }));
+    const creator = await svc.byId(23);
+    const rates = computeRateRanges(creator!);
+    // 913K avg views × ~$0.085 CPV × scale ≈ tens of thousands — loose lower
+    // bound, not an exact figure (coefficients are IP, see rate-estimate.ts).
+    expect(rates.ded[0]).toBeGreaterThan(10_000);
   });
 });
 

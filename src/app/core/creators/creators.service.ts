@@ -36,6 +36,17 @@ export function parseSubs(raw: string): number {
   return n;
 }
 
+// Compact display formatter — the write-side counterpart to parseSubs (16_900_000
+// -> "16.9M", 913_385 -> "913K", 950 -> "950"). Used by the live-stat overlay
+// below: downstream code (rate-estimate, Discovery) parses these strings back
+// via parseSubs, so output must roundtrip to ≈ the same magnitude.
+export function formatCompact(n: number): string {
+  if (!Number.isFinite(n) || n <= 0) return '0';
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`;
+  if (n >= 1_000) return `${Math.round(n / 1_000)}K`;
+  return `${Math.round(n)}`;
+}
+
 function parseYtStats(row: Record<string, any>): YoutubeStats | undefined {
   const yt = row['youtube_creators'];
   if (!yt || (Array.isArray(yt) && yt.length === 0)) return undefined;
@@ -101,16 +112,46 @@ function fromDb(row: Record<string, any>, cpiSource: 'best' | 'yt' | 'tw' = 'bes
     bestCpi;
   const cpi = dynamicCpi ?? row['cpi'];
 
+  const ytStats = parseYtStats(row);
+  const twitchStats = parseTwitchStats(row);
+
+  // Live-first overlay, static fallback. `creators.subs/avg_views/eng` (and the
+  // subs_parsed generated column) are vestigial: empty for admin-added creators,
+  // since live stats live in the per-platform tables (ytStats/twitchStats above).
+  // Left untouched, computeRateRanges (rate-estimate.ts) and the cards compute
+  // off empty/zero values and floor out. Mirrors the platform semantics of
+  // live-stats.ts#liveStatsFor: YouTube-primary overlays all four fields from
+  // ytStats; Twitch/Kick-primary overlays only avgViews (CCV) — there's no live
+  // subs/engagement source for Twitch. Pending retirement of the static columns
+  // — see backend migration 20260711140000 (benchmarks RPC got the same
+  // treatment) and ARCHITECTURE.md §12.
+  let subs = row['subs'];
+  let subsParsed = Number(row['subs_parsed'] ?? 0);
+  let avgViews = row['avg_views'];
+  let eng = row['eng'];
+
+  const platform = (row['platform'] || '').toLowerCase();
+  if (platform.includes('twitch') || platform.includes('kick')) {
+    if (twitchStats && twitchStats.avgCcv > 0) {
+      avgViews = formatCompact(twitchStats.avgCcv);
+    }
+  } else if (ytStats) {
+    subs = formatCompact(ytStats.subscriberCount);
+    subsParsed = ytStats.subscriberCount;
+    avgViews = formatCompact(ytStats.avgViews);
+    eng = `${ytStats.engagementRate}%`;
+  }
+
   return {
     id: row['id'],
     name: row['name'],
     handle: row['handle'],
     platform: row['platform'],
     allPlatforms: Array.isArray(row['all_platforms']) ? row['all_platforms'] : undefined,
-    subs: row['subs'],
-    subsParsed: Number(row['subs_parsed'] ?? 0),
-    avgViews: row['avg_views'],
-    eng: row['eng'],
+    subs,
+    subsParsed,
+    avgViews,
+    eng,
     genre: row['genre'],
     cpi,
     gfi,
@@ -120,8 +161,8 @@ function fromDb(row: Record<string, any>, cpiSource: 'best' | 'yt' | 'tw' = 'bes
     bio: row['bio'],
     language: row['language'],
     rates: row['rates'] ?? undefined,
-    ytStats: parseYtStats(row),
-    twitchStats: parseTwitchStats(row),
+    ytStats,
+    twitchStats,
     twCpi,
     ytCpi,
     bestCpi,
