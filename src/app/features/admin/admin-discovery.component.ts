@@ -20,7 +20,7 @@ type DiscoveryView = 'search' | 'queue' | 'sweeps' | 'manual';
   standalone: true,
   imports: [DecimalPipe, AdminAddFormComponent, DiscoverySearchComponent, DiscoveryQueueComponent, DiscoverySweepsComponent],
   template: `
-    <div data-testid="admin-discovery" class="flex flex-col gap-4">
+    <div data-testid="admin-discovery" class="flex flex-col gap-4 flex-1 min-h-0">
       <div class="flex items-center gap-2" role="tablist">
         @for (v of views; track v.key) {
           <button type="button" role="tab" [attr.aria-selected]="view() === v.key"
@@ -38,7 +38,7 @@ type DiscoveryView = 'search' | 'queue' | 'sweeps' | 'manual';
       </div>
       @switch (view()) {
         @case ('search') { <app-discovery-search (staged)="refreshBadges()" /> }
-        @case ('queue')  { <app-discovery-queue (changed)="refreshBadges()" /> }
+        @case ('queue')  { <app-discovery-queue class="flex-1 min-h-0 flex flex-col" (changed)="refreshBadges()" /> }
         @case ('sweeps') { <app-discovery-sweeps /> }
         @case ('manual') { <app-admin-add-form (added)="refreshBadges()" /> }
       }

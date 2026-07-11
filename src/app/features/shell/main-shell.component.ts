@@ -30,7 +30,7 @@ const VALID_TIERS = new Set<string>(Object.keys(TIER_LEVELS));
         <aside class="p-4 border-r overflow-y-auto" style="background: var(--color-bg-2); border-color: var(--color-border);">
           <app-side-nav />
         </aside>
-        <main class="p-6 pb-16 overflow-y-auto">
+        <main class="p-6 pb-16 overflow-y-auto flex flex-col">
           <router-outlet />
         </main>
       </div>

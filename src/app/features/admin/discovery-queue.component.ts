@@ -50,7 +50,7 @@ const STATUS_OPTIONS: { key: StatusFilter; label: string }[] = [
   standalone: true,
   imports: [DecimalPipe, DatePipe, DiscoveryDrawerComponent, DiscoveryAddDialogComponent, SpinnerComponent],
   template: `
-    <div data-testid="discovery-queue" class="flex flex-col gap-4">
+    <div data-testid="discovery-queue" class="flex flex-col gap-4 flex-1 min-h-0">
       <div class="sf-card p-4 flex flex-wrap items-end gap-3">
         <div class="flex gap-1">
           @for (o of statusOptions; track o.key) {
@@ -101,9 +101,10 @@ const STATUS_OPTIONS: { key: StatusFilter; label: string }[] = [
         @if (rows().length === 0) {
           <p class="text-sm" style="color: var(--color-text-muted);">No candidates in the queue for this filter.</p>
         } @else {
-          <div class="sf-card overflow-hidden" data-testid="queue-table">
+          <div class="sf-card overflow-hidden flex-1 min-h-0 flex flex-col" data-testid="queue-table">
+            <div class="flex-1 min-h-0 overflow-y-auto">
             <table class="w-full text-sm">
-              <thead>
+              <thead class="sticky top-0 z-10">
                 <tr style="color: var(--color-text-muted); background: var(--color-bg-3);">
                   <th class="${TH}"></th>
                   <th class="${TH}">Name</th>
@@ -160,6 +161,7 @@ const STATUS_OPTIONS: { key: StatusFilter; label: string }[] = [
                 }
               </tbody>
             </table>
+            </div>
           </div>
         }
 

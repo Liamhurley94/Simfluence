@@ -12,7 +12,7 @@ import { AdminDiscoveryComponent } from './admin-discovery.component';
   standalone: true,
   imports: [RouterLink, RouterOutlet, DatePipe, AdminCreatorsComponent, AdminUsageComponent, AdminDiscoveryComponent],
   template: `
-    <section class="py-8 sf-appear">
+    <section class="py-8 sf-appear flex-1 min-h-0 flex flex-col">
       <header class="mb-6">
         <h1 class="text-2xl font-bold" style="color: var(--color-text);">Admin</h1>
         <p class="text-sm mt-1" style="color: var(--color-text-muted);">Manage enterprises and creators, and discover new ones.</p>
@@ -20,7 +20,7 @@ import { AdminDiscoveryComponent } from './admin-discovery.component';
 
       <router-outlet />
 
-      <div class="rounded-xl overflow-hidden" style="border: 1px solid var(--color-border);">
+      <div class="rounded-xl overflow-hidden flex-1 min-h-0 flex flex-col" style="border: 1px solid var(--color-border);">
         <div class="flex" role="tablist" style="border-bottom: 1px solid var(--color-border);">
           <button
             type="button"
@@ -71,7 +71,7 @@ import { AdminDiscoveryComponent } from './admin-discovery.component';
             data-testid="admin-tab-usage"
           >Usage</button>
         </div>
-        <div class="p-5">
+        <div class="p-5 flex-1 min-h-0 flex flex-col overflow-y-auto">
 
       @switch (tab()) {
       @case ('enterprises') {
@@ -124,7 +124,7 @@ import { AdminDiscoveryComponent } from './admin-discovery.component';
 
       }
       @case ('add') {
-        <app-admin-discovery />
+        <app-admin-discovery class="flex-1 min-h-0 flex flex-col" />
       }
       @case ('creators') {
         <app-admin-creators />
