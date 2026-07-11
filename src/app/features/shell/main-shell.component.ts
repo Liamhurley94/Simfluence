@@ -24,13 +24,13 @@ const VALID_TIERS = new Set<string>(Object.keys(TIER_LEVELS));
     ComplianceFooterComponent,
   ],
   template: `
-    <div class="min-h-screen flex flex-col">
+    <div class="h-screen flex flex-col">
       <app-top-nav />
-      <div class="flex-1 grid" style="grid-template-columns: 220px 1fr;">
-        <aside class="p-4 border-r" style="background: var(--color-bg-2); border-color: var(--color-border);">
+      <div class="flex-1 min-h-0 grid" style="grid-template-columns: 220px 1fr;">
+        <aside class="p-4 border-r overflow-y-auto" style="background: var(--color-bg-2); border-color: var(--color-border);">
           <app-side-nav />
         </aside>
-        <main class="p-6 pb-16">
+        <main class="p-6 pb-16 overflow-y-auto">
           <router-outlet />
         </main>
       </div>
