@@ -10,9 +10,10 @@ import { AdminDiscoveryComponent } from './admin-discovery.component';
 @Component({
   selector: 'app-admin',
   standalone: true,
+  host: { class: 'flex-1 min-h-0 flex flex-col' },
   imports: [RouterLink, RouterOutlet, DatePipe, AdminCreatorsComponent, AdminUsageComponent, AdminDiscoveryComponent],
   template: `
-    <section class="py-8 sf-appear flex-1 min-h-0 flex flex-col">
+    <section class="pt-8 sf-appear flex-1 min-h-0 flex flex-col">
       <header class="mb-6">
         <h1 class="text-2xl font-bold" style="color: var(--color-text);">Admin</h1>
         <p class="text-sm mt-1" style="color: var(--color-text-muted);">Manage enterprises and creators, and discover new ones.</p>

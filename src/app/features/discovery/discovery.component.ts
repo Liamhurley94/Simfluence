@@ -25,14 +25,15 @@ const EMPTY_PAGE: PagedCreators = { creators: [], total: 0, pageCount: 1, page: 
 @Component({
   selector: 'app-discovery',
   standalone: true,
+  host: { class: 'flex-1 min-h-0 flex flex-col' },
   imports: [CreatorCardComponent, FilterPanelComponent, PaginationComponent, DecimalPipe, BudgetPickerComponent, IconComponent, SpinnerComponent],
   template: `
-    <div class="flex gap-6 sf-appear">
-      <aside class="w-72 shrink-0">
+    <div class="flex gap-6 sf-appear flex-1 min-h-0">
+      <aside class="w-72 shrink-0 overflow-y-auto">
         <app-filter-panel (queryChange)="onQuery($event)" />
       </aside>
 
-      <section class="flex-1 min-w-0">
+      <section class="flex-1 min-w-0 min-h-0 flex flex-col">
         <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
           <h1 class="text-xl font-bold" style="color: var(--color-text);">Discovery</h1>
           <app-budget-picker [value]="budget()" (valueChange)="setBudget($event)" />
@@ -107,8 +108,8 @@ const EMPTY_PAGE: PagedCreators = { creators: [], total: 0, pageCount: 1, page: 
           </div>
         } @else {
           <div
-            class="grid gap-4 mb-6"
-            style="grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));"
+            class="grid gap-4 flex-1 min-h-0 overflow-y-auto pr-1"
+            style="grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); align-content: start;"
             data-testid="creator-grid"
           >
             @for (c of results.value().creators; track c.id; let i = $index) {
@@ -124,11 +125,16 @@ const EMPTY_PAGE: PagedCreators = { creators: [], total: 0, pageCount: 1, page: 
               />
             }
           </div>
-          <app-pagination
-            [page]="results.value().page"
-            [pageCount]="results.value().pageCount"
-            (pageChange)="onPage($event)"
-          />
+          <div
+            class="shrink-0 flex items-center justify-center px-2 py-3 mt-2"
+            style="border-top: 1px solid var(--color-border); background: var(--color-bg);"
+          >
+            <app-pagination
+              [page]="results.value().page"
+              [pageCount]="results.value().pageCount"
+              (pageChange)="onPage($event)"
+            />
+          </div>
         }
       </section>
     </div>

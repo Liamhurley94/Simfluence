@@ -222,19 +222,18 @@ function sponsorColor(pct: number): string {
                         </div>
                         <ul class="flex flex-col gap-1">
                           @for (v of videos(); track $index) {
-                            <li class="text-xs flex items-start gap-1.5" style="color: var(--color-text);">
-                              <span class="shrink-0">•</span>
+                            <li class="text-xs flex items-start gap-1.5">
                               @if (v.url) {
                                 <a
                                   [attr.href]="v.url"
                                   target="_blank"
                                   rel="noopener"
-                                  class="truncate flex-1"
-                                  style="color: var(--color-text); text-decoration: none;"
+                                  class="truncate flex-1 hover:underline"
+                                  style="color: var(--color-sf-blue);"
                                   [title]="v.title"
-                                >{{ v.title }}</a>
+                                >↗ {{ v.title }}</a>
                               } @else {
-                                <span class="truncate flex-1" [title]="v.title">{{ v.title }}</span>
+                                <span class="truncate flex-1" style="color: var(--color-text-dim);" [title]="v.title">{{ v.title }}</span>
                               }
                             </li>
                           }
