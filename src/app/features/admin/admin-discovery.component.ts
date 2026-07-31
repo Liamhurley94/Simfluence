@@ -1,7 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { AdminDiscoveryService } from '../../core/admin/admin-discovery.service';
-import { QuotaStatus } from '../../core/admin/admin-discovery.types';
+import { QuotaStatus, RunStatus } from '../../core/admin/admin-discovery.types';
 import { AdminAddFormComponent } from './admin-add-form.component';
 import { DiscoverySearchComponent } from './discovery-search.component';
 import { DiscoveryQueueComponent } from './discovery-queue.component';
@@ -27,7 +27,7 @@ type DiscoveryView = 'search' | 'queue' | 'sweeps' | 'manual';
             (click)="view.set(v.key); refreshBadges()"
             class="sf-btn text-xs" [class.sf-btn-primary]="view() === v.key" [class.sf-btn-ghost]="view() !== v.key"
             [attr.data-testid]="'discovery-view-' + v.key">
-            {{ v.label }}@if (v.key === 'queue' && queueCount() > 0) { ({{ queueCount() }}) }
+            {{ v.label }}@if (v.key === 'queue' && queueCount() > 0) { ({{ queueCount() }}) }@if (v.key === 'sweeps' && sweepBadge(); as b) { <span class="ml-1" [style.color]="b === 'running' ? 'var(--color-sf-blue)' : 'var(--color-sf-gold)'" [title]="b === 'running' ? 'Sweep in progress' : 'Sweep paused (quota)'" data-testid="sweeps-running-badge">●</span> }
           </button>
         }
         @if (quota(); as q) {
@@ -54,23 +54,34 @@ export class AdminDiscoveryComponent {
   ];
   readonly quota = signal<QuotaStatus | null>(null);
   readonly queueCount = signal(0);
+  readonly activeSweeps = signal<RunStatus[]>([]);
   /** Remaining quota, clamped so a stale/elevated ceiling swap never renders
    *  a negative "left" count while today's used total catches up. */
   readonly quotaRemaining = computed(() => {
     const q = this.quota();
     return q ? Math.max(0, q.effective_ceiling - q.used_today) : 0;
   });
+  /** 'running' (blue ●) while anything is queued/running; 'paused' (gold ●)
+   *  when the only in-flight runs are quota-paused; null hides the badge. */
+  readonly sweepBadge = computed(() => {
+    const s = this.activeSweeps();
+    if (s.includes('running') || s.includes('queued')) return 'running' as const;
+    if (s.includes('paused_quota')) return 'paused' as const;
+    return null;
+  });
 
   constructor() { void this.refreshBadges(); }
 
   async refreshBadges(): Promise<void> {
     try {
-      const [q, queue] = await Promise.all([
+      const [q, queue, active] = await Promise.all([
         this.svc.quotaStatus(),
         this.svc.listQueue({ status: 'new' }, 0, 1),
+        this.svc.activeRunStatuses(),
       ]);
       this.quota.set(q);
       this.queueCount.set(queue.total);
+      this.activeSweeps.set(active);
     } catch { /* chip is cosmetic — never block the tab on it */ }
   }
 }

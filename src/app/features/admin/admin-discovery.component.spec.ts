@@ -6,24 +6,25 @@ import { AdminCreatorService } from '../../core/admin/admin-creator.service';
 import { CreatorsService } from '../../core/creators/creators.service';
 import { QuotaStatus } from '../../core/admin/admin-discovery.types';
 
-function setup(quota: QuotaStatus | null = null) {
+function setup(quota: QuotaStatus | null = null, overrides: { activeRunStatuses?: ReturnType<typeof vi.fn> } = {}) {
   const quotaStatus = vi.fn().mockResolvedValue(quota);
   const listQueue = vi.fn().mockResolvedValue({ rows: [], total: 0 });
+  const activeRunStatuses = overrides.activeRunStatuses ?? vi.fn().mockResolvedValue([]);
 
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({
     imports: [AdminDiscoveryComponent],
     providers: [
-      { provide: AdminDiscoveryService, useValue: { quotaStatus, listQueue } },
+      { provide: AdminDiscoveryService, useValue: { quotaStatus, listQueue, activeRunStatuses } },
       { provide: AdminCreatorService, useValue: { listCreators: vi.fn().mockResolvedValue({ added: [], offline: [] }), addCreators: vi.fn() } },
       { provide: CreatorsService, useValue: { submodesByGenre: () => ({ Gaming: [] }), languages: () => [] } },
     ],
   });
-  return { quotaStatus, listQueue };
+  return { quotaStatus, listQueue, activeRunStatuses };
 }
 
 /** Create the fixture and let the constructor's initial refreshBadges() (a
- *  Promise.all of two mocked calls) settle. Two stabilize rounds: the first
+ *  Promise.all of mocked calls) settle. Two stabilize rounds: the first
  *  Promise.all resolution and the second's DOM-affecting `.set()` calls land
  *  in separate microtask ticks relative to a single whenStable(). */
 async function create() {
@@ -63,6 +64,26 @@ describe('AdminDiscoveryComponent — pill nav', () => {
 
     const queueTab: HTMLButtonElement = fixture.nativeElement.querySelector('[data-testid="discovery-view-queue"]');
     expect(queueTab.getAttribute('aria-selected')).toBe('false');
+  });
+});
+
+describe('AdminDiscoveryComponent — sweeps badge', () => {
+  it('sweepBadge reflects in-flight runs: running wins over paused, empty hides', async () => {
+    const activeRunStatuses = vi.fn().mockResolvedValue(['queued', 'paused_quota']);
+    setup(null, { activeRunStatuses });
+    const fixture = await create();
+    const component = fixture.componentInstance;
+
+    await component.refreshBadges();
+    expect(component.sweepBadge()).toBe('running');
+
+    activeRunStatuses.mockResolvedValue(['paused_quota']);
+    await component.refreshBadges();
+    expect(component.sweepBadge()).toBe('paused');
+
+    activeRunStatuses.mockResolvedValue([]);
+    await component.refreshBadges();
+    expect(component.sweepBadge()).toBeNull();
   });
 });
 

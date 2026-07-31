@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { EdgeClient } from '../api/edge.client';
 import { SupabaseService } from '../supabase/supabase.service';
 import {
-  CandidateStatus, DiscoveredChannel, DiscoveryRun, QuotaStatus, SearchResult,
+  CandidateStatus, DiscoveredChannel, DiscoveryRun, QuotaStatus, RunStatus, SearchResult,
 } from './admin-discovery.types';
 
 /** Admin creator discovery. Edge fn for anything touching YouTube (search,
@@ -61,5 +61,14 @@ export class AdminDiscoveryService {
     const { data } = await this.supabase.client.rpc('youtube_quota_status');
     const row = Array.isArray(data) ? data[0] : data;
     return (row as QuotaStatus) ?? null;
+  }
+
+  /** Statuses of in-flight runs — feeds the Sweeps-pill badge (D10). */
+  async activeRunStatuses(): Promise<RunStatus[]> {
+    const { data, error } = await this.supabase.client
+      .from('discovery_runs').select('status')
+      .in('status', ['queued', 'running', 'paused_quota']);
+    if (error) throw new Error(error.message);
+    return (data ?? []).map((r) => r.status as RunStatus);
   }
 }
