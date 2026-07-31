@@ -84,6 +84,19 @@ const CANCELLABLE_RUN_STATUSES: RunStatus[] = ['queued', 'running', 'paused_quot
               }
             </select>
           </div>
+          <div>
+            <label class="${LABEL}" style="color: var(--color-text-muted);">Min subs</label>
+            <input
+              type="number"
+              min="1"
+              [value]="minSubs() ?? ''"
+              (input)="onMinSubs($any($event.target).value)"
+              placeholder="5,000"
+              class="sf-input"
+              style="width: 110px;"
+              data-testid="sweep-minsubs"
+            />
+          </div>
           <button
             type="button"
             (click)="startSweep()"
@@ -179,6 +192,7 @@ export class DiscoverySweepsComponent {
 
   readonly genre = signal('');
   readonly subMode = signal('');
+  readonly minSubs = signal<number | null>(null);
 
   readonly starting = signal(false);
   readonly startError = signal<string | null>(null);
@@ -211,12 +225,21 @@ export class DiscoverySweepsComponent {
     if (!valid) this.subMode.set('');
   }
 
+  onMinSubs(raw: string): void {
+    const n = Math.floor(Number(raw));
+    this.minSubs.set(Number.isFinite(n) && n >= 1 ? n : null);
+  }
+
   async startSweep(): Promise<void> {
     if (this.starting()) return;
     this.starting.set(true);
     this.startError.set(null);
     try {
-      await this.svc.startSweep({ genre: this.genre() || undefined, subMode: this.subMode() || undefined });
+      await this.svc.startSweep({
+        genre: this.genre() || undefined,
+        subMode: this.subMode() || undefined,
+        minSubscribers: this.minSubs() ?? undefined,
+      });
       await this.loadRuns();
     } catch (err) {
       this.startError.set(edgeErrorMessage(err, 'Failed to start sweep'));

@@ -91,6 +91,19 @@ const STATUS_BG: Record<CandidateStatus, string> = {
             data-testid="discovery-search-query"
           />
         </div>
+        <div>
+          <label class="${LABEL}" style="color: var(--color-text-muted);">Min subs</label>
+          <input
+            type="number"
+            min="1"
+            [value]="minSubs() ?? ''"
+            (input)="onMinSubs($any($event.target).value)"
+            placeholder="5,000"
+            class="sf-input"
+            style="width: 110px;"
+            data-testid="discovery-search-minsubs"
+          />
+        </div>
         <button
           type="button"
           (click)="search()"
@@ -201,6 +214,7 @@ export class DiscoverySearchComponent {
   readonly genre = signal('');
   readonly subMode = signal('');
   readonly query = signal('');
+  readonly minSubs = signal<number | null>(null);
   protected readonly canSearch = computed(() => !!this.query().trim() || (!!this.genre() && !!this.subMode()));
 
   readonly busy = signal(false);
@@ -222,15 +236,21 @@ export class DiscoverySearchComponent {
     if (!valid) this.subMode.set('');
   }
 
+  onMinSubs(raw: string): void {
+    const n = Math.floor(Number(raw));
+    this.minSubs.set(Number.isFinite(n) && n >= 1 ? n : null);
+  }
+
   async search(): Promise<void> {
     if (this.busy() || !this.canSearch()) return;
     this.busy.set(true);
     this.error.set(null);
     try {
       const q = this.query().trim();
+      const minSubscribers = this.minSubs() ?? undefined;
       const result = q
-        ? await this.svc.search({ query: q })
-        : await this.svc.search({ genre: this.genre(), subMode: this.subMode() });
+        ? await this.svc.search({ query: q, minSubscribers })
+        : await this.svc.search({ genre: this.genre(), subMode: this.subMode(), minSubscribers });
       this.lastResult.set(result);
       this.resultRows.set(this.mergeResultRows(result));
       this.rosterRows.set(result.alreadyInRoster);

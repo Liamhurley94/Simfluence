@@ -154,6 +154,25 @@ describe('DiscoverySearchComponent — submit', () => {
     expect(search).toHaveBeenCalledWith({ genre: 'Gaming', subMode: 'Speedruns' });
   });
 
+  it('passes minSubscribers when set and omits it when blank or invalid', async () => {
+    const { search } = setup();
+    const fixture = create();
+    const c = fixture.componentInstance;
+    c.query.set('x');
+
+    c.onMinSubs('500000');
+    await c.search();
+    expect(search).toHaveBeenLastCalledWith({ query: 'x', minSubscribers: 500000 });
+
+    c.onMinSubs('');                   // blank → omit (backend defaults 5,000)
+    await c.search();
+    expect(search).toHaveBeenLastCalledWith({ query: 'x', minSubscribers: undefined });
+
+    c.onMinSubs('0');                  // 0 is falsy server-side — treat as unset
+    await c.search();
+    expect(search).toHaveBeenLastCalledWith({ query: 'x', minSubscribers: undefined });
+  });
+
   it('shows "Searching…" on the submit button while busy', async () => {
     let resolve!: (v: SearchResult) => void;
     const search = vi.fn().mockImplementation(() => new Promise((r) => { resolve = r; }));

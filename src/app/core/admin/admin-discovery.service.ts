@@ -13,11 +13,11 @@ export class AdminDiscoveryService {
   private edge = inject(EdgeClient);
   private supabase = inject(SupabaseService);
 
-  search(input: { genre?: string; subMode?: string; query?: string; maxResults?: number }): Promise<SearchResult> {
+  search(input: { genre?: string; subMode?: string; query?: string; maxResults?: number; minSubscribers?: number }): Promise<SearchResult> {
     return this.edge.post('admin-discover-creators', { mode: 'search', ...input });
   }
 
-  startSweep(input: { genre?: string; subMode?: string }): Promise<{ runId: string; queryTotal: number }> {
+  startSweep(input: { genre?: string; subMode?: string; minSubscribers?: number }): Promise<{ runId: string; queryTotal: number }> {
     return this.edge.post('admin-discover-creators', { mode: 'sweep', ...input });
   }
 

@@ -114,6 +114,24 @@ describe('DiscoverySweepsComponent — start sweep', () => {
     expect(startSweep).toHaveBeenCalledWith({ genre: undefined, subMode: undefined });
   });
 
+  it('passes minSubscribers when set and omits it when blank or invalid', async () => {
+    const { startSweep } = setup();
+    const fixture = await create();
+    const component = fixture.componentInstance;
+
+    component.onMinSubs('500000');
+    await component.startSweep();
+    expect(startSweep).toHaveBeenLastCalledWith({ genre: undefined, subMode: undefined, minSubscribers: 500000 });
+
+    component.onMinSubs('');                   // blank → omit (backend defaults 5,000)
+    await component.startSweep();
+    expect(startSweep).toHaveBeenLastCalledWith({ genre: undefined, subMode: undefined, minSubscribers: undefined });
+
+    component.onMinSubs('0');                  // 0 is falsy server-side — treat as unset
+    await component.startSweep();
+    expect(startSweep).toHaveBeenLastCalledWith({ genre: undefined, subMode: undefined, minSubscribers: undefined });
+  });
+
   it('surfaces the backend 404 "no enabled queries in scope" inline instead of throwing', async () => {
     const startSweep = vi.fn().mockRejectedValue({ error: { error: 'No enabled queries in scope' } });
     setup({ startSweep });
