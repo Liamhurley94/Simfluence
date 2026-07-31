@@ -339,11 +339,12 @@ export class DiscoverySearchComponent {
   protected statusBg(s: CandidateStatus): string { return STATUS_BG[s]; }
 
   /** Merge candidates + alreadyStaged into one row list, unique by channel_id.
-   *  The backend runs a genre+subMode search's preset queries in parallel and
-   *  merges keep-first, but one response can still report the same channel in
-   *  BOTH arrays (a query's dedup lookup races another query's fresh upsert).
-   *  Duplicate track keys would throw NG0955, so keep only the first
-   *  occurrence — candidates come first, so the actionable entry wins. */
+   *  The backend's shared keep-first merge across its parallel preset queries
+   *  already makes candidates and alreadyStaged pairwise disjoint within one
+   *  response, so this is belt-and-braces against NG0955 (duplicate track
+   *  keys) — e.g. stale rows mixed in across separate searches. Keep only
+   *  the first occurrence — candidates come first, so the actionable entry
+   *  wins. */
   private mergeResultRows(result: SearchResult): DiscoveredChannel[] {
     const seen = new Set<string>();
     return [...result.candidates, ...result.alreadyStaged]

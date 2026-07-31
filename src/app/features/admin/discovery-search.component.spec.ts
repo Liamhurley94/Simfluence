@@ -322,8 +322,9 @@ describe('DiscoverySearchComponent — summary + results table', () => {
   });
 
   it('the same channel_id in both candidates and alreadyStaged renders exactly one actionable row', async () => {
-    // Backend's sequential per-query upserts can double-report a channel
-    // within one response — the merge must dedup or track keys collide (NG0955).
+    // The merge dedups defensively even though the parallel backend's shared
+    // merge already returns disjoint arrays — track keys would still collide
+    // (NG0955) without it.
     setup({ search: vi.fn().mockResolvedValue(mkResult({
       candidates: [mkCandidate({ channel_id: 'UC123', name: 'DoubleReported', status: 'new' })],
       alreadyStaged: [mkCandidate({ channel_id: 'UC123', name: 'DoubleReported', status: 'shortlisted' })],
