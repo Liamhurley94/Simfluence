@@ -198,6 +198,29 @@ describe('DiscoverySearchComponent — submit', () => {
     await c.search();
     expect(emitted).toBe(1);
   });
+
+  it('ticks elapsedSec while a search is in flight and resets on the next search', async () => {
+    vi.useFakeTimers();
+    try {
+      let resolveSearch!: (r: SearchResult) => void;
+      const search = vi.fn().mockReturnValue(new Promise<SearchResult>((res) => { resolveSearch = res; }));
+      setup({ search });
+      const fixture = create();
+      const component = fixture.componentInstance;
+      component.query.set('minecraft');
+
+      const pending = component.search();
+      vi.advanceTimersByTime(3000);
+      expect(component.elapsedSec()).toBe(3);
+
+      resolveSearch({ candidates: [], alreadyInRoster: [], alreadyStaged: [], unitsSpent: 0 });
+      await pending;
+      vi.advanceTimersByTime(5000);
+      expect(component.elapsedSec()).toBe(3);   // timer stopped at completion
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });
 
 describe('DiscoverySearchComponent — errors', () => {

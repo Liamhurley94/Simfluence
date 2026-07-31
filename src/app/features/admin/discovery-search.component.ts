@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal, output } from '@angular/core';
+import { Component, DestroyRef, computed, inject, signal, output } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { AdminDiscoveryService } from '../../core/admin/admin-discovery.service';
 import { CreatorsService } from '../../core/creators/creators.service';
@@ -112,6 +112,12 @@ const STATUS_BG: Record<CandidateStatus, string> = {
           data-testid="discovery-search-submit"
         >{{ busy() ? 'Searching…' : 'Search' }}</button>
       </div>
+
+      @if (busy()) {
+        <p class="text-xs" style="color: var(--color-text-muted);" data-testid="discovery-search-elapsed">
+          Searching YouTube live — {{ elapsedSec() }}s elapsed. Multi-query genre searches usually take a few seconds.
+        </p>
+      }
 
       @if (error()) {
         <p class="text-sm" style="color: var(--color-sf-red);" data-testid="discovery-search-error">{{ error() }}</p>
@@ -230,6 +236,26 @@ export class DiscoverySearchComponent {
   readonly dialogCandidate = signal<DiscoveredChannel | null>(null);
   readonly dialogMode = signal<'add' | 'link'>('add');
 
+  readonly elapsedSec = signal(0);
+  private elapsedHandle: ReturnType<typeof setInterval> | null = null;
+
+  constructor() {
+    inject(DestroyRef).onDestroy(() => this.stopElapsed());
+  }
+
+  private startElapsed(): void {
+    this.stopElapsed();
+    this.elapsedSec.set(0);
+    this.elapsedHandle = setInterval(() => this.elapsedSec.update((s) => s + 1), 1000);
+  }
+
+  private stopElapsed(): void {
+    if (this.elapsedHandle) {
+      clearInterval(this.elapsedHandle);
+      this.elapsedHandle = null;
+    }
+  }
+
   onGenre(g: string): void {
     this.genre.set(g);
     const valid = g ? (this.creators.submodesByGenre()[g] ?? []).some((s) => s.subMode === this.subMode()) : false;
@@ -244,6 +270,7 @@ export class DiscoverySearchComponent {
   async search(): Promise<void> {
     if (this.busy() || !this.canSearch()) return;
     this.busy.set(true);
+    this.startElapsed();
     this.error.set(null);
     try {
       const q = this.query().trim();
@@ -258,6 +285,7 @@ export class DiscoverySearchComponent {
     } catch (err) {
       this.error.set(edgeErrorMessage(err, 'Search failed'));
     } finally {
+      this.stopElapsed();
       this.busy.set(false);
     }
   }
@@ -311,10 +339,10 @@ export class DiscoverySearchComponent {
   protected statusBg(s: CandidateStatus): string { return STATUS_BG[s]; }
 
   /** Merge candidates + alreadyStaged into one row list, unique by channel_id.
-   *  The backend processes a genre+subMode search's preset queries sequentially,
-   *  and each query's dedup sees the previous query's fresh upserts — so one
-   *  response can report the same channel in BOTH arrays (or in alreadyStaged
-   *  twice). Duplicate track keys would throw NG0955, so keep only the first
+   *  The backend runs a genre+subMode search's preset queries in parallel and
+   *  merges keep-first, but one response can still report the same channel in
+   *  BOTH arrays (a query's dedup lookup races another query's fresh upsert).
+   *  Duplicate track keys would throw NG0955, so keep only the first
    *  occurrence — candidates come first, so the actionable entry wins. */
   private mergeResultRows(result: SearchResult): DiscoveredChannel[] {
     const seen = new Set<string>();
