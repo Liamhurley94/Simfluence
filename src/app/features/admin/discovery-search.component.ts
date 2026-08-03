@@ -92,12 +92,13 @@ const STATUS_BG: Record<CandidateStatus, string> = {
           />
         </div>
         <div>
-          <label class="${LABEL}" style="color: var(--color-text-muted);">Min subs</label>
+          <label class="${LABEL}" style="color: var(--color-text-muted);">Min subs <span class="cursor-help" title="Subscriber floor for new results. Blank = default 5,000. Minimum 1 — there's no 'no floor' setting." data-testid="discovery-search-minsubs-tip">ⓘ</span></label>
           <input
             type="number"
             min="1"
             [value]="minSubs() ?? ''"
             (input)="onMinSubs($any($event.target).value)"
+            (blur)="onMinSubsBlur($any($event.target))"
             placeholder="5,000"
             class="sf-input"
             style="width: 110px;"
@@ -265,6 +266,13 @@ export class DiscoverySearchComponent {
   onMinSubs(raw: string): void {
     const n = Math.floor(Number(raw));
     this.minSubs.set(Number.isFinite(n) && n >= 1 ? n : null);
+  }
+
+  /** Blur re-sync: whatever survives in the box is what applies. Invalid
+   *  input (0, negatives, junk) parses to null, so the box clears to blank
+   *  and the placeholder shows the effective 5,000 default. */
+  onMinSubsBlur(input: HTMLInputElement): void {
+    input.value = this.minSubs()?.toString() ?? '';
   }
 
   async search(): Promise<void> {

@@ -132,6 +132,30 @@ describe('DiscoverySweepsComponent — start sweep', () => {
     expect(startSweep).toHaveBeenLastCalledWith({ genre: undefined, subMode: undefined, minSubscribers: undefined });
   });
 
+  it('re-syncs the min-subs box to the parsed value on blur and shows the infotip', async () => {
+    setup();
+    const fixture = await create();
+    const component = fixture.componentInstance;
+
+    const box = { value: '0' } as HTMLInputElement;
+    component.onMinSubs('0');
+    component.onMinSubsBlur(box);
+    expect(box.value).toBe('');        // 0 → unset → box clears (placeholder shows the 5,000 default)
+
+    box.value = '12.7';
+    component.onMinSubs('12.7');
+    component.onMinSubsBlur(box);
+    expect(box.value).toBe('12');      // floored value shown honestly
+
+    box.value = '500000';
+    component.onMinSubs('500000');
+    component.onMinSubsBlur(box);
+    expect(box.value).toBe('500000');  // valid value survives blur
+
+    const tip = fixture.nativeElement.querySelector('[data-testid="sweep-minsubs-tip"]') as HTMLElement;
+    expect(tip?.title).toContain('5,000');
+  });
+
   it('surfaces the backend 404 "no enabled queries in scope" inline instead of throwing', async () => {
     const startSweep = vi.fn().mockRejectedValue({ error: { error: 'No enabled queries in scope' } });
     setup({ startSweep });

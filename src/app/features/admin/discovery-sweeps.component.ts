@@ -85,12 +85,13 @@ const CANCELLABLE_RUN_STATUSES: RunStatus[] = ['queued', 'running', 'paused_quot
             </select>
           </div>
           <div>
-            <label class="${LABEL}" style="color: var(--color-text-muted);">Min subs</label>
+            <label class="${LABEL}" style="color: var(--color-text-muted);">Min subs <span class="cursor-help" title="Subscriber floor for new results. Blank = default 5,000. Minimum 1 — there's no 'no floor' setting." data-testid="sweep-minsubs-tip">ⓘ</span></label>
             <input
               type="number"
               min="1"
               [value]="minSubs() ?? ''"
               (input)="onMinSubs($any($event.target).value)"
+              (blur)="onMinSubsBlur($any($event.target))"
               placeholder="5,000"
               class="sf-input"
               style="width: 110px;"
@@ -228,6 +229,13 @@ export class DiscoverySweepsComponent {
   onMinSubs(raw: string): void {
     const n = Math.floor(Number(raw));
     this.minSubs.set(Number.isFinite(n) && n >= 1 ? n : null);
+  }
+
+  /** Blur re-sync: whatever survives in the box is what applies. Invalid
+   *  input (0, negatives, junk) parses to null, so the box clears to blank
+   *  and the placeholder shows the effective 5,000 default. */
+  onMinSubsBlur(input: HTMLInputElement): void {
+    input.value = this.minSubs()?.toString() ?? '';
   }
 
   async startSweep(): Promise<void> {

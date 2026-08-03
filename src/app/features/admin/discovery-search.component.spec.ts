@@ -173,6 +173,30 @@ describe('DiscoverySearchComponent — submit', () => {
     expect(search).toHaveBeenLastCalledWith({ query: 'x', minSubscribers: undefined });
   });
 
+  it('re-syncs the min-subs box to the parsed value on blur and shows the infotip', () => {
+    setup();
+    const fixture = create();
+    const c = fixture.componentInstance;
+
+    const box = { value: '0' } as HTMLInputElement;
+    c.onMinSubs('0');
+    c.onMinSubsBlur(box);
+    expect(box.value).toBe('');        // 0 → unset → box clears (placeholder shows the 5,000 default)
+
+    box.value = '12.7';
+    c.onMinSubs('12.7');
+    c.onMinSubsBlur(box);
+    expect(box.value).toBe('12');      // floored value shown honestly
+
+    box.value = '500000';
+    c.onMinSubs('500000');
+    c.onMinSubsBlur(box);
+    expect(box.value).toBe('500000');  // valid value survives blur
+
+    const tip = fixture.nativeElement.querySelector('[data-testid="discovery-search-minsubs-tip"]') as HTMLElement;
+    expect(tip?.title).toContain('5,000');
+  });
+
   it('shows "Searching…" on the submit button while busy', async () => {
     let resolve!: (v: SearchResult) => void;
     const search = vi.fn().mockImplementation(() => new Promise((r) => { resolve = r; }));
