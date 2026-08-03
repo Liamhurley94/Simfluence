@@ -24,7 +24,7 @@ const SAMPLE: Creator = {
   verifiedDeals: 2,
   sponsorHistory: ['Acme'],
   bio: 'test bio',
-  rates: { mix: [10_000, 40_000] },
+  rateRanges: { int: [500, 900], ded: [700, 1200], mix: [600, 1050] },
   ytStats: {
     subscriberCount: 1_500_000,
     avgViews: 180_000,
@@ -200,14 +200,24 @@ describe('CreatorCardComponent', () => {
     expect(intLabel).toMatch(/^\$\d+/);
   });
 
-  it('shows a computed range even when creator.rates is empty (no em-dash)', () => {
+  it('renders the mocked rateRanges value for the current format', () => {
     const fixture = TestBed.createComponent(HostComponent);
-    fixture.componentInstance.creator.set({ ...SAMPLE, rates: undefined });
+    fixture.componentInstance.canSee.set(true);
+    fixture.componentInstance.format.set('Integrated');
+    fixture.detectChanges();
+    const rate = fixture.nativeElement.querySelector('[data-testid="creator-rate"]');
+    // SAMPLE.rateRanges.int = [500, 900] — rendered straight from the column,
+    // no client-side computation.
+    expect(rate.textContent.trim()).toBe('$500–$900');
+  });
+
+  it('shows — when creator.rateRanges is undefined (not yet backfilled)', () => {
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.componentInstance.creator.set({ ...SAMPLE, rateRanges: undefined });
     fixture.componentInstance.canSee.set(true);
     fixture.detectChanges();
     const rate = fixture.nativeElement.querySelector('[data-testid="creator-rate"]');
-    expect(rate.textContent.trim()).not.toBe('—');
-    expect(rate.textContent).toMatch(/\$\d+/);
+    expect(rate.textContent.trim()).toBe('—');
   });
 
   it('emits toggle with creator id when button is clicked', () => {

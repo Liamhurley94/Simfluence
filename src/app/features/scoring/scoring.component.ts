@@ -9,8 +9,7 @@ import { CreatorsService } from '../../core/creators/creators.service';
 import { SelectionService } from '../../core/selection/selection.service';
 import { ScoreCreatorService } from '../../core/score/score-creator.service';
 import { GENRE_BENCHMARKS } from '../../core/data/benchmarks.data';
-import { Creator } from '../../core/data/creator.types';
-import { computeRateRanges, RateRanges } from '../../core/rates/rate-estimate';
+import { Creator, RateRanges } from '../../core/data/creator.types';
 import { Format } from '../../core/simulation/simulation.types';
 import { hasLiveYoutubeStats } from '../../core/simulation/live-stats';
 import { tierRank } from '../../core/types';
@@ -24,7 +23,9 @@ interface ScoredRow {
   // no cached row for the campaign genre. UI renders "—" rather than zeroing.
   gfi: number | null;
   performance: number | null;
-  ranges: RateRanges;
+  // undefined when the creator's rate_ranges column hasn't been backfilled yet.
+  // UI renders "—" rather than $0.
+  ranges: RateRanges | undefined;
 }
 
 @Component({
@@ -307,13 +308,13 @@ interface ScoredRow {
                   data-testid="scoring-rate"
                 >
                   <div class="text-sm font-bold" style="color: var(--color-sf-gold);">
-                    {{ rangeLabel(row.ranges[primaryKey()]) }}
+                    {{ rangeLabel(row.ranges?.[primaryKey()]) }}
                   </div>
                   <div class="text-[8px] uppercase tracking-wider mt-0.5" style="color: var(--color-text-muted);">
                     {{ format() }}
                   </div>
                   <div class="text-[10px] mt-0.5" style="color: var(--color-text-muted);">
-                    {{ rangeLabel(row.ranges[secondaryKey()]) }} {{ secondaryKey() }}
+                    {{ rangeLabel(row.ranges?.[secondaryKey()]) }} {{ secondaryKey() }}
                   </div>
                 </td>
               </tr>
@@ -448,7 +449,7 @@ export class ScoringComponent {
           cpi,
           gfi,
           performance: gfi === null ? null : Math.round((cpi + gfi) / 2),
-          ranges: computeRateRanges(creator),
+          ranges: creator.rateRanges,
         };
       })
       .sort((a, b) => b.cpi - a.cpi);
@@ -601,7 +602,8 @@ export class ScoringComponent {
     return 'ded';
   }
 
-  protected rangeLabel(range: [number, number]): string {
+  protected rangeLabel(range: [number, number] | undefined): string {
+    if (!range) return '—';
     return `$${compact(range[0])}–$${compact(range[1])}`;
   }
 

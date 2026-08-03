@@ -1,7 +1,6 @@
 import { Component, computed, inject, input, output } from '@angular/core';
 import { CREATOR_TIER_COLORS, Creator, tierForSubs } from '../../core/data/creator.types';
 import { CreatorProfileService } from '../../core/creator-profile/creator-profile.service';
-import { computeRateRanges } from '../../core/rates/rate-estimate';
 import { Format } from '../../core/simulation/simulation.types';
 import { IconComponent } from '../icon/icon.component';
 import { ProprietaryNoteComponent } from '../compliance/proprietary-note.component';
@@ -278,7 +277,8 @@ export class CreatorCardComponent {
   });
 
   readonly rateLabel = computed(() => {
-    const ranges = computeRateRanges(this.creator());
+    const ranges = this.creator().rateRanges;
+    if (!ranges) return '—';
     const key = this.format() === 'Dedicated' ? 'ded' : this.format() === 'Mixed' ? 'mix' : 'int';
     return this.formatRange(ranges[key]);
   });

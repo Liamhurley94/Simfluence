@@ -30,6 +30,7 @@ function mkCreator(id: number): Creator {
     verifiedDeals: 2,
     sponsorHistory: [],
     bio: 'bio',
+    rateRanges: { int: [500, 900], ded: [700, 1200], mix: [600, 1050] },
   };
 }
 
@@ -186,6 +187,21 @@ describe('ScoringComponent', () => {
     tier.set('silver');
     fixture.detectChanges();
     expect(rateCell?.classList.contains('blur-sm')).toBe(false);
+  });
+
+  it('renders — in the rate cell when creator.rateRanges is undefined (not yet backfilled)', async () => {
+    const noRates: Creator = { ...mkCreator(2), rateRanges: undefined };
+    setup({ selectedIds: [2], tier: 'silver', creators: [noRates] });
+    const fixture = TestBed.createComponent(ScoringComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const rateCell: HTMLElement = fixture.nativeElement
+      .querySelector('[data-testid="scoring-row-2"]')
+      ?.children[4];
+    expect(rateCell?.textContent).toContain('—');
+    expect(rateCell?.textContent).not.toMatch(/\$\d/);
   });
 
   it('confidence reflects % of creators with verified deals', async () => {

@@ -29,7 +29,7 @@ function mkCreator(id: number): Creator {
     verifiedDeals: 2,
     sponsorHistory: [],
     bio: 'bio',
-    rates: { mix: [10_000, 40_000] },
+    rateRanges: { int: [500, 900], ded: [700, 1200], mix: [600, 1050] },
   };
 }
 

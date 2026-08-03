@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 
 import { CreatorsService, formatCompact, parseSubs } from './creators.service';
 import { SupabaseService } from '../supabase/supabase.service';
-import { computeRateRanges } from '../rates/rate-estimate';
 
 describe('parseSubs', () => {
   it('parses "1.5M" → 1_500_000', () => {
@@ -400,24 +399,31 @@ describe('fromDb — live-first stat overlay', () => {
   });
 });
 
-describe('rate-estimate sanity — live overlay unblocks floor pricing', () => {
-  it('Linus-like creator with live YouTube stats prices well above the static-floor ($150/$300)', async () => {
+describe('fromDb — rateRanges passthrough', () => {
+  it('maps row.rate_ranges to creator.rateRanges verbatim', async () => {
     const row = {
       id: 23, name: 'Linus Tech Tips', handle: '@ltt', platform: 'YouTube',
-      all_platforms: ['YouTube'], subs: '', subs_parsed: 0,
-      avg_views: '', eng: '', genre: 'Tech & Gadgets', cpi: 80, gfi: null,
+      all_platforms: ['YouTube'], subs: '500K', subs_parsed: 500_000,
+      avg_views: '80K', eng: '4%', genre: 'Tech & Gadgets', cpi: 80, gfi: null,
       color: '#fff', verified_deals: 0, sponsor_history: [], bio: '',
-      youtube_creators: [{
-        subscriber_count: 16_900_000, avg_views: 913_385, engagement_rate: 3.4,
-        sponsor_freq_pct: 12, stats_refreshed_at: '2026-07-01T00:00:00Z',
-      }],
+      rate_ranges: { int: [500, 900], ded: [700, 1200], mix: [600, 1050] },
     };
     const { svc } = setup(makeQuery({ data: row }));
     const creator = await svc.byId(23);
-    const rates = computeRateRanges(creator!);
-    // 913K avg views × ~$0.085 CPV × scale ≈ tens of thousands — loose lower
-    // bound, not an exact figure (coefficients are IP, see rate-estimate.ts).
-    expect(rates.ded[0]).toBeGreaterThan(10_000);
+    expect(creator?.rateRanges).toEqual({ int: [500, 900], ded: [700, 1200], mix: [600, 1050] });
+  });
+
+  it('leaves rateRanges undefined when the column is null (not yet backfilled)', async () => {
+    const row = {
+      id: 24, name: 'No Rates Yet', handle: '@norates', platform: 'YouTube',
+      all_platforms: ['YouTube'], subs: '500K', subs_parsed: 500_000,
+      avg_views: '80K', eng: '4%', genre: 'Tech & Gadgets', cpi: 80, gfi: null,
+      color: '#fff', verified_deals: 0, sponsor_history: [], bio: '',
+      rate_ranges: null,
+    };
+    const { svc } = setup(makeQuery({ data: row }));
+    const creator = await svc.byId(24);
+    expect(creator?.rateRanges).toBeUndefined();
   });
 });
 

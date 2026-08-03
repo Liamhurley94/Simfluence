@@ -11,7 +11,6 @@ import { SupabaseService } from '../../core/supabase/supabase.service';
 import { Creator } from '../../core/data/creator.types';
 import { YoutubeCreatorData, YoutubeVideo } from '../../core/youtube/youtube-creator.types';
 import { TwitchEnrichment } from '../../core/twitch/twitch-live.types';
-import { computeRateRanges } from '../../core/rates/rate-estimate';
 import { lastStreamPhrase } from '../../core/twitch/twitch-live.util';
 
 interface GenreBenchmarks {
@@ -353,10 +352,10 @@ function sponsorColor(pct: number): string {
                       Integrated
                     </div>
                     <div class="text-sm font-bold" style="color: var(--color-sf-green);">
-                      {{ formatBudget(rates().int[0]) }}
+                      {{ rateLo('int') }}
                     </div>
                     <div class="text-[9px]" style="color: var(--color-text-muted);">
-                      ~{{ formatBudget(rates().int[1]) }}
+                      {{ rateHi('int') }}
                     </div>
                   </div>
                   <div class="p-2 rounded text-center" style="background: var(--color-bg-3);">
@@ -364,10 +363,10 @@ function sponsorColor(pct: number): string {
                       Dedicated
                     </div>
                     <div class="text-sm font-bold" style="color: var(--color-sf-green);">
-                      {{ formatBudget(rates().ded[0]) }}
+                      {{ rateLo('ded') }}
                     </div>
                     <div class="text-[9px]" style="color: var(--color-text-muted);">
-                      ~{{ formatBudget(rates().ded[1]) }}
+                      {{ rateHi('ded') }}
                     </div>
                   </div>
                   <div class="p-2 rounded text-center" style="background: var(--color-bg-3);">
@@ -375,10 +374,10 @@ function sponsorColor(pct: number): string {
                       Mixed
                     </div>
                     <div class="text-sm font-bold" style="color: var(--color-sf-green);">
-                      {{ formatBudget(rates().mix[0]) }}
+                      {{ rateLo('mix') }}
                     </div>
                     <div class="text-[9px]" style="color: var(--color-text-muted);">
-                      ~{{ formatBudget(rates().mix[1]) }}
+                      {{ rateHi('mix') }}
                     </div>
                   </div>
                 </div>
@@ -679,7 +678,9 @@ export class CreatorProfileModalComponent {
   protected readonly lastStreamPhrase = lastStreamPhrase;
 
   protected readonly videos = computed<YoutubeVideo[]>(() => this.data()?.top_videos ?? []);
-  protected readonly rates = computed(() => computeRateRanges(this.creator()!));
+  // undefined when the creator's rate_ranges column hasn't been backfilled yet
+  // — the budget box renders "—".
+  protected readonly rates = computed(() => this.creator()?.rateRanges);
 
   protected readonly bench = resource<GenreBenchmarks | null, Creator | null>({
     params: () => this.creator(),
@@ -720,5 +721,17 @@ export class CreatorProfileModalComponent {
     if (n >= 1_000_000) return '$' + (n / 1_000_000).toFixed(1) + 'M';
     if (n >= 1_000) return '$' + Math.round(n / 1_000) + 'K';
     return '$' + n;
+  }
+
+  // "—" when rates() is undefined (rate_ranges not yet backfilled for this
+  // creator) instead of a misleading $0.
+  rateLo(key: 'int' | 'ded' | 'mix'): string {
+    const r = this.rates();
+    return r ? this.formatBudget(r[key][0]) : '—';
+  }
+
+  rateHi(key: 'int' | 'ded' | 'mix'): string {
+    const r = this.rates();
+    return r ? '~' + this.formatBudget(r[key][1]) : '';
   }
 }

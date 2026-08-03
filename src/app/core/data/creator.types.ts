@@ -30,6 +30,15 @@ export interface TwitchStats {
   liveRefreshedAt: string | null;
 }
 
+// Materialized server-side into creators.rate_ranges. The coefficients that
+// produce these numbers are IP and live only in the backend refresh job — the
+// frontend just renders whatever the column holds.
+export interface RateRanges {
+  int: [number, number];
+  ded: [number, number];
+  mix: [number, number];
+}
+
 export interface Creator {
   id: number;
   name: string;
@@ -53,11 +62,7 @@ export interface Creator {
 
   // optional enrichment fields
   language?: string;
-  rates?: {
-    int?: [number, number];
-    ded?: [number, number];
-    mix?: [number, number];
-  };
+  rateRanges?: RateRanges;
 
   ytStats?: YoutubeStats;
   twitchStats?: TwitchStats;
