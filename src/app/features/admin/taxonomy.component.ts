@@ -7,8 +7,8 @@ import { CreatorsService } from '../../core/creators/creators.service';
 
 const LABEL = 'text-[10px] uppercase tracking-wider mb-1 block';
 
-const PHRASES_HELP = 'What we ask YouTube, to find these creators. Full phrases work best, e.g. "elden ring gameplay".';
-const KEYWORDS_HELP = 'Words we look for in a creator\'s bio, to judge how well they fit. Short works best, e.g. "rpg", "baldur".';
+const PHRASES_HELP = 'What we ask YouTube, to find these creators. One phrase per line. Full phrases work best, e.g. a line reading: elden ring gameplay';
+const KEYWORDS_HELP = 'Words we look for in a creator\'s bio, to judge how well they fit. One keyword per line - commas do not separate them. Short words work best, e.g. a line reading rpg, then a line reading baldur';
 const STALE_NOTICE = 'Saved. Rankings for this sub-genre won\'t change until they\'re recomputed.';
 
 /** One entry per line — trim only. Case, dedup and dropping fully-blank
@@ -187,8 +187,8 @@ function parseLines(raw: string): string[] {
             </div>
 
             @if (rankingsStale()) {
-              <div class="flex flex-wrap items-center gap-3" data-testid="taxonomy-stale-notice">
-                <p class="text-sm" style="color: var(--color-sf-gold);">{{ staleNotice }}</p>
+              <div class="flex flex-col items-end gap-2" data-testid="taxonomy-stale-notice">
+                <p class="text-sm self-start" style="color: var(--color-sf-gold);">{{ staleNotice }}</p>
                 <button
                   type="button"
                   (click)="recompute()"
