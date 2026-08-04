@@ -34,12 +34,16 @@ export class TaxonomyService {
     return this.edge.post('admin-manage-taxonomy', { action: 'refreshRankings', genre, subMode });
   }
 
-  /** Count of creator_genre_scores rows already computed for this
-   *  (genre, subMode) pair — the numerator the recompute progress bar polls. */
-  async rankingProgress(genre: string, subMode: string): Promise<number> {
+  /** Count of creator_genre_scores rows *freshly recomputed* for this
+   *  (genre, subMode) pair since `since` – the numerator the recompute
+   *  progress bar polls. An upsert overwrites rows in place, so for an
+   *  existing sub-genre the row count alone is already at target before a
+   *  recompute starts; the `computed_at` floor is what actually moves as
+   *  the run progresses. */
+  async rankingProgress(genre: string, subMode: string, since: string): Promise<number> {
     const { count } = await this.supabase.client
       .from('creator_genre_scores').select('*', { count: 'exact', head: true })
-      .eq('campaign_genre', genre).eq('sub_mode', subMode);
+      .eq('campaign_genre', genre).eq('sub_mode', subMode).gte('computed_at', since);
     return count ?? 0;
   }
 

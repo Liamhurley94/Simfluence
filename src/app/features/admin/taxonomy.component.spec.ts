@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TaxonomyComponent } from './taxonomy.component';
 import { TaxonomyService } from '../../core/admin/admin-taxonomy.service';
 import { TaxonomyGenre } from '../../core/admin/admin-taxonomy.types';
+import { CreatorsService } from '../../core/creators/creators.service';
 
 function mkGenres(): TaxonomyGenre[] {
   return [
@@ -32,6 +33,7 @@ function setup(overrides: {
   refreshRankings?: ReturnType<typeof vi.fn>;
   rankingProgress?: ReturnType<typeof vi.fn>;
   creatorCount?: ReturnType<typeof vi.fn>;
+  loadFilterOptions?: ReturnType<typeof vi.fn>;
 } = {}) {
   const list = overrides.list ?? vi.fn().mockResolvedValue(mkGenres());
   const createSubMode = overrides.createSubMode ?? vi.fn().mockResolvedValue({ ok: true });
@@ -40,14 +42,18 @@ function setup(overrides: {
   const refreshRankings = overrides.refreshRankings ?? vi.fn().mockResolvedValue({ ok: true });
   const rankingProgress = overrides.rankingProgress ?? vi.fn().mockResolvedValue(0);
   const creatorCount = overrides.creatorCount ?? vi.fn().mockResolvedValue(0);
+  const loadFilterOptions = overrides.loadFilterOptions ?? vi.fn().mockResolvedValue(undefined);
 
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({
     imports: [TaxonomyComponent],
-    providers: [{
-      provide: TaxonomyService,
-      useValue: { list, createSubMode, setPhrases, setKeywords, refreshRankings, rankingProgress, creatorCount },
-    }],
+    providers: [
+      {
+        provide: TaxonomyService,
+        useValue: { list, createSubMode, setPhrases, setKeywords, refreshRankings, rankingProgress, creatorCount },
+      },
+      { provide: CreatorsService, useValue: { loadFilterOptions } },
+    ],
   });
   fixture = TestBed.createComponent(TaxonomyComponent);
   fixture.detectChanges();
@@ -185,6 +191,40 @@ describe('TaxonomyComponent — recompute progress polling', () => {
     expect(rankingProgress).toHaveBeenCalledTimes(3);
   });
 
+  it('shows progress for an existing sub-genre where every row already exists – the freshly-recomputed count starts at 0, not the total', async () => {
+    // Regression for the defect this fix addresses: an upsert overwrites rows in
+    // place, so for an existing sub-genre creator_genre_scores is already at the
+    // target count before a recompute even starts. Scoping rankingProgress to rows
+    // recomputed since dispatch (the `since` argument) means the first read comes
+    // back low even though the *total* row count was already 100 – so the bar has
+    // something to animate instead of reading "done" on the very first poll.
+    const rankingProgress = vi.fn()
+      .mockResolvedValueOnce(0)    // nothing freshly recomputed yet, despite all 100 rows already existing
+      .mockResolvedValueOnce(45)
+      .mockResolvedValueOnce(100); // reaches target
+    const creatorCount = vi.fn().mockResolvedValue(100);
+    const c = setup({ rankingProgress, creatorCount });
+    await settle();
+    c.selectSubMode('Gaming & Esports', 'Survival');
+
+    await c.recompute();
+    expect(rankingProgress).toHaveBeenNthCalledWith(1, 'Gaming & Esports', 'Survival', expect.any(String));
+    expect(c.rankingProgressCount()).toBe(0);
+    expect(c.polling()).toBe(true); // did not read "done" on the first check
+
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[data-testid="taxonomy-progress"]')).not.toBeNull();
+
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(rankingProgress).toHaveBeenNthCalledWith(2, 'Gaming & Esports', 'Survival', expect.any(String));
+    expect(c.rankingProgressCount()).toBe(45);
+    expect(c.polling()).toBe(true);
+
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(c.rankingProgressCount()).toBe(100);
+    expect(c.polling()).toBe(false); // caught up – polling stops
+  });
+
   it('MAX_POLLS bounds a polling episode', async () => {
     const rankingProgress = vi.fn().mockResolvedValue(5); // never reaches the target
     const creatorCount = vi.fn().mockResolvedValue(100);
@@ -268,6 +308,7 @@ describe('TaxonomyComponent — create sub-genre', () => {
 
   it('confirming creates the sub-genre, reloads, and selects it', async () => {
     const createSubMode = vi.fn().mockResolvedValue({ ok: true });
+    const loadFilterOptions = vi.fn().mockResolvedValue(undefined);
     const list = vi.fn()
       .mockResolvedValueOnce(mkGenres())
       .mockResolvedValueOnce([
@@ -280,7 +321,7 @@ describe('TaxonomyComponent — create sub-genre', () => {
           ],
         },
       ]);
-    const c = setup({ createSubMode, list });
+    const c = setup({ createSubMode, list, loadFilterOptions });
     await settle();
     c.selectGenre('Gaming & Esports');
     c.newSubModeName.set('Roguelikes');
@@ -292,6 +333,35 @@ describe('TaxonomyComponent — create sub-genre', () => {
     expect(c.confirmingCreate()).toBe(false);
     expect(c.selectedSubMode()).toBe('Roguelikes');
     expect(c.newSubModeName()).toBe('');
+    // Search/Sweeps read the taxonomy off CreatorsService's cached signals –
+    // without this refresh a new sub-genre needs a page reload to show up there.
+    expect(loadFilterOptions).toHaveBeenCalled();
+  });
+
+  it('collapses inner double-spaces the same way the server does, so the post-create select finds the row', async () => {
+    const createSubMode = vi.fn().mockResolvedValue({ ok: true });
+    const list = vi.fn()
+      .mockResolvedValueOnce(mkGenres())
+      .mockResolvedValueOnce([
+        ...mkGenres().filter((g) => g.genre !== 'Gaming & Esports'),
+        {
+          genre: 'Gaming & Esports',
+          subModes: [
+            ...mkGenres()[0].subModes,
+            { subMode: 'Pack Openings', sortOrder: 2, phrases: [], keywords: [] },
+          ],
+        },
+      ]);
+    const c = setup({ createSubMode, list });
+    await settle();
+    c.selectGenre('Gaming & Esports');
+    c.newSubModeName.set('Pack  Openings'); // double space
+    await c.createSubMode();
+
+    await c.confirmCreateSubMode();
+
+    expect(createSubMode).toHaveBeenCalledWith('Gaming & Esports', 'Pack Openings');
+    expect(c.selectedSubMode()).toBe('Pack Openings');
   });
 
   it('cancelling the confirm step never calls the backend', async () => {

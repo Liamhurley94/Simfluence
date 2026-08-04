@@ -3,6 +3,7 @@ import { SpinnerComponent } from '../../shared/spinner/spinner.component';
 import { TaxonomyService } from '../../core/admin/admin-taxonomy.service';
 import { TaxonomyGenre, TaxonomySubMode } from '../../core/admin/admin-taxonomy.types';
 import { edgeErrorMessage } from '../../core/api/edge-error';
+import { CreatorsService } from '../../core/creators/creators.service';
 
 const LABEL = 'text-[10px] uppercase tracking-wider mb-1 block';
 
@@ -218,6 +219,7 @@ function parseLines(raw: string): string[] {
 })
 export class TaxonomyComponent {
   private svc = inject(TaxonomyService);
+  private creatorsSvc = inject(CreatorsService);
 
   protected readonly phrasesHelp = PHRASES_HELP;
   protected readonly keywordsHelp = KEYWORDS_HELP;
@@ -245,6 +247,10 @@ export class TaxonomyComponent {
   readonly recomputeError = signal<string | null>(null);
   readonly rankingProgressCount = signal(0);
   readonly polling = signal(false);
+  // Set right before dispatch – rankingProgress counts rows recomputed at/after
+  // this instant, since an upsert overwrites in place and an existing sub-genre's
+  // row count is already at target before the recompute even starts.
+  private readonly recomputeSince = signal('');
 
   readonly newSubModeName = signal('');
   readonly createError = signal<string | null>(null);
@@ -374,13 +380,18 @@ export class TaxonomyComponent {
     if (!genre || !subMode) return;
     this.recomputing.set(true);
     this.recomputeError.set(null);
+    // Captured before dispatch, not after – rows the run touches must land
+    // at/after this instant, and the run can start before refreshRankings' own
+    // await resolves.
+    const since = new Date().toISOString();
+    this.recomputeSince.set(since);
     try {
       await this.svc.refreshRankings(genre, subMode);
       this.rankingsStale.set(false);
       // Only flip polling() on once the first reading actually lands — if
       // rankingProgress throws here, the catch below must not leave a
       // progress bar frozen on screen alongside the error message.
-      this.rankingProgressCount.set(await this.svc.rankingProgress(genre, subMode));
+      this.rankingProgressCount.set(await this.svc.rankingProgress(genre, subMode, since));
       this.polling.set(true);
       this.syncPolling(genre, subMode);
     } catch (err) {
@@ -405,7 +416,7 @@ export class TaxonomyComponent {
 
   private async pollTick(genre: string, subMode: string): Promise<void> {
     try {
-      this.rankingProgressCount.set(await this.svc.rankingProgress(genre, subMode));
+      this.rankingProgressCount.set(await this.svc.rankingProgress(genre, subMode, this.recomputeSince()));
     } catch {
       // Transient PostgREST hiccup — leave the interval running, next tick retries.
     }
@@ -449,7 +460,10 @@ export class TaxonomyComponent {
 
   async confirmCreateSubMode(): Promise<void> {
     const genre = this.selectedGenre();
-    const name = this.newSubModeName().trim();
+    // Collapse inner whitespace the same way the server's normaliseName does –
+    // otherwise "Pack  Openings" (double space) creates "Pack Openings" and the
+    // select below, keyed on the untouched name, finds nothing.
+    const name = this.newSubModeName().trim().replace(/\s+/g, ' ');
     if (!genre || !name) return;
     this.creating.set(true);
     this.createError.set(null);
@@ -459,6 +473,10 @@ export class TaxonomyComponent {
       this.confirmingCreate.set(false);
       await this.loadGenres();
       this.selectSubMode(genre, name);
+      // Other screens (Search, Sweeps) read the taxonomy off CreatorsService's
+      // cached signals, loaded once at boot – without this refresh the new
+      // sub-genre only shows up there after a full page reload.
+      await this.creatorsSvc.loadFilterOptions();
     } catch (err) {
       this.createError.set(edgeErrorMessage(err, 'Failed to create sub-genre'));
       this.confirmingCreate.set(false);
