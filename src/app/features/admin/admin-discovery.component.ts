@@ -6,11 +6,12 @@ import { AdminAddFormComponent } from './admin-add-form.component';
 import { DiscoverySearchComponent } from './discovery-search.component';
 import { DiscoveryQueueComponent } from './discovery-queue.component';
 import { DiscoverySweepsComponent } from './discovery-sweeps.component';
+import { TaxonomyComponent } from './taxonomy.component';
 
-type DiscoveryView = 'search' | 'queue' | 'sweeps' | 'manual';
+type DiscoveryView = 'search' | 'queue' | 'sweeps' | 'manual' | 'taxonomy';
 
 /** Add-creators tab shell — pill sub-nav (Search / Review queue / Sweeps /
- *  Manual add) + a quota chip. The chip and the queue-count badge are both
+ *  Manual add / Taxonomy) + a quota chip. The chip and the queue-count badge are both
  *  cosmetic reads (`refreshBadges`), so a failure there never blocks the tab
  *  from rendering its active sub-view. Sweeps run in the background and emit
  *  nothing, so switching pills is the only reliable moment to catch a badge
@@ -18,7 +19,7 @@ type DiscoveryView = 'search' | 'queue' | 'sweeps' | 'manual';
 @Component({
   selector: 'app-admin-discovery',
   standalone: true,
-  imports: [DecimalPipe, AdminAddFormComponent, DiscoverySearchComponent, DiscoveryQueueComponent, DiscoverySweepsComponent],
+  imports: [DecimalPipe, AdminAddFormComponent, DiscoverySearchComponent, DiscoveryQueueComponent, DiscoverySweepsComponent, TaxonomyComponent],
   template: `
     <div data-testid="admin-discovery" class="flex flex-col gap-4 flex-1 min-h-0">
       <div class="flex items-center gap-2" role="tablist">
@@ -41,6 +42,7 @@ type DiscoveryView = 'search' | 'queue' | 'sweeps' | 'manual';
         @case ('queue')  { <app-discovery-queue class="flex-1 min-h-0 flex flex-col" (changed)="refreshBadges()" /> }
         @case ('sweeps') { <app-discovery-sweeps /> }
         @case ('manual') { <app-admin-add-form (added)="refreshBadges()" /> }
+        @case ('taxonomy') { <app-taxonomy /> }
       }
     </div>
   `,
@@ -51,6 +53,7 @@ export class AdminDiscoveryComponent {
   readonly views: { key: DiscoveryView; label: string }[] = [
     { key: 'search', label: 'Search' }, { key: 'queue', label: 'Review queue' },
     { key: 'sweeps', label: 'Sweeps' }, { key: 'manual', label: 'Manual add' },
+    { key: 'taxonomy', label: 'Taxonomy' },
   ];
   readonly quota = signal<QuotaStatus | null>(null);
   readonly queueCount = signal(0);

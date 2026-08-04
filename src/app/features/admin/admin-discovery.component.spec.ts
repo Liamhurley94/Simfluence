@@ -52,6 +52,15 @@ describe('AdminDiscoveryComponent — pill nav', () => {
     expect(fixture.componentInstance.view()).toBe('queue');
   });
 
+  it('adds a fifth Taxonomy pill without switching to it (avoids instantiating app-taxonomy here)', async () => {
+    setup();
+    const fixture = await create();
+    const tab: HTMLButtonElement = fixture.nativeElement.querySelector('[data-testid="discovery-view-taxonomy"]');
+    expect(tab).not.toBeNull();
+    expect(tab.textContent?.trim()).toBe('Taxonomy');
+    expect(fixture.componentInstance.view()).toBe('search'); // unchanged — never clicked
+  });
+
   it('marks the pill nav as a tablist with per-pill tab semantics', async () => {
     setup();
     const fixture = await create();
