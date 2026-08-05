@@ -13,7 +13,7 @@ export class AdminDiscoveryService {
   private edge = inject(EdgeClient);
   private supabase = inject(SupabaseService);
 
-  search(input: { genre?: string; subMode?: string; query?: string; maxResults?: number; minSubscribers?: number }): Promise<SearchResult> {
+  search(input: { genre?: string; subMode?: string; query?: string; maxResults?: number; minSubscribers?: number; country?: string; language?: string }): Promise<SearchResult> {
     return this.edge.post('admin-discover-creators', { mode: 'search', ...input });
   }
 

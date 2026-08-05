@@ -2,6 +2,7 @@ import { Component, DestroyRef, computed, inject, signal, output } from '@angula
 import { DecimalPipe } from '@angular/common';
 import { AdminDiscoveryService } from '../../core/admin/admin-discovery.service';
 import { CreatorsService } from '../../core/creators/creators.service';
+import { COUNTRY_OPTIONS } from '../../core/data/countries.data';
 import { CandidateStatus, DiscoveredChannel, SearchResult } from '../../core/admin/admin-discovery.types';
 import { DiscoveryDrawerComponent } from './discovery-drawer.component';
 import { DiscoveryAddDialogComponent } from './discovery-add-dialog.component';
@@ -105,6 +106,36 @@ const STATUS_BG: Record<CandidateStatus, string> = {
             data-testid="discovery-search-minsubs"
           />
         </div>
+        <div>
+          <label class="${LABEL}" style="color: var(--color-text-muted);" title="Biases YouTube results toward this country – not a strict filter">Country</label>
+          <select
+            [value]="country()"
+            (change)="country.set($any($event.target).value)"
+            class="sf-select"
+            style="min-width: 150px;"
+            data-testid="discovery-search-country"
+          >
+            <option value="">Any</option>
+            @for (co of countryOptions; track co.code) {
+              <option [value]="co.code">{{ co.name }}</option>
+            }
+          </select>
+        </div>
+        <div>
+          <label class="${LABEL}" style="color: var(--color-text-muted);" title="Biases YouTube results toward this language – not a strict filter">Language</label>
+          <select
+            [value]="language()"
+            (change)="language.set($any($event.target).value)"
+            class="sf-select"
+            style="min-width: 150px;"
+            data-testid="discovery-search-language"
+          >
+            <option value="">Any</option>
+            @for (l of languageOptions(); track l.code) {
+              <option [value]="l.code">{{ l.name }}</option>
+            }
+          </select>
+        </div>
         <button
           type="button"
           (click)="search()"
@@ -140,6 +171,7 @@ const STATUS_BG: Record<CandidateStatus, string> = {
                   <th class="${TH}">Avg views</th>
                   <th class="${TH}">Eng %</th>
                   <th class="${TH}">Sponsored %</th>
+                  <th class="${TH}">Country</th>
                   <th class="${TH}">Language</th>
                   <th class="${TH}"></th>
                 </tr>
@@ -169,6 +201,7 @@ const STATUS_BG: Record<CandidateStatus, string> = {
                     <td class="px-3 py-2">{{ row.avg_views | number }}</td>
                     <td class="px-3 py-2">{{ row.engagement_rate | number:'1.0-1' }}%</td>
                     <td class="px-3 py-2">{{ row.sponsor_freq_pct | number:'1.0-0' }}%</td>
+                    <td class="px-3 py-2">{{ row.country || '—' }}</td>
                     <td class="px-3 py-2">{{ row.language || '—' }}</td>
                     <td class="px-3 py-2 text-right" (click)="$event.stopPropagation()">
                       @if (row.status === 'new') {
@@ -186,7 +219,7 @@ const STATUS_BG: Record<CandidateStatus, string> = {
                 @for (rr of rosterRows(); track rr.channelId) {
                   <tr style="border-top: 1px solid var(--color-border); color: var(--color-text);" data-testid="discovery-roster-row">
                     <td class="px-3 py-2 font-medium">{{ rr.name }}</td>
-                    <td class="px-3 py-2 text-xs" style="color: var(--color-text-muted);" colspan="7">✓ already in roster</td>
+                    <td class="px-3 py-2 text-xs" style="color: var(--color-text-muted);" colspan="8">✓ already in roster</td>
                   </tr>
                 }
               </tbody>
@@ -222,6 +255,12 @@ export class DiscoverySearchComponent {
   readonly subMode = signal('');
   readonly query = signal('');
   readonly minSubs = signal<number | null>(null);
+  readonly country = signal('');
+  readonly language = signal('');
+  protected readonly countryOptions = COUNTRY_OPTIONS;
+  // Same all-languages list the admin add form uses, sorted by display name.
+  protected readonly languageOptions = computed(() =>
+    [...this.creators.languages()].sort((a, b) => a.name.localeCompare(b.name)));
   protected readonly canSearch = computed(() => !!this.query().trim() || (!!this.genre() && !!this.subMode()));
 
   readonly busy = signal(false);
@@ -283,9 +322,11 @@ export class DiscoverySearchComponent {
     try {
       const q = this.query().trim();
       const minSubscribers = this.minSubs() ?? undefined;
+      const country = this.country() || undefined;
+      const language = this.language() || undefined;
       const result = q
-        ? await this.svc.search({ query: q, minSubscribers })
-        : await this.svc.search({ genre: this.genre(), subMode: this.subMode(), minSubscribers });
+        ? await this.svc.search({ query: q, minSubscribers, country, language })
+        : await this.svc.search({ genre: this.genre(), subMode: this.subMode(), minSubscribers, country, language });
       this.lastResult.set(result);
       this.resultRows.set(this.mergeResultRows(result));
       this.rosterRows.set(result.alreadyInRoster);

@@ -506,3 +506,25 @@ describe('DiscoverySearchComponent — drawer', () => {
     expect(c.dialogMode()).toBe('link');
   });
 });
+
+describe('DiscoverySearchComponent country/language filters', () => {
+  it('passes country and language through to the search call', async () => {
+    const search = vi.fn().mockResolvedValue(mkResult());
+    setup({ search });
+    const c = TestBed.createComponent(DiscoverySearchComponent).componentInstance;
+    c.query.set('gameplay ao vivo');
+    c.country.set('BR');
+    c.language.set('pt');
+    await c.search();
+    expect(search).toHaveBeenCalledWith({ query: 'gameplay ao vivo', minSubscribers: undefined, country: 'BR', language: 'pt' });
+  });
+
+  it('omits country and language when left on Any', async () => {
+    const search = vi.fn().mockResolvedValue(mkResult());
+    setup({ search });
+    const c = TestBed.createComponent(DiscoverySearchComponent).componentInstance;
+    c.query.set('gameplay');
+    await c.search();
+    expect(search).toHaveBeenCalledWith({ query: 'gameplay', minSubscribers: undefined, country: undefined, language: undefined });
+  });
+});
