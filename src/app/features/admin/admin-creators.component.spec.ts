@@ -9,14 +9,15 @@ function setup(
   attachPlatform = vi.fn().mockResolvedValue({ attached: { creatorId: 1, platform: 'twitch' } }),
 ) {
   const resyncCreator = vi.fn().mockResolvedValue({ resynced: { creatorId: 9, platform: 'YouTube' } });
+  const syncUnsynced = vi.fn().mockResolvedValue({ youtube: 0, gfi: 0, twitch: 0, rates: 0 });
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({
     imports: [AdminCreatorsComponent],
     providers: [
-      { provide: AdminCreatorService, useValue: { listCreators, resyncCreator, attachPlatform } },
+      { provide: AdminCreatorService, useValue: { listCreators, resyncCreator, attachPlatform, syncUnsynced } },
     ],
   });
-  return { listCreators, resyncCreator, attachPlatform };
+  return { listCreators, resyncCreator, attachPlatform, syncUnsynced };
 }
 
 const mkAdded = (over: Partial<AddedCreator> = {}): AddedCreator => ({
@@ -25,14 +26,15 @@ const mkAdded = (over: Partial<AddedCreator> = {}): AddedCreator => ({
 });
 
 describe('AdminCreatorsComponent added list', () => {
-  it('anyResolving: true while resolving or GFI missing, false once settled', () => {
+  it('anyUnsettled: true while resolving, resolved, or GFI missing; false once terminal', () => {
     setup();
     const c = TestBed.createComponent(AdminCreatorsComponent).componentInstance;
-    expect(c.anyResolving([mkAdded({ youtube: 'resolving' })])).toBe(true);
-    expect(c.anyResolving([mkAdded({ youtube: 'resolved', gfi: false })])).toBe(true);
-    expect(c.anyResolving([mkAdded({ youtube: 'resolved', gfi: true })])).toBe(false);
-    expect(c.anyResolving([mkAdded({ youtube: 'synced', gfi: true })])).toBe(false);
-    expect(c.anyResolving([mkAdded({ youtube: 'offline', gfi: true })])).toBe(false);
+    expect(c.anyUnsettled([mkAdded({ youtube: 'resolving' })])).toBe(true);
+    expect(c.anyUnsettled([mkAdded({ youtube: 'resolved', gfi: true })])).toBe(true);
+    expect(c.anyUnsettled([mkAdded({ youtube: 'synced', gfi: false })])).toBe(true);
+    expect(c.anyUnsettled([mkAdded({ youtube: 'synced', gfi: true })])).toBe(false);
+    expect(c.anyUnsettled([mkAdded({ youtube: 'offline', gfi: true })])).toBe(false);
+    expect(c.anyUnsettled([mkAdded({ youtube: 'synced', twitch: 'resolved', gfi: true })])).toBe(true);
   });
 
   it('renders one row per added creator with a status label', async () => {
@@ -44,6 +46,35 @@ describe('AdminCreatorsComponent added list', () => {
     const rows = fixture.nativeElement.querySelectorAll('[data-testid="admin-added-row"]');
     expect(rows.length).toBe(2);
     expect(fixture.nativeElement.textContent).toContain('Resolved');
+  });
+});
+
+describe('AdminCreatorsComponent sync unsynced', () => {
+  it('shows the button only while something is unsettled', async () => {
+    const { listCreators } = setup();
+    listCreators.mockResolvedValue({ added: [mkAdded({ youtube: 'resolved' })], offline: [] });
+    const fixture = TestBed.createComponent(AdminCreatorsComponent);
+    await fixture.componentInstance.loadList();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[data-testid="sync-unsynced"]')).toBeTruthy();
+
+    listCreators.mockResolvedValue({ added: [mkAdded({ youtube: 'synced', gfi: true })], offline: [] });
+    await fixture.componentInstance.loadList();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[data-testid="sync-unsynced"]')).toBeNull();
+  });
+
+  it('dispatches the sync RPC and shows the summary notice', async () => {
+    const { listCreators, syncUnsynced } = setup();
+    listCreators.mockResolvedValue({ added: [mkAdded({ youtube: 'resolved', gfi: false })], offline: [] });
+    syncUnsynced.mockResolvedValue({ youtube: 1, gfi: 2, twitch: 0, rates: 0 });
+    const fixture = TestBed.createComponent(AdminCreatorsComponent);
+    await fixture.componentInstance.loadList();
+    await fixture.componentInstance.syncUnsynced();
+    fixture.detectChanges();
+    expect(syncUnsynced).toHaveBeenCalled();
+    expect(fixture.nativeElement.textContent).toContain('YouTube: 1');
+    expect(fixture.nativeElement.textContent).toContain('GFI: 2');
   });
 });
 

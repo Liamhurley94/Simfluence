@@ -15,6 +15,9 @@ export interface AddCreatorInput {
 
 export interface AddCreatorResult {
   created: Array<{ id: number; name: string; platforms: string[] }>;
+  /** Status of the on-add hydration kicks – 'failed' means stats/GFI will
+   *  self-heal overnight (or via Sync unsynced) instead of landing in ~a minute. */
+  kicks?: { youtube: KickStatus; gfi: KickStatus; twitch: KickStatus };
 }
 
 /**
@@ -45,4 +48,14 @@ export interface OfflineCreator {
 export interface ListCreatorsResult {
   added: AddedCreator[];
   offline: OfflineCreator[];
+}
+
+export type KickStatus = 'ok' | 'failed' | 'skipped';
+
+/** admin_sync_unsynced() RPC result – creator counts per dispatched set. */
+export interface SyncUnsyncedResult {
+  youtube: number;
+  gfi: number;
+  twitch: number;
+  rates: number;
 }

@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { EdgeClient } from '../api/edge.client';
-import { AddCreatorInput, AddCreatorResult, ListCreatorsResult } from './admin-creator.types';
+import { SupabaseService } from '../supabase/supabase.service';
+import { AddCreatorInput, AddCreatorResult, ListCreatorsResult, SyncUnsyncedResult } from './admin-creator.types';
 
 /**
  * Admin-only creator management. Adding a creator inserts the rows and fires the
@@ -11,6 +12,7 @@ import { AddCreatorInput, AddCreatorResult, ListCreatorsResult } from './admin-c
 @Injectable({ providedIn: 'root' })
 export class AdminCreatorService {
   private edge = inject(EdgeClient);
+  private supabase = inject(SupabaseService);
 
   async addCreators(creators: AddCreatorInput[]): Promise<AddCreatorResult> {
     return this.edge.post('admin-add-creator', { creators });
@@ -35,7 +37,19 @@ export class AdminCreatorService {
   async attachPlatform(input: {
     creatorId: number; platform: 'youtube' | 'twitch'; handle: string;
     statsSeed?: import('./admin-discovery.types').StatsSeed;
-  }): Promise<{ attached: { creatorId: number; platform: string } }> {
+  }): Promise<{
+    attached: { creatorId: number; platform: string };
+    kicks?: { youtube: import('./admin-creator.types').KickStatus; twitch: import('./admin-creator.types').KickStatus };
+  }> {
     return this.edge.post('admin-attach-platform', input);
+  }
+
+  /** Targeted re-hydration of any admin-added creator the on-add kicks missed.
+   *  SECURITY DEFINER RPC, admin-guarded server-side; dispatches the same SQL
+   *  kicks the nightly crons use. */
+  async syncUnsynced(): Promise<SyncUnsyncedResult> {
+    const { data, error } = await this.supabase.client.rpc('admin_sync_unsynced');
+    if (error) throw error;
+    return data as SyncUnsyncedResult;
   }
 }

@@ -73,4 +73,18 @@ describe('AdminAddFormComponent', () => {
     expect(c.error()).toBe('dup');
     expect(addCreators).toHaveBeenCalled();
   });
+
+  it('warns when a background kick failed', async () => {
+    const { addCreators } = setup();
+    addCreators.mockResolvedValue({
+      created: [{ id: 1, name: 'X', platforms: ['YouTube'] }],
+      kicks: { youtube: 'failed', gfi: 'ok', twitch: 'skipped' },
+    });
+    const fixture = TestBed.createComponent(AdminAddFormComponent);
+    const c = fixture.componentInstance;
+    c.form.patchValue({ name: '  A  ', genre: 'Gaming', youtube: ' @foo ', twitch: '', bio: ' hi ' });
+    await c.onSubmit();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[data-testid="add-warning"]')?.textContent).toContain('youtube');
+  });
 });

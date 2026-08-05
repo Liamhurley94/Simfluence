@@ -84,6 +84,9 @@ const LABEL = 'text-[10px] uppercase tracking-wider mb-1 block';
       @if (success()) {
         <p class="text-sm" style="color: var(--color-sf-green);" data-testid="add-success">{{ success() }}</p>
       }
+      @if (warning()) {
+        <p class="text-sm" style="color: var(--color-sf-gold);" data-testid="add-warning">{{ warning() }}</p>
+      }
 
       <div class="flex justify-end">
         <button type="submit" [disabled]="busy()" class="sf-btn sf-btn-primary" data-testid="add-submit">
@@ -123,11 +126,13 @@ export class AdminAddFormComponent {
 
   readonly error = signal<string | null>(null);
   readonly success = signal<string | null>(null);
+  readonly warning = signal<string | null>(null);
   readonly busy = signal(false);
 
   async onSubmit(): Promise<void> {
     this.error.set(null);
     this.success.set(null);
+    this.warning.set(null);
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       this.error.set('Enter a name and pick a genre.');
@@ -151,8 +156,12 @@ export class AdminAddFormComponent {
 
     this.busy.set(true);
     try {
-      const { created } = await this.svc.addCreators([input]);
-      this.success.set(`Added ${created.map((c) => c.name).join(', ')}.`);
+      const res = await this.svc.addCreators([input]);
+      this.success.set(`Added ${res.created.map((c) => c.name).join(', ')}.`);
+      const failed = Object.entries(res.kicks ?? {}).filter(([, s]) => s === 'failed').map(([k]) => k);
+      this.warning.set(failed.length
+        ? `Background sync failed (${failed.join(', ')}) – stats will self-heal overnight, or use Sync unsynced on the Creators tab.`
+        : null);
       this.form.reset();
       this.added.emit();
     } catch (err) {

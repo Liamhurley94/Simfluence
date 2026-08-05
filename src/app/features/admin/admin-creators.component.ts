@@ -63,14 +63,29 @@ export function offlineStatusFor(reason: string | null): OfflineStatus {
       <section class="sf-card overflow-hidden">
         <header class="flex items-center justify-between px-4 py-3">
           <h2 class="text-sm font-bold uppercase tracking-wider" style="color: var(--color-text);">Added creators</h2>
-          <button
-            type="button"
-            (click)="loadList()"
-            [disabled]="listLoading()"
-            class="sf-btn sf-btn-ghost text-xs"
-            data-testid="added-refresh"
-          >{{ listLoading() ? 'Refreshing…' : 'Refresh' }}</button>
+          <div class="flex items-center gap-2">
+            @if (anyUnsettled()) {
+              <button
+                type="button"
+                (click)="syncUnsynced()"
+                [disabled]="syncBusy()"
+                class="sf-btn sf-btn-primary text-xs"
+                data-testid="sync-unsynced"
+              >{{ syncBusy() ? 'Syncing…' : 'Sync unsynced' }}</button>
+            }
+            <button
+              type="button"
+              (click)="loadList()"
+              [disabled]="listLoading()"
+              class="sf-btn sf-btn-ghost text-xs"
+              data-testid="added-refresh"
+            >{{ listLoading() ? 'Refreshing…' : 'Refresh' }}</button>
+          </div>
         </header>
+
+        @if (notice(); as n) {
+          <p class="text-xs px-4 pb-2" [style.color]="n.tone === 'ok' ? 'var(--color-sf-green)' : 'var(--color-sf-gold)'" data-testid="creators-notice">{{ n.text }}</p>
+        }
 
         @if (!loaded() && listLoading()) {
           <div class="px-4 pb-4" data-testid="added-loading"><app-spinner label="Loading creators…" /></div>
@@ -124,7 +139,7 @@ export function offlineStatusFor(reason: string | null): OfflineStatus {
               }
             </tbody>
           </table>
-          @if (anyResolving()) {
+          @if (anyUnsettled()) {
             <p class="text-xs px-4 py-2" style="color: var(--color-text-muted);" data-testid="added-syncing">
               Syncing new creators… id + stats land within ~a minute; Twitch CPI needs a first live capture.
             </p>
@@ -255,9 +270,9 @@ export class AdminCreatorsComponent {
   // later refreshes/polls (those keep the existing data + the "Refreshing…" button).
   readonly loaded = signal(false);
 
-  // Poll while creators are still resolving — id-resolution + GFI land within ~a
-  // minute. Bounded so it can't spin forever if something stalls; 'synced'/CPI
-  // only arrive at the nightly refresh, so we deliberately don't wait for them.
+  // Poll while creators are still unsettled — id-resolution, stats, and GFI land
+  // within ~a minute via the targeted sync kicks (see anyUnsettled). Bounded so
+  // it can't spin forever if something stalls.
   private pollHandle: ReturnType<typeof setInterval> | null = null;
   private pollAttempts = 0;
   private readonly POLL_MS = 5000;
@@ -284,14 +299,39 @@ export class AdminCreatorsComponent {
     }
   }
 
-  /** A creator is still settling while any platform is 'resolving' or its GFI is
-   *  missing. 'resolved'/'synced'/'offline' + GFI present = settled. */
-  anyResolving(list: AddedCreator[] = this.added()): boolean {
-    return list.some((c) => c.youtube === 'resolving' || c.twitch === 'resolving' || !c.gfi);
+  /** A creator is still settling while any platform hasn't reached a terminal
+   *  state ('synced'/'offline') or its Genre Fit Index (GFI) is missing.
+   *  Targeted syncs land stats within ~a minute, so polling rides
+   *  resolved → synced too (it used to stop at 'resolved', leaving
+   *  freshly-synced rows visually stale until reload). */
+  anyUnsettled(list: AddedCreator[] = this.added()): boolean {
+    const settling = (s: PlatformSyncStatus | null) => s === 'resolving' || s === 'resolved';
+    return list.some((c) => settling(c.youtube) || settling(c.twitch) || !c.gfi);
+  }
+
+  readonly syncBusy = signal(false);
+  readonly notice = signal<{ text: string; tone: 'ok' | 'warn' } | null>(null);
+
+  async syncUnsynced(): Promise<void> {
+    if (this.syncBusy()) return;
+    this.syncBusy.set(true);
+    this.notice.set(null);
+    try {
+      const r = await this.svc.syncUnsynced();
+      this.notice.set({
+        text: `Sync dispatched – YouTube: ${r.youtube}, GFI: ${r.gfi}, Twitch: ${r.twitch}, rates: ${r.rates}. Stats land within ~a minute.`,
+        tone: 'ok',
+      });
+      await this.loadList();
+    } catch (err) {
+      this.notice.set({ text: edgeErrorMessage(err, 'Sync failed'), tone: 'warn' });
+    } finally {
+      this.syncBusy.set(false);
+    }
   }
 
   private syncPolling(): void {
-    if (this.anyResolving() && this.pollAttempts < this.MAX_POLLS) {
+    if (this.anyUnsettled() && this.pollAttempts < this.MAX_POLLS) {
       this.pollHandle ??= setInterval(() => {
         this.pollAttempts++;
         void this.loadList();
@@ -384,7 +424,11 @@ export class AdminCreatorsComponent {
     this.dialogBusy.set(true);
     this.dialogError.set(null);
     try {
-      await this.svc.attachPlatform({ creatorId: c.id, platform, handle });
+      const res = await this.svc.attachPlatform({ creatorId: c.id, platform, handle });
+      const failed = Object.entries(res.kicks ?? {}).filter(([, s]) => s === 'failed').map(([k]) => k);
+      if (failed.length) {
+        this.notice.set({ text: `Background sync failed (${failed.join(', ')}) – will self-heal overnight, or press Sync unsynced.`, tone: 'warn' });
+      }
       this.closePlatformDialog();
       await this.loadList();
     } catch (err) {
