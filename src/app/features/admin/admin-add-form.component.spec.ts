@@ -88,3 +88,14 @@ describe('AdminAddFormComponent', () => {
     expect(fixture.nativeElement.querySelector('[data-testid="add-warning"]')?.textContent).toContain('youtube');
   });
 });
+
+describe('AdminAddFormComponent Twitch handle validation', () => {
+  it('rejects an invalid-format Twitch handle before calling the service', async () => {
+    const { addCreators } = setup();
+    const c = TestBed.createComponent(AdminAddFormComponent).componentInstance;
+    c.form.patchValue({ name: 'A', genre: 'Gaming', youtube: '', twitch: '@bmsjoël' });
+    await c.onSubmit();
+    expect(addCreators).not.toHaveBeenCalled();
+    expect(c.error()).toContain('letters, numbers');
+  });
+});

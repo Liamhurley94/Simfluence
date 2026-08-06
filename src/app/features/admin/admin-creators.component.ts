@@ -4,6 +4,7 @@ import { SpinnerComponent } from '../../shared/spinner/spinner.component';
 import { AdminCreatorService } from '../../core/admin/admin-creator.service';
 import { AddedCreator, OfflineCreator, PlatformSyncStatus } from '../../core/admin/admin-creator.types';
 import { edgeErrorMessage } from '../../core/api/edge-error';
+import { isValidTwitchHandleInput } from '../../core/admin/twitch-handle';
 
 const TH = 'text-left px-3 py-2 text-[10px] uppercase tracking-wider font-medium';
 
@@ -423,6 +424,10 @@ export class AdminCreatorsComponent {
     const handle = this.dialogHandle().trim().replace(/^@/, '');
     if (!c || !platform || !handle) {
       this.dialogError.set('Select a platform and enter a handle.');
+      return;
+    }
+    if (platform === 'twitch' && !isValidTwitchHandleInput(handle)) {
+      this.dialogError.set('Twitch handles only allow letters, numbers, and underscores (max 25) – check for accents, spaces, or dashes.');
       return;
     }
     this.dialogBusy.set(true);

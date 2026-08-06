@@ -259,3 +259,16 @@ describe('AdminCreatorsComponent — polling', () => {
     expect(listCreators.mock.calls.length).toBe(callsAfterReload + 1); // polling ticked again
   });
 });
+
+describe('AdminCreatorsComponent attach-dialog Twitch handle validation', () => {
+  it('rejects an invalid-format Twitch handle before calling attach', async () => {
+    const { attachPlatform } = setup();
+    const c = TestBed.createComponent(AdminCreatorsComponent).componentInstance;
+    c.platformDialogFor.set(mkAdded({ twitch: null }));
+    c.dialogPlatform.set('twitch');
+    c.dialogHandle.set('@bmsjoël');
+    await c.submitPlatform();
+    expect(attachPlatform).not.toHaveBeenCalled();
+    expect(c.dialogError()).toContain('letters, numbers');
+  });
+});

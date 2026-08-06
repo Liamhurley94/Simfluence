@@ -3,6 +3,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AdminCreatorService } from '../../core/admin/admin-creator.service';
 import { CreatorsService } from '../../core/creators/creators.service';
 import { AddCreatorInput } from '../../core/admin/admin-creator.types';
+import { isValidTwitchHandleInput } from '../../core/admin/twitch-handle';
 import { edgeErrorMessage } from '../../core/api/edge-error';
 
 const LABEL = 'text-[10px] uppercase tracking-wider mb-1 block';
@@ -143,6 +144,10 @@ export class AdminAddFormComponent {
     const twitch = v.twitch.trim();
     if (!youtube && !twitch) {
       this.error.set('Add at least one platform handle (YouTube or Twitch).');
+      return;
+    }
+    if (twitch && !isValidTwitchHandleInput(twitch)) {
+      this.error.set('Twitch handles only allow letters, numbers, and underscores (max 25) – check for accents, spaces, or dashes.');
       return;
     }
     const input: AddCreatorInput = {
