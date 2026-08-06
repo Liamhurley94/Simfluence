@@ -42,6 +42,10 @@ const OFFLINE_STATUS: Record<string, OfflineStatus> = {
     label: 'Channel went dark',
     tip: 'This Twitch channel returned no data twice in a row — likely renamed, deleted, or banned. Re-sync re-checks in case it’s back.',
   },
+  invalid_handle_format: {
+    label: 'Handle has invalid characters',
+    tip: 'Twitch logins only allow lowercase letters, numbers, and underscores – this stored handle has other characters (accents, spaces, dashes), so Twitch rejects the lookup. Correct the handle, then Re-sync.',
+  },
 };
 
 const OFFLINE_STATUS_FALLBACK: OfflineStatus = {

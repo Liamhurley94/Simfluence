@@ -107,6 +107,8 @@ describe('offlineStatusFor', () => {
     expect(offlineStatusFor('bootstrap_no_channel').label).toContain('resolve');
     expect(offlineStatusFor('channels_list_empty_2x').label).toBe('Channel went dark');
     expect(offlineStatusFor('get_users_empty_2x').label).toBe('Channel went dark');
+    expect(offlineStatusFor('invalid_handle_format').label).toBe('Handle has invalid characters');
+    expect(offlineStatusFor('invalid_handle_format').tip).toContain('lowercase');
     expect(offlineStatusFor('bootstrap_no_channel').tip.length).toBeGreaterThan(20);
   });
 
