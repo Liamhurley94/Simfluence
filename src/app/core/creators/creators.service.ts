@@ -160,6 +160,7 @@ function fromDb(row: Record<string, any>, cpiSource: 'best' | 'yt' | 'tw' = 'bes
     verifiedDeals: row['verified_deals'],
     sponsorHistory: Array.isArray(row['sponsor_history']) ? row['sponsor_history'] : [],
     bio: row['bio'],
+    platformBio: row['platform_bio'] ?? null,
     language: row['language'],
     rateRanges: row['rate_ranges'] ?? undefined,
     ytStats,

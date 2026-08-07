@@ -59,6 +59,10 @@ export interface Creator {
   verifiedDeals: number;
   sponsorHistory: string[];
   bio: string;
+  // Machine-owned display bio from creator_cpi.platform_bio (the platform's
+  // own channel description, nightly-refreshed). NULL/undefined → UI falls
+  // back to `bio`, which remains the scoring/tags haystack.
+  platformBio?: string | null;
 
   // optional enrichment fields
   language?: string;

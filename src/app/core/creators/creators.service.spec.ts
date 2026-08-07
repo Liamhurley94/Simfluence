@@ -251,6 +251,20 @@ describe('CreatorsService.list', () => {
     expect(r.creators[0].allPlatforms).toEqual(['YouTube']);
     expect(r.creators[0].verifiedDeals).toBe(1);
   });
+
+  it('maps platform_bio → platformBio, null when absent', async () => {
+    const row = {
+      id: 8, name: 'B', handle: '@b', platform: 'Twitch',
+      subs: '10K', subs_parsed: 10_000, avg_views: '1K', eng: '2%',
+      genre: 'Gaming', cpi: 60, gfi: null, color: '#fff',
+      verified_deals: 0, sponsor_history: [], bio: 'tag · tag',
+      platform_bio: 'Real Twitch about text',
+    };
+    const { svc } = setup(makeQuery({ data: [row], count: 1 }));
+    const r = await svc.list({}, 'cpi', 0, 10);
+    expect(r.creators[0].platformBio).toBe('Real Twitch about text');
+    expect(r.creators[0].bio).toBe('tag · tag');
+  });
 });
 
 describe('CreatorsService.byId', () => {

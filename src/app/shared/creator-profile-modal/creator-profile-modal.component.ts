@@ -156,10 +156,10 @@ function sponsorColor(pct: number): string {
           <!-- Body. The whole overlay scrolls (backdrop overflow-y-auto +
                items-start), so the modal is fully reachable on any viewport. -->
           <div class="p-5 flex flex-col gap-4">
-            @if (c.bio) {
+            @if (c.platformBio || c.bio) {
               <div>
                 <div class="text-[10px] uppercase tracking-wider mb-1" style="color: var(--color-text-muted);">Bio</div>
-                <div class="text-sm" style="color: var(--color-text);">{{ c.bio }}</div>
+                <div class="text-sm" style="color: var(--color-text);">{{ c.platformBio || c.bio }}</div>
               </div>
             }
 
