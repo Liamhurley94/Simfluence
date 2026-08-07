@@ -8,6 +8,8 @@ import { edgeErrorMessage } from '../../core/api/edge-error';
 
 const LABEL = 'text-[10px] uppercase tracking-wider mb-1 block';
 
+const BIO_HELP = 'Feeds genre matching, not what\'s shown to users. The bio displayed on the creator\'s profile is pulled automatically from their channel description.';
+
 /** Pure mapping from a just-fetched discovery candidate to the seed shape
  *  `admin-add-creator`/`admin-attach-platform` use to birth a youtube_creators
  *  row already fully synced — no extra YouTube quota, no waiting on a kick.
@@ -90,6 +92,7 @@ export function seedFrom(c: DiscoveredChannel): StatsSeed {
           </div>
           <div>
             <label class="${LABEL}" style="color: var(--color-text-muted);">Bio</label>
+            <p class="text-xs" style="color: var(--color-text-muted);" data-testid="dialog-bio-help">{{ bioHelp }}</p>
             <textarea formControlName="bio" rows="2" class="sf-input" data-testid="dialog-bio"></textarea>
           </div>
           <div>
@@ -133,6 +136,8 @@ export class DiscoveryAddDialogComponent {
   readonly mode = input.required<'add' | 'link'>();
   readonly done = output<void>();
   readonly cancelled = output<void>();
+
+  protected readonly bioHelp = BIO_HELP;
 
   readonly genreOptions = computed(() => Object.keys(this.creators.submodesByGenre()).sort());
   readonly languageOptions = computed(() =>

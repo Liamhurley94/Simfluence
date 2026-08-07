@@ -8,6 +8,8 @@ import { edgeErrorMessage } from '../../core/api/edge-error';
 
 const LABEL = 'text-[10px] uppercase tracking-wider mb-1 block';
 
+const BIO_HELP = 'Feeds genre matching, not what\'s shown to users. The bio displayed on the creator\'s profile is pulled automatically from their channel description.';
+
 /** The manual add-creator form (Twitch-only creators / known handles). Lives in
  *  the "Add creators" tab's Manual sub-view; extracted unchanged from the old
  *  Creators-tab form. Emits (added) so hosts can refresh whatever they show. */
@@ -61,6 +63,7 @@ const LABEL = 'text-[10px] uppercase tracking-wider mb-1 block';
 
       <div>
         <label class="${LABEL}" style="color: var(--color-text-muted);">Bio (optional)</label>
+        <p class="text-xs" style="color: var(--color-text-muted);" data-testid="add-bio-help">{{ bioHelp }}</p>
         <textarea formControlName="bio" rows="2" class="sf-input"></textarea>
       </div>
       <div class="grid grid-cols-2 gap-3">
@@ -103,6 +106,8 @@ export class AdminAddFormComponent {
   private creators = inject(CreatorsService);
 
   readonly added = output<void>();
+
+  protected readonly bioHelp = BIO_HELP;
 
   protected readonly unsupportedPlatforms = ['Instagram', 'TikTok', 'Kick', 'X'];
 
