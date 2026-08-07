@@ -265,6 +265,18 @@ describe('CreatorsService.list', () => {
     expect(r.creators[0].platformBio).toBe('Real Twitch about text');
     expect(r.creators[0].bio).toBe('tag · tag');
   });
+
+  it('maps platform_bio → null when the column is absent from the row (creators-table path)', async () => {
+    const row = {
+      id: 9, name: 'C', handle: '@c', platform: 'Twitch',
+      subs: '10K', subs_parsed: 10_000, avg_views: '1K', eng: '2%',
+      genre: 'Gaming', cpi: 60, gfi: null, color: '#fff',
+      verified_deals: 0, sponsor_history: [], bio: 'tag · tag',
+    };
+    const { svc } = setup(makeQuery({ data: [row], count: 1 }));
+    const r = await svc.list({}, 'cpi', 0, 10);
+    expect(r.creators[0].platformBio).toBeNull();
+  });
 });
 
 describe('CreatorsService.byId', () => {
