@@ -14,7 +14,8 @@ import { IconComponent } from '../../../shared/icon/icon.component';
 import { SpinnerComponent } from '../../../shared/spinner/spinner.component';
 
 import { CreatorsService } from '../../../core/creators/creators.service';
-import { CreatorFilters, PagedCreators } from '../../../core/data/creator.types';
+import { CreatorProfileService } from '../../../core/creator-profile/creator-profile.service';
+import { Creator, CreatorFilters, PagedCreators } from '../../../core/data/creator.types';
 
 const EMPTY_PAGE: PagedCreators = { creators: [], total: 0, pageCount: 1, page: 0 };
 const PAGE_SIZE = 20;
@@ -49,7 +50,7 @@ const PAGE_SIZE = 20;
           <button
             type="button"
             (click)="close.emit()"
-            class="text-xs px-3 py-1 rounded"
+            class="text-xs px-3 py-1 rounded cursor-pointer"
             style="background: transparent; border: 1px solid var(--color-border); color: var(--color-text-muted);"
             data-testid="browse-creators-close"
           >
@@ -73,7 +74,7 @@ const PAGE_SIZE = 20;
             <button
               type="button"
               (click)="toggleGenreFilter()"
-              class="text-[10px] uppercase tracking-wider px-2 py-1.5 rounded"
+              class="text-[10px] uppercase tracking-wider px-2 py-1.5 rounded cursor-pointer"
               [style.background]="genreActive() ? 'var(--color-sf-blue)' : 'var(--color-bg-3)'"
               style="color: var(--color-bg);"
               data-testid="browse-creators-genre-toggle"
@@ -97,9 +98,10 @@ const PAGE_SIZE = 20;
             <ul class="space-y-2">
               @for (c of results.value().creators; track c.id; let i = $index) {
                 <li
-                  class="flex items-center gap-3 p-2 rounded sf-appear"
+                  class="flex items-center gap-3 p-2 rounded sf-appear cursor-pointer"
                   style="background: var(--color-bg-3);"
                   [style.animation-delay.ms]="(i < 12 ? i : 12) * 30"
+                  (click)="openProfile(c)"
                   [attr.data-testid]="'browse-creator-' + c.id"
                 >
                   <div
@@ -139,9 +141,9 @@ const PAGE_SIZE = 20;
                   } @else {
                     <button
                       type="button"
-                      (click)="onAdd(c.id)"
+                      (click)="onAdd(c.id); $event.stopPropagation()"
                       [disabled]="addingIds().has(c.id)"
-                      class="text-[10px] uppercase tracking-wider px-3 py-1 rounded shrink-0 disabled:opacity-50"
+                      class="text-[10px] uppercase tracking-wider px-3 py-1 rounded shrink-0 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
                       style="background: var(--color-sf-blue); color: var(--color-bg);"
                       [attr.data-testid]="'browse-creator-add-' + c.id"
                     >
@@ -166,7 +168,7 @@ const PAGE_SIZE = 20;
               type="button"
               (click)="prev()"
               [disabled]="page() === 0"
-              class="text-[10px] uppercase tracking-wider px-2 py-1 rounded disabled:opacity-40"
+              class="text-[10px] uppercase tracking-wider px-2 py-1 rounded cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
               style="background: transparent; border: 1px solid var(--color-border); color: var(--color-text-muted);"
               data-testid="browse-creators-prev"
             >
@@ -179,7 +181,7 @@ const PAGE_SIZE = 20;
               type="button"
               (click)="next()"
               [disabled]="page() + 1 >= results.value().pageCount"
-              class="text-[10px] uppercase tracking-wider px-2 py-1 rounded disabled:opacity-40"
+              class="text-[10px] uppercase tracking-wider px-2 py-1 rounded cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
               style="background: transparent; border: 1px solid var(--color-border); color: var(--color-text-muted);"
               data-testid="browse-creators-next"
             >
@@ -193,6 +195,7 @@ const PAGE_SIZE = 20;
 })
 export class BrowseCreatorsModalComponent {
   private creatorsSvc = inject(CreatorsService);
+  private profile = inject(CreatorProfileService);
 
   /** Genre filter is preset to this on open; can be toggled off. */
   @Input() campaignGenre: string | null = null;
@@ -264,6 +267,14 @@ export class BrowseCreatorsModalComponent {
         return next;
       });
     }, 1500);
+  }
+
+  // Rows here already hold a full Creator, so open() paints the header
+  // instantly rather than showing openById()'s skeleton. The profile modal is
+  // z-50 over this modal's z-40, so it stacks above and its backdrop click
+  // closes only the profile, leaving Browse open underneath.
+  openProfile(creator: Creator): void {
+    this.profile.open(creator);
   }
 
   onBackdrop(event: MouseEvent): void {

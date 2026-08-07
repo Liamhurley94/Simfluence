@@ -4,6 +4,7 @@ import {
   MatchResult,
   MatchedCreator,
 } from '../../../core/creator-matcher/creator-matcher.service';
+import { CreatorProfileService } from '../../../core/creator-profile/creator-profile.service';
 
 /**
  * Creator Matcher panel — in-campaign shortlist (planning only).
@@ -56,8 +57,9 @@ import {
           <div class="flex flex-col gap-3 max-h-[22rem] overflow-y-auto pr-1" data-testid="matcher-cards">
             @for (m of result().creators; track m.creator.id) {
               <div
-                class="flex items-center gap-2.5 p-2.5 rounded"
+                class="flex items-center gap-2.5 p-2.5 rounded cursor-pointer"
                 style="background: var(--color-bg-3);"
+                (click)="openProfile(m.creator.id)"
                 [attr.data-testid]="'matcher-card-' + m.creator.id"
               >
                 <div
@@ -92,7 +94,7 @@ import {
                       <span class="text-xs font-bold px-1.5 py-0.5 rounded" style="color: var(--color-bg);" [style.background]="gfiColor(m.gfi)">{{ m.gfi }}%</span>
                     </div>
                   }
-                  <button type="button" (click)="add.emit(m)" [disabled]="disabled()" class="sf-btn sf-btn-ghost text-[9px] disabled:opacity-40" [attr.data-testid]="'matcher-add-' + m.creator.id">+ Add</button>
+                  <button type="button" (click)="add.emit(m); $event.stopPropagation()" [disabled]="disabled()" class="sf-btn sf-btn-ghost text-[9px] disabled:opacity-40" [attr.data-testid]="'matcher-add-' + m.creator.id">+ Add</button>
                 </div>
               </div>
             }
@@ -104,6 +106,7 @@ import {
 })
 export class CreatorMatcherPanelComponent {
   private matcher = inject(CreatorMatcherService);
+  private profile = inject(CreatorProfileService);
 
   readonly genre = input.required<string>();
   readonly budget = input.required<number | null>();
@@ -154,6 +157,12 @@ export class CreatorMatcherPanelComponent {
     } finally {
       this.loading.set(false);
     }
+  }
+
+  // Matcher rows are raw `creator_cpi` shapes off the edge fn, not `Creator` —
+  // so open by id and let the profile service fetch the hydrated record.
+  protected openProfile(id: number): void {
+    void this.profile.openById(id);
   }
 
   /** One-line "why" copy from the derived axis + budget. */

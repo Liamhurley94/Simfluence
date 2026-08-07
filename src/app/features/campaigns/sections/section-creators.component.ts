@@ -2,6 +2,7 @@ import { Component, computed, effect, inject, input, signal } from '@angular/cor
 import { CampaignCreatorsService } from '../../../core/campaigns/campaign-creators.service';
 import { FEATURES } from '../../../core/features';
 import { CreatorsService } from '../../../core/creators/creators.service';
+import { CreatorProfileService } from '../../../core/creator-profile/creator-profile.service';
 import { Creator } from '../../../core/data/creator.types';
 import { Campaign } from '../../../core/campaigns/campaign.types';
 import { MatchedCreator } from '../../../core/creator-matcher/creator-matcher.service';
@@ -45,8 +46,9 @@ import { CreatorMatcherPanelComponent } from '../creator-matcher/creator-matcher
         <ul class="space-y-2 mb-4">
           @for (cc of campaignCreators.records(); track cc.id) {
             <li
-              class="p-2 rounded flex items-center justify-between gap-3 text-xs"
+              class="p-2 rounded flex items-center justify-between gap-3 text-xs cursor-pointer"
               style="background: var(--color-bg-3);"
+              (click)="openProfile(cc.creatorId)"
               [attr.data-testid]="'campaign-creator-' + cc.id"
             >
               <div class="min-w-0">
@@ -65,7 +67,7 @@ import { CreatorMatcherPanelComponent } from '../creator-matcher/creator-matcher
                 </span>
                 <button
                   type="button"
-                  (click)="remove(cc.id)"
+                  (click)="remove(cc.id); $event.stopPropagation()"
                   [disabled]="editingLocked()"
                   class="sf-btn text-[10px] disabled:opacity-40"
                   style="background: transparent; border-color: var(--color-sf-red); color: var(--color-sf-red);"
@@ -107,6 +109,7 @@ import { CreatorMatcherPanelComponent } from '../creator-matcher/creator-matcher
 export class SectionCreatorsComponent {
   protected campaignCreators = inject(CampaignCreatorsService);
   private creatorsSvc = inject(CreatorsService);
+  private profile = inject(CreatorProfileService);
 
   readonly campaign = input.required<Campaign>();
   readonly readonly = input(false);
@@ -184,6 +187,14 @@ export class SectionCreatorsComponent {
     const mix = m.rateEstimate?.ranges?.mix;
     if (!mix || mix.length !== 2) return null;
     return Math.round((mix[0] + mix[1]) / 2);
+  }
+
+  // By id, not from creatorById(): the hydrate effect may still be in flight
+  // (the row renders a "Creator #123" placeholder then), and the click should
+  // work regardless. Viewing a profile is read-only, so this stays enabled even
+  // when the roster is locked or the campaign is readonly.
+  openProfile(creatorId: number): void {
+    void this.profile.openById(creatorId);
   }
 
   openBrowse(): void {

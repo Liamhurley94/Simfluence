@@ -78,6 +78,86 @@ describe('CreatorProfileService', () => {
     expect(svc.current()).toBeNull();
   });
 
+  it('openById() sets loading and clears current until byId resolves', async () => {
+    let resolve!: (v: Creator | undefined) => void;
+    const p = new Promise<Creator | undefined>((r) => { resolve = r; });
+    const { svc } = setup(() => p);
+
+    svc.open(makeCreator(3));        // something already on screen
+    void svc.openById(9);
+    expect(svc.loading()).toBe(true);
+    expect(svc.current()).toBeNull(); // stale creator cleared, skeleton shows
+
+    resolve(makeCreator(9));
+    await Promise.resolve(); await Promise.resolve();
+    expect(svc.loading()).toBe(false);
+    expect(svc.current()?.id).toBe(9);
+  });
+
+  it('openById() leaves the modal closed when byId returns undefined', async () => {
+    const { svc } = setup(() => Promise.resolve(undefined));
+    await svc.openById(404);
+    expect(svc.current()).toBeNull();
+    expect(svc.loading()).toBe(false);
+  });
+
+  it('openById() discards a late result once close() has been called', async () => {
+    let resolve!: (v: Creator | undefined) => void;
+    const p = new Promise<Creator | undefined>((r) => { resolve = r; });
+    const { svc } = setup(() => p);
+
+    void svc.openById(7);
+    svc.close();
+    expect(svc.loading()).toBe(false);
+
+    resolve(makeCreator(7));
+    await Promise.resolve(); await Promise.resolve();
+    // Must NOT re-open the modal the user just closed.
+    expect(svc.current()).toBeNull();
+  });
+
+  it('openById() twice for the SAME id: the first response cannot satisfy the second', async () => {
+    // Guards against using the creator id as the request token — open, close,
+    // re-open the same creator, and both requests would carry the same id.
+    const resolvers: ((v: Creator | undefined) => void)[] = [];
+    const byId = vi.fn(() => new Promise<Creator | undefined>((r) => { resolvers.push(r); }));
+    const creatorsStub = { byId } as unknown as CreatorsService;
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({ providers: [{ provide: CreatorsService, useValue: creatorsStub }] });
+    const svc = TestBed.inject(CreatorProfileService);
+
+    void svc.openById(5);
+    void svc.openById(5); // second click supersedes the first
+
+    resolvers[0](makeCreator(5)); // first (stale) response lands
+    await Promise.resolve(); await Promise.resolve();
+    expect(svc.loading()).toBe(true);   // still waiting on the second request
+    expect(svc.current()).toBeNull();
+
+    resolvers[1](makeCreator(5));
+    await Promise.resolve(); await Promise.resolve();
+    expect(svc.loading()).toBe(false);
+    expect(svc.current()?.id).toBe(5);
+  });
+
+  it('open() after an in-flight openById() wins — the older fetch cannot stomp it', async () => {
+    let resolveSlow!: (v: Creator | undefined) => void;
+    const slow = new Promise<Creator | undefined>((r) => { resolveSlow = r; });
+    const byId = vi.fn((id: number) => id === 1 ? slow : Promise.resolve(undefined));
+    const creatorsStub = { byId } as unknown as CreatorsService;
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({ providers: [{ provide: CreatorsService, useValue: creatorsStub }] });
+    const svc = TestBed.inject(CreatorProfileService);
+
+    void svc.openById(1);
+    svc.open(makeCreator(2));
+    expect(svc.loading()).toBe(false); // open() clears the skeleton
+
+    resolveSlow(makeCreator(1));
+    await Promise.resolve(); await Promise.resolve();
+    expect(svc.current()?.id).toBe(2);
+  });
+
   it('open() guard: does not apply hydration if close() was called before byId resolves', async () => {
     let resolve!: (v: Creator | undefined) => void;
     const p = new Promise<Creator | undefined>((r) => { resolve = r; });

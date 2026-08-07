@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { CreatorMatcherPanelComponent } from './creator-matcher-panel.component';
 import { CreatorMatcherService, MatchResult } from '../../../core/creator-matcher/creator-matcher.service';
+import { CreatorProfileService } from '../../../core/creator-profile/creator-profile.service';
 
 function makeResult(overrides: Partial<MatchResult> = {}): MatchResult {
   return {
@@ -34,11 +35,16 @@ function makeResult(overrides: Partial<MatchResult> = {}): MatchResult {
 function setup(result: MatchResult, excludeIds: number[] = []) {
   const match = vi.fn().mockResolvedValue(result);
   const matcherStub = { match } as unknown as CreatorMatcherService;
+  const openById = vi.fn();
+  const profileStub = { openById } as unknown as CreatorProfileService;
 
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({
     imports: [CreatorMatcherPanelComponent],
-    providers: [{ provide: CreatorMatcherService, useValue: matcherStub }],
+    providers: [
+      { provide: CreatorMatcherService, useValue: matcherStub },
+      { provide: CreatorProfileService, useValue: profileStub },
+    ],
   });
 
   const fixture = TestBed.createComponent(CreatorMatcherPanelComponent);
@@ -47,7 +53,7 @@ function setup(result: MatchResult, excludeIds: number[] = []) {
   fixture.componentRef.setInput('objectives', ['Sales']);
   fixture.componentRef.setInput('excludeIds', excludeIds);
   fixture.componentRef.setInput('disabled', false);
-  return { fixture, match };
+  return { fixture, match, openById };
 }
 
 async function settle(fixture: { whenStable: () => Promise<unknown>; detectChanges: () => void }) {
@@ -119,6 +125,31 @@ describe('CreatorMatcherPanelComponent', () => {
 
     expect(emitted).toHaveLength(1);
     expect((emitted[0] as { creator: { id: number } }).creator.id).toBe(7);
+  });
+
+  it('opens the profile modal by id when the card body is clicked', async () => {
+    const { fixture, openById } = setup(makeResult());
+    fixture.detectChanges();
+    await settle(fixture);
+
+    fixture.nativeElement.querySelector('[data-testid="matcher-card-9"]').click();
+
+    expect(openById).toHaveBeenCalledOnce();
+    expect(openById).toHaveBeenCalledWith(9);
+  });
+
+  it('does NOT open the profile modal when the Add button is clicked', async () => {
+    const { fixture, openById } = setup(makeResult());
+    fixture.detectChanges();
+    await settle(fixture);
+
+    const emitted: unknown[] = [];
+    fixture.componentInstance.add.subscribe((v: unknown) => emitted.push(v));
+
+    fixture.nativeElement.querySelector('[data-testid="matcher-add-7"]').click();
+
+    expect(emitted).toHaveLength(1); // add still fires
+    expect(openById).not.toHaveBeenCalled(); // but the click stops there
   });
 
   it('shows an empty state when the matcher returns no creators', async () => {

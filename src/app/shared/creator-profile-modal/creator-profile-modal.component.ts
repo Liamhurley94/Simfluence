@@ -72,7 +72,46 @@ function sponsorColor(pct: number): string {
   standalone: true,
   imports: [DecimalPipe, IconComponent, ProprietaryNoteComponent, SourceZoneHeaderComponent],
   template: `
-    @if (creator(); as c) {
+    <!-- openById() has nothing to paint until byId resolves — show the modal
+         shell with a skeleton rather than leaving the click looking dead.
+         open() skips this branch entirely (it paints from the caller's record). -->
+    @if (loading()) {
+      <div
+        class="fixed inset-0 z-50 overflow-y-auto flex items-start justify-center p-3 sm:p-6 sf-fade-in"
+        style="background: var(--color-overlay);"
+        (click)="close()"
+        data-testid="creator-profile-loading-backdrop"
+      >
+        <div
+          class="max-w-2xl w-full rounded-lg overflow-hidden sf-modal-in"
+          style="background: var(--color-bg-2); border: 1px solid var(--color-border-strong);"
+          (click)="$event.stopPropagation()"
+          data-testid="creator-profile-skeleton"
+        >
+          <div class="px-5 py-4 flex items-center gap-3 border-b" style="border-color: var(--color-border);">
+            <div class="sf-skeleton w-14 h-14 rounded-full shrink-0"></div>
+            <div class="flex-1 min-w-0 flex flex-col gap-2">
+              <div class="sf-skeleton h-5 w-48"></div>
+              <div class="sf-skeleton h-3 w-64"></div>
+            </div>
+          </div>
+          <div class="p-5 flex flex-col gap-4">
+            <div class="sf-skeleton h-3 w-full"></div>
+            <div class="sf-skeleton h-3 w-11/12"></div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div class="flex flex-col gap-2">
+                <div class="sf-skeleton h-2 w-16"></div>
+                <div class="sf-skeleton h-4 w-24"></div>
+              </div>
+              <div class="flex flex-col gap-2">
+                <div class="sf-skeleton h-2 w-16"></div>
+                <div class="sf-skeleton h-4 w-24"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    } @else if (creator(); as c) {
       <div
         class="fixed inset-0 z-50 overflow-y-auto flex items-start justify-center p-3 sm:p-6 sf-fade-in"
         style="background: var(--color-overlay);"
@@ -643,6 +682,7 @@ export class CreatorProfileModalComponent {
   private supabase = inject(SupabaseService);
 
   protected readonly creator = this.profile.current;
+  protected readonly loading = this.profile.loading;
   protected readonly showYoutube = computed(() => hasYoutube(this.creator()));
   protected readonly showTwitch = computed(() => hasTwitch(this.creator()));
 

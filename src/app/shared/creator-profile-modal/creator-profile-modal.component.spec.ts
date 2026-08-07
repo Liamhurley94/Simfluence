@@ -35,12 +35,14 @@ function mkCreator(overrides: Partial<Creator> = {}): Creator {
   };
 }
 
-function setup(creator: Creator | null) {
+function setup(creator: Creator | null, loading = false) {
   TestBed.resetTestingModule();
 
   const profileStub = {
     current: signal<Creator | null>(creator),
+    loading: signal(loading),
     open: vi.fn(),
+    openById: vi.fn(),
     close: vi.fn(),
   };
   const youtubeStub = { fetch: vi.fn().mockResolvedValue(null) };
@@ -59,6 +61,50 @@ function setup(creator: Creator | null) {
 
   return { profileStub };
 }
+
+describe('CreatorProfileModalComponent — loading skeleton', () => {
+  beforeEach(() => {
+    TestBed.resetTestingModule();
+  });
+
+  it('renders the skeleton shell, not the real modal, while openById is in flight', () => {
+    setup(null, true);
+    const fixture = TestBed.createComponent(CreatorProfileModalComponent);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('[data-testid="creator-profile-skeleton"]')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('[data-testid="creator-profile-modal"]')).toBeNull();
+  });
+
+  it('renders nothing at all when idle — not loading and no creator', () => {
+    setup(null, false);
+    const fixture = TestBed.createComponent(CreatorProfileModalComponent);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('[data-testid="creator-profile-skeleton"]')).toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-testid="creator-profile-modal"]')).toBeNull();
+  });
+
+  it('renders the real modal once a creator is present and loading has cleared', async () => {
+    setup(mkCreator(), false);
+    const fixture = TestBed.createComponent(CreatorProfileModalComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('[data-testid="creator-profile-modal"]')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('[data-testid="creator-profile-skeleton"]')).toBeNull();
+  });
+
+  it('closes from the skeleton backdrop — a slow fetch is escapable', () => {
+    const { profileStub } = setup(null, true);
+    const fixture = TestBed.createComponent(CreatorProfileModalComponent);
+    fixture.detectChanges();
+
+    fixture.nativeElement.querySelector('[data-testid="creator-profile-loading-backdrop"]').click();
+    expect(profileStub.close).toHaveBeenCalledOnce();
+  });
+});
 
 describe('CreatorProfileModalComponent — Estimated Budget Range', () => {
   beforeEach(() => {

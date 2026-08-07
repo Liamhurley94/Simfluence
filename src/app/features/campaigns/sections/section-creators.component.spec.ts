@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { SectionCreatorsComponent } from './section-creators.component';
 import { CampaignCreatorsService } from '../../../core/campaigns/campaign-creators.service';
 import { CreatorsService } from '../../../core/creators/creators.service';
+import { CreatorProfileService } from '../../../core/creator-profile/creator-profile.service';
 import { CreatorMatcherService, MatchResult } from '../../../core/creator-matcher/creator-matcher.service';
 import { Campaign } from '../../../core/campaigns/campaign.types';
 
@@ -54,6 +55,8 @@ function setup(
   const creatorsStub = { byIds: vi.fn().mockResolvedValue([]) };
   const match = vi.fn().mockResolvedValue(result);
   const matcherStub = { match };
+  const openById = vi.fn();
+  const profileStub = { openById };
 
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({
@@ -62,6 +65,7 @@ function setup(
       { provide: CampaignCreatorsService, useValue: campaignCreatorsStub },
       { provide: CreatorsService, useValue: creatorsStub },
       { provide: CreatorMatcherService, useValue: matcherStub },
+      { provide: CreatorProfileService, useValue: profileStub },
     ],
   });
 
@@ -70,7 +74,7 @@ function setup(
   if (inputs.readonly !== undefined) fixture.componentRef.setInput('readonly', inputs.readonly);
   if (inputs.rosterLocked !== undefined) fixture.componentRef.setInput('rosterLocked', inputs.rosterLocked);
   fixture.detectChanges();
-  return { fixture, campaignCreatorsStub, creatorsStub, match };
+  return { fixture, campaignCreatorsStub, creatorsStub, match, openById };
 }
 
 async function settle(fixture: { whenStable: () => Promise<unknown>; detectChanges: () => void }) {
@@ -140,6 +144,53 @@ describe('SectionCreatorsComponent', () => {
         rateEstimate: 1800, // midpoint of [1200, 2400]
       }),
     );
+  });
+
+  describe('opening the creator profile modal', () => {
+    const roster = [{ id: 'cc-1', creatorId: 11, source: 'manual' }];
+
+    it('opens by id when the roster row is clicked', () => {
+      const { fixture, openById } = setup(makeCampaign(), roster);
+
+      fixture.nativeElement.querySelector('[data-testid="campaign-creator-cc-1"]').click();
+
+      expect(openById).toHaveBeenCalledOnce();
+      expect(openById).toHaveBeenCalledWith(11);
+    });
+
+    it('opens by id even before the creator hydrate resolves (placeholder row)', () => {
+      // byIds resolves empty, so creatorById() never gains an entry and the row
+      // renders "Creator #11" — the click must still work.
+      const { fixture, openById } = setup(makeCampaign(), roster);
+
+      const row: HTMLElement = fixture.nativeElement.querySelector('[data-testid="campaign-creator-cc-1"]');
+      expect(row.textContent).toContain('Creator #11');
+      row.click();
+
+      expect(openById).toHaveBeenCalledWith(11);
+    });
+
+    it('does NOT open the modal when Remove is clicked', () => {
+      const { fixture, openById, campaignCreatorsStub } = setup(makeCampaign(), roster);
+
+      fixture.nativeElement.querySelector('[data-testid="campaign-creator-remove-cc-1"]').click();
+
+      expect(campaignCreatorsStub.remove).toHaveBeenCalledWith('cc-1');
+      expect(openById).not.toHaveBeenCalled();
+    });
+
+    it('stays clickable when the roster is locked — viewing a profile is read-only', () => {
+      const { fixture, openById } = setup(
+        makeCampaign({ status: 'active' }),
+        roster,
+        matchResult(),
+        { rosterLocked: true },
+      );
+
+      fixture.nativeElement.querySelector('[data-testid="campaign-creator-cc-1"]').click();
+
+      expect(openById).toHaveBeenCalledWith(11);
+    });
   });
 
   describe('roster locking (rosterLocked input)', () => {
