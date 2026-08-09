@@ -205,7 +205,7 @@ const FORMATS: Format[] = ['Integrated', 'Mixed', 'Dedicated'];
           style="background: color-mix(in srgb, var(--color-sf-red) 8%, transparent); border: 1px solid var(--color-sf-red); color: var(--color-sf-red);"
           data-testid="sim-budget-warning"
         >
-          Budget covers {{ r.reachableCount }} of {{ creators().length - excludedNoData().length }}
+          Budget covers {{ r.reachableCount }} of {{ forecastRosterSize() }}
           creators – {{ unaffordableCount() }} were left out of this forecast. Raise the budget or
           remove creators.
         </div>
@@ -363,12 +363,18 @@ export class SimulationPanelComponent {
   // Creators with no live view metric are excluded from the forecast (no stale
   // fallback); surfaced so the omission is explicit to the user.
   protected readonly excludedNoData = computed(() => partitionByLiveData(this.creators()).excluded);
+  // Snapshot of how many creators were actually sent to the edge fn on the last
+  // run, captured in run() before the await. `creators()` is live and can change
+  // while a result sits on screen (e.g. the campaign roster is edited elsewhere
+  // without re-running) – pairing that live count with the frozen `reachableCount`
+  // from an old result would describe a forecast that was never actually run.
+  protected readonly forecastRosterSize = signal(0);
   // The forecast's greedy budget fit drops creators the budget can't cover.
   // Without this the omission is invisible – the headline just quietly shrinks.
   protected readonly unaffordableCount = computed(() => {
     const r = this.result();
     if (!r) return 0;
-    return Math.max(0, this.creators().length - this.excludedNoData().length - r.reachableCount);
+    return Math.max(0, this.forecastRosterSize() - r.reachableCount);
   });
   readonly initialBudget = input<number>(85_000);
   readonly initialGenre = input<string>('');
@@ -425,6 +431,11 @@ export class SimulationPanelComponent {
   async run(): Promise<void> {
     if (this.runDisabled()) return;
     this.rateLimitSvc.increment();
+    // Snapshot before the await – `creators()` can change while the request is
+    // in flight, and the count paired with this result's `reachableCount` must
+    // describe what was actually sent, not whatever the roster is by the time
+    // the response lands.
+    const rosterSize = partitionByLiveData(this.creators()).included.length;
     const r = await this.runSim.run({
       creators: this.creators(),
       budget: this.budget(),
@@ -439,7 +450,11 @@ export class SimulationPanelComponent {
       durationWeeks: this.durationWeeks(),
       creatorFormats: this.perCreatorFormat() ? this.creatorFormats() : undefined,
     });
-    if (r) { this.result.set(r); this.simulated.emit(r); }
+    if (r) {
+      this.result.set(r);
+      this.forecastRosterSize.set(rosterSize);
+      this.simulated.emit(r);
+    }
   }
 
   toggleObjective(o: Objective): void {

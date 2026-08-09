@@ -242,4 +242,35 @@ describe('SimulationPanelComponent', () => {
     expect(warn.textContent).toContain('Budget covers 1 of 2');
     expect(warn.textContent).toContain('1 were left out');
   });
+
+  it('keeps describing the roster that was actually run when creators() changes afterward', async () => {
+    // Run against 3 creators (reachableCount: 1 -> 2 unaffordable). Then edit the
+    // roster to 5 creators WITHOUT re-running. The warning must still describe the
+    // forecast that was actually run ("of 3" / "2 left out"), not silently
+    // recompute against the new, never-simulated roster ("of 5" / "4 left out").
+    const { post } = setup();
+    post.mockResolvedValue({ ...RESULT, reachableCount: 1 });
+    const f = TestBed.createComponent(Host);
+    f.componentInstance.creators.set([mkCreator(1), mkCreator(2), mkCreator(3)]);
+    f.detectChanges();
+    f.nativeElement.querySelector('[data-testid="sim-run"]').click();
+    await f.whenStable(); f.detectChanges();
+
+    let warn = f.nativeElement.querySelector('[data-testid="sim-budget-warning"]');
+    expect(warn.textContent).toContain('Budget covers 1 of 3');
+    expect(warn.textContent).toContain('2 were left out');
+
+    // Roster changes after the run – no re-run.
+    f.componentInstance.creators.set([
+      mkCreator(1), mkCreator(2), mkCreator(3), mkCreator(4), mkCreator(5),
+    ]);
+    f.detectChanges();
+
+    warn = f.nativeElement.querySelector('[data-testid="sim-budget-warning"]');
+    expect(warn).toBeTruthy();
+    expect(warn.textContent).toContain('Budget covers 1 of 3');
+    expect(warn.textContent).toContain('2 were left out');
+    expect(warn.textContent).not.toContain('of 5');
+    expect(post).toHaveBeenCalledOnce();
+  });
 });
