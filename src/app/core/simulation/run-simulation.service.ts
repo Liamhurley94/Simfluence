@@ -1,6 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { EdgeClient } from '../api/edge.client';
-import { SimInputs, SimResult } from './simulation.types';
+import { DEFAULT_AOV, DEFAULT_DURATION_WEEKS, SimInputs, SimResult } from './simulation.types';
 import { partitionByLiveData } from './live-stats';
 
 /**
@@ -47,6 +47,8 @@ export class RunSimulationService {
         genre: inputs.genre,
         objectives: inputs.objectives,
         subMode: inputs.subMode ?? '',
+        aov: inputs.aov ?? DEFAULT_AOV,
+        durationWeeks: inputs.durationWeeks ?? DEFAULT_DURATION_WEEKS,
       };
 
       const res = await this.edge

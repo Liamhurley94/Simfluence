@@ -178,7 +178,9 @@ export class CampaignSimulatorComponent {
         impressions: r.impressions, ctr: r.ctr, roas: r.roas, cvr: r.cvr,
         p10: r.p10, p50: r.p50, p90: r.p90,
         creatorBreakdowns: (r.creatorBreakdowns ?? []).map((b) => ({
-          id: b.id,
+          // b.id arrives as a string (the edge fn echoes back String(creator.id));
+          // CampaignForecastCreator.id is the numeric creator id used for lookups.
+          id: Number(b.id),
           impressions: b.impressions,
           clicks: b.clicks,
           conversions: b.conversions,

@@ -23,6 +23,12 @@ export interface SimInputs {
   // the top-level `format` for creators without one. Used by the campaign forecast
   // (per-creator formats from campaign_creators); the standalone sim leaves it unset.
   creatorFormats?: Record<number, string>;
+  /** Average conversion value (AOV) in USD – drives per-creator ROAS and
+   *  revenue only, never the headline ROAS. Defaults to DEFAULT_AOV. */
+  aov?: number;
+  /** Campaign length in weeks, 1–12. Scales volume metrics only. Defaults to
+   *  DEFAULT_DURATION_WEEKS. */
+  durationWeeks?: number;
 }
 
 export interface SimBand {
@@ -31,13 +37,45 @@ export interface SimBand {
   roas: number;
 }
 
-export interface SimCreatorBreakdown {
-  id: number;
-  impressions: number;
+/** Defaults mirrored from the edge function (`breakdown.ts`, `duration.ts`). */
+export const DEFAULT_AOV = 30;
+export const DEFAULT_DURATION_WEEKS = 4;
+
+/** One confidence band of a per-creator breakdown row. Field names are the edge
+ *  function's abbreviated ones, not the roster-level `SimBand` spellings. */
+export interface SimCreatorBand {
+  impr: number;
+  ctr: number;
   clicks: number;
-  conversions: number;
-  budgetShare: number;   // per-creator spend basis
+  conv: number;
   roas: number;
+}
+
+/** Budget range [low, high] per sponsorship format, in USD. */
+export interface SimCreatorRates {
+  int: [number, number];
+  mix: [number, number];
+  ded: [number, number];
+}
+
+export interface SimCreatorBreakdown {
+  /** Echoed back exactly as the payload sent it – `run-simulation.service`
+   *  sends `String(creator.id)`, so this arrives as a string at runtime. Callers
+   *  keying by creator id must `Number()` it first. */
+  id: string | number;
+  /** Genre Fit Index, 0–100. */
+  gfi: number;
+  budgetShare: number;
+  impressions: number;
+  ctr: number;
+  clicks: number;
+  cvr: number;
+  conversions: number;
+  roas: number;
+  rates: SimCreatorRates;
+  p10: SimCreatorBand;
+  p50: SimCreatorBand;
+  p90: SimCreatorBand;
 }
 
 export interface SimResult {
@@ -54,6 +92,10 @@ export interface SimResult {
   engRate: number;
   clicks: number;
   budget: number;
+  /** Echoed back by the edge function so a saved forecast records the
+   *  assumptions it was produced under. */
+  aov: number;
+  durationWeeks: number;
   reachableCount: number;          // creators we could actually afford under the budget
   bench: GenreBenchmark;
   p10: SimBand;

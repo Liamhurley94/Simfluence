@@ -187,6 +187,18 @@ describe('RunSimulationService', () => {
     expect(res).toBeNull();
   });
 
+  it('sends average conversion value and duration, defaulted when unset', async () => {
+    const { service, post } = setup();
+    await service.run(sampleInputs);
+    expect(post.mock.calls[0][1]).toMatchObject({ aov: 30, durationWeeks: 4 });
+  });
+
+  it('forwards explicit average conversion value and duration', async () => {
+    const { service, post } = setup();
+    await service.run({ ...sampleInputs, aov: 150, durationWeeks: 8 });
+    expect(post.mock.calls[0][1]).toMatchObject({ aov: 150, durationWeeks: 8 });
+  });
+
   it("sends a Twitch creator's avg_ccv as avgViews (empty subs)", async () => {
     const { service, post } = setup({
       impressions: 1, ctr: 1, cpM: 1, cvr: 1, conversions: 1, roas: 1, engRate: 1, clicks: 1, budget: 50_000,

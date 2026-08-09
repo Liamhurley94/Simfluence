@@ -17,7 +17,8 @@ function mkCreator(id: number): Creator {
 }
 const RESULT: SimResult = { impressions: 100, ctr: 2, cpM: 6, cvr: 0.5, conversions: 1, roas: 0.1,
   roasP10: 0.07, roasP50: 0.1, roasP90: 0.15, roasRange: '0.1–0.4×', engRate: 3, clicks: 2,
-  budget: 85_000, reachableCount: 1, bench: { ctrBase: 2, cpmBase: 8, cvrBase: 0.5, roasBase: 2, engBase: 4 },
+  budget: 85_000, aov: 30, durationWeeks: 4, reachableCount: 1,
+  bench: { ctrBase: 2, cpmBase: 8, cvrBase: 0.5, roasBase: 2, engBase: 4 },
   p10: { impressions: 68, ctr: 1.3, roas: 0.07 }, p50: { impressions: 100, ctr: 2, roas: 0.1 },
   p90: { impressions: 142, ctr: 2.8, roas: 0.15 } };
 
