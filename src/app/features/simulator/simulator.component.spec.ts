@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { signal } from '@angular/core';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -10,8 +10,10 @@ import { CreatorsService } from '../../core/creators/creators.service';
 import { EdgeClient } from '../../core/api/edge.client';
 import { RateLimitService } from '../../core/simulation/rate-limit.service';
 import { CampaignsRepository } from '../../core/campaigns/campaigns.repository';
+import { CampaignCreatorsRepository } from '../../core/campaigns/campaign-creators.repository';
 import { CreatorProfileService } from '../../core/creator-profile/creator-profile.service';
 import { Creator } from '../../core/data/creator.types';
+import { Campaign } from '../../core/campaigns/campaign.types';
 
 function mkCreator(id: number): Creator {
   return {
@@ -72,6 +74,11 @@ function setup({ selectedIds = [] as number[], tier = 'silver' } = {}) {
     remove: vi.fn(),
   } as unknown as CampaignsRepository;
 
+  const campaignCreatorsRepoStub = {
+    listFor: vi.fn().mockResolvedValue([]),
+    add: vi.fn(),
+  } as unknown as CampaignCreatorsRepository;
+
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({
     imports: [SimulatorComponent],
@@ -81,13 +88,14 @@ function setup({ selectedIds = [] as number[], tier = 'silver' } = {}) {
       { provide: CreatorsService, useValue: creatorsStub },
       { provide: EdgeClient, useValue: edgeStub },
       { provide: CampaignsRepository, useValue: campaignsRepoStub },
+      { provide: CampaignCreatorsRepository, useValue: campaignCreatorsRepoStub },
     ],
   });
 
   const selection = TestBed.inject(SelectionService);
   for (const id of selectedIds) selection.add(id);
 
-  return { post, selection, tier: tierSignal };
+  return { post, selection, tier: tierSignal, campaignsRepoStub, campaignCreatorsRepoStub };
 }
 
 describe('SimulatorComponent', () => {
@@ -159,6 +167,50 @@ describe('SimulatorComponent', () => {
 
     const save: HTMLButtonElement = fixture.nativeElement.querySelector('[data-testid="sim-save"]');
     expect(save.disabled).toBe(false);
+  });
+
+  it('saving to campaigns persists the aov and durationWeeks the result carried', async () => {
+    const { post, campaignsRepoStub } = setup({ selectedIds: [2, 14] });
+    // saveToCampaigns() navigates to the new campaign's detail page after
+    // saving; this suite doesn't register app routes, so stub navigate the
+    // same way campaigns.component.spec.ts does rather than let it reject.
+    vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    // Same shape as the real edge fn response (2026-08-09 branch) — aov and
+    // durationWeeks are echoed back alongside the existing bands.
+    post.mockResolvedValueOnce({
+      impressions: 100, ctr: 2, cpM: 6, cvr: 0.5, conversions: 1, roas: 0.1,
+      roasRange: '0.1–0.4×', engRate: 3, clicks: 2, budget: 85_000, aov: 45, durationWeeks: 6,
+      bench: { ctrBase: 2, cpmBase: 8, cvrBase: 0.5, roasBase: 2, engBase: 4 },
+      p10: { impressions: 68, ctr: 1.3, roas: 0.07 },
+      p50: { impressions: 100, ctr: 2, roas: 0.1 },
+      p90: { impressions: 142, ctr: 2.8, roas: 0.15 },
+    });
+    const created: Campaign = {
+      id: 'new-camp', createdBy: 'u', enterpriseId: null, status: 'planning',
+      name: 'x', client: null, genre: 'Gaming & Esports', budget: 85_000, notes: null, objectives: [],
+      forecast: null, debriefNotes: null, startedAt: null, completedAt: null, createdAt: '', updatedAt: '',
+    };
+    (campaignsRepoStub.create as ReturnType<typeof vi.fn>).mockResolvedValue(created);
+    (campaignsRepoStub.update as ReturnType<typeof vi.fn>).mockResolvedValue(created);
+
+    const fixture = TestBed.createComponent(SimulatorComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const runBtn: HTMLButtonElement = fixture.nativeElement.querySelector('[data-testid="sim-run"]');
+    runBtn.click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const save: HTMLButtonElement = fixture.nativeElement.querySelector('[data-testid="sim-save"]');
+    save.click();
+    await fixture.whenStable();
+
+    expect(campaignsRepoStub.update).toHaveBeenCalledWith(
+      'new-camp',
+      { forecast: expect.objectContaining({ aov: 45, durationWeeks: 6 }) },
+    );
   });
 
   it('free tier hitting limit disables the run button and shows banner', async () => {

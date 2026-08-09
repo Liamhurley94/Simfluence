@@ -119,4 +119,16 @@ describe('SectionResultsComponent', () => {
     f.detectChanges();
     expect(f.nativeElement.querySelector('[data-testid="creator-forecast"]')).toBeNull();
   });
+
+  it('populates the per-creator forecast column from a legacy forecast with a string breakdown id', () => {
+    const campaign = mkCampaign('completed');
+    // Forecasts saved before 2026-08-09 persisted the edge fn's echoed string
+    // id verbatim (e.g. "7") rather than the numeric creatorId. The read path
+    // must coerce it, or every pre-existing campaign's debrief column is blank.
+    const forecast = { ...campaign.forecast!,
+      creatorBreakdowns: [{ id: '7' as unknown as number, impressions: 90, clicks: 3, conversions: 1, spend: 40000, revenue: 96000 }] };
+    const { f } = setup({ ...campaign, forecast });
+    f.detectChanges();
+    expect(f.nativeElement.querySelector('[data-testid="creator-forecast"]')).toBeTruthy();
+  });
 });

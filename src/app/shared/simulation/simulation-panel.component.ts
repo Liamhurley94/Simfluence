@@ -379,6 +379,8 @@ export class SimulationPanelComponent {
   readonly initialBudget = input<number>(85_000);
   readonly initialGenre = input<string>('');
   readonly initialObjectives = input<string[]>([]);
+  readonly initialAov = input<number>(DEFAULT_AOV);
+  readonly initialDurationWeeks = input<number>(DEFAULT_DURATION_WEEKS);
   readonly genres = input<string[]>([]);
   readonly subMode = input<string | undefined>(undefined);
   readonly readonly = input<boolean>(false);
@@ -398,8 +400,8 @@ export class SimulationPanelComponent {
   protected readonly genre = linkedSignal(() => this.initialGenre());
   protected readonly format = signal<Format>('Integrated');
   protected readonly defaultAov = DEFAULT_AOV;
-  protected readonly aov = signal<number>(DEFAULT_AOV);
-  protected readonly durationWeeks = signal<number>(DEFAULT_DURATION_WEEKS);
+  protected readonly aov = linkedSignal(() => this.initialAov());
+  protected readonly durationWeeks = linkedSignal(() => this.initialDurationWeeks());
   // Seeded from the campaign's persisted objectives (mirrors budget/genre).
   // Filter to the canonical buckets so stale/legacy values are ignored.
   protected readonly selectedObjectives = linkedSignal<Objective[]>(() =>

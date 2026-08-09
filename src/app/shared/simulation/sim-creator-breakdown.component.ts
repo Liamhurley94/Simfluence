@@ -58,6 +58,11 @@ interface BreakdownRow {
             @for (row of rows(); track row.key) {
               <tr
                 (click)="toggle(row.key)"
+                (keydown.enter)="toggle(row.key)"
+                (keydown.space)="toggle(row.key); $event.preventDefault()"
+                tabindex="0"
+                role="button"
+                [attr.aria-expanded]="expanded() === row.key"
                 class="cursor-pointer"
                 style="border-bottom: 1px solid var(--color-border);"
                 data-testid="sim-breakdown-row"

@@ -130,6 +130,8 @@ export class SimulatorComponent {
       p10: r.p10,
       p50: r.p50,
       p90: r.p90,
+      aov: r.aov,
+      durationWeeks: r.durationWeeks,
     };
 
     // Standalone save — create a new campaign with the basics + forecast.

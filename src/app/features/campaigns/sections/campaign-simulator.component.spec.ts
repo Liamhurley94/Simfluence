@@ -10,6 +10,7 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { EdgeClient } from '../../../core/api/edge.client';
 import { Campaign } from '../../../core/campaigns/campaign.types';
 import { Creator } from '../../../core/data/creator.types';
+import { DEFAULT_AOV } from '../../../core/simulation/simulation.types';
 
 function mkCreator(id: number): Creator {
   return { id, name: `C${id}`, handle: `@c${id}`, platform: 'YouTube', allPlatforms: ['YouTube'],
@@ -114,6 +115,41 @@ describe('CampaignSimulatorComponent', () => {
     expect(saved.creatorBreakdowns[0].revenue).toBe(30);   // 1 conversion × $30
     expect(saved.aov).toBe(30);
     expect(saved.durationWeeks).toBe(4);
+  });
+
+  it('falls back to DEFAULT_AOV when the edge fn response omits aov (older backend)', async () => {
+    const { update, post } = setup('planning');
+    // Simulate an edge fn predating this branch, which never echoed `aov` back.
+    const { aov: _omitted, ...staleResult } = RESULT;
+    post.mockResolvedValue(staleResult);
+    const f = TestBed.createComponent(CampaignSimulatorComponent);
+    f.componentRef.setInput('campaign', mkCampaign('planning'));
+    f.detectChanges(); await f.whenStable(); f.detectChanges();
+    (f.nativeElement.querySelector('[data-testid="sim-run"]') as HTMLButtonElement).click();
+    await f.whenStable(); f.detectChanges();
+    (f.nativeElement.querySelector('[data-testid="campaign-forecast-save"]') as HTMLButtonElement).click();
+    await f.whenStable(); f.detectChanges();
+    const saved = update.mock.calls.at(-1)![1].forecast;
+    // Without the fallback this would be NaN -> serialized to null.
+    expect(saved.creatorBreakdowns[0].revenue).toBe(1 * DEFAULT_AOV);
+    expect(Number.isNaN(saved.creatorBreakdowns[0].revenue)).toBe(false);
+  });
+
+  it('seeds AOV and duration controls from the saved campaign forecast', async () => {
+    const withForecast: Campaign = { ...mkCampaign('planning'), forecast: {
+      impressions: 50, ctr: 1, roas: 0.2, cvr: 0.3,
+      p10: { impressions: 40, ctr: 0.8, roas: 0.15 },
+      p50: { impressions: 50, ctr: 1, roas: 0.2 },
+      p90: { impressions: 60, ctr: 1.2, roas: 0.25 },
+      aov: 150, durationWeeks: 8,
+    } };
+    setup('planning');
+    const f = TestBed.createComponent(CampaignSimulatorComponent);
+    f.componentRef.setInput('campaign', withForecast);
+    f.detectChanges(); await f.whenStable(); f.detectChanges();
+    const aovInput: HTMLInputElement = f.nativeElement.querySelector('[data-testid="sim-aov"]');
+    expect(aovInput.value).toBe('150');
+    expect(f.nativeElement.querySelector('[data-testid="sim-duration-label"]').textContent).toContain('8');
   });
 
   it('Save is projected into the panel actions row next to Run', async () => {

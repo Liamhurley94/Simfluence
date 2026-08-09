@@ -6,7 +6,7 @@ import { CreatorsService } from '../../../core/creators/creators.service';
 import { CampaignsService } from '../../../core/campaigns/campaigns.service';
 import { Campaign, CampaignForecast } from '../../../core/campaigns/campaign.types';
 import { Creator } from '../../../core/data/creator.types';
-import { SimResult } from '../../../core/simulation/simulation.types';
+import { DEFAULT_AOV, DEFAULT_DURATION_WEEKS, SimResult } from '../../../core/simulation/simulation.types';
 
 @Component({
   selector: 'app-campaign-simulator',
@@ -61,6 +61,8 @@ import { SimResult } from '../../../core/simulation/simulation.types';
           [initialBudget]="campaign().budget ?? 85000"
           [initialGenre]="campaign().genre ?? ''"
           [initialObjectives]="campaign().objectives"
+          [initialAov]="campaign().forecast?.aov ?? defaultAov"
+          [initialDurationWeeks]="campaign().forecast?.durationWeeks ?? defaultDurationWeeks"
           [genres]="genres()"
           [perCreatorFormat]="true"
           [creatorFormats]="creatorFormats()"
@@ -115,6 +117,8 @@ export class CampaignSimulatorComponent {
   private campaignsSvc = inject(CampaignsService);
 
   readonly campaign = input.required<Campaign>();
+  protected readonly defaultAov = DEFAULT_AOV;
+  protected readonly defaultDurationWeeks = DEFAULT_DURATION_WEEKS;
   protected readonly genres = this.creatorsSvc.genres;
   protected readonly result = signal<SimResult | null>(null);
   protected readonly saving = signal(false);
@@ -189,8 +193,11 @@ export class CampaignSimulatorComponent {
           spend: b.budgetShare,
           // Straight from conversions × average conversion value. Deriving it
           // from `roas × budgetShare` used to round-trip through a 1-decimal
-          // ROAS and overstate revenue by up to ~12%.
-          revenue: Math.round(b.conversions * r.aov),
+          // ROAS and overstate revenue by up to ~12%. `r.aov` falls back to
+          // DEFAULT_AOV against an edge function older than this branch,
+          // which doesn't echo `aov` back — undefined would otherwise produce
+          // NaN, silently poisoning the saved revenue as `null`.
+          revenue: Math.round(b.conversions * (r.aov ?? DEFAULT_AOV)),
         })),
       };
       await this.campaignsSvc.update(this.campaign().id, { forecast });

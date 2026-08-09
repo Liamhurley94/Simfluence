@@ -204,7 +204,10 @@ export class SectionResultsComponent {
 
   private readonly forecastById = computed(() => {
     const m = new Map<number, CampaignForecastCreator>();
-    for (const b of this.campaign().forecast?.creatorBreakdowns ?? []) m.set(b.id, b);
+    // Forecasts saved before 2026-08-09 persisted the edge fn's echoed string
+    // id verbatim (CampaignForecastCreator.id is typed `number`, but legacy
+    // rows hold e.g. "7"). No migration touches old jsonb, so coerce on read.
+    for (const b of this.campaign().forecast?.creatorBreakdowns ?? []) m.set(Number(b.id), b);
     return m;
   });
 

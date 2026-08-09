@@ -68,4 +68,32 @@ describe('SimCreatorBreakdownComponent', () => {
     const f = TestBed.createComponent(Host); f.detectChanges();
     expect(f.nativeElement.querySelector('[data-testid="proprietary-note"]')).toBeTruthy();
   });
+
+  it('carries the source-zone header labeling the metrics as Simfluence-derived', () => {
+    TestBed.resetTestingModule();
+    const f = TestBed.createComponent(Host); f.detectChanges();
+    expect(f.nativeElement.querySelector('[data-testid="metric-source-simfluence"]')).toBeTruthy();
+  });
+
+  it('expands a row on Enter for keyboard-only users', () => {
+    TestBed.resetTestingModule();
+    const f = TestBed.createComponent(Host); f.detectChanges();
+    const row: HTMLElement = f.nativeElement.querySelector('[data-testid="sim-breakdown-row"]');
+    expect(f.nativeElement.querySelector('[data-testid="sim-breakdown-detail"]')).toBeFalsy();
+    row.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    f.detectChanges();
+    expect(f.nativeElement.querySelector('[data-testid="sim-breakdown-detail"]')).toBeTruthy();
+  });
+
+  it('marks the row as a focusable, aria-expanded button for keyboard access', () => {
+    TestBed.resetTestingModule();
+    const f = TestBed.createComponent(Host); f.detectChanges();
+    const row: HTMLElement = f.nativeElement.querySelector('[data-testid="sim-breakdown-row"]');
+    expect(row.getAttribute('tabindex')).toBe('0');
+    expect(row.getAttribute('role')).toBe('button');
+    expect(row.getAttribute('aria-expanded')).toBe('false');
+    row.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    f.detectChanges();
+    expect(row.getAttribute('aria-expanded')).toBe('true');
+  });
 });
