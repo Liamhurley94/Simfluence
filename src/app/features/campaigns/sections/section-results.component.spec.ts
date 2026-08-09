@@ -101,6 +101,22 @@ describe('SectionResultsComponent', () => {
   it('populates the per-creator forecast column from a saved breakdown', () => {
     const { f } = setup(mkCampaign('completed'));
     f.detectChanges();
-    expect(f.nativeElement.textContent).toContain('90');   // forecast impressions for creator 7
+    const el: HTMLElement = f.nativeElement.querySelector('[data-testid="creator-forecast"]');
+    expect(el).toBeTruthy();
+    expect(el.textContent).toContain('90');       // forecast impressions for creator 7
+    expect(el.textContent).toContain('40,000');   // forecast spend
+    expect(el.textContent).toContain('96,000');   // forecast revenue
+  });
+
+  it('omits the per-creator forecast line when the saved breakdown id does not match the roster', () => {
+    const campaign = mkCampaign('completed');
+    // Same shape as a real saved forecast, but the breakdown's id (999) has no
+    // matching creatorId in the roster (ccRecord() defaults to creatorId 7) –
+    // this is the id-mismatch regression the string/number fix guards against.
+    const forecast = { ...campaign.forecast!,
+      creatorBreakdowns: [{ id: 999, impressions: 90, clicks: 3, conversions: 1, spend: 40000, revenue: 96000 }] };
+    const { f } = setup({ ...campaign, forecast });
+    f.detectChanges();
+    expect(f.nativeElement.querySelector('[data-testid="creator-forecast"]')).toBeNull();
   });
 });

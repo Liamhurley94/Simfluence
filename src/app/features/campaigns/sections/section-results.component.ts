@@ -93,7 +93,7 @@ interface DebriefRow {
                 <td class="px-1 py-2" style="color: var(--color-text);">
                   {{ row.name }}
                   @if (forecastFor(row.cc.creatorId); as fc) {
-                    <div class="text-[9px]" style="color: var(--color-text-muted);">
+                    <div class="text-[9px]" style="color: var(--color-text-muted);" data-testid="creator-forecast">
                       fc {{ fc.impressions | number: '1.0-0' }} · {{ fc.clicks | number: '1.0-0' }} · {{ fc.conversions | number: '1.0-0' }} · {{ '$' + (fc.spend | number: '1.0-0') }} · {{ '$' + (fc.revenue | number: '1.0-0') }}
                     </div>
                   }
