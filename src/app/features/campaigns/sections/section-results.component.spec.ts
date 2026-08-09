@@ -97,4 +97,10 @@ describe('SectionResultsComponent', () => {
     await f.whenStable();
     expect(update).toHaveBeenCalledWith('c1', { debriefNotes: 'EMEA underperformed' });
   });
+
+  it('populates the per-creator forecast column from a saved breakdown', () => {
+    const { f } = setup(mkCampaign('completed'));
+    f.detectChanges();
+    expect(f.nativeElement.textContent).toContain('90');   // forecast impressions for creator 7
+  });
 });

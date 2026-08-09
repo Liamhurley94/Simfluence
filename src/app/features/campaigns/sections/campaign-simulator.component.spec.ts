@@ -24,10 +24,16 @@ function mkCampaign(status: Campaign['status'] = 'planning', objectives: string[
 }
 const RESULT = { impressions: 100, ctr: 2, cpM: 6, cvr: 0.5, conversions: 1, roas: 0.1, roasP10: 0.07,
   roasP50: 0.1, roasP90: 0.15, roasRange: '0.1–0.4×', engRate: 3, clicks: 2, budget: 50_000, reachableCount: 1,
+  aov: 30, durationWeeks: 4,
   bench: { ctrBase: 2, cpmBase: 8, cvrBase: 0.5, roasBase: 2, engBase: 4 },
   p10: { impressions: 68, ctr: 1.3, roas: 0.07 }, p50: { impressions: 100, ctr: 2, roas: 0.1 },
   p90: { impressions: 142, ctr: 2.8, roas: 0.15 },
-  creatorBreakdowns: [{ id: 7, impressions: 90, clicks: 3, conversions: 1, budgetShare: 40000, roas: 2 }] };
+  creatorBreakdowns: [{ id: '7', gfi: 80, budgetShare: 40_000, impressions: 90, ctr: 2, clicks: 3,
+    cvr: 0.5, conversions: 1, roas: 2,
+    rates: { int: [1, 2], mix: [2, 3], ded: [3, 4] },
+    p10: { impr: 60, ctr: 1.4, clicks: 2, conv: 1, roas: 1.3 },
+    p50: { impr: 90, ctr: 2, clicks: 3, conv: 1, roas: 2 },
+    p90: { impr: 130, ctr: 2.8, clicks: 4, conv: 1, roas: 2.9 } }] };
 
 function setup(
   status: Campaign['status'] = 'planning',
@@ -76,9 +82,38 @@ describe('CampaignSimulatorComponent', () => {
     await f.whenStable(); f.detectChanges();
     expect(update).toHaveBeenCalledWith('c1', expect.objectContaining({
       forecast: expect.objectContaining({
-        creatorBreakdowns: [{ id: 7, impressions: 90, clicks: 3, conversions: 1, spend: 40000, revenue: 80000 }],
+        creatorBreakdowns: [{ id: 7, impressions: 90, clicks: 3, conversions: 1, spend: 40000, revenue: 30 }],
       }),
     }));
+  });
+
+  it('normalizes the string creator id the edge function echoes back', async () => {
+    const { update } = setup('planning');
+    const f = TestBed.createComponent(CampaignSimulatorComponent);
+    f.componentRef.setInput('campaign', mkCampaign('planning'));
+    f.detectChanges(); await f.whenStable(); f.detectChanges();
+    (f.nativeElement.querySelector('[data-testid="sim-run"]') as HTMLButtonElement).click();
+    await f.whenStable(); f.detectChanges();
+    (f.nativeElement.querySelector('[data-testid="campaign-forecast-save"]') as HTMLButtonElement).click();
+    await f.whenStable(); f.detectChanges();
+    const saved = update.mock.calls.at(-1)![1].forecast;
+    expect(saved.creatorBreakdowns[0].id).toBe(7);
+    expect(typeof saved.creatorBreakdowns[0].id).toBe('number');
+  });
+
+  it('records the assumptions and derives revenue from conversions', async () => {
+    const { update } = setup('planning');
+    const f = TestBed.createComponent(CampaignSimulatorComponent);
+    f.componentRef.setInput('campaign', mkCampaign('planning'));
+    f.detectChanges(); await f.whenStable(); f.detectChanges();
+    (f.nativeElement.querySelector('[data-testid="sim-run"]') as HTMLButtonElement).click();
+    await f.whenStable(); f.detectChanges();
+    (f.nativeElement.querySelector('[data-testid="campaign-forecast-save"]') as HTMLButtonElement).click();
+    await f.whenStable(); f.detectChanges();
+    const saved = update.mock.calls.at(-1)![1].forecast;
+    expect(saved.creatorBreakdowns[0].revenue).toBe(30);   // 1 conversion × $30
+    expect(saved.aov).toBe(30);
+    expect(saved.durationWeeks).toBe(4);
   });
 
   it('Save is projected into the panel actions row next to Run', async () => {

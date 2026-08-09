@@ -177,6 +177,8 @@ export class CampaignSimulatorComponent {
       const forecast: CampaignForecast = {
         impressions: r.impressions, ctr: r.ctr, roas: r.roas, cvr: r.cvr,
         p10: r.p10, p50: r.p50, p90: r.p90,
+        aov: r.aov,
+        durationWeeks: r.durationWeeks,
         creatorBreakdowns: (r.creatorBreakdowns ?? []).map((b) => ({
           // b.id arrives as a string (the edge fn echoes back String(creator.id));
           // CampaignForecastCreator.id is the numeric creator id used for lookups.
@@ -185,7 +187,10 @@ export class CampaignSimulatorComponent {
           clicks: b.clicks,
           conversions: b.conversions,
           spend: b.budgetShare,
-          revenue: Math.round(b.roas * b.budgetShare),
+          // Straight from conversions × average conversion value. Deriving it
+          // from `roas × budgetShare` used to round-trip through a 1-decimal
+          // ROAS and overstate revenue by up to ~12%.
+          revenue: Math.round(b.conversions * r.aov),
         })),
       };
       await this.campaignsSvc.update(this.campaign().id, { forecast });

@@ -23,6 +23,11 @@ export interface CampaignForecast {
   // Slim per-creator snapshot captured at Save time, for the debrief's per-creator
   // rows. Optional so pre-existing saved forecasts still load.
   creatorBreakdowns?: CampaignForecastCreator[];
+  /** Assumptions the forecast was produced under, so the debrief can say what
+   *  it is grading against. Optional – forecasts saved before 2026-08-09 have
+   *  neither. `campaigns.forecast` is jsonb, so this needs no migration. */
+  aov?: number;
+  durationWeeks?: number;
 }
 
 export interface Campaign {
