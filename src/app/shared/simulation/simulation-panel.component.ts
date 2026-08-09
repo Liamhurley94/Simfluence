@@ -5,7 +5,14 @@ import { IconComponent } from '../icon/icon.component';
 import { AuthService } from '../../core/auth/auth.service';
 import { RunSimulationService } from '../../core/simulation/run-simulation.service';
 import { RateLimitService } from '../../core/simulation/rate-limit.service';
-import { Format, OBJECTIVES, Objective, SimResult } from '../../core/simulation/simulation.types';
+import {
+  DEFAULT_AOV,
+  DEFAULT_DURATION_WEEKS,
+  Format,
+  OBJECTIVES,
+  Objective,
+  SimResult,
+} from '../../core/simulation/simulation.types';
 import { Creator } from '../../core/data/creator.types';
 import { partitionByLiveData } from '../../core/simulation/live-stats';
 
@@ -77,6 +84,45 @@ const FORMATS: Format[] = ['Integrated', 'Mixed', 'Dedicated'];
               <option [ngValue]="g">{{ g }}</option>
             }
           </select>
+        </div>
+        <div>
+          <label
+            class="text-[10px] uppercase tracking-wider mb-1 block"
+            style="color: var(--color-text-muted);"
+          >
+            Avg. conversion value (USD)
+          </label>
+          <input
+            type="number"
+            min="1"
+            step="5"
+            [ngModel]="aov()"
+            (ngModelChange)="aov.set($event || defaultAov)"
+            class="sf-input"
+            data-testid="sim-aov"
+          />
+        </div>
+        <div>
+          <label
+            class="text-[10px] uppercase tracking-wider mb-1 block"
+            style="color: var(--color-text-muted);"
+          >
+            Duration –
+            <span data-testid="sim-duration-label">
+              {{ durationWeeks() }} week{{ durationWeeks() === 1 ? '' : 's' }}
+            </span>
+          </label>
+          <input
+            type="range"
+            min="1"
+            max="12"
+            step="1"
+            [ngModel]="durationWeeks()"
+            (ngModelChange)="durationWeeks.set(+$event)"
+            class="w-full"
+            style="accent-color: var(--color-sf-blue);"
+            data-testid="sim-duration"
+          />
         </div>
       </div>
 
@@ -318,6 +364,9 @@ export class SimulationPanelComponent {
   protected readonly budget = linkedSignal(() => this.initialBudget());
   protected readonly genre = linkedSignal(() => this.initialGenre());
   protected readonly format = signal<Format>('Integrated');
+  protected readonly defaultAov = DEFAULT_AOV;
+  protected readonly aov = signal<number>(DEFAULT_AOV);
+  protected readonly durationWeeks = signal<number>(DEFAULT_DURATION_WEEKS);
   // Seeded from the campaign's persisted objectives (mirrors budget/genre).
   // Filter to the canonical buckets so stale/legacy values are ignored.
   protected readonly selectedObjectives = linkedSignal<Objective[]>(() =>
@@ -359,6 +408,8 @@ export class SimulationPanelComponent {
       genre: this.genre(),
       objectives: this.selectedObjectives(),
       subMode: this.subMode(),
+      aov: this.aov(),
+      durationWeeks: this.durationWeeks(),
       creatorFormats: this.perCreatorFormat() ? this.creatorFormats() : undefined,
     });
     if (r) { this.result.set(r); this.simulated.emit(r); }

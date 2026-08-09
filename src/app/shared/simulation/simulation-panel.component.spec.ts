@@ -177,4 +177,30 @@ describe('SimulationPanelComponent', () => {
     f.detectChanges();
     expect(f.nativeElement.querySelector('[data-testid="sim-excluded-note"]')).toBeNull();
   });
+
+  it('sends the default average conversion value and duration', async () => {
+    const { post } = setup();
+    const f = TestBed.createComponent(Host); f.detectChanges();
+    f.nativeElement.querySelector('[data-testid="sim-run"]').click();
+    await f.whenStable();
+    expect(post.mock.calls[0][1]).toMatchObject({ aov: 30, durationWeeks: 4 });
+  });
+
+  it('sends edited average conversion value and duration', async () => {
+    const { post } = setup();
+    const f = TestBed.createComponent(Host); f.detectChanges();
+    const aov: HTMLInputElement = f.nativeElement.querySelector('[data-testid="sim-aov"]');
+    aov.value = '150'; aov.dispatchEvent(new Event('input')); f.detectChanges();
+    const dur: HTMLInputElement = f.nativeElement.querySelector('[data-testid="sim-duration"]');
+    dur.value = '8'; dur.dispatchEvent(new Event('input')); f.detectChanges();
+    f.nativeElement.querySelector('[data-testid="sim-run"]').click();
+    await f.whenStable();
+    expect(post.mock.calls[0][1]).toMatchObject({ aov: 150, durationWeeks: 8 });
+  });
+
+  it('labels the duration slider with its current value', () => {
+    setup();
+    const f = TestBed.createComponent(Host); f.detectChanges();
+    expect(f.nativeElement.querySelector('[data-testid="sim-duration-label"]').textContent).toContain('4 weeks');
+  });
 });
