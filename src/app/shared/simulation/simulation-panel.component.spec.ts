@@ -203,4 +203,43 @@ describe('SimulationPanelComponent', () => {
     const f = TestBed.createComponent(Host); f.detectChanges();
     expect(f.nativeElement.querySelector('[data-testid="sim-duration-label"]').textContent).toContain('4 weeks');
   });
+
+  it('warns when the budget could not cover every selected creator', async () => {
+    const { post } = setup();
+    post.mockResolvedValue({ ...RESULT, reachableCount: 1 });
+    const f = TestBed.createComponent(Host);
+    f.componentInstance.creators.set([mkCreator(1), mkCreator(2), mkCreator(3)]);
+    f.detectChanges();
+    f.nativeElement.querySelector('[data-testid="sim-run"]').click();
+    await f.whenStable(); f.detectChanges();
+    const warn = f.nativeElement.querySelector('[data-testid="sim-budget-warning"]');
+    expect(warn).toBeTruthy();
+    expect(warn.textContent).toContain('2');   // 3 selected − 1 affordable
+  });
+
+  it('shows no budget warning when every creator is affordable', async () => {
+    const { post } = setup();
+    post.mockResolvedValue({ ...RESULT, reachableCount: 1 });
+    const f = TestBed.createComponent(Host); f.detectChanges();
+    f.nativeElement.querySelector('[data-testid="sim-run"]').click();
+    await f.whenStable(); f.detectChanges();
+    expect(f.nativeElement.querySelector('[data-testid="sim-budget-warning"]')).toBeFalsy();
+  });
+
+  it('nets out both no-live-data exclusions and unaffordable creators in the warning count', async () => {
+    // 3 selected: creator 3 has no live stats (never reaches the edge fn), leaving
+    // 2 eligible; the edge fn can only afford 1 of those – 1 should read as
+    // unaffordable, not 2 (which is what a roster-length-only subtraction would give).
+    const { post } = setup();
+    post.mockResolvedValue({ ...RESULT, reachableCount: 1 });
+    const f = TestBed.createComponent(Host);
+    f.componentInstance.creators.set([mkCreator(1), mkCreator(2), { ...mkCreator(3), ytStats: undefined }]);
+    f.detectChanges();
+    f.nativeElement.querySelector('[data-testid="sim-run"]').click();
+    await f.whenStable(); f.detectChanges();
+    const warn = f.nativeElement.querySelector('[data-testid="sim-budget-warning"]');
+    expect(warn).toBeTruthy();
+    expect(warn.textContent).toContain('Budget covers 1 of 2');
+    expect(warn.textContent).toContain('1 were left out');
+  });
 });

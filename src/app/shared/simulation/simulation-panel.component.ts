@@ -3,6 +3,7 @@ import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IconComponent } from '../icon/icon.component';
 import { SimCreatorBreakdownComponent } from './sim-creator-breakdown.component';
+import { SimBenchmarkPanelComponent } from './sim-benchmark-panel.component';
 import { AuthService } from '../../core/auth/auth.service';
 import { RunSimulationService } from '../../core/simulation/run-simulation.service';
 import { RateLimitService } from '../../core/simulation/rate-limit.service';
@@ -22,7 +23,7 @@ const FORMATS: Format[] = ['Integrated', 'Mixed', 'Dedicated'];
 @Component({
   selector: 'app-simulation-panel',
   standalone: true,
-  imports: [DecimalPipe, FormsModule, IconComponent, SimCreatorBreakdownComponent],
+  imports: [DecimalPipe, FormsModule, IconComponent, SimCreatorBreakdownComponent, SimBenchmarkPanelComponent],
   template: `
     @if (!readonly()) {
       <!-- Controls -->
@@ -198,6 +199,18 @@ const FORMATS: Format[] = ['Integrated', 'Mixed', 'Dedicated'];
     }
 
     @if (result(); as r) {
+      @if (unaffordableCount() > 0) {
+        <div
+          class="p-3 mb-4 rounded-lg text-xs"
+          style="background: color-mix(in srgb, var(--color-sf-red) 8%, transparent); border: 1px solid var(--color-sf-red); color: var(--color-sf-red);"
+          data-testid="sim-budget-warning"
+        >
+          Budget covers {{ r.reachableCount }} of {{ creators().length - excludedNoData().length }}
+          creators – {{ unaffordableCount() }} were left out of this forecast. Raise the budget or
+          remove creators.
+        </div>
+      }
+
       <!-- Bands -->
       <div class="grid grid-cols-3 gap-3 mb-6" data-testid="sim-bands">
         <div
@@ -336,6 +349,8 @@ const FORMATS: Format[] = ['Integrated', 'Mixed', 'Dedicated'];
       @if (r.creatorBreakdowns?.length) {
         <app-sim-creator-breakdown [breakdowns]="r.creatorBreakdowns!" [creators]="creators()" />
       }
+
+      <app-sim-benchmark-panel [result]="r" />
     }
   `,
 })
@@ -348,6 +363,13 @@ export class SimulationPanelComponent {
   // Creators with no live view metric are excluded from the forecast (no stale
   // fallback); surfaced so the omission is explicit to the user.
   protected readonly excludedNoData = computed(() => partitionByLiveData(this.creators()).excluded);
+  // The forecast's greedy budget fit drops creators the budget can't cover.
+  // Without this the omission is invisible – the headline just quietly shrinks.
+  protected readonly unaffordableCount = computed(() => {
+    const r = this.result();
+    if (!r) return 0;
+    return Math.max(0, this.creators().length - this.excludedNoData().length - r.reachableCount);
+  });
   readonly initialBudget = input<number>(85_000);
   readonly initialGenre = input<string>('');
   readonly initialObjectives = input<string[]>([]);
