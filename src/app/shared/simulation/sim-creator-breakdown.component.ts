@@ -9,7 +9,6 @@ interface BreakdownRow {
   key: number;
   name: string;
   handle: string;
-  platform: string;
   cpi: number | null;
   b: SimCreatorBreakdown;
 }
@@ -130,7 +129,6 @@ export class SimCreatorBreakdownComponent {
         key,
         name: c?.name ?? `#${key}`,
         handle: c?.handle ?? '',
-        platform: c?.platform ?? '',
         cpi: c?.cpi ?? null,
         b,
       };
