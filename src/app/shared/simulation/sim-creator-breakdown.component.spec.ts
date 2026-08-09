@@ -13,8 +13,8 @@ function mkCreator(id: number, name: string): Creator {
 
 const band = (n: number) => ({ impr: n, ctr: 2, clicks: n / 10, conv: n / 100, roas: 1.2 });
 
-function mkBreakdown(id: string | number, reachable = true): SimCreatorBreakdown {
-  return { id, gfi: 91, reachable, budgetShare: 18_200, impressions: 2_100_000, ctr: 2.9,
+function mkBreakdown(id: string | number, reachable = true, fitFormat: 'int' | 'mix' | 'ded' = 'int'): SimCreatorBreakdown {
+  return { id, gfi: 91, reachable, fitFormat, budgetShare: 18_200, impressions: 2_100_000, ctr: 2.9,
     clicks: 61_900, cvr: 0.35, conversions: 217, roas: 1.4,
     rates: { int: [4200, 8100], mix: [7000, 13_000], ded: [9800, 19_000] },
     p10: band(1_100_000), p50: band(1_600_000), p90: band(2_300_000) };
@@ -132,5 +132,34 @@ describe('SimCreatorBreakdownComponent', () => {
     f.nativeElement.querySelector('[data-testid="sim-breakdown-row"]').click();
     f.detectChanges();
     expect(f.nativeElement.querySelector('[data-testid="sim-breakdown-detail"]')).toBeFalsy();
+  });
+
+  it('an over-budget row renders the rate range it was actually gated on, not always Integrated', () => {
+    TestBed.resetTestingModule();
+    const f = TestBed.createComponent(Host);
+    // fitFormat: 'ded' – the budget fit excluded this creator on its Dedicated
+    // price, so the row must show the Dedicated range ($9,800-$19,000) and say
+    // "Dedicated", never the unrelated Integrated range ($4,200-$8,100).
+    f.componentInstance.breakdowns.set([mkBreakdown('1', false, 'ded')]);
+    f.detectChanges();
+    const row = f.nativeElement.querySelector('[data-testid="sim-breakdown-unaffordable"]');
+    expect(row.textContent).toContain('Dedicated rate');
+    expect(row.textContent).toContain('9,800');
+    expect(row.textContent).toContain('19,000');
+    expect(row.textContent).not.toContain('Integrated');
+    expect(row.textContent).not.toContain('4,200');
+  });
+
+  it('fails open when reachable is missing (stale backend), rendering forecast numbers not Over budget', () => {
+    TestBed.resetTestingModule();
+    const f = TestBed.createComponent(Host);
+    // Simulate a stale deployed edge function that predates `reachable` –
+    // omitted entirely, not `false`. Must not be treated as unaffordable.
+    const stale = { ...mkBreakdown('1') } as Partial<SimCreatorBreakdown>;
+    delete stale.reachable;
+    f.componentInstance.breakdowns.set([stale as SimCreatorBreakdown]);
+    f.detectChanges();
+    expect(f.nativeElement.querySelector('[data-testid="sim-breakdown-unaffordable"]')).toBeFalsy();
+    expect(f.nativeElement.textContent).toContain('2,100,000');
   });
 });

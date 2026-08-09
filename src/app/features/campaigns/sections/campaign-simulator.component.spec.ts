@@ -29,7 +29,7 @@ const RESULT = { impressions: 100, ctr: 2, cpM: 6, cvr: 0.5, conversions: 1, roa
   bench: { ctrBase: 2, cpmBase: 8, cvrBase: 0.5, roasBase: 2, engBase: 4 },
   p10: { impressions: 68, ctr: 1.3, roas: 0.07 }, p50: { impressions: 100, ctr: 2, roas: 0.1 },
   p90: { impressions: 142, ctr: 2.8, roas: 0.15 },
-  creatorBreakdowns: [{ id: '7', gfi: 80, budgetShare: 40_000, impressions: 90, ctr: 2, clicks: 3,
+  creatorBreakdowns: [{ id: '7', gfi: 80, reachable: true, fitFormat: 'int', budgetShare: 40_000, impressions: 90, ctr: 2, clicks: 3,
     cvr: 0.5, conversions: 1, roas: 2,
     rates: { int: [1, 2], mix: [2, 3], ded: [3, 4] },
     p10: { impr: 60, ctr: 1.4, clicks: 2, conv: 1, roas: 1.3 },

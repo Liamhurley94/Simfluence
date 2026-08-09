@@ -68,6 +68,12 @@ export interface SimCreatorBreakdown {
   /** False when the budget could not cover this creator's rate. Their forecast
    *  fields are 0 in that case – the row shows the rate instead. */
   reachable: boolean;
+  /** Which of `rates` (Integrated/Mixed/Dedicated) the budget fit gated this
+   *  creator on: the creator's own per-creator format, else the campaign
+   *  fallback – same resolution `run-simulation` used to price the fit. An
+   *  unaffordable row must display this range, not always Integrated,
+   *  otherwise it can advertise a rate that isn't what excluded the creator. */
+  fitFormat: 'int' | 'mix' | 'ded';
   budgetShare: number;
   impressions: number;
   ctr: number;

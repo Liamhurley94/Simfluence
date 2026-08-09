@@ -5,6 +5,13 @@ import { ProprietaryNoteComponent } from '../compliance/proprietary-note.compone
 import { Creator } from '../../core/data/creator.types';
 import { SimCreatorBand, SimCreatorBreakdown } from '../../core/simulation/simulation.types';
 
+/** Label for the format `fitFormat` displays alongside the over-budget rate. */
+const FIT_FORMAT_LABELS: Record<'int' | 'mix' | 'ded', string> = {
+  int: 'Integrated',
+  mix: 'Mixed',
+  ded: 'Dedicated',
+};
+
 interface BreakdownRow {
   key: number;
   name: string;
@@ -125,7 +132,7 @@ interface BreakdownRow {
                     style="color: var(--color-text-muted);"
                     data-testid="sim-breakdown-unaffordable"
                   >
-                    Over budget – needs \${{ row.b.rates.int[0] | number: '1.0-0' }}–\${{ row.b.rates.int[1] | number: '1.0-0' }} (Integrated rate)
+                    Over budget – needs \${{ fitRate(row.b)[0] | number: '1.0-0' }}–\${{ fitRate(row.b)[1] | number: '1.0-0' }} ({{ fitFormatLabel(row.b) }} rate)
                   </td>
                 </tr>
               }
@@ -159,7 +166,12 @@ export class SimCreatorBreakdownComponent {
         name: c?.name ?? `#${key}`,
         handle: c?.handle ?? '',
         cpi: c?.cpi ?? null,
-        reachable: b.reachable,
+        // Fail open: a stale deployed edge function (rollback, or a frontend
+        // deploy that lands ahead of the backend) omits `reachable` entirely,
+        // which must not read as "every row is over budget" – that would hide
+        // a full forecast behind a false warning. Only an explicit `false`
+        // marks a row unaffordable.
+        reachable: b.reachable !== false,
         b,
       };
     });
@@ -168,6 +180,19 @@ export class SimCreatorBreakdownComponent {
     // relative order within each group.
     return [...mapped].sort((a, b) => Number(b.reachable) - Number(a.reachable));
   });
+
+  /** The rate range the budget fit actually gated this row on – not always
+   *  Integrated. Do not resolve the format client-side; `fitFormat` already
+   *  carries the resolution `run-simulation` used (its own format, else the
+   *  campaign fallback), and duplicating that rule here would risk it
+   *  drifting from the backend's. */
+  protected fitRate(b: SimCreatorBreakdown): [number, number] {
+    return b.rates[b.fitFormat];
+  }
+
+  protected fitFormatLabel(b: SimCreatorBreakdown): string {
+    return FIT_FORMAT_LABELS[b.fitFormat];
+  }
 
   protected bandsOf(b: SimCreatorBreakdown): Array<{ label: string; v: SimCreatorBand; color: string }> {
     return [
