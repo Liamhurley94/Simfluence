@@ -2,6 +2,7 @@ import { Component, computed, effect, inject, input, linkedSignal, output, signa
 import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IconComponent } from '../icon/icon.component';
+import { SimCreatorBreakdownComponent } from './sim-creator-breakdown.component';
 import { AuthService } from '../../core/auth/auth.service';
 import { RunSimulationService } from '../../core/simulation/run-simulation.service';
 import { RateLimitService } from '../../core/simulation/rate-limit.service';
@@ -21,7 +22,7 @@ const FORMATS: Format[] = ['Integrated', 'Mixed', 'Dedicated'];
 @Component({
   selector: 'app-simulation-panel',
   standalone: true,
-  imports: [DecimalPipe, FormsModule, IconComponent],
+  imports: [DecimalPipe, FormsModule, IconComponent, SimCreatorBreakdownComponent],
   template: `
     @if (!readonly()) {
       <!-- Controls -->
@@ -331,6 +332,10 @@ const FORMATS: Format[] = ['Integrated', 'Mixed', 'Dedicated'];
           </div>
         </div>
       </div>
+
+      @if (r.creatorBreakdowns?.length) {
+        <app-sim-creator-breakdown [breakdowns]="r.creatorBreakdowns!" [creators]="creators()" />
+      }
     }
   `,
 })
