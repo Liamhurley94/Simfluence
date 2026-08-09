@@ -205,9 +205,13 @@ const FORMATS: Format[] = ['Integrated', 'Mixed', 'Dedicated'];
           style="background: color-mix(in srgb, var(--color-sf-red) 8%, transparent); border: 1px solid var(--color-sf-red); color: var(--color-sf-red);"
           data-testid="sim-budget-warning"
         >
-          Budget covers {{ r.reachableCount }} of {{ forecastRosterSize() }}
-          creators – {{ unaffordableCount() }} were left out of this forecast. Raise the budget or
-          remove creators.
+          @if (r.reachableCount === 0) {
+            This budget covers none of the {{ forecastRosterSize() }} selected creators. Raise the
+            budget or remove creators.
+          } @else {
+            {{ unaffordableCount() }} of {{ forecastRosterSize() }} selected creators don't fit
+            this budget – they're marked below. Raise the budget or remove them.
+          }
         </div>
       }
 

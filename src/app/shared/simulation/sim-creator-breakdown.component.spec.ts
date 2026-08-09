@@ -13,8 +13,8 @@ function mkCreator(id: number, name: string): Creator {
 
 const band = (n: number) => ({ impr: n, ctr: 2, clicks: n / 10, conv: n / 100, roas: 1.2 });
 
-function mkBreakdown(id: string | number): SimCreatorBreakdown {
-  return { id, gfi: 91, budgetShare: 18_200, impressions: 2_100_000, ctr: 2.9,
+function mkBreakdown(id: string | number, reachable = true): SimCreatorBreakdown {
+  return { id, gfi: 91, reachable, budgetShare: 18_200, impressions: 2_100_000, ctr: 2.9,
     clicks: 61_900, cvr: 0.35, conversions: 217, roas: 1.4,
     rates: { int: [4200, 8100], mix: [7000, 13_000], ded: [9800, 19_000] },
     p10: band(1_100_000), p50: band(1_600_000), p90: band(2_300_000) };
@@ -95,5 +95,42 @@ describe('SimCreatorBreakdownComponent', () => {
     row.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
     f.detectChanges();
     expect(row.getAttribute('aria-expanded')).toBe('true');
+  });
+
+  it('groups unaffordable creators after affordable ones', () => {
+    TestBed.resetTestingModule();
+    const f = TestBed.createComponent(Host);
+    f.componentInstance.breakdowns.set([
+      { ...mkBreakdown('1'), reachable: false },
+      { ...mkBreakdown('2'), reachable: true },
+    ]);
+    f.componentInstance.creators.set([mkCreator(1, 'Poorfit'), mkCreator(2, 'Affordable')]);
+    f.detectChanges();
+    const names = [...f.nativeElement.querySelectorAll('[data-testid="sim-breakdown-row"]')]
+      .map((r: HTMLElement) => r.textContent ?? '');
+    expect(names[0]).toContain('Affordable');
+    expect(names[1]).toContain('Poorfit');
+  });
+
+  it('shows the rate instead of forecast numbers on an over-budget row', () => {
+    TestBed.resetTestingModule();
+    const f = TestBed.createComponent(Host);
+    f.componentInstance.breakdowns.set([{ ...mkBreakdown('1'), reachable: false }]);
+    f.detectChanges();
+    const row = f.nativeElement.querySelector('[data-testid="sim-breakdown-unaffordable"]');
+    expect(row).toBeTruthy();
+    expect(row.textContent).toContain('Over budget');
+    // The row must not present a fabricated forecast for a placement the budget can't buy.
+    expect(row.textContent).not.toContain('2,100,000');
+  });
+
+  it('does not expand an over-budget row', () => {
+    TestBed.resetTestingModule();
+    const f = TestBed.createComponent(Host);
+    f.componentInstance.breakdowns.set([{ ...mkBreakdown('1'), reachable: false }]);
+    f.detectChanges();
+    f.nativeElement.querySelector('[data-testid="sim-breakdown-row"]').click();
+    f.detectChanges();
+    expect(f.nativeElement.querySelector('[data-testid="sim-breakdown-detail"]')).toBeFalsy();
   });
 });

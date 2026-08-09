@@ -239,8 +239,7 @@ describe('SimulationPanelComponent', () => {
     await f.whenStable(); f.detectChanges();
     const warn = f.nativeElement.querySelector('[data-testid="sim-budget-warning"]');
     expect(warn).toBeTruthy();
-    expect(warn.textContent).toContain('Budget covers 1 of 2');
-    expect(warn.textContent).toContain('1 were left out');
+    expect(warn.textContent).toContain('1 of 2 selected creators');
   });
 
   it('keeps describing the roster that was actually run when creators() changes afterward', async () => {
@@ -257,8 +256,7 @@ describe('SimulationPanelComponent', () => {
     await f.whenStable(); f.detectChanges();
 
     let warn = f.nativeElement.querySelector('[data-testid="sim-budget-warning"]');
-    expect(warn.textContent).toContain('Budget covers 1 of 3');
-    expect(warn.textContent).toContain('2 were left out');
+    expect(warn.textContent).toContain('2 of 3 selected creators');
 
     // Roster changes after the run – no re-run.
     f.componentInstance.creators.set([
@@ -268,9 +266,36 @@ describe('SimulationPanelComponent', () => {
 
     warn = f.nativeElement.querySelector('[data-testid="sim-budget-warning"]');
     expect(warn).toBeTruthy();
-    expect(warn.textContent).toContain('Budget covers 1 of 3');
-    expect(warn.textContent).toContain('2 were left out');
+    expect(warn.textContent).toContain('2 of 3 selected creators');
     expect(warn.textContent).not.toContain('of 5');
     expect(post).toHaveBeenCalledOnce();
+  });
+
+  it('counts the warning from the unaffordable side, matching the table', async () => {
+    const { post } = setup();
+    post.mockResolvedValue({ ...RESULT, reachableCount: 1 });
+    const f = TestBed.createComponent(Host);
+    f.componentInstance.creators.set([mkCreator(1), mkCreator(2), mkCreator(3)]);
+    f.detectChanges();
+    f.nativeElement.querySelector('[data-testid="sim-run"]').click();
+    await f.whenStable(); f.detectChanges();
+    const warn = f.nativeElement.querySelector('[data-testid="sim-budget-warning"]');
+    expect(warn.textContent).toContain('2 of 3');
+    expect(warn.textContent).not.toContain('covers 1 of 3');
+  });
+
+  it('says the budget covers none of the selected creators when reachableCount is 0', async () => {
+    const { post } = setup();
+    post.mockResolvedValue({ ...RESULT, reachableCount: 0 });
+    const f = TestBed.createComponent(Host);
+    f.componentInstance.creators.set([mkCreator(1), mkCreator(2), mkCreator(3)]);
+    f.detectChanges();
+    f.nativeElement.querySelector('[data-testid="sim-run"]').click();
+    await f.whenStable(); f.detectChanges();
+    const warn = f.nativeElement.querySelector('[data-testid="sim-budget-warning"]');
+    expect(warn).toBeTruthy();
+    expect(warn.textContent).toContain('none');
+    // Must not render as "3 of 3 don't fit" next to a table that looks empty.
+    expect(warn.textContent).not.toContain('3 of 3');
   });
 });

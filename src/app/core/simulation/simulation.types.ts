@@ -65,6 +65,9 @@ export interface SimCreatorBreakdown {
   id: string | number;
   /** Genre Fit Index, 0–100. */
   gfi: number;
+  /** False when the budget could not cover this creator's rate. Their forecast
+   *  fields are 0 in that case – the row shows the rate instead. */
+  reachable: boolean;
   budgetShare: number;
   impressions: number;
   ctr: number;

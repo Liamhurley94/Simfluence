@@ -10,6 +10,7 @@ interface BreakdownRow {
   name: string;
   handle: string;
   cpi: number | null;
+  reachable: boolean;
   b: SimCreatorBreakdown;
 }
 
@@ -56,52 +57,75 @@ interface BreakdownRow {
           </thead>
           <tbody>
             @for (row of rows(); track row.key) {
-              <tr
-                (click)="toggle(row.key)"
-                (keydown.enter)="toggle(row.key)"
-                (keydown.space)="toggle(row.key); $event.preventDefault()"
-                tabindex="0"
-                role="button"
-                [attr.aria-expanded]="expanded() === row.key"
-                class="cursor-pointer"
-                style="border-bottom: 1px solid var(--color-border);"
-                data-testid="sim-breakdown-row"
-              >
-                <td class="px-4 py-2" style="color: var(--color-text);">
-                  <span style="color: var(--color-text-muted);">{{ expanded() === row.key ? '▾' : '▸' }}</span>
-                  {{ row.name }}
-                  <span class="text-[10px]" style="color: var(--color-text-muted);">{{ row.handle }}</span>
-                </td>
-                <td class="text-right px-2 py-2" style="color: var(--color-text);">{{ row.cpi ?? '–' }}</td>
-                <td class="text-right px-2 py-2" style="color: var(--color-text);">{{ row.b.gfi }}%</td>
-                <td class="text-right px-2 py-2" style="color: var(--color-sf-gold);">\${{ row.b.budgetShare | number: '1.0-0' }}</td>
-                <td class="text-right px-2 py-2" style="color: var(--color-text);">{{ row.b.impressions | number: '1.0-0' }}</td>
-                <td class="text-right px-2 py-2" style="color: var(--color-text);">{{ row.b.ctr }}%</td>
-                <td class="text-right px-2 py-2" style="color: var(--color-text);">{{ row.b.clicks | number: '1.0-0' }}</td>
-                <td class="text-right px-2 py-2" style="color: var(--color-text);">{{ row.b.conversions | number: '1.0-0' }}</td>
-                <td class="text-right px-4 py-2" style="color: var(--color-sf-gold);">{{ row.b.roas }}×</td>
-              </tr>
-              @if (expanded() === row.key) {
-                <tr data-testid="sim-breakdown-detail" style="border-bottom: 1px solid var(--color-border);">
-                  <td colspan="9" class="px-4 py-3" style="background: var(--color-bg-3);">
-                    <table class="w-full text-[11px]">
-                      @for (band of bandsOf(row.b); track band.label) {
-                        <tr>
-                          <td class="py-0.5 pr-4 font-semibold" [style.color]="band.color">{{ band.label }}</td>
-                          <td class="py-0.5 pr-4 text-right" style="color: var(--color-text);">{{ band.v.impr | number: '1.0-0' }} impr</td>
-                          <td class="py-0.5 pr-4 text-right" style="color: var(--color-text);">{{ band.v.ctr }}% CTR</td>
-                          <td class="py-0.5 pr-4 text-right" style="color: var(--color-text);">{{ band.v.clicks | number: '1.0-0' }} clicks</td>
-                          <td class="py-0.5 pr-4 text-right" style="color: var(--color-text);">{{ band.v.conv | number: '1.0-0' }} conv</td>
-                          <td class="py-0.5 text-right" style="color: var(--color-text);">{{ band.v.roas }}× ROAS</td>
-                        </tr>
-                      }
-                    </table>
-                    <div class="mt-2 text-[10px]" style="color: var(--color-text-muted);">
-                      Budget range –
-                      Integrated \${{ row.b.rates.int[0] | number: '1.0-0' }}–\${{ row.b.rates.int[1] | number: '1.0-0' }} ·
-                      Mixed \${{ row.b.rates.mix[0] | number: '1.0-0' }}–\${{ row.b.rates.mix[1] | number: '1.0-0' }} ·
-                      Dedicated \${{ row.b.rates.ded[0] | number: '1.0-0' }}–\${{ row.b.rates.ded[1] | number: '1.0-0' }}
-                    </div>
+              @if (row.reachable) {
+                <tr
+                  (click)="toggle(row.key)"
+                  (keydown.enter)="toggle(row.key)"
+                  (keydown.space)="toggle(row.key); $event.preventDefault()"
+                  tabindex="0"
+                  role="button"
+                  [attr.aria-expanded]="expanded() === row.key"
+                  class="cursor-pointer"
+                  style="border-bottom: 1px solid var(--color-border);"
+                  data-testid="sim-breakdown-row"
+                >
+                  <td class="px-4 py-2" style="color: var(--color-text);">
+                    <span style="color: var(--color-text-muted);">{{ expanded() === row.key ? '▾' : '▸' }}</span>
+                    {{ row.name }}
+                    <span class="text-[10px]" style="color: var(--color-text-muted);">{{ row.handle }}</span>
+                  </td>
+                  <td class="text-right px-2 py-2" style="color: var(--color-text);">{{ row.cpi ?? '–' }}</td>
+                  <td class="text-right px-2 py-2" style="color: var(--color-text);">{{ row.b.gfi }}%</td>
+                  <td class="text-right px-2 py-2" style="color: var(--color-sf-gold);">\${{ row.b.budgetShare | number: '1.0-0' }}</td>
+                  <td class="text-right px-2 py-2" style="color: var(--color-text);">{{ row.b.impressions | number: '1.0-0' }}</td>
+                  <td class="text-right px-2 py-2" style="color: var(--color-text);">{{ row.b.ctr }}%</td>
+                  <td class="text-right px-2 py-2" style="color: var(--color-text);">{{ row.b.clicks | number: '1.0-0' }}</td>
+                  <td class="text-right px-2 py-2" style="color: var(--color-text);">{{ row.b.conversions | number: '1.0-0' }}</td>
+                  <td class="text-right px-4 py-2" style="color: var(--color-sf-gold);">{{ row.b.roas }}×</td>
+                </tr>
+                @if (expanded() === row.key) {
+                  <tr data-testid="sim-breakdown-detail" style="border-bottom: 1px solid var(--color-border);">
+                    <td colspan="9" class="px-4 py-3" style="background: var(--color-bg-3);">
+                      <table class="w-full text-[11px]">
+                        @for (band of bandsOf(row.b); track band.label) {
+                          <tr>
+                            <td class="py-0.5 pr-4 font-semibold" [style.color]="band.color">{{ band.label }}</td>
+                            <td class="py-0.5 pr-4 text-right" style="color: var(--color-text);">{{ band.v.impr | number: '1.0-0' }} impr</td>
+                            <td class="py-0.5 pr-4 text-right" style="color: var(--color-text);">{{ band.v.ctr }}% CTR</td>
+                            <td class="py-0.5 pr-4 text-right" style="color: var(--color-text);">{{ band.v.clicks | number: '1.0-0' }} clicks</td>
+                            <td class="py-0.5 pr-4 text-right" style="color: var(--color-text);">{{ band.v.conv | number: '1.0-0' }} conv</td>
+                            <td class="py-0.5 text-right" style="color: var(--color-text);">{{ band.v.roas }}× ROAS</td>
+                          </tr>
+                        }
+                      </table>
+                      <div class="mt-2 text-[10px]" style="color: var(--color-text-muted);">
+                        Budget range –
+                        Integrated \${{ row.b.rates.int[0] | number: '1.0-0' }}–\${{ row.b.rates.int[1] | number: '1.0-0' }} ·
+                        Mixed \${{ row.b.rates.mix[0] | number: '1.0-0' }}–\${{ row.b.rates.mix[1] | number: '1.0-0' }} ·
+                        Dedicated \${{ row.b.rates.ded[0] | number: '1.0-0' }}–\${{ row.b.rates.ded[1] | number: '1.0-0' }}
+                      </div>
+                    </td>
+                  </tr>
+                }
+              } @else {
+                <!-- Over budget: nothing to expand, so this row carries none of
+                     the interactive/keyboard/aria attributes above – a
+                     focusable element that does nothing is worse than a
+                     non-focusable one. -->
+                <tr style="border-bottom: 1px solid var(--color-border);" data-testid="sim-breakdown-row">
+                  <td class="px-4 py-2" style="color: var(--color-text);">
+                    {{ row.name }}
+                    <span class="text-[10px]" style="color: var(--color-text-muted);">{{ row.handle }}</span>
+                  </td>
+                  <td class="text-right px-2 py-2" style="color: var(--color-text);">{{ row.cpi ?? '–' }}</td>
+                  <td class="text-right px-2 py-2" style="color: var(--color-text);">{{ row.b.gfi }}%</td>
+                  <td
+                    colspan="6"
+                    class="text-right px-4 py-2"
+                    style="color: var(--color-text-muted);"
+                    data-testid="sim-breakdown-unaffordable"
+                  >
+                    Over budget – needs \${{ row.b.rates.int[0] | number: '1.0-0' }}–\${{ row.b.rates.int[1] | number: '1.0-0' }} (Integrated rate)
                   </td>
                 </tr>
               }
@@ -125,7 +149,7 @@ export class SimCreatorBreakdownComponent {
 
   protected readonly rows = computed<BreakdownRow[]>(() => {
     const byId = new Map(this.creators().map((c) => [c.id, c]));
-    return this.breakdowns().map((b) => {
+    const mapped = this.breakdowns().map((b) => {
       // The edge function echoes back the id the payload sent, which is a
       // string – Creator.id is numeric, so normalize before the lookup.
       const key = Number(b.id);
@@ -135,9 +159,14 @@ export class SimCreatorBreakdownComponent {
         name: c?.name ?? `#${key}`,
         handle: c?.handle ?? '',
         cpi: c?.cpi ?? null,
+        reachable: b.reachable,
         b,
       };
     });
+    // Reachable (affordable) rows first, unaffordable ones after – a copy, so
+    // the input array from the parent is never mutated. Stable sort preserves
+    // relative order within each group.
+    return [...mapped].sort((a, b) => Number(b.reachable) - Number(a.reachable));
   });
 
   protected bandsOf(b: SimCreatorBreakdown): Array<{ label: string; v: SimCreatorBand; color: string }> {
@@ -149,6 +178,11 @@ export class SimCreatorBreakdownComponent {
   }
 
   protected toggle(key: number): void {
+    // Defense in depth: the template only wires up (click)/(keydown) on
+    // reachable rows, but guard here too since there is nothing to expand
+    // for an over-budget row (its bands are all zero).
+    const row = this.rows().find((r) => r.key === key);
+    if (!row?.reachable) return;
     this.expanded.update((cur) => (cur === key ? null : key));
   }
 }
