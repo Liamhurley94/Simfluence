@@ -4,9 +4,9 @@ import { SimulationPanelComponent } from '../../../shared/simulation/simulation-
 import { CampaignCreatorsService } from '../../../core/campaigns/campaign-creators.service';
 import { CreatorsService } from '../../../core/creators/creators.service';
 import { CampaignsService } from '../../../core/campaigns/campaigns.service';
-import { Campaign, CampaignForecast } from '../../../core/campaigns/campaign.types';
+import { Campaign, LegacyCampaignForecast, isW2Forecast } from '../../../core/campaigns/campaign.types';
 import { Creator } from '../../../core/data/creator.types';
-import { DEFAULT_AOV, DEFAULT_DURATION_WEEKS, SimResult } from '../../../core/simulation/simulation.types';
+import { W2Response } from '../../../core/simulation/simulation-w2.types';
 
 @Component({
   selector: 'app-campaign-simulator',
@@ -16,8 +16,32 @@ import { DEFAULT_AOV, DEFAULT_DURATION_WEEKS, SimResult } from '../../../core/si
     <section class="sf-panel p-5" data-testid="section-forecast">
       <h2 class="text-xs uppercase tracking-wider font-bold mb-4" style="color: var(--color-text-muted);">Forecast</h2>
 
-      @if (campaign().forecast; as fc) {
-        <div class="grid grid-cols-3 gap-4 text-center mb-4" data-testid="campaign-forecast-summary">
+      <!-- Saved-forecast summary. Forecasts are records, never migrated (spec §8),
+           so which summary renders is decided by the payload's own version stamp. -->
+      @if (savedW2(); as fc) {
+        <div class="grid grid-cols-3 gap-4 text-center mb-4" data-testid="campaign-forecast-summary-w2">
+          <div>
+            <div class="text-[10px] uppercase tracking-wider" style="color: var(--color-text-muted);">Impressions</div>
+            <div class="text-lg font-bold" style="color: var(--color-text);">{{ fc.totals.impressions | number: '1.0-0' }}</div>
+            <div class="text-[10px]" style="color: var(--color-text-muted);">
+              {{ fc.totals.band.impressions.conservative | number: '1.0-0' }}–{{ fc.totals.band.impressions.optimistic | number: '1.0-0' }}
+            </div>
+          </div>
+          <div>
+            <div class="text-[10px] uppercase tracking-wider" style="color: var(--color-text-muted);">Conversions</div>
+            <div class="text-lg font-bold" style="color: var(--color-text);">{{ fc.totals.conversions.value | number: '1.0-0' }}</div>
+            <div class="text-[10px]" style="color: var(--color-sf-orange);">Upper bound — platforms overlap</div>
+          </div>
+          <div>
+            <div class="text-[10px] uppercase tracking-wider" style="color: var(--color-text-muted);">Cost per conversion</div>
+            <div class="text-lg font-bold" style="color: var(--color-sf-gold);">
+              {{ fc.totals.costPerConversion === null ? '–' : '$' + (fc.totals.costPerConversion | number: '1.0-2') }}
+            </div>
+            <div class="text-[10px]" style="color: var(--color-text-muted);">on \${{ fc.totals.cost | number: '1.0-0' }} spend</div>
+          </div>
+        </div>
+      } @else if (savedLegacy(); as fc) {
+        <div class="grid grid-cols-3 gap-4 text-center mb-4" data-testid="campaign-forecast-summary-legacy">
           <div>
             <div class="text-[10px] uppercase tracking-wider" style="color: var(--color-text-muted);">P50 Impressions</div>
             <div class="text-lg font-bold" style="color: var(--color-text);">{{ fc.p50.impressions | number: '1.0-0' }}</div>
@@ -49,23 +73,12 @@ import { DEFAULT_AOV, DEFAULT_DURATION_WEEKS, SimResult } from '../../../core/si
       } @else if (creators().length === 0) {
         <p class="text-xs" style="color: var(--color-text-muted);">Add creators to this campaign to run a forecast.</p>
       } @else {
-        @if (defaultedFormatCount() > 0) {
-          <p class="text-xs mb-4" style="color: var(--color-text-muted);"
-            data-testid="forecast-format-default-note">
-            {{ defaultedFormatCount() }} creator{{ defaultedFormatCount() === 1 ? '' : 's' }} default to
-            Integrated — set per-creator formats in Outreach.
-          </p>
-        }
         <app-simulation-panel
-          [creators]="creators()"
-          [initialBudget]="campaign().budget ?? 85000"
+          mode="campaign"
+          [campaignId]="campaign().id"
           [initialGenre]="campaign().genre ?? ''"
           [initialObjectives]="campaign().objectives"
-          [initialAov]="campaign().forecast?.aov ?? defaultAov"
-          [initialDurationWeeks]="campaign().forecast?.durationWeeks ?? defaultDurationWeeks"
           [genres]="genres()"
-          [perCreatorFormat]="true"
-          [creatorFormats]="creatorFormats()"
           (simulated)="result.set($event)"
         >
           <button type="button" (click)="onSaveClick()" [disabled]="!result() || saving()"
@@ -117,10 +130,8 @@ export class CampaignSimulatorComponent {
   private campaignsSvc = inject(CampaignsService);
 
   readonly campaign = input.required<Campaign>();
-  protected readonly defaultAov = DEFAULT_AOV;
-  protected readonly defaultDurationWeeks = DEFAULT_DURATION_WEEKS;
   protected readonly genres = this.creatorsSvc.genres;
-  protected readonly result = signal<SimResult | null>(null);
+  protected readonly result = signal<W2Response | null>(null);
   protected readonly saving = signal(false);
   // Guards the one-forecast-per-campaign overwrite: true while the confirm
   // dialog is open (only when a forecast already exists).
@@ -128,29 +139,24 @@ export class CampaignSimulatorComponent {
 
   protected readonly forecastLocked = computed(() => this.campaign().status !== 'planning');
 
+  protected readonly savedW2 = computed(() => {
+    const f = this.campaign().forecast;
+    return isW2Forecast(f) ? f : null;
+  });
+  protected readonly savedLegacy = computed<LegacyCampaignForecast | null>(() => {
+    const f = this.campaign().forecast;
+    return f && !isW2Forecast(f) ? f : null;
+  });
+
+  // Only used to decide whether there is a roster worth forecasting at all —
+  // the panel sends the campaign id and the server loads the deliverable rows,
+  // their formats and the budget itself (spec §2).
   private readonly creatorsRes = resource<Creator[], number[]>({
     params: () => this.campaignCreators.records().map((cc) => cc.creatorId),
     loader: ({ params }) => (params.length ? this.creatorsSvc.byIds(params) : Promise.resolve([])),
     defaultValue: [],
   });
   protected readonly creators = computed(() => this.creatorsRes.value());
-
-  // creatorId → sponsorship format, only for records that have one set. Fed to the
-  // panel's per-creator mode; creators absent here fall back to Integrated server-side.
-  protected readonly creatorFormats = computed<Record<number, string>>(() => {
-    const map: Record<number, string> = {};
-    for (const cc of this.campaignCreators.records()) {
-      if (cc.format) map[cc.creatorId] = cc.format;
-    }
-    return map;
-  });
-
-  // Count of hydrated roster creators with no format set (they'll default to
-  // Integrated). Drives the forecast note.
-  protected readonly defaultedFormatCount = computed(() => {
-    const formats = this.creatorFormats();
-    return this.creators().filter((c) => !formats[c.id]).length;
-  });
 
   // Save entry point. Overwriting an existing forecast is destructive (only one
   // is kept per campaign), so gate that behind a confirm dialog. First save goes
@@ -178,29 +184,9 @@ export class CampaignSimulatorComponent {
     if (!r || this.forecastLocked()) return;
     this.saving.set(true);
     try {
-      const forecast: CampaignForecast = {
-        impressions: r.impressions, ctr: r.ctr, roas: r.roas, cvr: r.cvr,
-        p10: r.p10, p50: r.p50, p90: r.p90,
-        aov: r.aov,
-        durationWeeks: r.durationWeeks,
-        creatorBreakdowns: (r.creatorBreakdowns ?? []).map((b) => ({
-          // b.id arrives as a string (the edge fn echoes back String(creator.id));
-          // CampaignForecastCreator.id is the numeric creator id used for lookups.
-          id: Number(b.id),
-          impressions: b.impressions,
-          clicks: b.clicks,
-          conversions: b.conversions,
-          spend: b.budgetShare,
-          // Straight from conversions × average conversion value. Deriving it
-          // from `roas × budgetShare` used to round-trip through a 1-decimal
-          // ROAS and overstate revenue by up to ~12%. `r.aov` falls back to
-          // DEFAULT_AOV against an edge function older than this branch,
-          // which doesn't echo `aov` back — undefined would otherwise produce
-          // NaN, silently poisoning the saved revenue as `null`.
-          revenue: Math.round(b.conversions * (r.aov ?? DEFAULT_AOV)),
-        })),
-      };
-      await this.campaignsSvc.update(this.campaign().id, { forecast });
+      // The whole version-stamped response is the record (spec §8): no slimming,
+      // no client-derived fields. The debrief discriminates on `model.version`.
+      await this.campaignsSvc.update(this.campaign().id, { forecast: r });
     } finally {
       this.saving.set(false);
     }

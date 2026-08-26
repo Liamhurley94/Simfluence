@@ -5,7 +5,13 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { CampaignsService } from '../../core/campaigns/campaigns.service';
 import { BriefPdfService } from '../../core/campaigns/brief-pdf.service';
-import { Campaign, CAMPAIGN_STATUS_LABELS } from '../../core/campaigns/campaign.types';
+import {
+  Campaign,
+  CAMPAIGN_STATUS_LABELS,
+  LegacyCampaignForecast,
+  isW2Forecast,
+} from '../../core/campaigns/campaign.types';
+import { W2Response } from '../../core/simulation/simulation-w2.types';
 import { tierRank } from '../../core/types';
 import { SpinnerComponent } from '../../shared/spinner/spinner.component';
 
@@ -96,8 +102,31 @@ import { SpinnerComponent } from '../../shared/spinner/spinner.component';
               </span>
             </div>
 
-            @if (c.forecast; as f) {
-              <div class="grid grid-cols-3 gap-1 text-center mb-3">
+            <!-- Saved forecasts are records, not migrations (spec §8): the card
+                 renders whichever shape the campaign actually stored. -->
+            @if (w2ForecastOf(c); as f) {
+              <div class="grid grid-cols-3 gap-1 text-center mb-3" [attr.data-testid]="'campaign-forecast-w2-' + c.id">
+                <div>
+                  <div class="text-[9px] uppercase" style="color: var(--color-text-muted);">Impressions</div>
+                  <div class="text-xs font-bold" style="color: var(--color-text);">
+                    {{ f.totals.impressions | number: '1.0-0' }}
+                  </div>
+                </div>
+                <div>
+                  <div class="text-[9px] uppercase" style="color: var(--color-text-muted);">Conv. (max)</div>
+                  <div class="text-xs font-bold" style="color: var(--color-text);">
+                    {{ f.totals.conversions.value | number: '1.0-0' }}
+                  </div>
+                </div>
+                <div>
+                  <div class="text-[9px] uppercase" style="color: var(--color-text-muted);">Cost / conv.</div>
+                  <div class="text-xs font-bold" style="color: var(--color-sf-gold);">
+                    {{ f.totals.costPerConversion === null ? '–' : '$' + (f.totals.costPerConversion | number: '1.0-2') }}
+                  </div>
+                </div>
+              </div>
+            } @else if (legacyForecastOf(c); as f) {
+              <div class="grid grid-cols-3 gap-1 text-center mb-3" [attr.data-testid]="'campaign-forecast-legacy-' + c.id">
                 <div>
                   <div class="text-[9px] uppercase" style="color: var(--color-text-muted);">P50 Imp.</div>
                   <div class="text-xs font-bold" style="color: var(--color-text);">
@@ -203,5 +232,13 @@ export class CampaignsComponent {
   protected ownershipLabel(c: Campaign): string {
     if (c.enterpriseId === null) return 'Personal';
     return this.auth.enterprise()?.name ?? 'Enterprise';
+  }
+
+  protected w2ForecastOf(c: Campaign): W2Response | null {
+    return isW2Forecast(c.forecast) ? c.forecast : null;
+  }
+
+  protected legacyForecastOf(c: Campaign): LegacyCampaignForecast | null {
+    return c.forecast && !isW2Forecast(c.forecast) ? c.forecast : null;
   }
 }

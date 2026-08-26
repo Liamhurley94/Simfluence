@@ -1,42 +1,165 @@
 // src/app/shared/simulation/simulation-panel.component.spec.ts
 import { TestBed } from '@angular/core/testing';
 import { Component, signal } from '@angular/core';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { SimulationPanelComponent } from './simulation-panel.component';
 import { AuthService } from '../../core/auth/auth.service';
 import { EdgeClient } from '../../core/api/edge.client';
 import { RateLimitService } from '../../core/simulation/rate-limit.service';
-import { Creator } from '../../core/data/creator.types';
-import { SimResult } from '../../core/simulation/simulation.types';
+import {
+  Band,
+  CreatorResult,
+  DeliverableResult,
+  W2Response,
+} from '../../core/simulation/simulation-w2.types';
 
-function mkCreator(id: number): Creator {
-  return { id, name: `C${id}`, handle: `@c${id}`, platform: 'YouTube', allPlatforms: ['YouTube'],
-    subs: '100K', subsParsed: 100_000, avgViews: '20K', eng: '3.0%', genre: 'Gaming & Esports',
-    cpi: 80, gfi: 75, color: '#fff', verifiedDeals: 0, sponsorHistory: [], bio: '',
-    ytStats: { subscriberCount: 100_000, avgViews: 20_000, engagementRate: 3, sponsorFreqPct: 5, statsRefreshedAt: null } };
+// ── W2 fixtures ───────────────────────────────────────────────────────
+// Shaped exactly like the `run-simulation` W2 response (spec §5/§8). The
+// panel renders this and nothing else — it does no forecast math.
+
+function band(expected: number): Band {
+  return {
+    conservative: Math.round(expected * 0.68),
+    expected,
+    optimistic: Math.round(expected * 1.42),
+  };
 }
-const RESULT: SimResult = { impressions: 100, ctr: 2, cpM: 6, cvr: 0.5, conversions: 1, roas: 0.1,
-  roasP10: 0.07, roasP50: 0.1, roasP90: 0.15, roasRange: '0.1–0.4×', engRate: 3, clicks: 2,
-  budget: 85_000, aov: 30, durationWeeks: 4, reachableCount: 1,
-  bench: { ctrBase: 2, cpmBase: 8, cvrBase: 0.5, roasBase: 2, engBase: 4 },
-  p10: { impressions: 68, ctr: 1.3, roas: 0.07 }, p50: { impressions: 100, ctr: 2, roas: 0.1 },
-  p90: { impressions: 142, ctr: 2.8, roas: 0.15 } };
+
+function ytDeliverable(over: Partial<DeliverableResult> = {}): DeliverableResult {
+  return {
+    creatorId: '7', platform: 'YouTube', format: 'Integrated', quantity: 2, durationHours: null,
+    reach: 20_000, cpi: 80, cpiSubstituted: false, gfi: 75, noData: false,
+    ctr: 2.4, cvr: 0.9,
+    impressions: 40_000, uniqueReach: 32_000, engagedClicks: 960, conversions: 288,
+    d60: { impressions: 52_000, uniqueReach: 41_600, engagedClicks: 1_248, conversions: 374 },
+    d90: { impressions: 58_000, uniqueReach: 46_400, engagedClicks: 1_392, conversions: 417 },
+    band: {
+      impressions: band(40_000), uniqueReach: band(32_000),
+      engagedClicks: band(960), conversions: band(288),
+    },
+    cost: 6_000, costSource: 'agreed', bandBreach: null,
+    rateRange: [4_000, 8_000], costPerConversion: 20.8,
+    ...over,
+  };
+}
+
+function twDeliverable(over: Partial<DeliverableResult> = {}): DeliverableResult {
+  // A stream is watched live — the 60/90-day windows add nothing (spec §11).
+  const flat = { impressions: 9_000, uniqueReach: 7_200, engagedClicks: 180, conversions: 54 };
+  return {
+    creatorId: '9', platform: 'Twitch', format: 'Dedicated', quantity: 1, durationHours: 2,
+    reach: 9_000, cpi: 50, cpiSubstituted: true, gfi: 60, noData: false,
+    ctr: 2, cvr: 0.75,
+    ...flat,
+    d60: { ...flat }, d90: { ...flat },
+    band: {
+      impressions: band(9_000), uniqueReach: band(7_200),
+      engagedClicks: band(180), conversions: band(54),
+    },
+    cost: 3_500, costSource: 'estimated', bandBreach: 'above',
+    rateRange: [1_000, 3_000], costPerConversion: 64.8,
+    ...over,
+  };
+}
+
+function ytCreator(over: Partial<CreatorResult> = {}): CreatorResult {
+  return {
+    id: '7', name: 'Creator 7', primaryPlatform: 'YouTube', gfi: 75, reachable: true,
+    engagementRate: 3.2,
+    cost: 6_000, forecastableCost: 6_000,
+    impressions: 40_000, uniqueReach: 32_000, engagedClicks: 960, conversions: 288,
+    costPerConversion: 20.8, reachUpperBound: false,
+    deliverables: [ytDeliverable()],
+    ...over,
+  };
+}
+
+function twCreator(over: Partial<CreatorResult> = {}): CreatorResult {
+  return {
+    // D26: Twitch carries no observed engagement rate — the row must be absent.
+    id: '9', name: 'Creator 9', primaryPlatform: 'Twitch', gfi: 60, reachable: true,
+    engagementRate: null,
+    cost: 3_500, forecastableCost: 3_500,
+    impressions: 9_000, uniqueReach: 7_200, engagedClicks: 180, conversions: 54,
+    costPerConversion: 64.8, reachUpperBound: false,
+    deliverables: [twDeliverable()],
+    ...over,
+  };
+}
+
+function w2(over: Partial<W2Response> = {}): W2Response {
+  const creators = over.creators ?? [ytCreator(), twCreator()];
+  return {
+    mode: 'free', budget: 20_000, genre: 'Gaming & Esports', subMode: '', objectives: [],
+    model: {
+      version: 'w2-2026-08',
+      params: { T: 0.35, k_youtube: 1.6, k_twitch: 2.5 },
+      generatedAt: '2026-08-26T00:00:00.000Z',
+    },
+    bench: { ctrBase: 2, cvrBase: 0.5, engBase: 4 },
+    creators,
+    platforms: [
+      {
+        platform: 'YouTube', impressions: 40_000, uniqueReach: 32_000, engagedClicks: 960,
+        conversions: 288, cost: 6_000, costPerConversion: 20.8,
+        band: {
+          impressions: band(40_000), uniqueReach: band(32_000),
+          engagedClicks: band(960), conversions: band(288),
+        },
+      },
+      {
+        platform: 'Twitch', impressions: 9_000, uniqueReach: 7_200, engagedClicks: 180,
+        conversions: 54, cost: 3_500, costPerConversion: 64.8,
+        band: {
+          impressions: band(9_000), uniqueReach: band(7_200),
+          engagedClicks: band(180), conversions: band(54),
+        },
+      },
+    ],
+    totals: {
+      impressions: 49_000, engagedClicks: 1_140,
+      uniqueReach: { value: 39_200, upperBound: true },
+      conversions: { value: 342, upperBound: true },
+      cost: 9_500, forecastableCost: 9_500, costPerConversion: 27.78,
+      band: {
+        impressions: band(49_000),
+        uniqueReach: { ...band(39_200), upperBound: true },
+        engagedClicks: band(1_140),
+        conversions: { ...band(342), upperBound: true },
+      },
+    },
+    unallocated: 0, unallocatedMessage: null, zeroBudget: false, warnings: [],
+    ...over,
+  };
+}
 
 @Component({
-  standalone: true, imports: [SimulationPanelComponent],
-  template: `<app-simulation-panel [creators]="creators()" [initialGenre]="'Gaming & Esports'"
+  standalone: true,
+  imports: [SimulationPanelComponent],
+  template: `<app-simulation-panel
+    [mode]="mode()" [creatorIds]="creatorIds()" [campaignId]="campaignId()"
+    [initialBudget]="85000" [initialGenre]="'Gaming & Esports'"
     [genres]="['Gaming & Esports']" [initialObjectives]="initialObjectives()"
-    [readonly]="readonly()" [autoRun]="autoRun()"
-    [perCreatorFormat]="perCreatorFormat()" [creatorFormats]="creatorFormats()"
+    [subMode]="subMode()" [readonly]="readonly()" [autoRun]="autoRun()"
     (simulated)="last.set($event)" />`,
 })
-class Host { creators = signal<Creator[]>([mkCreator(1)]); readonly = signal(false); autoRun = signal(false);
-  initialObjectives = signal<string[]>([]); last = signal<SimResult | null>(null);
-  perCreatorFormat = signal(false); creatorFormats = signal<Record<number, string>>({}); }
+class Host {
+  mode = signal<'free' | 'campaign'>('free');
+  creatorIds = signal<number[]>([7, 9]);
+  campaignId = signal<string | null>(null);
+  readonly = signal(false);
+  autoRun = signal(false);
+  subMode = signal<string | undefined>(undefined);
+  initialObjectives = signal<string[]>([]);
+  last = signal<W2Response | null>(null);
+}
 
-function setup(tier = 'silver') {
+function setup(response: W2Response | Error = w2(), tier = 'silver') {
   localStorage.clear();
-  const post = vi.fn().mockResolvedValue(RESULT);
+  const post =
+    response instanceof Error
+      ? vi.fn().mockRejectedValue(response)
+      : vi.fn().mockResolvedValue(response);
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({
     imports: [Host],
@@ -48,254 +171,403 @@ function setup(tier = 'silver') {
   return { post };
 }
 
-describe('SimulationPanelComponent', () => {
-  it('renders controls + run button for a non-empty creator set', () => {
+/** Create the host, run the panel, and settle — the common arrange for render tests. */
+async function rendered(response: W2Response | Error = w2(), mutate?: (h: Host) => void) {
+  const { post } = setup(response);
+  const f = TestBed.createComponent(Host);
+  if (mutate) mutate(f.componentInstance);
+  f.detectChanges();
+  (f.nativeElement.querySelector('[data-testid="simw2-run"]') as HTMLButtonElement).click();
+  await f.whenStable();
+  f.detectChanges();
+  return { f, post, el: f.nativeElement as HTMLElement };
+}
+
+const text = (el: HTMLElement, sel: string) =>
+  (el.querySelector(`[data-testid="${sel}"]`) as HTMLElement | null)?.textContent ?? '';
+
+describe('SimulationPanelComponent (W2) — controls', () => {
+  it('renders budget, genre, objectives and run in free mode', () => {
     setup();
-    const f = TestBed.createComponent(Host); f.detectChanges();
-    expect(f.nativeElement.querySelector('[data-testid="sim-controls"]')).toBeTruthy();
-    const run: HTMLButtonElement = f.nativeElement.querySelector('[data-testid="sim-run"]');
-    expect(run.disabled).toBe(false);
+    const f = TestBed.createComponent(Host);
+    f.detectChanges();
+    const el: HTMLElement = f.nativeElement;
+    expect(el.querySelector('[data-testid="simw2-controls"]')).toBeTruthy();
+    expect(el.querySelector('[data-testid="simw2-budget"]')).toBeTruthy();
+    expect(el.querySelector('[data-testid="simw2-genre"]')).toBeTruthy();
+    expect(el.querySelector('[data-testid="simw2-objectives"]')).toBeTruthy();
+    expect((el.querySelector('[data-testid="simw2-run"]') as HTMLButtonElement).disabled).toBe(false);
   });
 
-  it('run() posts to the edge fn, renders bands, increments rate limit, and emits the result', async () => {
-    const { post } = setup();
-    const f = TestBed.createComponent(Host); f.detectChanges();
-    (f.nativeElement.querySelector('[data-testid="sim-run"]') as HTMLButtonElement).click();
-    await f.whenStable(); f.detectChanges();
-    expect(post).toHaveBeenCalledOnce();
-    expect(f.nativeElement.querySelector('[data-testid="sim-bands"]')).toBeTruthy();
-    expect(TestBed.inject(RateLimitService).read()).toBe(1);
-    expect(f.componentInstance.last()?.impressions).toBe(100);
-  });
-
-  it('renders exactly the 3 objective buckets', () => {
-    setup();
-    const f = TestBed.createComponent(Host); f.detectChanges();
-    const chips = f.nativeElement.querySelectorAll('[data-testid^="sim-obj-"]');
-    expect([...chips].map((c: HTMLElement) => c.textContent?.trim())).toEqual([
-      'Awareness', 'Sales', 'Engagement',
-    ]);
-    expect(f.nativeElement.querySelector('[data-testid="sim-obj-awareness"]')).toBeTruthy();
-    expect(f.nativeElement.querySelector('[data-testid="sim-obj-sales"]')).toBeTruthy();
-    expect(f.nativeElement.querySelector('[data-testid="sim-obj-engagement"]')).toBeTruthy();
-  });
-
-  it('seeds selectedObjectives from initialObjectives (chips render selected)', () => {
+  it('renders exactly the 3 objective buckets and seeds them from initialObjectives', () => {
     setup();
     const f = TestBed.createComponent(Host);
     f.componentInstance.initialObjectives.set(['Awareness', 'Engagement']);
     f.detectChanges();
-    const awareness: HTMLButtonElement = f.nativeElement.querySelector('[data-testid="sim-obj-awareness"]');
-    const sales: HTMLButtonElement = f.nativeElement.querySelector('[data-testid="sim-obj-sales"]');
-    const engagement: HTMLButtonElement = f.nativeElement.querySelector('[data-testid="sim-obj-engagement"]');
-    expect(awareness.style.background).toContain('color-sf-blue');
-    expect(engagement.style.background).toContain('color-sf-blue');
-    expect(sales.style.background).not.toContain('color-sf-blue');
+    const el: HTMLElement = f.nativeElement;
+    const chips = [...el.querySelectorAll('[data-testid^="simw2-obj-"]')];
+    expect(chips.map((c) => c.textContent?.trim())).toEqual(['Awareness', 'Sales', 'Engagement']);
+    const bg = (id: string) =>
+      (el.querySelector(`[data-testid="simw2-obj-${id}"]`) as HTMLElement).style.background;
+    expect(bg('awareness')).toContain('color-sf-blue');
+    expect(bg('engagement')).toContain('color-sf-blue');
+    expect(bg('sales')).not.toContain('color-sf-blue');
   });
 
-  it('readonly hides the controls/run', () => {
+  it('has no AOV input, no duration slider and no format dropdown', () => {
     setup();
     const f = TestBed.createComponent(Host);
-    f.componentInstance.readonly.set(true); f.detectChanges();
-    expect(f.nativeElement.querySelector('[data-testid="sim-controls"]')).toBeNull();
-    expect(f.nativeElement.querySelector('[data-testid="sim-run"]')).toBeNull();
+    f.detectChanges();
+    const el: HTMLElement = f.nativeElement;
+    for (const gone of [
+      'sim-aov', 'sim-duration', 'sim-duration-label', 'sim-format',
+      'simw2-aov', 'simw2-duration', 'simw2-format',
+    ]) {
+      expect(el.querySelector(`[data-testid="${gone}"]`)).toBeNull();
+    }
   });
 
-  it('auto-runs once when autoRun is set and creators are present', async () => {
+  it('campaign mode hides the budget control — the server owns the campaign budget', () => {
+    setup();
+    const f = TestBed.createComponent(Host);
+    f.componentInstance.mode.set('campaign');
+    f.componentInstance.campaignId.set('camp-1');
+    f.detectChanges();
+    expect(f.nativeElement.querySelector('[data-testid="simw2-controls"]')).toBeTruthy();
+    expect(f.nativeElement.querySelector('[data-testid="simw2-budget"]')).toBeNull();
+  });
+
+  it('readonly hides the controls and the run button', () => {
+    setup();
+    const f = TestBed.createComponent(Host);
+    f.componentInstance.readonly.set(true);
+    f.detectChanges();
+    expect(f.nativeElement.querySelector('[data-testid="simw2-controls"]')).toBeNull();
+    expect(f.nativeElement.querySelector('[data-testid="simw2-run"]')).toBeNull();
+  });
+
+  it('free mode with no creators disables run', () => {
+    setup();
+    const f = TestBed.createComponent(Host);
+    f.componentInstance.creatorIds.set([]);
+    f.detectChanges();
+    expect((f.nativeElement.querySelector('[data-testid="simw2-run"]') as HTMLButtonElement).disabled).toBe(true);
+  });
+});
+
+describe('SimulationPanelComponent (W2) — dispatch', () => {
+  it('free mode posts ids, budget, genre, subMode and objectives — never creator stats', async () => {
+    const { post, f } = await rendered(w2(), (h) => {
+      h.subMode.set('Cozy');
+      h.initialObjectives.set(['Awareness']);
+    });
+    expect(post).toHaveBeenCalledOnce();
+    const [name, body] = post.mock.calls[0];
+    expect(name).toBe('run-simulation');
+    expect(body).toEqual({
+      mode: 'free',
+      creators: [{ id: 7 }, { id: 9 }],
+      budget: 85_000,
+      genre: 'Gaming & Esports',
+      subMode: 'Cozy',
+      objectives: ['Awareness'],
+    });
+    // No stats, no aov, no durationWeeks, no format ride along (spec §2/§6).
+    for (const k of ['aov', 'durationWeeks', 'format', 'cpi', 'subs', 'avgViews']) {
+      expect(body).not.toHaveProperty(k);
+    }
+    expect(f.componentInstance.last()?.totals.impressions).toBe(49_000);
+  });
+
+  it('campaign mode posts the campaign id, never a creator roster', async () => {
+    const { post } = await rendered(w2({ mode: 'campaign' }), (h) => {
+      h.mode.set('campaign');
+      h.campaignId.set('camp-1');
+    });
+    const body = post.mock.calls[0][1] as Record<string, unknown>;
+    expect(body['mode']).toBe('campaign');
+    expect(body['campaignId']).toBe('camp-1');
+    expect(body).not.toHaveProperty('creators');
+    expect(body).not.toHaveProperty('budget');
+  });
+
+  it('increments the rate limit on a run', async () => {
+    await rendered();
+    expect(TestBed.inject(RateLimitService).read()).toBe(1);
+  });
+
+  it('blocks the run and shows the banner when the tier limit is spent', () => {
+    setup(w2(), 'free');
+    const rate = TestBed.inject(RateLimitService);
+    rate.increment(); rate.increment(); rate.increment();
+    const f = TestBed.createComponent(Host);
+    f.detectChanges();
+    expect((f.nativeElement.querySelector('[data-testid="simw2-run"]') as HTMLButtonElement).disabled).toBe(true);
+    expect(f.nativeElement.querySelector('[data-testid="simw2-rate-limit"]')).toBeTruthy();
+  });
+
+  it('auto-runs once when autoRun is set', async () => {
     const { post } = setup();
     const f = TestBed.createComponent(Host);
     f.componentInstance.autoRun.set(true);
     f.detectChanges();
-    // Macrotask flush drains the whole deferred chain (queueMicrotask -> run ->
-    // edge post -> result.set) before we assert the rendered bands.
     await new Promise((r) => setTimeout(r));
     f.detectChanges();
     expect(post).toHaveBeenCalledOnce();
-    expect(f.nativeElement.querySelector('[data-testid="sim-bands"]')).toBeTruthy();
+    expect(f.nativeElement.querySelector('[data-testid="simw2-results"]')).toBeTruthy();
   });
 
-  it('shows the global Format dropdown by default (perCreatorFormat false)', () => {
-    setup();
-    const f = TestBed.createComponent(Host); f.detectChanges();
-    expect(f.nativeElement.querySelector('[data-testid="sim-format"]')).toBeTruthy();
+  it('surfaces a rejected run as an error state instead of an empty forecast', async () => {
+    const { el } = await rendered(new Error('edge fn exploded'));
+    const err = el.querySelector('[data-testid="simw2-error"]');
+    expect(err).toBeTruthy();
+    expect(err!.textContent).toContain('edge fn exploded');
+    expect(el.querySelector('[data-testid="simw2-results"]')).toBeNull();
   });
 
-  it('hides the global Format dropdown when perCreatorFormat is true', () => {
-    setup();
+  it('clears a previous error when a later run succeeds', async () => {
+    const { post } = setup(new Error('transient'));
     const f = TestBed.createComponent(Host);
-    f.componentInstance.perCreatorFormat.set(true);
     f.detectChanges();
-    expect(f.nativeElement.querySelector('[data-testid="sim-format"]')).toBeNull();
-  });
-
-  it('per-creator mode: payload carries each creator\'s format from creatorFormats, top-level stays Integrated', async () => {
-    const { post } = setup();
-    const f = TestBed.createComponent(Host);
-    f.componentInstance.creators.set([mkCreator(1), mkCreator(2)]);
-    f.componentInstance.perCreatorFormat.set(true);
-    f.componentInstance.creatorFormats.set({ 1: 'Dedicated' }); // 2 has none
-    f.detectChanges();
-    (f.nativeElement.querySelector('[data-testid="sim-run"]') as HTMLButtonElement).click();
+    const run = f.nativeElement.querySelector('[data-testid="simw2-run"]') as HTMLButtonElement;
+    run.click();
     await f.whenStable(); f.detectChanges();
+    expect(f.nativeElement.querySelector('[data-testid="simw2-error"]')).toBeTruthy();
 
-    const body = post.mock.calls[0][1] as { creators: Array<Record<string, unknown>>; format: string };
-    const c1 = body.creators.find((e) => e['id'] === '1')!;
-    const c2 = body.creators.find((e) => e['id'] === '2')!;
-    expect(c1['format']).toBe('Dedicated');
-    expect(c2['format']).toBeUndefined();
-    // Top-level fallback stays the default in per-creator mode.
-    expect(body.format).toBe('Integrated');
-  });
-
-  it('standalone mode: no per-creator formats sent even if creatorFormats is set', async () => {
-    const { post } = setup();
-    const f = TestBed.createComponent(Host);
-    // perCreatorFormat stays false; creatorFormats provided but must be ignored.
-    f.componentInstance.creatorFormats.set({ 1: 'Dedicated' });
-    f.detectChanges();
-    (f.nativeElement.querySelector('[data-testid="sim-run"]') as HTMLButtonElement).click();
+    post.mockResolvedValue(w2());
+    run.click();
     await f.whenStable(); f.detectChanges();
+    expect(f.nativeElement.querySelector('[data-testid="simw2-error"]')).toBeNull();
+    expect(f.nativeElement.querySelector('[data-testid="simw2-results"]')).toBeTruthy();
+  });
+});
 
-    const body = post.mock.calls[0][1] as { creators: Array<Record<string, unknown>> };
-    expect(body.creators[0]['format']).toBeUndefined();
+describe('SimulationPanelComponent (W2) — per-creator deliverable rows', () => {
+  it('groups deliverable rows under each creator', async () => {
+    const { el } = await rendered();
+    expect(el.querySelector('[data-testid="simw2-creator-7"]')).toBeTruthy();
+    expect(el.querySelector('[data-testid="simw2-creator-9"]')).toBeTruthy();
+    expect(text(el, 'simw2-creator-7')).toContain('Creator 7');
+    expect(el.querySelector('[data-testid="simw2-deliverable-7-0"]')).toBeTruthy();
+    expect(el.querySelector('[data-testid="simw2-deliverable-9-0"]')).toBeTruthy();
   });
 
-  it('shows an excluded-no-live-data note counting creators dropped for missing live stats', () => {
-    setup();
-    const f = TestBed.createComponent(Host);
-    f.componentInstance.creators.set([mkCreator(1), { ...mkCreator(2), ytStats: undefined }]);
+  it('renders platform badge, format and quantity on every row', async () => {
+    const { el } = await rendered();
+    expect(text(el, 'simw2-deliverable-platform-7-0')).toContain('YouTube');
+    expect(text(el, 'simw2-deliverable-format-7-0')).toContain('Integrated');
+    expect(text(el, 'simw2-deliverable-qty-7-0')).toContain('2');
+    expect(text(el, 'simw2-deliverable-platform-9-0')).toContain('Twitch');
+    expect(text(el, 'simw2-deliverable-format-9-0')).toContain('Dedicated');
+  });
+
+  it('renders stream hours on a Twitch row and none on a YouTube row', async () => {
+    const { el } = await rendered();
+    expect(text(el, 'simw2-deliverable-hours-9-0')).toContain('2');
+    expect(el.querySelector('[data-testid="simw2-deliverable-hours-7-0"]')).toBeNull();
+  });
+
+  it('renders the four volume columns per row', async () => {
+    const { el } = await rendered();
+    expect(text(el, 'simw2-deliverable-impressions-7-0')).toContain('40,000');
+    expect(text(el, 'simw2-deliverable-unique-reach-7-0')).toContain('32,000');
+    expect(text(el, 'simw2-deliverable-engaged-clicks-7-0')).toContain('960');
+    expect(text(el, 'simw2-deliverable-conversions-7-0')).toContain('288');
+  });
+
+  it('labels engaged clicks as video-level engagement, not site visits', async () => {
+    const { el } = await rendered();
+    const label = text(el, 'simw2-engaged-clicks-label').toLowerCase();
+    expect(label).toContain('engagement clicks');
+    expect(label).toContain('video-level');
+  });
+
+  it('renders cost, its source and cost per conversion per row', async () => {
+    const { el } = await rendered();
+    expect(text(el, 'simw2-deliverable-cost-7-0')).toContain('6,000');
+    expect(text(el, 'simw2-deliverable-cost-source-7-0').toLowerCase()).toContain('agreed');
+    expect(text(el, 'simw2-deliverable-cost-per-conversion-7-0')).toContain('20.8');
+    expect(text(el, 'simw2-deliverable-cost-source-9-0').toLowerCase()).toContain('estimated');
+  });
+
+  it('shows a creator engagement rate for YouTube and omits it for Twitch (D26)', async () => {
+    const { el } = await rendered();
+    expect(text(el, 'simw2-creator-engagement-7')).toContain('3.2');
+    expect(el.querySelector('[data-testid="simw2-creator-engagement-9"]')).toBeNull();
+  });
+
+  it('badges a no-data row and keeps its cost visible', async () => {
+    const noData = ytDeliverable({
+      noData: true, reach: null, impressions: 0, uniqueReach: 0, engagedClicks: 0,
+      conversions: 0, costPerConversion: null,
+    });
+    const { el } = await rendered(w2({ creators: [ytCreator({ deliverables: [noData] })] }));
+    expect(el.querySelector('[data-testid="simw2-deliverable-no-data-7-0"]')).toBeTruthy();
+    expect(text(el, 'simw2-deliverable-cost-7-0')).toContain('6,000');
+  });
+
+  it('badges a band breach above the rate range', async () => {
+    const { el } = await rendered();
+    const breach = el.querySelector('[data-testid="simw2-deliverable-band-breach-9-0"]');
+    expect(breach).toBeTruthy();
+    expect(breach!.textContent!.toLowerCase()).toContain('above');
+    expect(el.querySelector('[data-testid="simw2-deliverable-band-breach-7-0"]')).toBeNull();
+  });
+
+  it('flags a substituted CPI and leaves a real CPI unflagged', async () => {
+    const { el } = await rendered();
+    expect(el.querySelector('[data-testid="simw2-deliverable-cpi-substituted-9-0"]')).toBeTruthy();
+    expect(el.querySelector('[data-testid="simw2-deliverable-cpi-substituted-7-0"]')).toBeNull();
+  });
+
+  it('marks a creator the budget could not cover', async () => {
+    const { el } = await rendered(w2({ creators: [ytCreator({ reachable: false }), twCreator()] }));
+    expect(el.querySelector('[data-testid="simw2-creator-unreachable-7"]')).toBeTruthy();
+    expect(el.querySelector('[data-testid="simw2-creator-unreachable-9"]')).toBeNull();
+  });
+
+  it('labels a multi-platform creator reach as an upper bound', async () => {
+    const mixed = ytCreator({
+      reachUpperBound: true,
+      deliverables: [ytDeliverable(), twDeliverable({ creatorId: '7' })],
+    });
+    const { el } = await rendered(w2({ creators: [mixed] }));
+    expect(text(el, 'simw2-creator-upper-bound-7').toLowerCase()).toContain('upper bound');
+  });
+});
+
+describe('SimulationPanelComponent (W2) — 30/60/90 windows', () => {
+  it('expands a row to its 30/60/90-day windows on demand', async () => {
+    const { f, el } = await rendered();
+    expect(el.querySelector('[data-testid="simw2-window-7-0"]')).toBeNull();
+    (el.querySelector('[data-testid="simw2-window-toggle-7-0"]') as HTMLButtonElement).click();
     f.detectChanges();
-    const note = f.nativeElement.querySelector('[data-testid="sim-excluded-note"]');
-    expect(note).toBeTruthy();
-    expect(note.textContent).toContain('1 creator');
+    expect(el.querySelector('[data-testid="simw2-window-7-0"]')).toBeTruthy();
+    expect(text(el, 'simw2-window-30-impressions-7-0')).toContain('40,000');
+    expect(text(el, 'simw2-window-60-impressions-7-0')).toContain('52,000');
+    expect(text(el, 'simw2-window-90-impressions-7-0')).toContain('58,000');
+    expect(text(el, 'simw2-window-90-conversions-7-0')).toContain('417');
   });
 
-  it('shows no excluded note when every creator has live stats', () => {
-    setup();
-    const f = TestBed.createComponent(Host);
-    f.componentInstance.creators.set([mkCreator(1)]);
+  it('shows a Twitch row flat across all three windows, with a note saying why', async () => {
+    const { f, el } = await rendered();
+    (el.querySelector('[data-testid="simw2-window-toggle-9-0"]') as HTMLButtonElement).click();
     f.detectChanges();
-    expect(f.nativeElement.querySelector('[data-testid="sim-excluded-note"]')).toBeNull();
-  });
-
-  it('sends the default average conversion value and duration', async () => {
-    const { post } = setup();
-    const f = TestBed.createComponent(Host); f.detectChanges();
-    f.nativeElement.querySelector('[data-testid="sim-run"]').click();
-    await f.whenStable();
-    expect(post.mock.calls[0][1]).toMatchObject({ aov: 30, durationWeeks: 4 });
-  });
-
-  it('sends edited average conversion value and duration', async () => {
-    const { post } = setup();
-    const f = TestBed.createComponent(Host); f.detectChanges();
-    const aov: HTMLInputElement = f.nativeElement.querySelector('[data-testid="sim-aov"]');
-    aov.value = '150'; aov.dispatchEvent(new Event('input')); f.detectChanges();
-    const dur: HTMLInputElement = f.nativeElement.querySelector('[data-testid="sim-duration"]');
-    dur.value = '8'; dur.dispatchEvent(new Event('input')); f.detectChanges();
-    f.nativeElement.querySelector('[data-testid="sim-run"]').click();
-    await f.whenStable();
-    expect(post.mock.calls[0][1]).toMatchObject({ aov: 150, durationWeeks: 8 });
-  });
-
-  it('labels the duration slider with its current value', () => {
-    setup();
-    const f = TestBed.createComponent(Host); f.detectChanges();
-    expect(f.nativeElement.querySelector('[data-testid="sim-duration-label"]').textContent).toContain('4 weeks');
-  });
-
-  it('warns when the budget could not cover every selected creator', async () => {
-    const { post } = setup();
-    post.mockResolvedValue({ ...RESULT, reachableCount: 1 });
-    const f = TestBed.createComponent(Host);
-    f.componentInstance.creators.set([mkCreator(1), mkCreator(2), mkCreator(3)]);
+    expect(text(el, 'simw2-window-30-impressions-9-0')).toContain('9,000');
+    expect(text(el, 'simw2-window-60-impressions-9-0')).toContain('9,000');
+    expect(text(el, 'simw2-window-90-impressions-9-0')).toContain('9,000');
+    expect(el.querySelector('[data-testid="simw2-window-flat-note-9-0"]')).toBeTruthy();
+    // A YouTube row, which does accumulate, carries no flat note.
+    (el.querySelector('[data-testid="simw2-window-toggle-7-0"]') as HTMLButtonElement).click();
     f.detectChanges();
-    f.nativeElement.querySelector('[data-testid="sim-run"]').click();
-    await f.whenStable(); f.detectChanges();
-    const warn = f.nativeElement.querySelector('[data-testid="sim-budget-warning"]');
-    expect(warn).toBeTruthy();
-    expect(warn.textContent).toContain('2');   // 3 selected − 1 affordable
+    expect(el.querySelector('[data-testid="simw2-window-flat-note-7-0"]')).toBeNull();
+  });
+});
+
+describe('SimulationPanelComponent (W2) — bands', () => {
+  it('labels the campaign band Conservative / Expected / Optimistic', async () => {
+    const { el } = await rendered();
+    expect(text(el, 'simw2-band-conservative')).toContain('Conservative');
+    expect(text(el, 'simw2-band-expected')).toContain('Expected');
+    expect(text(el, 'simw2-band-optimistic')).toContain('Optimistic');
+    expect(text(el, 'simw2-band-conservative')).toContain('33,320'); // 49,000 × 0.68
+    expect(text(el, 'simw2-band-optimistic')).toContain('69,580');   // 49,000 × 1.42
   });
 
-  it('shows no budget warning when every creator is affordable', async () => {
-    const { post } = setup();
-    post.mockResolvedValue({ ...RESULT, reachableCount: 1 });
-    const f = TestBed.createComponent(Host); f.detectChanges();
-    f.nativeElement.querySelector('[data-testid="sim-run"]').click();
-    await f.whenStable(); f.detectChanges();
-    expect(f.nativeElement.querySelector('[data-testid="sim-budget-warning"]')).toBeFalsy();
+  it('labels a per-deliverable range the same way', async () => {
+    const { f, el } = await rendered();
+    (el.querySelector('[data-testid="simw2-window-toggle-7-0"]') as HTMLButtonElement).click();
+    f.detectChanges();
+    const range = el.querySelector('[data-testid="simw2-range-7-0"]') as HTMLElement;
+    expect(range).toBeTruthy();
+    expect(range.textContent).toContain('Conservative');
+    expect(range.textContent).toContain('Expected');
+    expect(range.textContent).toContain('Optimistic');
   });
 
-  it('nets out both no-live-data exclusions and unaffordable creators in the warning count', async () => {
-    // 3 selected: creator 3 has no live stats (never reaches the edge fn), leaving
-    // 2 eligible; the edge fn can only afford 1 of those – 1 should read as
-    // unaffordable, not 2 (which is what a roster-length-only subtraction would give).
-    const { post } = setup();
-    post.mockResolvedValue({ ...RESULT, reachableCount: 1 });
-    const f = TestBed.createComponent(Host);
-    f.componentInstance.creators.set([mkCreator(1), mkCreator(2), { ...mkCreator(3), ytStats: undefined }]);
+  it('never renders a percentile label anywhere', async () => {
+    const { f, el } = await rendered();
+    (el.querySelector('[data-testid="simw2-window-toggle-7-0"]') as HTMLButtonElement).click();
     f.detectChanges();
-    f.nativeElement.querySelector('[data-testid="sim-run"]').click();
-    await f.whenStable(); f.detectChanges();
-    const warn = f.nativeElement.querySelector('[data-testid="sim-budget-warning"]');
-    expect(warn).toBeTruthy();
-    expect(warn.textContent).toContain('1 of 2 selected creators');
+    const dom = el.textContent ?? '';
+    for (const banned of ['P10', 'P50', 'P90', 'Worst case', 'Base case', 'Best case']) {
+      expect(dom).not.toContain(banned);
+    }
   });
 
-  it('keeps describing the roster that was actually run when creators() changes afterward', async () => {
-    // Run against 3 creators (reachableCount: 1 -> 2 unaffordable). Then edit the
-    // roster to 5 creators WITHOUT re-running. The warning must still describe the
-    // forecast that was actually run ("of 3" / "2 left out"), not silently
-    // recompute against the new, never-simulated roster ("of 5" / "4 left out").
-    const { post } = setup();
-    post.mockResolvedValue({ ...RESULT, reachableCount: 1 });
-    const f = TestBed.createComponent(Host);
-    f.componentInstance.creators.set([mkCreator(1), mkCreator(2), mkCreator(3)]);
+  it('never renders ROAS, revenue assumptions or a campaign duration anywhere', async () => {
+    const { f, el } = await rendered();
+    (el.querySelector('[data-testid="simw2-window-toggle-7-0"]') as HTMLButtonElement).click();
     f.detectChanges();
-    f.nativeElement.querySelector('[data-testid="sim-run"]').click();
-    await f.whenStable(); f.detectChanges();
+    const dom = (el.textContent ?? '').toLowerCase();
+    for (const banned of ['roas', 'return on ad spend', 'conversion value', 'week']) {
+      expect(dom).not.toContain(banned);
+    }
+  });
+});
 
-    let warn = f.nativeElement.querySelector('[data-testid="sim-budget-warning"]');
-    expect(warn.textContent).toContain('2 of 3 selected creators');
-
-    // Roster changes after the run – no re-run.
-    f.componentInstance.creators.set([
-      mkCreator(1), mkCreator(2), mkCreator(3), mkCreator(4), mkCreator(5),
-    ]);
-    f.detectChanges();
-
-    warn = f.nativeElement.querySelector('[data-testid="sim-budget-warning"]');
-    expect(warn).toBeTruthy();
-    expect(warn.textContent).toContain('2 of 3 selected creators');
-    expect(warn.textContent).not.toContain('of 5');
-    expect(post).toHaveBeenCalledOnce();
+describe('SimulationPanelComponent (W2) — aggregates', () => {
+  it('renders a totals section per platform', async () => {
+    const { el } = await rendered();
+    const yt = el.querySelector('[data-testid="simw2-platform-youtube"]') as HTMLElement;
+    const tw = el.querySelector('[data-testid="simw2-platform-twitch"]') as HTMLElement;
+    expect(yt).toBeTruthy();
+    expect(tw).toBeTruthy();
+    expect(yt.textContent).toContain('40,000');
+    expect(yt.textContent).toContain('288');
+    expect(tw.textContent).toContain('9,000');
+    expect(text(el, 'simw2-platform-cost-per-conversion-twitch')).toContain('64.8');
   });
 
-  it('counts the warning from the unaffordable side, matching the table', async () => {
-    const { post } = setup();
-    post.mockResolvedValue({ ...RESULT, reachableCount: 1 });
-    const f = TestBed.createComponent(Host);
-    f.componentInstance.creators.set([mkCreator(1), mkCreator(2), mkCreator(3)]);
-    f.detectChanges();
-    f.nativeElement.querySelector('[data-testid="sim-run"]').click();
-    await f.whenStable(); f.detectChanges();
-    const warn = f.nativeElement.querySelector('[data-testid="sim-budget-warning"]');
-    expect(warn.textContent).toContain('2 of 3');
-    expect(warn.textContent).not.toContain('covers 1 of 3');
+  it('sums impressions plainly but labels combined reach and conversions as an upper bound', async () => {
+    const { el } = await rendered();
+    expect(text(el, 'simw2-total-impressions')).toContain('49,000');
+    expect(text(el, 'simw2-total-unique-reach')).toContain('39,200');
+    expect(text(el, 'simw2-total-conversions')).toContain('342');
+    expect(text(el, 'simw2-total-unique-reach-upper-bound').toLowerCase()).toContain('upper bound');
+    expect(text(el, 'simw2-total-conversions-upper-bound').toLowerCase()).toContain('upper bound');
+    // Impressions are exposure events — they sum honestly, so no caveat there.
+    expect(el.querySelector('[data-testid="simw2-total-impressions-upper-bound"]')).toBeNull();
   });
 
-  it('says the budget covers none of the selected creators when reachableCount is 0', async () => {
-    const { post } = setup();
-    post.mockResolvedValue({ ...RESULT, reachableCount: 0 });
-    const f = TestBed.createComponent(Host);
-    f.componentInstance.creators.set([mkCreator(1), mkCreator(2), mkCreator(3)]);
-    f.detectChanges();
-    f.nativeElement.querySelector('[data-testid="sim-run"]').click();
-    await f.whenStable(); f.detectChanges();
-    const warn = f.nativeElement.querySelector('[data-testid="sim-budget-warning"]');
-    expect(warn).toBeTruthy();
-    expect(warn.textContent).toContain('none');
-    // Must not render as "3 of 3 don't fit" next to a table that looks empty.
-    expect(warn.textContent).not.toContain('3 of 3');
+  it('renders campaign cost and cost per conversion', async () => {
+    const { el } = await rendered();
+    expect(text(el, 'simw2-total-cost')).toContain('9,500');
+    expect(text(el, 'simw2-total-cost-per-conversion')).toContain('27.78');
+  });
+});
+
+describe('SimulationPanelComponent (W2) — budget messages', () => {
+  it('renders the unallocated line with the roster-tops-out message', async () => {
+    const { el } = await rendered(
+      w2({ unallocated: 10_500, unallocatedMessage: 'This roster tops out at $9,500.' }),
+    );
+    expect(text(el, 'simw2-unallocated')).toContain('10,500');
+    expect(text(el, 'simw2-unallocated-message')).toContain('This roster tops out at $9,500.');
+  });
+
+  it('hides the unallocated line when the budget is fully allocated', async () => {
+    const { el } = await rendered();
+    expect(el.querySelector('[data-testid="simw2-unallocated"]')).toBeNull();
+  });
+
+  it('warns loudly on a zero budget', async () => {
+    const { el } = await rendered(w2({ zeroBudget: true, budget: 0 }));
+    expect(el.querySelector('[data-testid="simw2-zero-budget"]')).toBeTruthy();
+  });
+
+  it('lists every server warning', async () => {
+    const { el } = await rendered(
+      w2({ warnings: ['2 deliverables had no stats', 'genre benchmark missing'] }),
+    );
+    const items = el.querySelectorAll('[data-testid="simw2-warning"]');
+    expect(items.length).toBe(2);
+    expect(items[0].textContent).toContain('2 deliverables had no stats');
+    expect(items[1].textContent).toContain('genre benchmark missing');
+  });
+
+  it('renders no warnings block when the server sent none', async () => {
+    const { el } = await rendered();
+    expect(el.querySelector('[data-testid="simw2-warnings"]')).toBeNull();
   });
 });

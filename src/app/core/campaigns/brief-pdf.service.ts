@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Campaign } from './campaign.types';
+import { Campaign, isW2Forecast } from './campaign.types';
 
 /**
  * Builds a print-ready HTML document and opens it in a new window with the
@@ -34,8 +34,38 @@ export class BriefPdfService {
     const f = campaign.forecast;
     const date = new Date().toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' });
 
-    const forecastBlock = f
-      ? `
+    // A saved forecast is a record of the model that produced it (spec §8), so
+    // the brief renders whichever shape was saved rather than migrating it.
+    let forecastBlock: string;
+    if (!f) {
+      forecastBlock = '<p class="empty">No forecast attached.</p>';
+    } else if (isW2Forecast(f)) {
+      const t = f.totals;
+      const cpc = t.costPerConversion == null ? '–' : `$${t.costPerConversion.toLocaleString('en-GB')}`;
+      forecastBlock = `
+      <section class="forecast">
+        <h2>Campaign forecast</h2>
+        <div class="bands">
+          <div class="band worst">
+            <div class="label">Conservative</div>
+            <div class="value">${t.band.impressions.conservative.toLocaleString('en-GB')} impressions</div>
+            <div class="sub">${t.band.conversions.conservative.toLocaleString('en-GB')} conversions (upper bound)</div>
+          </div>
+          <div class="band base">
+            <div class="label">Expected</div>
+            <div class="value">${t.impressions.toLocaleString('en-GB')} impressions</div>
+            <div class="sub">${t.conversions.value.toLocaleString('en-GB')} conversions (upper bound) · ${cpc} per conversion</div>
+          </div>
+          <div class="band best">
+            <div class="label">Optimistic</div>
+            <div class="value">${t.band.impressions.optimistic.toLocaleString('en-GB')} impressions</div>
+            <div class="sub">${t.band.conversions.optimistic.toLocaleString('en-GB')} conversions (upper bound)</div>
+          </div>
+        </div>
+      </section>
+    `;
+    } else {
+      forecastBlock = `
       <section class="forecast">
         <h2>Campaign forecast</h2>
         <div class="bands">
@@ -56,8 +86,8 @@ export class BriefPdfService {
           </div>
         </div>
       </section>
-    `
-      : '<p class="empty">No forecast attached.</p>';
+    `;
+    }
 
     return `<!DOCTYPE html>
 <html lang="en">

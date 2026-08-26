@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { BriefPdfService } from './brief-pdf.service';
 import { Campaign } from './campaign.types';
+import { W2Response } from '../simulation/simulation-w2.types';
 
 const SAMPLE: Campaign = {
   id: 'cmp-1',
@@ -27,6 +28,38 @@ const SAMPLE: Campaign = {
   completedAt: null,
   createdAt: '2026-04-23T10:00:00.000Z',
   updatedAt: '2026-04-23T10:00:00.000Z',
+};
+
+const band = (n: number) => ({
+  conservative: Math.round(n * 0.68),
+  expected: n,
+  optimistic: Math.round(n * 1.42),
+});
+
+/** A W2-era saved forecast — version-stamped, so the brief takes the new path. */
+const W2_SAMPLE: W2Response = {
+  mode: 'campaign', budget: 85_000, genre: 'Gaming & Esports', subMode: '', objectives: [],
+  model: {
+    version: 'w2-2026-08',
+    params: { T: 0.35, k_youtube: 1.6, k_twitch: 2.5 },
+    generatedAt: '2026-08-26T00:00:00.000Z',
+  },
+  bench: { ctrBase: 2, cvrBase: 0.5, engBase: 4 },
+  creators: [],
+  platforms: [],
+  totals: {
+    impressions: 1_562_500, engagedClicks: 29_688,
+    uniqueReach: { value: 1_250_000, upperBound: true },
+    conversions: { value: 11_250, upperBound: true },
+    cost: 85_000, forecastableCost: 85_000, costPerConversion: 7.56,
+    band: {
+      impressions: band(1_562_500),
+      uniqueReach: { ...band(1_250_000), upperBound: true },
+      engagedClicks: band(29_688),
+      conversions: { ...band(11_250), upperBound: true },
+    },
+  },
+  unallocated: 0, unallocatedMessage: null, zeroBudget: false, warnings: [],
 };
 
 describe('BriefPdfService.buildHtml', () => {
@@ -62,6 +95,17 @@ describe('BriefPdfService.buildHtml', () => {
   it('includes the creator count when passed', () => {
     const html = svc.buildHtml(SAMPLE, 7);
     expect(html).toMatch(/Creators[\s\S]*7/);
+  });
+
+  it('renders a W2 forecast as Conservative/Expected/Optimistic, with no percentiles or ROAS', () => {
+    const html = svc.buildHtml({ ...SAMPLE, forecast: W2_SAMPLE }, 3);
+    expect(html).toContain('Conservative');
+    expect(html).toContain('Expected');
+    expect(html).toContain('Optimistic');
+    expect(html).toContain('1,562,500');
+    expect(html).toContain('conversions (upper bound)');
+    expect(html).not.toContain('P50');
+    expect(html).not.toContain('ROAS');
   });
 });
 

@@ -7,7 +7,7 @@ import { CampaignContextService } from '../../core/context/campaign-context.serv
 import { CreatorsService } from '../../core/creators/creators.service';
 import { CreatorProfileService } from '../../core/creator-profile/creator-profile.service';
 import { SelectionService } from '../../core/selection/selection.service';
-import { SimResult } from '../../core/simulation/simulation.types';
+import { W2Response } from '../../core/simulation/simulation-w2.types';
 import { CampaignsService } from '../../core/campaigns/campaigns.service';
 import { CampaignCreatorsService } from '../../core/campaigns/campaign-creators.service';
 import { Creator } from '../../core/data/creator.types';
@@ -61,7 +61,8 @@ import { Creator } from '../../core/data/creator.types';
         </div>
       </div>
       <app-simulation-panel
-        [creators]="creators()"
+        mode="free"
+        [creatorIds]="creatorIds()"
         [initialGenre]="context.genre()"
         [genres]="genres()"
         [subMode]="context.subMode() || undefined"
@@ -95,7 +96,7 @@ export class SimulatorComponent {
 
   protected readonly genres = this.creatorsSvc.genres;
 
-  protected readonly result = signal<SimResult | null>(null);
+  protected readonly result = signal<W2Response | null>(null);
 
   // Async batch fetch of selected creators; re-runs when selection changes.
   private readonly creatorsRes = resource<Creator[], number[]>({
@@ -104,13 +105,17 @@ export class SimulatorComponent {
     defaultValue: [],
   });
   protected readonly creators = computed(() => this.creatorsRes.value());
+  // The panel sends ids only — the server loads every stat, rate and score it
+  // needs (spec §2). Derived from the hydrated roster so the forecast covers
+  // exactly the creators rendered as chips above it.
+  protected readonly creatorIds = computed(() => this.creators().map((c) => c.id));
   // True only when there is a non-empty selection in flight — avoids flashing
   // the spinner on the genuine "nothing selected" empty state.
   protected readonly creatorsLoading = computed(
     () => this.selection.ids().size > 0 && this.creatorsRes.isLoading(),
   );
 
-  onSimulated(r: SimResult): void {
+  onSimulated(r: W2Response): void {
     this.result.set(r);
   }
 
@@ -122,17 +127,9 @@ export class SimulatorComponent {
     const r = this.result();
     if (!r) return;
 
-    const forecast = {
-      impressions: r.impressions,
-      ctr: r.ctr,
-      cvr: r.cvr,
-      roas: r.roas,
-      p10: r.p10,
-      p50: r.p50,
-      p90: r.p90,
-      aov: r.aov,
-      durationWeeks: r.durationWeeks,
-    };
+    // The whole version-stamped response is the record (spec §8) — no slimming,
+    // no derived fields. The debrief discriminates on `model.version` on read.
+    const forecast = r;
 
     // Standalone save — create a new campaign with the basics + forecast.
     // Use the budget from the simulation result (the budget the sim was actually run with).

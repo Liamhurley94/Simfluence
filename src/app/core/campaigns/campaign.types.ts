@@ -1,4 +1,5 @@
 import { SimBand } from '../simulation/simulation.types';
+import { W2Response } from '../simulation/simulation-w2.types';
 
 export const CAMPAIGN_STATUSES = ['planning', 'active', 'completed', 'archived'] as const;
 export type CampaignStatus = (typeof CAMPAIGN_STATUSES)[number];
@@ -12,7 +13,12 @@ export interface CampaignForecastCreator {
   revenue: number;
 }
 
-export interface CampaignForecast {
+/**
+ * A forecast saved before the W2 rebuild (no `model.version`). Saved forecasts
+ * are records, never migrated or recomputed (spec §8 / D12) — so this shape
+ * stays exactly as it was and the debrief keeps rendering it.
+ */
+export interface LegacyCampaignForecast {
   impressions: number;
   ctr: number;
   roas: number;
@@ -28,6 +34,18 @@ export interface CampaignForecast {
    *  neither. `campaigns.forecast` is jsonb, so this needs no migration. */
   aov?: number;
   durationWeeks?: number;
+}
+
+/**
+ * `campaigns.forecast` holds whichever forecast shape was current when Save was
+ * pressed. W2 persists the whole `W2Response`, version-stamped (spec §8); every
+ * read path discriminates with `isW2Forecast` rather than guessing.
+ */
+export type CampaignForecast = LegacyCampaignForecast | W2Response;
+
+/** D18 rule 4: the version stamp is the discriminator, nothing else. */
+export function isW2Forecast(f: CampaignForecast | null | undefined): f is W2Response {
+  return !!f && typeof (f as W2Response).model?.version === 'string';
 }
 
 export interface Campaign {

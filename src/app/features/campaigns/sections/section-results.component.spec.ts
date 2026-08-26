@@ -6,6 +6,48 @@ import { CampaignCreatorsService } from '../../../core/campaigns/campaign-creato
 import { CampaignsService } from '../../../core/campaigns/campaigns.service';
 import { CreatorsService } from '../../../core/creators/creators.service';
 import { Campaign } from '../../../core/campaigns/campaign.types';
+import { W2Response } from '../../../core/simulation/simulation-w2.types';
+
+const band = (n: number) => ({
+  conservative: Math.round(n * 0.68),
+  expected: n,
+  optimistic: Math.round(n * 1.42),
+});
+
+/** A W2-era saved forecast — version-stamped, so the debrief takes the new path. */
+function w2Forecast(over: Partial<W2Response> = {}): W2Response {
+  return {
+    mode: 'campaign', budget: 50_000, genre: 'Gaming & Esports', subMode: '', objectives: [],
+    model: {
+      version: 'w2-2026-08',
+      params: { T: 0.35, k_youtube: 1.6, k_twitch: 2.5 },
+      generatedAt: '2026-08-26T00:00:00.000Z',
+    },
+    bench: { ctrBase: 2, cvrBase: 0.5, engBase: 4 },
+    creators: [{
+      id: '7', name: 'C7', primaryPlatform: 'YouTube', gfi: 75, reachable: true, engagementRate: 3,
+      cost: 40_000, forecastableCost: 40_000,
+      impressions: 90, uniqueReach: 72, engagedClicks: 3, conversions: 1,
+      costPerConversion: 40_000, reachUpperBound: false,
+      deliverables: [],
+    }],
+    platforms: [],
+    totals: {
+      impressions: 100, engagedClicks: 4,
+      uniqueReach: { value: 80, upperBound: true },
+      conversions: { value: 2, upperBound: true },
+      cost: 40_000, forecastableCost: 40_000, costPerConversion: 20_000,
+      band: {
+        impressions: band(100),
+        uniqueReach: { ...band(80), upperBound: true },
+        engagedClicks: band(4),
+        conversions: { ...band(2), upperBound: true },
+      },
+    },
+    unallocated: 0, unallocatedMessage: null, zeroBudget: false, warnings: [],
+    ...over,
+  };
+}
 
 function mkCampaign(status: Campaign['status'], withForecast = true): Campaign {
   return {
@@ -130,5 +172,82 @@ describe('SectionResultsComponent', () => {
     const { f } = setup({ ...campaign, forecast });
     f.detectChanges();
     expect(f.nativeElement.querySelector('[data-testid="creator-forecast"]')).toBeTruthy();
+  });
+});
+
+// ── W2 forecasts (spec §8) ────────────────────────────────────────────
+// Saved forecasts are records: legacy payloads keep the path above, W2
+// payloads (a `model.version` stamp) get the new one. Nothing is migrated.
+
+describe('SectionResultsComponent — W2 forecasts', () => {
+  it('renders the W2 debrief table, not the legacy one', async () => {
+    const { f } = setup({ ...mkCampaign('completed'), forecast: w2Forecast() },
+      signal<any[]>([ccRecord({ actualImpressions: 90 })]));
+    f.detectChanges(); await f.whenStable(); f.detectChanges();
+    expect(f.nativeElement.querySelector('[data-testid="debrief-w2-row-impressions"]')).toBeTruthy();
+    expect(f.nativeElement.querySelector('[data-testid="debrief-row-impressions"]')).toBeNull();
+    expect(f.nativeElement.querySelector('[data-testid="results-no-forecast"]')).toBeNull();
+  });
+
+  it('compares actuals to the expected value and flags the Conservative–Optimistic band', async () => {
+    const { f } = setup({ ...mkCampaign('completed'), forecast: w2Forecast() },
+      signal<any[]>([ccRecord({ actualImpressions: 90 })]));
+    f.detectChanges(); await f.whenStable(); f.detectChanges();
+    const row = f.nativeElement.querySelector('[data-testid="debrief-w2-row-impressions"]');
+    expect(row.textContent).toContain('-10%');   // (90/100 - 1) × 100
+    expect(f.nativeElement.querySelector('[data-testid="debrief-w2-band-impressions"]').textContent).toContain('✓');
+  });
+
+  it('grades conversions and engagement clicks, never ROAS', async () => {
+    const { f } = setup({ ...mkCampaign('completed'), forecast: w2Forecast() },
+      signal<any[]>([ccRecord({ actualClicks: 4, actualConversions: 2, actualSpend: 40_000 })]));
+    f.detectChanges(); await f.whenStable(); f.detectChanges();
+    const el: HTMLElement = f.nativeElement;
+    expect(el.querySelector('[data-testid="debrief-w2-row-engagedClicks"]')!.textContent!.toLowerCase())
+      .toContain('engagement clicks');
+    expect(el.querySelector('[data-testid="debrief-w2-row-conversions"]')).toBeTruthy();
+    expect(el.querySelector('[data-testid="debrief-w2-row-spend"]')).toBeTruthy();
+    expect(el.querySelector('[data-testid="debrief-w2-row-roas"]')).toBeNull();
+    expect(el.querySelector('[data-testid="results-roas-hint"]')).toBeNull();
+  });
+
+  it('reports cost per conversion for both forecast and actual', async () => {
+    const { f } = setup({ ...mkCampaign('completed'), forecast: w2Forecast() },
+      signal<any[]>([ccRecord({ actualConversions: 2, actualSpend: 30_000 })]));
+    f.detectChanges(); await f.whenStable(); f.detectChanges();
+    const row = f.nativeElement.querySelector('[data-testid="debrief-w2-row-costPerConversion"]');
+    expect(row.textContent).toContain('20,000');   // forecast: $40,000 / 2
+    expect(f.nativeElement.querySelector('[data-testid="debrief-w2-actual-costPerConversion"]').textContent)
+      .toContain('15,000');                        // actual:   $30,000 / 2
+  });
+
+  it('populates the per-creator forecast column from creators[]', async () => {
+    const { f } = setup({ ...mkCampaign('completed'), forecast: w2Forecast() });
+    f.detectChanges();
+    const el: HTMLElement = f.nativeElement.querySelector('[data-testid="creator-forecast-w2"]');
+    expect(el).toBeTruthy();
+    expect(el.textContent).toContain('90');       // impressions
+    expect(el.textContent).toContain('3');        // engagement clicks
+    expect(el.textContent).toContain('40,000');   // cost
+    // Revenue was a ROAS-era field — it is not forecast any more.
+    expect(f.nativeElement.querySelector('[data-testid="creator-forecast"]')).toBeNull();
+  });
+
+  it('omits the per-creator line when the W2 creator id has no roster match', async () => {
+    const forecast = w2Forecast();
+    forecast.creators[0].id = '999';
+    const { f } = setup({ ...mkCampaign('completed'), forecast });
+    f.detectChanges();
+    expect(f.nativeElement.querySelector('[data-testid="creator-forecast-w2"]')).toBeNull();
+  });
+
+  it('still records actuals normally under a W2 forecast', async () => {
+    const { f, updateActuals } = setup({ ...mkCampaign('active'), forecast: w2Forecast() });
+    f.detectChanges(); await f.whenStable(); f.detectChanges();
+    const input: HTMLInputElement = f.nativeElement.querySelector('[data-testid="actual-actualClicks-cc1"]');
+    input.value = '35';
+    input.dispatchEvent(new Event('blur'));
+    await f.whenStable();
+    expect(updateActuals).toHaveBeenCalledWith('cc1', { actualClicks: 35 });
   });
 });

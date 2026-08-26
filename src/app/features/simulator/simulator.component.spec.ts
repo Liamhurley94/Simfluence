@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { signal } from '@angular/core';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { SimulatorComponent } from './simulator.component';
 import { AuthService } from '../../core/auth/auth.service';
@@ -14,6 +14,7 @@ import { CampaignCreatorsRepository } from '../../core/campaigns/campaign-creato
 import { CreatorProfileService } from '../../core/creator-profile/creator-profile.service';
 import { Creator } from '../../core/data/creator.types';
 import { Campaign } from '../../core/campaigns/campaign.types';
+import { W2Response } from '../../core/simulation/simulation-w2.types';
 
 function mkCreator(id: number): Creator {
   return {
@@ -37,6 +38,62 @@ function mkCreator(id: number): Creator {
   };
 }
 
+const band = (n: number) => ({
+  conservative: Math.round(n * 0.68),
+  expected: n,
+  optimistic: Math.round(n * 1.42),
+});
+
+/** A minimal but complete W2 response — the only shape the panel accepts now. */
+function w2(over: Partial<W2Response> = {}): W2Response {
+  return {
+    mode: 'free', budget: 85_000, genre: 'Gaming & Esports', subMode: '', objectives: [],
+    model: {
+      version: 'w2-2026-08',
+      params: { T: 0.35, k_youtube: 1.6, k_twitch: 2.5 },
+      generatedAt: '2026-08-26T00:00:00.000Z',
+    },
+    bench: { ctrBase: 2, cvrBase: 0.5, engBase: 4 },
+    creators: [
+      {
+        id: '2', name: 'Creator 2', primaryPlatform: 'YouTube', gfi: 75, reachable: true,
+        engagementRate: 3, cost: 6_000, forecastableCost: 6_000,
+        impressions: 40_000, uniqueReach: 32_000, engagedClicks: 960, conversions: 288,
+        costPerConversion: 20.8, reachUpperBound: false,
+        deliverables: [{
+          creatorId: '2', platform: 'YouTube', format: 'Integrated', quantity: 2, durationHours: null,
+          reach: 20_000, cpi: 80, cpiSubstituted: false, gfi: 75, noData: false, ctr: 2.4, cvr: 0.9,
+          impressions: 40_000, uniqueReach: 32_000, engagedClicks: 960, conversions: 288,
+          d60: { impressions: 52_000, uniqueReach: 41_600, engagedClicks: 1_248, conversions: 374 },
+          d90: { impressions: 58_000, uniqueReach: 46_400, engagedClicks: 1_392, conversions: 417 },
+          band: { impressions: band(40_000), uniqueReach: band(32_000), engagedClicks: band(960), conversions: band(288) },
+          cost: 6_000, costSource: 'estimated', bandBreach: null, rateRange: [4_000, 8_000],
+          costPerConversion: 20.8,
+        }],
+      },
+    ],
+    platforms: [{
+      platform: 'YouTube', impressions: 40_000, uniqueReach: 32_000, engagedClicks: 960,
+      conversions: 288, cost: 6_000, costPerConversion: 20.8,
+      band: { impressions: band(40_000), uniqueReach: band(32_000), engagedClicks: band(960), conversions: band(288) },
+    }],
+    totals: {
+      impressions: 40_000, engagedClicks: 960,
+      uniqueReach: { value: 32_000, upperBound: true },
+      conversions: { value: 288, upperBound: true },
+      cost: 6_000, forecastableCost: 6_000, costPerConversion: 20.8,
+      band: {
+        impressions: band(40_000),
+        uniqueReach: { ...band(32_000), upperBound: true },
+        engagedClicks: band(960),
+        conversions: { ...band(288), upperBound: true },
+      },
+    },
+    unallocated: 0, unallocatedMessage: null, zeroBudget: false, warnings: [],
+    ...over,
+  };
+}
+
 function setup({ selectedIds = [] as number[], tier = 'silver' } = {}) {
   localStorage.clear();
   sessionStorage.clear();
@@ -50,15 +107,13 @@ function setup({ selectedIds = [] as number[], tier = 'silver' } = {}) {
     enterprise: () => null,
   };
 
-  const post = vi.fn().mockResolvedValue({ error: 'no server in tests' });
+  const post = vi.fn().mockResolvedValue(w2());
   const edgeStub = { post, get: vi.fn() } as unknown as EdgeClient;
 
-  // Creator data now loads server-side via CreatorsService.byIds (async),
-  // wrapped in a resource() inside the component. Stub it so seeding the
-  // SelectionService with ids resolves to full Creator objects.
-  const byIds = vi.fn(async (ids: Iterable<number>) =>
-    Array.from(ids, (id) => mkCreator(id)),
-  );
+  // Creator data loads server-side via CreatorsService.byIds (async), wrapped in
+  // a resource() inside the component. Stub it so seeding the SelectionService
+  // with ids resolves to full Creator objects.
+  const byIds = vi.fn(async (ids: Iterable<number>) => Array.from(ids, (id) => mkCreator(id)));
   const creatorsStub = {
     byIds,
     genres: signal(['Gaming & Esports', 'Music']),
@@ -98,93 +153,57 @@ function setup({ selectedIds = [] as number[], tier = 'silver' } = {}) {
   return { post, selection, tier: tierSignal, campaignsRepoStub, campaignCreatorsRepoStub };
 }
 
-describe('SimulatorComponent', () => {
-  beforeEach(() => {
-    /* noop */
-  });
+/** Create, hydrate the creator resource, and settle. */
+async function mounted(opts?: Parameters<typeof setup>[0]) {
+  const ctx = setup(opts);
+  const f = TestBed.createComponent(SimulatorComponent);
+  f.detectChanges();
+  await f.whenStable();
+  f.detectChanges();
+  return { ...ctx, f, el: f.nativeElement as HTMLElement };
+}
 
+describe('SimulatorComponent', () => {
   it('shows empty state when no creators are selected', () => {
     setup({ selectedIds: [] });
-    const fixture = TestBed.createComponent(SimulatorComponent);
-    fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('[data-testid="sim-empty"]')).toBeTruthy();
-    expect(fixture.nativeElement.querySelector('[data-testid="sim-controls"]')).toBeNull();
+    const f = TestBed.createComponent(SimulatorComponent);
+    f.detectChanges();
+    expect(f.nativeElement.querySelector('[data-testid="sim-empty"]')).toBeTruthy();
+    expect(f.nativeElement.querySelector('[data-testid="simw2-controls"]')).toBeNull();
   });
 
   it('renders controls + objectives + run button when creators are selected', async () => {
-    setup({ selectedIds: [2, 14] });
-    const fixture = TestBed.createComponent(SimulatorComponent);
-    fixture.detectChanges();
-    // CreatorsService.byIds is async (server-backed); let the resource() resolve.
-    await fixture.whenStable();
-    fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('[data-testid="sim-controls"]')).toBeTruthy();
-    expect(fixture.nativeElement.querySelector('[data-testid="sim-objectives"]')).toBeTruthy();
-    const runBtn: HTMLButtonElement = fixture.nativeElement.querySelector('[data-testid="sim-run"]');
+    const { el } = await mounted({ selectedIds: [2, 14] });
+    expect(el.querySelector('[data-testid="simw2-controls"]')).toBeTruthy();
+    expect(el.querySelector('[data-testid="simw2-objectives"]')).toBeTruthy();
+    const runBtn = el.querySelector('[data-testid="simw2-run"]') as HTMLButtonElement;
     expect(runBtn).toBeTruthy();
     expect(runBtn.disabled).toBe(false);
   });
 
-  it('clicking run renders the server result bands and increments rate limit', async () => {
-    const { post } = setup({ selectedIds: [2, 14] });
-    // The simulator is server-only (the local-compute fallback was removed — sim
-    // math is IP). Bands render only when the edge fn returns a result.
-    post.mockResolvedValueOnce({
-      impressions: 100,
-      ctr: 2,
-      cpM: 6,
-      cvr: 0.5,
-      conversions: 1,
-      roas: 0.1,
-      roasRange: '0.1–0.4×',
-      engRate: 3,
-      clicks: 2,
-      budget: 85_000,
-      bench: { ctrBase: 2, cpmBase: 8, cvrBase: 0.5, roasBase: 2, engBase: 4 },
-      p10: { impressions: 68, ctr: 1.3, roas: 0.07 },
-      p50: { impressions: 100, ctr: 2, roas: 0.1 },
-      p90: { impressions: 142, ctr: 2.8, roas: 0.15 },
-    });
+  it('runs in free mode: sends the selected ids and renders the W2 forecast', async () => {
+    const { f, el, post } = await mounted({ selectedIds: [2, 14] });
+    (el.querySelector('[data-testid="simw2-run"]') as HTMLButtonElement).click();
+    await f.whenStable();
+    f.detectChanges();
 
-    const fixture = TestBed.createComponent(SimulatorComponent);
-    fixture.detectChanges();
-    await fixture.whenStable();
-    fixture.detectChanges();
-
-    const runBtn: HTMLButtonElement = fixture.nativeElement.querySelector('[data-testid="sim-run"]');
-    runBtn.click();
-    await fixture.whenStable();
-    fixture.detectChanges();
-
-    expect(fixture.nativeElement.querySelector('[data-testid="sim-bands"]')).toBeTruthy();
-    expect(fixture.nativeElement.querySelector('[data-testid="sim-p10"]')).toBeTruthy();
-    expect(fixture.nativeElement.querySelector('[data-testid="sim-p50"]')).toBeTruthy();
-    expect(fixture.nativeElement.querySelector('[data-testid="sim-p90"]')).toBeTruthy();
     expect(post).toHaveBeenCalledOnce();
+    const body = post.mock.calls[0][1] as Record<string, unknown>;
+    expect(body['mode']).toBe('free');
+    expect(body['creators']).toEqual([{ id: 2 }, { id: 14 }]);
+    expect(body['budget']).toBe(85_000);
 
-    const rateLimit = TestBed.inject(RateLimitService);
-    expect(rateLimit.read()).toBe(1);
-
-    const save: HTMLButtonElement = fixture.nativeElement.querySelector('[data-testid="sim-save"]');
-    expect(save.disabled).toBe(false);
+    expect(el.querySelector('[data-testid="simw2-results"]')).toBeTruthy();
+    expect(el.querySelector('[data-testid="simw2-total-impressions"]')!.textContent).toContain('40,000');
+    expect(TestBed.inject(RateLimitService).read()).toBe(1);
+    expect((el.querySelector('[data-testid="sim-save"]') as HTMLButtonElement).disabled).toBe(false);
   });
 
-  it('saving to campaigns persists the aov and durationWeeks the result carried', async () => {
-    const { post, campaignsRepoStub } = setup({ selectedIds: [2, 14] });
+  it('saves the whole version-stamped W2 response into campaigns.forecast', async () => {
+    const { f, el, campaignsRepoStub } = await mounted({ selectedIds: [2, 14] });
     // saveToCampaigns() navigates to the new campaign's detail page after
-    // saving; this suite doesn't register app routes, so stub navigate the
-    // same way campaigns.component.spec.ts does rather than let it reject.
+    // saving; this suite doesn't register app routes, so stub navigate.
     vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
-    // Same shape as the real edge fn response (2026-08-09 branch) — aov and
-    // durationWeeks are echoed back alongside the existing bands.
-    post.mockResolvedValueOnce({
-      impressions: 100, ctr: 2, cpM: 6, cvr: 0.5, conversions: 1, roas: 0.1,
-      roasRange: '0.1–0.4×', engRate: 3, clicks: 2, budget: 85_000, aov: 45, durationWeeks: 6,
-      bench: { ctrBase: 2, cpmBase: 8, cvrBase: 0.5, roasBase: 2, engBase: 4 },
-      p10: { impressions: 68, ctr: 1.3, roas: 0.07 },
-      p50: { impressions: 100, ctr: 2, roas: 0.1 },
-      p90: { impressions: 142, ctr: 2.8, roas: 0.15 },
-    });
     const created: Campaign = {
       id: 'new-camp', createdBy: 'u', enterpriseId: null, status: 'planning',
       name: 'x', client: null, genre: 'Gaming & Esports', budget: 85_000, notes: null, objectives: [],
@@ -193,75 +212,66 @@ describe('SimulatorComponent', () => {
     (campaignsRepoStub.create as ReturnType<typeof vi.fn>).mockResolvedValue(created);
     (campaignsRepoStub.update as ReturnType<typeof vi.fn>).mockResolvedValue(created);
 
-    const fixture = TestBed.createComponent(SimulatorComponent);
-    fixture.detectChanges();
-    await fixture.whenStable();
-    fixture.detectChanges();
+    (el.querySelector('[data-testid="simw2-run"]') as HTMLButtonElement).click();
+    await f.whenStable(); f.detectChanges();
+    (el.querySelector('[data-testid="sim-save"]') as HTMLButtonElement).click();
+    await f.whenStable();
 
-    const runBtn: HTMLButtonElement = fixture.nativeElement.querySelector('[data-testid="sim-run"]');
-    runBtn.click();
-    await fixture.whenStable();
-    fixture.detectChanges();
+    const saved = (campaignsRepoStub.update as ReturnType<typeof vi.fn>).mock.calls.at(-1)![1].forecast;
+    expect(saved.model.version).toBe('w2-2026-08');
+    expect(saved.totals.conversions).toEqual({ value: 288, upperBound: true });
+    expect(saved.creators[0].deliverables).toHaveLength(1);
+    // The cut fields never reach storage again.
+    expect(saved).not.toHaveProperty('roas');
+    expect(saved).not.toHaveProperty('aov');
+    expect(saved).not.toHaveProperty('durationWeeks');
+    expect(saved).not.toHaveProperty('p50');
+  });
 
-    const save: HTMLButtonElement = fixture.nativeElement.querySelector('[data-testid="sim-save"]');
-    save.click();
-    await fixture.whenStable();
-
-    expect(campaignsRepoStub.update).toHaveBeenCalledWith(
-      'new-camp',
-      { forecast: expect.objectContaining({ aov: 45, durationWeeks: 6 }) },
-    );
+  it('surfaces a failed run instead of leaving an empty forecast on screen', async () => {
+    const { f, el, post } = await mounted({ selectedIds: [2] });
+    post.mockRejectedValueOnce(new Error('run-simulation is down'));
+    (el.querySelector('[data-testid="simw2-run"]') as HTMLButtonElement).click();
+    await f.whenStable(); f.detectChanges();
+    expect(el.querySelector('[data-testid="simw2-error"]')!.textContent).toContain('run-simulation is down');
+    expect(el.querySelector('[data-testid="simw2-results"]')).toBeNull();
+    expect((el.querySelector('[data-testid="sim-save"]') as HTMLButtonElement).disabled).toBe(true);
   });
 
   it('free tier hitting limit disables the run button and shows banner', async () => {
     setup({ selectedIds: [2], tier: 'free' });
     const rate = TestBed.inject(RateLimitService);
-    rate.increment();
-    rate.increment();
-    rate.increment();
+    rate.increment(); rate.increment(); rate.increment();
 
-    const fixture = TestBed.createComponent(SimulatorComponent);
-    fixture.detectChanges();
-    await fixture.whenStable();
-    fixture.detectChanges();
+    const f = TestBed.createComponent(SimulatorComponent);
+    f.detectChanges();
+    await f.whenStable();
+    f.detectChanges();
 
-    const runBtn: HTMLButtonElement = fixture.nativeElement.querySelector('[data-testid="sim-run"]');
-    expect(runBtn.disabled).toBe(true);
-    expect(fixture.nativeElement.querySelector('[data-testid="sim-rate-limit"]')).toBeTruthy();
+    expect((f.nativeElement.querySelector('[data-testid="simw2-run"]') as HTMLButtonElement).disabled).toBe(true);
+    expect(f.nativeElement.querySelector('[data-testid="simw2-rate-limit"]')).toBeTruthy();
   });
 
   it('gold tier has no rate-limit indicator and no blocking', () => {
     setup({ selectedIds: [2], tier: 'gold' });
-    const fixture = TestBed.createComponent(SimulatorComponent);
-    fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('[data-testid="sim-rate-usage"]')).toBeNull();
-    expect(fixture.nativeElement.querySelector('[data-testid="sim-rate-limit"]')).toBeNull();
+    const f = TestBed.createComponent(SimulatorComponent);
+    f.detectChanges();
+    expect(f.nativeElement.querySelector('[data-testid="simw2-rate-usage"]')).toBeNull();
+    expect(f.nativeElement.querySelector('[data-testid="simw2-rate-limit"]')).toBeNull();
   });
 
   it('toggling an objective updates the selected set', async () => {
-    setup({ selectedIds: [2] });
-    const fixture = TestBed.createComponent(SimulatorComponent);
-    fixture.detectChanges();
-    await fixture.whenStable();
-    fixture.detectChanges();
-    const btn: HTMLButtonElement = fixture.nativeElement.querySelector(
-      '[data-testid="sim-obj-sales"]',
-    );
+    const { f, el } = await mounted({ selectedIds: [2] });
+    const btn = el.querySelector('[data-testid="simw2-obj-sales"]') as HTMLButtonElement;
     btn.click();
-    fixture.detectChanges();
-    // Style flips background — inspect the attr for the blue class indicator.
+    f.detectChanges();
     expect(btn.style.background).toContain('color-sf-blue');
   });
 
   it('renders clickable selected-creator chips that open the profile modal', async () => {
-    setup({ selectedIds: [2, 14] });
-    const fixture = TestBed.createComponent(SimulatorComponent);
-    fixture.detectChanges();
-    await fixture.whenStable();
-    fixture.detectChanges();
-
-    expect(fixture.nativeElement.querySelector('[data-testid="sim-selected"]')).toBeTruthy();
-    const chips = fixture.nativeElement.querySelectorAll('[data-testid="sim-selected-chip"]');
+    const { el } = await mounted({ selectedIds: [2, 14] });
+    expect(el.querySelector('[data-testid="sim-selected"]')).toBeTruthy();
+    const chips = el.querySelectorAll('[data-testid="sim-selected-chip"]');
     expect(chips.length).toBe(2);
 
     const openSpy = vi
