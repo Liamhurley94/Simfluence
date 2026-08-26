@@ -32,14 +32,13 @@ const FORECASTABLE: DeliverablePlatform[] = ['YouTube', 'Twitch'];
             [attr.data-testid]="'deliverable-row-' + row.id"
           >
             <select
-              [value]="row.platform"
               (change)="onPlatformChange(row, $any($event.target).value)"
               [disabled]="disabled()"
               class="sf-select px-1 py-0.5 text-[10px]"
               [attr.data-testid]="'deliverable-platform-' + row.id"
             >
               @for (p of platformOptions; track p) {
-                <option [value]="p" [disabled]="!isAttached(p)">
+                <option [value]="p" [disabled]="!isAttached(p)" [selected]="p === row.platform">
                   {{ p }}{{ isAttached(p) ? '' : ' (not attached)' }}
                 </option>
               }
@@ -47,14 +46,13 @@ const FORECASTABLE: DeliverablePlatform[] = ['YouTube', 'Twitch'];
 
             @if (row.platform === 'YouTube') {
               <select
-                [value]="row.format"
                 (change)="onFormatChange(row, $any($event.target).value)"
                 [disabled]="disabled()"
                 class="sf-select px-1 py-0.5 text-[10px]"
                 [attr.data-testid]="'deliverable-format-' + row.id"
               >
                 @for (f of formatOptions; track f) {
-                  <option [value]="f">{{ f }}</option>
+                  <option [value]="f" [selected]="f === row.format">{{ f }}</option>
                 }
               </select>
             } @else {

@@ -87,6 +87,19 @@ describe('DeliverableEditorComponent', () => {
     expect(fixture.nativeElement.querySelector('[data-testid="deliverable-add"]')).toBeNull();
   });
 
+  it('displays the row\'s stored platform when the creator has both platforms attached (not the first option)', async () => {
+    await mount(creator({ platform: 'Twitch', allPlatforms: ['Twitch', 'YouTube'] }),
+      [d({ platform: 'Twitch', format: 'Dedicated', durationHours: 2 })]);
+    const sel = fixture.nativeElement.querySelector('[data-testid="deliverable-platform-d1"]') as HTMLSelectElement;
+    expect(sel.value).toBe('Twitch');
+  });
+
+  it('displays the row\'s stored format (not the first option)', async () => {
+    await mount(creator(), [d({ format: 'Dedicated' })]);
+    const sel = fixture.nativeElement.querySelector('[data-testid="deliverable-format-d1"]') as HTMLSelectElement;
+    expect(sel.value).toBe('Dedicated');
+  });
+
   it('disables all controls when the disabled input is set', async () => {
     await mount(creator(), [d()]);
     fixture.componentRef.setInput('disabled', true);
