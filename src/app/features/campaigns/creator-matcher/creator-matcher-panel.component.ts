@@ -191,7 +191,9 @@ export class CreatorMatcherPanelComponent {
   protected rateLabel(m: MatchedCreator): string {
     const mix = m.rateEstimate?.ranges?.mix;
     if (!mix || mix.length !== 2) return '—';
-    return this.moneyLabel(Math.round((mix[0] + mix[1]) / 2));
+    const midpoint = this.moneyLabel(Math.round((mix[0] + mix[1]) / 2));
+    const basis = m.creator.platform === 'Twitch' ? ' / 2hr stream' : '';
+    return `${midpoint}${basis}`;
   }
 
   protected cpiColor(cpi: number | null): string {

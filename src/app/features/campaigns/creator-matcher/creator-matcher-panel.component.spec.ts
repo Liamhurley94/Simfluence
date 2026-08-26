@@ -62,6 +62,26 @@ async function settle(fixture: { whenStable: () => Promise<unknown>; detectChang
 }
 
 describe('CreatorMatcherPanelComponent', () => {
+  describe('rateLabel', () => {
+    it('suffixes Twitch rate labels with the 2hr-stream basis', async () => {
+      const { fixture } = setup(makeResult());
+      fixture.detectChanges();
+      await settle(fixture);
+
+      const twitchCard: HTMLElement = fixture.nativeElement.querySelector('[data-testid="matcher-card-9"]'); // Blaze is Twitch
+      expect(twitchCard.textContent).toContain('/ 2hr stream');
+    });
+
+    it('leaves YouTube rate labels unsuffixed', async () => {
+      const { fixture } = setup(makeResult());
+      fixture.detectChanges();
+      await settle(fixture);
+
+      const youtubeCard: HTMLElement = fixture.nativeElement.querySelector('[data-testid="matcher-card-7"]'); // Nova is YouTube
+      expect(youtubeCard.textContent).not.toContain('2hr stream');
+    });
+  });
+
   it('calls match with genre/budget/objectives, roster excludeIds, and limit 12', async () => {
     const { fixture, match } = setup(makeResult(), [1, 2, 3]);
     fixture.detectChanges();
