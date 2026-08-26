@@ -1,7 +1,8 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { EdgeClient } from '../api/edge.client';
-import { DEFAULT_AOV, DEFAULT_DURATION_WEEKS, SimInputs, SimResult } from './simulation.types';
+import { DEFAULT_AOV, DEFAULT_DURATION_WEEKS, Objective, SimInputs, SimResult } from './simulation.types';
 import { partitionByLiveData } from './live-stats';
+import { W2CampaignRequest, W2FreeRequest, W2Response } from './simulation-w2.types';
 
 /**
  * Wraps the `/functions/v1/run-simulation` edge function.
@@ -68,5 +69,34 @@ export class RunSimulationService {
 
   clear(): void {
     this.latest.set(null);
+  }
+
+  // ── W2 rebuild ──────────────────────────────────────────────────────
+  // Same edge function, `mode: 'free' | 'campaign'` (spec §1). The server
+  // loads every stat, deliverable and modelling param itself (spec §2) — the
+  // client sends ids only, never stats. Unlike `run()` above, these do not
+  // catch: a failed request rejects, so the caller (Task 7's panel) can
+  // distinguish "no forecast yet" from "the request failed" instead of both
+  // collapsing to `null`.
+
+  /** Free simulation: a roster + total budget, priced at rate-band midpoints. */
+  runFree(request: {
+    creators: Array<{ id: number }>;
+    budget: number;
+    genre: string;
+    subMode?: string;
+    objectives?: Objective[];
+  }): Promise<W2Response> {
+    const payload: W2FreeRequest = { mode: 'free', ...request };
+    return this.edge.post<W2Response, W2FreeRequest>('run-simulation', payload);
+  }
+
+  /** Campaign forecast: a campaign's saved deliverable rows, priced at `agreed_fee` where entered. */
+  runCampaign(
+    campaignId: string,
+    overrides?: { genre?: string; subMode?: string; objectives?: Objective[] },
+  ): Promise<W2Response> {
+    const payload: W2CampaignRequest = { mode: 'campaign', campaignId, ...overrides };
+    return this.edge.post<W2Response, W2CampaignRequest>('run-simulation', payload);
   }
 }
