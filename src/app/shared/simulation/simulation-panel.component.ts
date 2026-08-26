@@ -530,6 +530,16 @@ export function errorMessage(e: unknown): string {
                 {{ c.conversions | number: '1.0-0' }} conversions ·
                 \${{ c.cost | number: '1.0-0' }} cost · {{ money(c.costPerConversion) }} per conversion
               </div>
+              <!-- Only when a no-data row was paid for but produced nothing: the
+                   two figures diverge and the row has to say which one the
+                   forecast above it is built on (same split as the campaign
+                   totals). -->
+              @if (c.forecastableCost !== c.cost) {
+                <div class="text-[9px] mt-0.5" style="color: var(--color-text-muted);"
+                  [attr.data-testid]="'simw2-creator-forecastable-cost-' + c.id">
+                  \${{ c.forecastableCost | number: '1.0-0' }} of it bought forecastable rows
+                </div>
+              }
             </div>
           }
         </div>

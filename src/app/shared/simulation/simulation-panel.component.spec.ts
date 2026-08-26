@@ -479,6 +479,30 @@ describe('SimulationPanelComponent (W2) — per-creator deliverable rows', () =>
     expect(text(el, 'simw2-deliverable-cost-7-0')).toContain('6,000');
   });
 
+  it('splits a creator total into cost and forecastable cost when a row has no data', async () => {
+    // A creator whose second deliverable is no-data: it's still paid for, but
+    // it produced no volume, so it's excluded from the aggregate. Cost and
+    // forecastable cost diverge, and the row has to say so – the same split the
+    // campaign totals already show.
+    const noData = ytDeliverable({
+      noData: true, reach: null, impressions: 0, uniqueReach: 0, engagedClicks: 0,
+      conversions: 0, costPerConversion: null, cost: 2_000,
+    });
+    const creator = ytCreator({ cost: 8_000, forecastableCost: 6_000, deliverables: [ytDeliverable(), noData] });
+    const { el } = await rendered(w2({ creators: [creator] }));
+
+    const totals = text(el, 'simw2-creator-totals-7');
+    expect(totals).toContain('8,000');
+    expect(text(el, 'simw2-creator-forecastable-cost-7')).toContain('6,000');
+  });
+
+  it('omits the creator forecastable-cost split when it equals the cost', async () => {
+    const { el } = await rendered();
+    expect(text(el, 'simw2-creator-totals-7')).toContain('6,000');
+    expect(el.querySelector('[data-testid="simw2-creator-forecastable-cost-7"]')).toBeNull();
+    expect(el.querySelector('[data-testid="simw2-creator-forecastable-cost-9"]')).toBeNull();
+  });
+
   it('badges a band breach above the rate range', async () => {
     const { el } = await rendered();
     const breach = el.querySelector('[data-testid="simw2-deliverable-band-breach-9-0"]');
