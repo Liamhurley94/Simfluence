@@ -3,10 +3,13 @@ import { signal } from '@angular/core';
 import { describe, expect, it, vi } from 'vitest';
 import { SectionCreatorsComponent } from './section-creators.component';
 import { CampaignCreatorsService } from '../../../core/campaigns/campaign-creators.service';
+import { CampaignDeliverablesService } from '../../../core/campaigns/campaign-deliverables.service';
 import { CreatorsService } from '../../../core/creators/creators.service';
 import { CreatorProfileService } from '../../../core/creator-profile/creator-profile.service';
 import { CreatorMatcherService, MatchResult } from '../../../core/creator-matcher/creator-matcher.service';
+import { AuthService } from '../../../core/auth/auth.service';
 import { Campaign } from '../../../core/campaigns/campaign.types';
+import { Creator } from '../../../core/data/creator.types';
 
 function makeCampaign(overrides: Partial<Campaign> = {}): Campaign {
   return {
@@ -40,6 +43,10 @@ function matchResult(overrides: Partial<MatchResult> = {}): MatchResult {
   };
 }
 
+function creator(over: Partial<Creator> = {}): Creator {
+  return { id: 42, name: 'Test', handle: 'test', platform: 'YouTube', ...over } as Creator;
+}
+
 function setup(
   campaign = makeCampaign(),
   records: any[] = [],
@@ -57,6 +64,13 @@ function setup(
   const matcherStub = { match };
   const openById = vi.fn();
   const profileStub = { openById };
+  const deliverablesStub = {
+    records: signal([]), error: signal(null),
+    byCampaignCreator: signal(new Map()),
+    loadFor: vi.fn().mockResolvedValue(undefined),
+    add: vi.fn().mockResolvedValue(undefined),
+  };
+  const authStub = { isAdmin: () => false };
 
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({
@@ -66,6 +80,8 @@ function setup(
       { provide: CreatorsService, useValue: creatorsStub },
       { provide: CreatorMatcherService, useValue: matcherStub },
       { provide: CreatorProfileService, useValue: profileStub },
+      { provide: CampaignDeliverablesService, useValue: deliverablesStub },
+      { provide: AuthService, useValue: authStub },
     ],
   });
 
@@ -74,7 +90,7 @@ function setup(
   if (inputs.readonly !== undefined) fixture.componentRef.setInput('readonly', inputs.readonly);
   if (inputs.rosterLocked !== undefined) fixture.componentRef.setInput('rosterLocked', inputs.rosterLocked);
   fixture.detectChanges();
-  return { fixture, campaignCreatorsStub, creatorsStub, match, openById };
+  return { fixture, campaignCreatorsStub, creatorsStub, match, openById, deliverablesStub };
 }
 
 async function settle(fixture: { whenStable: () => Promise<unknown>; detectChanges: () => void }) {
@@ -225,6 +241,42 @@ describe('SectionCreatorsComponent', () => {
       expect(remove.disabled).toBe(true);
       expect(fixture.nativeElement.querySelector('[data-testid="creator-matcher-panel"]')).toBeNull();
       expect(fixture.nativeElement.querySelector('[data-testid="matcher-need-settings"]')).toBeNull();
+    });
+  });
+
+  describe('seeding a default deliverable on add', () => {
+    it('seeds a default deliverable when adding a YouTube-primary creator from browse', async () => {
+      const { fixture, campaignCreatorsStub, creatorsStub, deliverablesStub } = setup();
+      campaignCreatorsStub.add.mockResolvedValue({ id: 'ccNew', campaignId: 'camp-1', creatorId: 7, source: 'manual' });
+      creatorsStub.byIds.mockResolvedValue([creator({ id: 7, platform: 'YouTube' })]);
+
+      await fixture.componentInstance.addFromBrowse(7);
+
+      expect(deliverablesStub.add).toHaveBeenCalledWith(
+        expect.objectContaining({ campaignCreatorId: 'ccNew', platform: 'YouTube', format: 'Integrated' }),
+      );
+    });
+
+    it('seeds Dedicated/2hr when adding a Twitch-primary creator', async () => {
+      const { fixture, campaignCreatorsStub, creatorsStub, deliverablesStub } = setup();
+      campaignCreatorsStub.add.mockResolvedValue({ id: 'ccNew', campaignId: 'camp-1', creatorId: 8, source: 'manual' });
+      creatorsStub.byIds.mockResolvedValue([creator({ id: 8, platform: 'Twitch' })]);
+
+      await fixture.componentInstance.addFromBrowse(8);
+
+      expect(deliverablesStub.add).toHaveBeenCalledWith(
+        expect.objectContaining({ platform: 'Twitch', format: 'Dedicated', durationHours: 2 }),
+      );
+    });
+
+    it('does not seed for a non-forecastable primary', async () => {
+      const { fixture, campaignCreatorsStub, creatorsStub, deliverablesStub } = setup();
+      campaignCreatorsStub.add.mockResolvedValue({ id: 'ccNew', campaignId: 'camp-1', creatorId: 9, source: 'manual' });
+      creatorsStub.byIds.mockResolvedValue([creator({ id: 9, platform: 'Instagram' })]);
+
+      await fixture.componentInstance.addFromBrowse(9);
+
+      expect(deliverablesStub.add).not.toHaveBeenCalled();
     });
   });
 });

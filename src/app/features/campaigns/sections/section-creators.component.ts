@@ -1,18 +1,22 @@
 import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { CampaignCreatorsService } from '../../../core/campaigns/campaign-creators.service';
+import { CampaignDeliverablesService } from '../../../core/campaigns/campaign-deliverables.service';
 import { FEATURES } from '../../../core/features';
 import { CreatorsService } from '../../../core/creators/creators.service';
 import { CreatorProfileService } from '../../../core/creator-profile/creator-profile.service';
 import { Creator } from '../../../core/data/creator.types';
 import { Campaign } from '../../../core/campaigns/campaign.types';
+import { CampaignCreator } from '../../../core/campaigns/campaign-creators.types';
+import { DeliverablePlatform } from '../../../core/campaigns/campaign-deliverables.types';
 import { MatchedCreator } from '../../../core/creator-matcher/creator-matcher.service';
 import { BrowseCreatorsModalComponent } from './browse-creators-modal.component';
 import { CreatorMatcherPanelComponent } from '../creator-matcher/creator-matcher-panel.component';
+import { DeliverableEditorComponent } from './deliverable-editor.component';
 
 @Component({
   selector: 'app-section-creators',
   standalone: true,
-  imports: [BrowseCreatorsModalComponent, CreatorMatcherPanelComponent],
+  imports: [BrowseCreatorsModalComponent, CreatorMatcherPanelComponent, DeliverableEditorComponent],
   template: `
     <section
       class="sf-panel p-5"
@@ -46,36 +50,44 @@ import { CreatorMatcherPanelComponent } from '../creator-matcher/creator-matcher
         <ul class="space-y-2 mb-4">
           @for (cc of campaignCreators.records(); track cc.id) {
             <li
-              class="p-2 rounded flex items-center justify-between gap-3 text-xs cursor-pointer"
+              class="p-2 rounded text-xs cursor-pointer"
               style="background: var(--color-bg-3);"
               (click)="openProfile(cc.creatorId)"
               [attr.data-testid]="'campaign-creator-' + cc.id"
             >
-              <div class="min-w-0">
-                @if (creatorById().get(cc.creatorId); as cr) {
-                  <div class="font-semibold truncate" style="color: var(--color-text);">{{ cr.name }}</div>
-                  <div class="text-[10px] truncate" style="color: var(--color-text-muted);">
-                    {{ '@' + (cr.handle || '—') }} · {{ cr.genre || '—' }}
-                  </div>
-                } @else {
-                  <div class="font-semibold" style="color: var(--color-text);">Creator #{{ cc.creatorId }}</div>
-                }
+              <div class="flex items-center justify-between gap-3">
+                <div class="min-w-0">
+                  @if (creatorById().get(cc.creatorId); as cr) {
+                    <div class="font-semibold truncate" style="color: var(--color-text);">{{ cr.name }}</div>
+                    <div class="text-[10px] truncate" style="color: var(--color-text-muted);">
+                      {{ '@' + (cr.handle || '—') }} · {{ cr.genre || '—' }}
+                    </div>
+                  } @else {
+                    <div class="font-semibold" style="color: var(--color-text);">Creator #{{ cc.creatorId }}</div>
+                  }
+                </div>
+                <div class="flex items-center gap-2 shrink-0">
+                  <span class="sf-chip">
+                    {{ sourceLabel(cc.source) }}
+                  </span>
+                  <button
+                    type="button"
+                    (click)="remove(cc.id); $event.stopPropagation()"
+                    [disabled]="editingLocked()"
+                    class="sf-btn text-[10px] disabled:opacity-40"
+                    style="background: transparent; border-color: var(--color-sf-red); color: var(--color-sf-red);"
+                    [attr.data-testid]="'campaign-creator-remove-' + cc.id"
+                  >
+                    Remove
+                  </button>
+                </div>
               </div>
-              <div class="flex items-center gap-2 shrink-0">
-                <span class="sf-chip">
-                  {{ sourceLabel(cc.source) }}
-                </span>
-                <button
-                  type="button"
-                  (click)="remove(cc.id); $event.stopPropagation()"
-                  [disabled]="editingLocked()"
-                  class="sf-btn text-[10px] disabled:opacity-40"
-                  style="background: transparent; border-color: var(--color-sf-red); color: var(--color-sf-red);"
-                  [attr.data-testid]="'campaign-creator-remove-' + cc.id"
-                >
-                  Remove
-                </button>
-              </div>
+              <app-deliverable-editor
+                (click)="$event.stopPropagation()"
+                [campaignCreator]="cc"
+                [creator]="creatorById().get(cc.creatorId) ?? null"
+                [disabled]="editingLocked()"
+              />
             </li>
           }
         </ul>
@@ -108,6 +120,7 @@ import { CreatorMatcherPanelComponent } from '../creator-matcher/creator-matcher
 })
 export class SectionCreatorsComponent {
   protected campaignCreators = inject(CampaignCreatorsService);
+  private deliverables = inject(CampaignDeliverablesService);
   private creatorsSvc = inject(CreatorsService);
   private profile = inject(CreatorProfileService);
 
@@ -157,9 +170,13 @@ export class SectionCreatorsComponent {
   });
 
   constructor() {
-    // Hydrate creator info for the "added creators" list.
+    // Hydrate creator info for the "added creators" list, and load each
+    // roster row's deliverables (re-runs whenever the roster changes).
     effect(async () => {
-      const ids = this.campaignCreators.records().map((r) => r.creatorId);
+      const records = this.campaignCreators.records();
+      void this.deliverables.loadFor(records.map((r) => r.id));
+
+      const ids = records.map((r) => r.creatorId);
       if (ids.length === 0) return;
       const known = this.creatorById();
       const missing = ids.filter((id) => !known.has(id));
@@ -173,12 +190,32 @@ export class SectionCreatorsComponent {
 
   /** Add a Matcher-suggested creator to the roster (source: 'auto_match'). */
   async onMatcherAdd(m: MatchedCreator): Promise<void> {
-    await this.campaignCreators.add({
+    const created = await this.campaignCreators.add({
       campaignId: this.campaign().id,
       creatorId: m.creator.id,
       source: 'auto_match',
       cpiAtAdd: m.best_cpi ?? null,
       rateEstimate: this.rateMidpoint(m),
+    });
+    if (created) await this.seedDefaultDeliverable(created);
+  }
+
+  // Extracted so both add paths (Browse, Matcher) seed the same default
+  // deliverable. Only YouTube/Twitch are forecastable; other primaries (e.g.
+  // Instagram) get no seed — the roster row's editor then shows the empty
+  // state until deliverables are added by hand once that platform ships.
+  private async seedDefaultDeliverable(created: CampaignCreator): Promise<void> {
+    let cr = this.creatorById().get(created.creatorId) ?? null;
+    if (!cr) cr = (await this.creatorsSvc.byIds([created.creatorId]))[0] ?? null;
+    const platform = cr?.platform;
+    const primary: DeliverablePlatform | null =
+      platform === 'YouTube' ? 'YouTube' : platform === 'Twitch' ? 'Twitch' : null;
+    if (!primary) return;
+    await this.deliverables.add({
+      campaignCreatorId: created.id,
+      platform: primary,
+      format: primary === 'Twitch' ? 'Dedicated' : 'Integrated',
+      durationHours: primary === 'Twitch' ? 2 : undefined,
     });
   }
 
@@ -202,11 +239,12 @@ export class SectionCreatorsComponent {
   }
 
   async addFromBrowse(creatorId: number): Promise<void> {
-    await this.campaignCreators.add({
+    const created = await this.campaignCreators.add({
       campaignId: this.campaign().id,
       creatorId,
       source: 'manual',
     });
+    if (created) await this.seedDefaultDeliverable(created);
   }
 
   async remove(id: string): Promise<void> {
