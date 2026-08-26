@@ -170,13 +170,19 @@ export class SectionCreatorsComponent {
   });
 
   constructor() {
-    // Hydrate creator info for the "added creators" list, and load each
-    // roster row's deliverables (re-runs whenever the roster changes).
-    effect(async () => {
-      const records = this.campaignCreators.records();
-      void this.deliverables.loadFor(records.map((r) => r.id));
+    // Load each roster row's deliverables whenever the roster changes. Kept
+    // as its own effect, separate from creator hydration below: that effect
+    // both reads and writes `creatorById`, so it re-runs on every hydration
+    // retry, not just on a real roster change — bundling `loadFor` into it
+    // would re-fire a deliverables reload on every one of those retries too.
+    effect(() => {
+      const ids = this.campaignCreators.records().map((r) => r.id);
+      void this.deliverables.loadFor(ids);
+    });
 
-      const ids = records.map((r) => r.creatorId);
+    // Hydrate creator info for the "added creators" list.
+    effect(async () => {
+      const ids = this.campaignCreators.records().map((r) => r.creatorId);
       if (ids.length === 0) return;
       const known = this.creatorById();
       const missing = ids.filter((id) => !known.has(id));

@@ -279,4 +279,20 @@ describe('SectionCreatorsComponent', () => {
       expect(deliverablesStub.add).not.toHaveBeenCalled();
     });
   });
+
+  describe('deliverables loadFor call frequency', () => {
+    it('loads deliverables once for the roster, and does not reload again when a creator-hydration retry resolves', async () => {
+      const roster = [{ id: 'cc-1', creatorId: 11, source: 'manual' }];
+      const { fixture, deliverablesStub, creatorsStub } = setup(makeCampaign(), roster);
+      // byIds resolves on this later tick — simulates the creator-hydrate
+      // effect writing `creatorById` well after the initial roster load.
+      creatorsStub.byIds.mockResolvedValue([creator({ id: 11 })]);
+
+      await settle(fixture);
+      await settle(fixture);
+
+      expect(deliverablesStub.loadFor).toHaveBeenCalledTimes(1);
+      expect(deliverablesStub.loadFor).toHaveBeenCalledWith(['cc-1']);
+    });
+  });
 });
