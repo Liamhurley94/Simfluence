@@ -238,6 +238,21 @@ describe('SimulatorComponent', () => {
     expect((el.querySelector('[data-testid="sim-save"]') as HTMLButtonElement).disabled).toBe(true);
   });
 
+  it('drops the held forecast when a re-run fails, so Save cannot persist a stale one', async () => {
+    const { f, el, post } = await mounted({ selectedIds: [2] });
+    (el.querySelector('[data-testid="simw2-run"]') as HTMLButtonElement).click();
+    await f.whenStable(); f.detectChanges();
+    expect((el.querySelector('[data-testid="sim-save"]') as HTMLButtonElement).disabled).toBe(false);
+
+    // HttpErrorResponse shape — what HttpClient actually rejects with.
+    post.mockRejectedValue({ name: 'HttpErrorResponse', status: 500, error: { error: 'boom' }, message: 'Http failure response: 500' });
+    (el.querySelector('[data-testid="simw2-run"]') as HTMLButtonElement).click();
+    await f.whenStable(); f.detectChanges();
+
+    expect(el.querySelector('[data-testid="simw2-results"]')).toBeNull();
+    expect((el.querySelector('[data-testid="sim-save"]') as HTMLButtonElement).disabled).toBe(true);
+  });
+
   it('free tier hitting limit disables the run button and shows banner', async () => {
     setup({ selectedIds: [2], tier: 'free' });
     const rate = TestBed.inject(RateLimitService);

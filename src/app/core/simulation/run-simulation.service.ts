@@ -17,6 +17,7 @@ export class RunSimulationService {
   readonly pending = signal(false);
   readonly latest = signal<SimResult | null>(null);
 
+  /** @deprecated — W1 request shape; backend no longer honors aov/durationWeeks; delete at W2 merge */
   async run(inputs: SimInputs): Promise<SimResult | null> {
     this.pending.set(true);
     try {

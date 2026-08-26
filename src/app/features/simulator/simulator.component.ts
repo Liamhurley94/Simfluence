@@ -68,6 +68,7 @@ import { Creator } from '../../core/data/creator.types';
         [subMode]="context.subMode() || undefined"
         [autoRun]="autoRun"
         (simulated)="onSimulated($event)"
+        (failed)="result.set(null)"
       >
         <button type="button" (click)="saveToCampaigns()" [disabled]="!result()"
           class="sf-btn text-xs uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"

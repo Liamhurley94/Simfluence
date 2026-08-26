@@ -37,6 +37,27 @@ interface WindowRow {
 }
 
 /**
+ * Pull the most useful message out of whatever the HTTP layer threw.
+ *
+ * Angular's `HttpErrorResponse` *implements* Error but does not extend it, so
+ * `e instanceof Error` is false for every real edge-function failure — an
+ * Error-only extraction renders "[object Object]" and swallows the message the
+ * backend actually sent. The edge function returns `{ error: string }`, which
+ * lands on `HttpErrorResponse.error`, so that is the first thing to try.
+ */
+export function errorMessage(e: unknown): string {
+  const err = e as { error?: unknown; message?: unknown } | null;
+  const body = err?.error as { error?: unknown } | string | null | undefined;
+  if (body && typeof body === 'object' && typeof body.error === 'string' && body.error) {
+    return body.error;
+  }
+  if (typeof body === 'string' && body && !body.includes('<')) return body;
+  if (typeof err?.message === 'string' && err.message) return err.message;
+  const s = String(e);
+  return s === '[object Object]' ? 'the request failed' : s;
+}
+
+/**
  * Simulation panel — renders a W2 `run-simulation` response and nothing else.
  * Every number on screen is computed server-side (the simulator math is IP);
  * the panel groups per-deliverable rows by creator, sums per platform, and
@@ -535,6 +556,8 @@ export class SimulationPanelComponent {
   readonly readonly = input<boolean>(false);
   readonly autoRun = input<boolean>(false);
   readonly simulated = output<W2Response>();
+  /** Emitted when a run rejects — hosts holding the last response must drop it. */
+  readonly failed = output<void>();
 
   protected readonly objectives = OBJECTIVES;
   protected readonly bandPoints = BAND_POINTS;
@@ -602,8 +625,12 @@ export class SimulationPanelComponent {
       this.result.set(r);
       this.simulated.emit(r);
     } catch (e: unknown) {
+      // A failed re-run must not leave the previous forecast standing: drop it
+      // here AND tell the host, or its Save button keeps offering a forecast
+      // that is no longer on screen.
       this.result.set(null);
-      this.error.set(e instanceof Error ? e.message : String(e));
+      this.error.set(errorMessage(e));
+      this.failed.emit();
     } finally {
       this.pending.set(false);
     }

@@ -184,6 +184,20 @@ describe('CampaignSimulatorComponent — saving', () => {
     }
   });
 
+  it('drops the held forecast when a re-run fails, disabling Save', async () => {
+    const { f, el, post } = await mounted(mkCampaign('planning'));
+    (el.querySelector('[data-testid="simw2-run"]') as HTMLButtonElement).click();
+    await f.whenStable(); f.detectChanges();
+    expect((el.querySelector('[data-testid="campaign-forecast-save"]') as HTMLButtonElement).disabled).toBe(false);
+
+    post.mockRejectedValue({ name: 'HttpErrorResponse', status: 500, error: { error: 'boom' }, message: 'Http failure response: 500' });
+    (el.querySelector('[data-testid="simw2-run"]') as HTMLButtonElement).click();
+    await f.whenStable(); f.detectChanges();
+
+    expect(el.querySelector('[data-testid="simw2-results"]')).toBeNull();
+    expect((el.querySelector('[data-testid="campaign-forecast-save"]') as HTMLButtonElement).disabled).toBe(true);
+  });
+
   it('existing forecast: Save opens the confirm dialog and only updates on confirm', async () => {
     const withForecast: Campaign = { ...mkCampaign('planning'), forecast: LEGACY_FORECAST };
     const { f, el, update } = await mounted(withForecast);

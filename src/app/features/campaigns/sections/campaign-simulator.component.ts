@@ -80,6 +80,7 @@ import { W2Response } from '../../../core/simulation/simulation-w2.types';
           [initialObjectives]="campaign().objectives"
           [genres]="genres()"
           (simulated)="result.set($event)"
+          (failed)="result.set(null)"
         >
           <button type="button" (click)="onSaveClick()" [disabled]="!result() || saving()"
             class="sf-btn text-xs uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"

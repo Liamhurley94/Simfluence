@@ -141,7 +141,7 @@ function w2(over: Partial<W2Response> = {}): W2Response {
     [initialBudget]="85000" [initialGenre]="'Gaming & Esports'"
     [genres]="['Gaming & Esports']" [initialObjectives]="initialObjectives()"
     [subMode]="subMode()" [readonly]="readonly()" [autoRun]="autoRun()"
-    (simulated)="last.set($event)" />`,
+    (simulated)="last.set($event)" (failed)="failures.update((n) => n + 1)" />`,
 })
 class Host {
   mode = signal<'free' | 'campaign'>('free');
@@ -152,13 +152,35 @@ class Host {
   subMode = signal<string | undefined>(undefined);
   initialObjectives = signal<string[]>([]);
   last = signal<W2Response | null>(null);
+  failures = signal(0);
 }
 
-function setup(response: W2Response | Error = w2(), tier = 'silver') {
+/** Wraps a rejection value so `setup` can reject with anything, not just an Error. */
+class Rejection {
+  constructor(readonly value: unknown) {}
+}
+const rejects = (value: unknown) => new Rejection(value);
+
+/**
+ * What Angular's HttpClient actually throws: an HttpErrorResponse, which
+ * *implements* Error but does not extend it (`instanceof Error` is false), and
+ * carries the edge function's JSON body on `.error`.
+ */
+const httpError = (body: unknown, message = 'Http failure response for /functions/v1/run-simulation: 400 Bad Request') => ({
+  name: 'HttpErrorResponse',
+  status: 400,
+  statusText: 'Bad Request',
+  url: 'https://example.supabase.co/functions/v1/run-simulation',
+  ok: false,
+  error: body,
+  message,
+});
+
+function setup(response: W2Response | Rejection = w2(), tier = 'silver') {
   localStorage.clear();
   const post =
-    response instanceof Error
-      ? vi.fn().mockRejectedValue(response)
+    response instanceof Rejection
+      ? vi.fn().mockRejectedValue(response.value)
       : vi.fn().mockResolvedValue(response);
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({
@@ -172,7 +194,7 @@ function setup(response: W2Response | Error = w2(), tier = 'silver') {
 }
 
 /** Create the host, run the panel, and settle — the common arrange for render tests. */
-async function rendered(response: W2Response | Error = w2(), mutate?: (h: Host) => void) {
+async function rendered(response: W2Response | Rejection = w2(), mutate?: (h: Host) => void) {
   const { post } = setup(response);
   const f = TestBed.createComponent(Host);
   if (mutate) mutate(f.componentInstance);
@@ -318,15 +340,56 @@ describe('SimulationPanelComponent (W2) — dispatch', () => {
   });
 
   it('surfaces a rejected run as an error state instead of an empty forecast', async () => {
-    const { el } = await rendered(new Error('edge fn exploded'));
+    const { el } = await rendered(rejects(new Error('edge fn exploded')));
     const err = el.querySelector('[data-testid="simw2-error"]');
     expect(err).toBeTruthy();
     expect(err!.textContent).toContain('edge fn exploded');
     expect(el.querySelector('[data-testid="simw2-results"]')).toBeNull();
   });
 
+  it('renders the edge function\'s own message from an HttpErrorResponse', async () => {
+    // HttpErrorResponse is NOT `instanceof Error`, so an Error-only extraction
+    // renders "[object Object]" and swallows what the backend actually said.
+    const { el } = await rendered(rejects(httpError({ error: 'campaign has no deliverable rows' })));
+    const err = el.querySelector('[data-testid="simw2-error"]')!;
+    expect(err.textContent).toContain('campaign has no deliverable rows');
+    expect(err.textContent).not.toContain('[object Object]');
+  });
+
+  it('falls back to the transport message when the body carries no error field', async () => {
+    const { el } = await rendered(rejects(httpError('<html>502 Bad Gateway</html>', 'Http failure response: 502 Bad Gateway')));
+    const err = el.querySelector('[data-testid="simw2-error"]')!;
+    expect(err.textContent).toContain('502 Bad Gateway');
+    expect(err.textContent).not.toContain('[object Object]');
+  });
+
+  it('never renders [object Object] for a thrown value with no message at all', async () => {
+    const { el } = await rendered(rejects({ status: 0 }));
+    const err = el.querySelector('[data-testid="simw2-error"]')!;
+    expect(err.textContent).not.toContain('[object Object]');
+  });
+
+  it('emits failed and drops the previous result when a re-run fails', async () => {
+    const { post } = setup();
+    const f = TestBed.createComponent(Host);
+    f.detectChanges();
+    const run = f.nativeElement.querySelector('[data-testid="simw2-run"]') as HTMLButtonElement;
+    run.click();
+    await f.whenStable(); f.detectChanges();
+    expect(f.componentInstance.last()).not.toBeNull();
+    expect(f.componentInstance.failures()).toBe(0);
+
+    post.mockRejectedValue(httpError({ error: 'quota exhausted' }));
+    run.click();
+    await f.whenStable(); f.detectChanges();
+
+    // The panel dropped the stale forecast; the host must be told so it can too.
+    expect(f.nativeElement.querySelector('[data-testid="simw2-results"]')).toBeNull();
+    expect(f.componentInstance.failures()).toBe(1);
+  });
+
   it('clears a previous error when a later run succeeds', async () => {
-    const { post } = setup(new Error('transient'));
+    const { post } = setup(rejects(new Error('transient')));
     const f = TestBed.createComponent(Host);
     f.detectChanges();
     const run = f.nativeElement.querySelector('[data-testid="simw2-run"]') as HTMLButtonElement;
@@ -373,6 +436,16 @@ describe('SimulationPanelComponent (W2) — per-creator deliverable rows', () =>
     expect(text(el, 'simw2-deliverable-unique-reach-7-0')).toContain('32,000');
     expect(text(el, 'simw2-deliverable-engaged-clicks-7-0')).toContain('960');
     expect(text(el, 'simw2-deliverable-conversions-7-0')).toContain('288');
+  });
+
+  it('carries the YouTube III.E.4h source header and proprietary-metric note beside CPI/GFI', async () => {
+    // Permanent obligation — see docs/compliance/README.md. This panel is the
+    // surface that renders CPI (per deliverable) and GFI (per creator).
+    const { el } = await rendered();
+    expect(el.querySelector('[data-testid="metric-source-simfluence"]')).toBeTruthy();
+    const note = el.querySelector('[data-testid="proprietary-note"]');
+    expect(note).toBeTruthy();
+    expect(note!.textContent).toContain('independently calculated by Simfluence');
   });
 
   it('labels engaged clicks as video-level engagement, not site visits', async () => {
