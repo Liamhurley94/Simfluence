@@ -19,7 +19,7 @@ const FORECASTABLE: DeliverablePlatform[] = ['YouTube', 'Twitch'];
   selector: 'app-deliverable-editor',
   standalone: true,
   template: `
-    @if (!hasForecastable()) {
+    @if (!hasForecastable() && rows().length === 0) {
       <div class="mt-2 text-[10px]" style="color: var(--color-text-muted);" data-testid="deliverables-none">
         No forecastable platform attached
       </div>
@@ -59,7 +59,7 @@ const FORECASTABLE: DeliverablePlatform[] = ['YouTube', 'Twitch'];
               <span class="text-[10px]" style="color: var(--color-text-muted);">Dedicated stream</span>
               <input
                 type="number"
-                min="0"
+                min="0.5"
                 step="0.5"
                 [value]="row.durationHours ?? 2"
                 (blur)="onHoursBlur(row, $any($event.target).value)"
@@ -165,7 +165,7 @@ export class DeliverableEditorComponent {
 
   protected async onHoursBlur(row: CampaignDeliverable, raw: string): Promise<void> {
     const trimmed = raw.trim();
-    const value = trimmed === '' ? 2 : Math.max(0, Number(trimmed));
+    const value = trimmed === '' ? 2 : Math.max(0.5, Number(trimmed));
     if (Number.isNaN(value) || value === row.durationHours) return;
     await this.deliverables.update(row.id, { durationHours: value });
   }
@@ -179,7 +179,7 @@ export class DeliverableEditorComponent {
 
   protected async onFeeBlur(row: CampaignDeliverable, raw: string): Promise<void> {
     const trimmed = raw.trim();
-    const value = trimmed === '' ? null : Number(trimmed);
+    const value = trimmed === '' ? null : Math.max(0, Number(trimmed));
     if (value !== null && Number.isNaN(value)) return;
     if (value === row.agreedFee) return;
     await this.deliverables.update(row.id, { agreedFee: value });

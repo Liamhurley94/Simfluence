@@ -35,7 +35,8 @@ describe('DeliverableEditorComponent', () => {
     const repo = {
       listForCampaignCreators: vi.fn().mockResolvedValue(rows),
       add: vi.fn(),
-      update: vi.fn(),
+      update: vi.fn().mockImplementation(async (id: string, dto: Partial<CampaignDeliverable>) =>
+        ({ ...rows.find((r) => r.id === id), ...dto }) as CampaignDeliverable),
       remove: vi.fn(),
     };
     TestBed.resetTestingModule();
@@ -106,5 +107,57 @@ describe('DeliverableEditorComponent', () => {
     fixture.detectChanges();
     const qty = fixture.nativeElement.querySelector('[data-testid="deliverable-qty-d1"]') as HTMLInputElement;
     expect(qty.disabled).toBe(true);
+  });
+
+  it('changing platform from YouTube to Twitch resets format/duration to the Dedicated defaults', async () => {
+    await mount(creator({ platform: 'YouTube', allPlatforms: ['YouTube', 'Twitch'] }), [d()]);
+    const updateSpy = vi.spyOn(svc, 'update');
+    const sel = fixture.nativeElement.querySelector('[data-testid="deliverable-platform-d1"]') as HTMLSelectElement;
+    sel.value = 'Twitch';
+    sel.dispatchEvent(new Event('change'));
+    await fixture.whenStable();
+    expect(updateSpy).toHaveBeenCalledWith('d1', { platform: 'Twitch', format: 'Dedicated', durationHours: 2 });
+  });
+
+  it('changing platform from Twitch to YouTube resets format/duration to the Integrated defaults', async () => {
+    await mount(creator({ platform: 'Twitch', allPlatforms: ['Twitch', 'YouTube'] }),
+      [d({ platform: 'Twitch', format: 'Dedicated', durationHours: 2 })]);
+    const updateSpy = vi.spyOn(svc, 'update');
+    const sel = fixture.nativeElement.querySelector('[data-testid="deliverable-platform-d1"]') as HTMLSelectElement;
+    sel.value = 'YouTube';
+    sel.dispatchEvent(new Event('change'));
+    await fixture.whenStable();
+    expect(updateSpy).toHaveBeenCalledWith('d1', { platform: 'YouTube', format: 'Integrated', durationHours: null });
+  });
+
+  it('onHoursBlur clamps 0 up to the 0.5 minimum (DB CHECK duration_hours > 0)', async () => {
+    await mount(creator({ platform: 'Twitch' }),
+      [d({ platform: 'Twitch', format: 'Dedicated', durationHours: 2 })]);
+    const updateSpy = vi.spyOn(svc, 'update');
+    const input = fixture.nativeElement.querySelector('[data-testid="deliverable-hours-d1"]') as HTMLInputElement;
+    input.value = '0';
+    input.dispatchEvent(new Event('blur'));
+    await fixture.whenStable();
+    expect(updateSpy).toHaveBeenCalledWith('d1', { durationHours: 0.5 });
+  });
+
+  it('onFeeBlur maps an empty string to null', async () => {
+    await mount(creator(), [d({ agreedFee: 500 })]);
+    const updateSpy = vi.spyOn(svc, 'update');
+    const input = fixture.nativeElement.querySelector('[data-testid="deliverable-fee-d1"]') as HTMLInputElement;
+    input.value = '';
+    input.dispatchEvent(new Event('blur'));
+    await fixture.whenStable();
+    expect(updateSpy).toHaveBeenCalledWith('d1', { agreedFee: null });
+  });
+
+  it('onFeeBlur clamps a negative fee to 0 (DB CHECK agreed_fee >= 0)', async () => {
+    await mount(creator(), [d()]);
+    const updateSpy = vi.spyOn(svc, 'update');
+    const input = fixture.nativeElement.querySelector('[data-testid="deliverable-fee-d1"]') as HTMLInputElement;
+    input.value = '-50';
+    input.dispatchEvent(new Event('blur'));
+    await fixture.whenStable();
+    expect(updateSpy).toHaveBeenCalledWith('d1', { agreedFee: 0 });
   });
 });
