@@ -199,33 +199,37 @@ describe('SimulatorComponent', () => {
     expect((el.querySelector('[data-testid="sim-save"]') as HTMLButtonElement).disabled).toBe(false);
   });
 
-  it('saves the whole version-stamped W2 response into campaigns.forecast', async () => {
-    const { f, el, campaignsRepoStub } = await mounted({ selectedIds: [2, 14] });
+  it('saves a campaign + roster but never persists the free-mode forecast', async () => {
+    const { f, el, campaignsRepoStub, campaignCreatorsRepoStub } = await mounted({ selectedIds: [2, 14] });
     // saveToCampaigns() navigates to the new campaign's detail page after
     // saving; this suite doesn't register app routes, so stub navigate.
-    vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
     const created: Campaign = {
       id: 'new-camp', createdBy: 'u', enterpriseId: null, status: 'planning',
       name: 'x', client: null, genre: 'Gaming & Esports', budget: 85_000, notes: null, objectives: [],
       forecast: null, debriefNotes: null, startedAt: null, completedAt: null, createdAt: '', updatedAt: '',
     };
     (campaignsRepoStub.create as ReturnType<typeof vi.fn>).mockResolvedValue(created);
-    (campaignsRepoStub.update as ReturnType<typeof vi.fn>).mockResolvedValue(created);
 
     (el.querySelector('[data-testid="simw2-run"]') as HTMLButtonElement).click();
     await f.whenStable(); f.detectChanges();
     (el.querySelector('[data-testid="sim-save"]') as HTMLButtonElement).click();
     await f.whenStable();
 
-    const saved = (campaignsRepoStub.update as ReturnType<typeof vi.fn>).mock.calls.at(-1)![1].forecast;
-    expect(saved.model.version).toBe('w2-2026-08');
-    expect(saved.totals.conversions).toEqual({ value: 288, upperBound: true });
-    expect(saved.creators[0].deliverables).toHaveLength(1);
-    // The cut fields never reach storage again.
-    expect(saved).not.toHaveProperty('roas');
-    expect(saved).not.toHaveProperty('aov');
-    expect(saved).not.toHaveProperty('durationWeeks');
-    expect(saved).not.toHaveProperty('p50');
+    // The campaign and its roster are created – each roster add seeds that
+    // creator's default deliverable (W1), so the new campaign is forecastable
+    // from its own panel straight away.
+    expect(campaignsRepoStub.create as ReturnType<typeof vi.fn>).toHaveBeenCalledOnce();
+    const addCalls = (campaignCreatorsRepoStub.add as ReturnType<typeof vi.fn>).mock.calls;
+    expect(addCalls.map((c) => c[0].creatorId).sort((a: number, b: number) => a - b)).toEqual([2, 14]);
+    expect(navigate).toHaveBeenCalledWith(['/app/campaigns', 'new-camp']);
+
+    // The free run itself is NOT persisted (spec §1): it priced against
+    // synthesised default deliverables at rate-band midpoints, so keeping it as
+    // the campaign's baseline would grade the campaign against numbers it was
+    // never planned on. The campaign forecast panel is the only writer of
+    // campaigns.forecast.
+    expect(campaignsRepoStub.update as ReturnType<typeof vi.fn>).not.toHaveBeenCalled();
   });
 
   it('surfaces a failed run instead of leaving an empty forecast on screen', async () => {

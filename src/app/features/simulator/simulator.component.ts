@@ -124,23 +124,29 @@ export class SimulatorComponent {
     this.profile.open(c);
   }
 
+  /**
+   * Turn a free-mode run into a real campaign: create it, add the roster (each
+   * add seeds that creator's default deliverable), and go there.
+   *
+   * It deliberately does NOT persist the forecast (spec §1). A free run prices
+   * synthesised default deliverables at rate-band midpoints; a campaign's saved
+   * baseline has to come from its own booked deliverables and negotiated fees,
+   * or the debrief later grades the campaign against numbers it was never
+   * planned on. The campaign forecast panel is the only writer of
+   * `campaigns.forecast`.
+   */
   async saveToCampaigns(): Promise<void> {
     const r = this.result();
     if (!r) return;
 
-    // The whole version-stamped response is the record (spec §8) — no slimming,
-    // no derived fields. The debrief discriminates on `model.version` on read.
-    const forecast = r;
-
-    // Standalone save — create a new campaign with the basics + forecast.
-    // Use the budget from the simulation result (the budget the sim was actually run with).
+    // Budget comes from the simulation result – the budget the sim actually ran
+    // with, not whatever the control reads now.
     const created = await this.campaignsSvc.create({
       name: `${this.context.genre()} campaign — ${new Date().toLocaleDateString()}`,
       genre: this.context.genre(),
       budget: r.budget,
     });
     if (!created) return;
-    await this.campaignsSvc.update(created.id, { forecast });
     const ids = this.creators().map((c) => c.id);
     await Promise.all(
       ids.map((cid) =>
