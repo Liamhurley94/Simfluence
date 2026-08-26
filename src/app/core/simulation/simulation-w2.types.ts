@@ -10,9 +10,10 @@ import { Objective } from './simulation.types';
  *
  * See docs/superpowers/specs/2026-08-26-simulator-rebuild-design.md.
  *
- * The legacy `SimInputs`/`SimResult` types in `simulation.types.ts` are
- * untouched — the debrief still renders legacy saved forecasts (no
- * `model.version`) through that path. The panel switch to W2 is Task 7.
+ * The legacy request/response types are deleted. All that survives in
+ * `simulation.types.ts` is `SimBand`, which types `LegacyCampaignForecast` –
+ * the debrief still renders saved forecasts carrying no `model.version`
+ * through that path, unmigrated and unrecomputed (D12).
  */
 
 export type SimW2Mode = 'free' | 'campaign';

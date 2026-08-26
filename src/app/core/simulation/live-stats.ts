@@ -40,19 +40,3 @@ export function hasLiveYoutubeStats(c: Creator): boolean {
   if (p.includes('twitch') || p.includes('kick')) return false;
   return !!c.ytStats;
 }
-
-/** Split a roster into creators with usable live stats (with their mapped stats)
- * and those excluded for having none. */
-export function partitionByLiveData(creators: Creator[]): {
-  included: Array<{ creator: Creator; live: LiveSimStats }>;
-  excluded: Creator[];
-} {
-  const included: Array<{ creator: Creator; live: LiveSimStats }> = [];
-  const excluded: Creator[] = [];
-  for (const c of creators) {
-    const live = liveStatsFor(c);
-    if (live) included.push({ creator: c, live });
-    else excluded.push(c);
-  }
-  return { included, excluded };
-}

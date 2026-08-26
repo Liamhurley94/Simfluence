@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Creator } from '../data/creator.types';
-import { hasLiveYoutubeStats, liveStatsFor, partitionByLiveData } from './live-stats';
+import { hasLiveYoutubeStats, liveStatsFor } from './live-stats';
 
 function mk(o: Partial<Creator> = {}): Creator {
   return {
@@ -31,14 +31,5 @@ describe('live-stats', () => {
   it('no live stats for the primary platform → null', () => {
     expect(liveStatsFor(mk({ platform: 'YouTube', ytStats: undefined }))).toBeNull();
     expect(liveStatsFor(mk({ platform: 'Twitch', ytStats: undefined, twitchStats: undefined }))).toBeNull();
-  });
-
-  it('partitionByLiveData splits included (with live stats) from excluded', () => {
-    const yt = mk({ id: 1, platform: 'YouTube', ytStats: { ...YT, subscriberCount: 100, avgViews: 50 } });
-    const off = mk({ id: 2, platform: 'YouTube', ytStats: undefined });
-    const { included, excluded } = partitionByLiveData([yt, off]);
-    expect(included.map((i) => i.creator.id)).toEqual([1]);
-    expect(included[0].live).toEqual({ subs: '100', avgViews: '50', eng: '3.1' });
-    expect(excluded.map((e) => e.id)).toEqual([2]);
   });
 });
