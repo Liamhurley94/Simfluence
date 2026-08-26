@@ -251,3 +251,54 @@ describe('SectionResultsComponent — W2 forecasts', () => {
     expect(updateActuals).toHaveBeenCalledWith('cc1', { actualClicks: 35 });
   });
 });
+
+describe('SectionResultsComponent — W2 delta polarity and excluded creators', () => {
+  it('colors a worse cost per conversion as a miss and a better one as a win', async () => {
+    // Forecast CPC is $20,000 ($40,000 / 2 conversions). Overspending per
+    // conversion is bad news, so a positive delta must NOT read green.
+    const worse = setup({ ...mkCampaign('completed'), forecast: w2Forecast() },
+      signal<any[]>([ccRecord({ actualConversions: 2, actualSpend: 60_000 })]));  // $30,000 CPC, +50%
+    worse.f.detectChanges(); await worse.f.whenStable(); worse.f.detectChanges();
+    const worseCell = worse.f.nativeElement
+      .querySelector('[data-testid="debrief-w2-delta-costPerConversion"]') as HTMLElement;
+    expect(worseCell.textContent).toContain('+50%');
+    expect(worseCell.style.color).toContain('color-sf-orange');
+
+    const better = setup({ ...mkCampaign('completed'), forecast: w2Forecast() },
+      signal<any[]>([ccRecord({ actualConversions: 2, actualSpend: 20_000 })]));  // $10,000 CPC, -50%
+    better.f.detectChanges(); await better.f.whenStable(); better.f.detectChanges();
+    const betterCell = better.f.nativeElement
+      .querySelector('[data-testid="debrief-w2-delta-costPerConversion"]') as HTMLElement;
+    expect(betterCell.textContent).toContain('-50%');
+    expect(betterCell.style.color).toContain('color-sf-green');
+  });
+
+  it('colors overspend as a miss, while more impressions than forecast stays a win', async () => {
+    const { f } = setup({ ...mkCampaign('completed'), forecast: w2Forecast() },
+      signal<any[]>([ccRecord({ actualImpressions: 120, actualSpend: 60_000 })]));
+    f.detectChanges(); await f.whenStable(); f.detectChanges();
+    const spend = f.nativeElement.querySelector('[data-testid="debrief-w2-delta-spend"]') as HTMLElement;
+    expect(spend.textContent).toContain('+50%');
+    expect(spend.style.color).toContain('color-sf-orange');
+    const impressions = f.nativeElement.querySelector('[data-testid="debrief-w2-delta-impressions"]') as HTMLElement;
+    expect(impressions.textContent).toContain('+20%');
+    expect(impressions.style.color).toContain('color-sf-green');
+  });
+
+  it('badges a creator the budget never covered instead of showing it as forecast', async () => {
+    const forecast = w2Forecast();
+    forecast.creators[0].reachable = false;
+    const { f } = setup({ ...mkCampaign('completed'), forecast });
+    f.detectChanges();
+    const badge = f.nativeElement.querySelector('[data-testid="creator-forecast-w2-excluded"]');
+    expect(badge).toBeTruthy();
+    expect(badge.textContent.toLowerCase()).toContain('excluded from the totals');
+  });
+
+  it('shows no excluded badge for a funded creator', async () => {
+    const { f } = setup({ ...mkCampaign('completed'), forecast: w2Forecast() });
+    f.detectChanges();
+    expect(f.nativeElement.querySelector('[data-testid="creator-forecast-w2"]')).toBeTruthy();
+    expect(f.nativeElement.querySelector('[data-testid="creator-forecast-w2-excluded"]')).toBeNull();
+  });
+});

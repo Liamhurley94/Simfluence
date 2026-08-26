@@ -24,6 +24,8 @@ interface DebriefRow {
   delta: number | null;
   banded: boolean;
   inBand: boolean;
+  /** Cost rows invert the usual reading: over forecast is a miss, not a win. */
+  lowerIsBetter?: boolean;
 }
 
 /** The per-creator forecast line a W2 payload contributes to the debrief. */
@@ -32,6 +34,8 @@ interface W2CreatorForecast {
   engagedClicks: number;
   conversions: number;
   cost: number;
+  /** False when the budget never covered this creator — it was in no total. */
+  reachable: boolean;
 }
 
 /**
@@ -63,7 +67,8 @@ interface W2CreatorForecast {
                   <td class="py-1.5 text-right" style="color: var(--color-text);">{{ fmt(r.forecast, r.unit) }}</td>
                   <td class="py-1.5 text-right font-semibold" style="color: var(--color-text);"
                       [attr.data-testid]="'debrief-w2-actual-' + r.key">{{ fmt(r.actual, r.unit) }}</td>
-                  <td class="py-1.5 text-right" [style.color]="deltaColor(r.delta)">{{ deltaLabel(r.delta) }}</td>
+                  <td class="py-1.5 text-right" [style.color]="deltaColor(r.delta, r.lowerIsBetter)"
+                      [attr.data-testid]="'debrief-w2-delta-' + r.key">{{ deltaLabel(r.delta) }}</td>
                   <td class="py-1.5 text-right" [attr.data-testid]="'debrief-w2-band-' + r.key">
                     @if (r.banded && r.actual !== null) {
                       <span [style.color]="r.inBand ? 'var(--color-sf-green)' : 'var(--color-sf-orange)'">
@@ -137,6 +142,11 @@ interface W2CreatorForecast {
                     <div class="text-[9px]" style="color: var(--color-text-muted);" data-testid="creator-forecast-w2">
                       fc {{ fc.impressions | number: '1.0-0' }} impr · {{ fc.engagedClicks | number: '1.0-0' }} eng. clicks · {{ fc.conversions | number: '1.0-0' }} conv · {{ '$' + (fc.cost | number: '1.0-0') }}
                     </div>
+                    @if (!fc.reachable) {
+                      <div class="text-[9px]" style="color: var(--color-sf-red);" data-testid="creator-forecast-w2-excluded">
+                        Budget didn't cover this creator — excluded from the totals
+                      </div>
+                    }
                   } @else if (forecastFor(row.cc.creatorId); as fc) {
                     <div class="text-[9px]" style="color: var(--color-text-muted);" data-testid="creator-forecast">
                       fc {{ fc.impressions | number: '1.0-0' }} · {{ fc.clicks | number: '1.0-0' }} · {{ fc.conversions | number: '1.0-0' }} · {{ '$' + (fc.spend | number: '1.0-0') }} · {{ '$' + (fc.revenue | number: '1.0-0') }}
@@ -258,8 +268,8 @@ export class SectionResultsComponent {
       { key: 'impressions', label: 'Impressions', unit: 'int', forecast: t.impressions, actual: h.impressions, delta: deltaPct(h.impressions, t.impressions), banded: true, inBand: inBand(h.impressions, t.band.impressions.conservative, t.band.impressions.optimistic) },
       { key: 'engagedClicks', label: 'Engagement clicks (video-level)', unit: 'int', forecast: t.engagedClicks, actual: h.clicks, delta: deltaPct(h.clicks, t.engagedClicks), banded: true, inBand: inBand(h.clicks, t.band.engagedClicks.conservative, t.band.engagedClicks.optimistic) },
       { key: 'conversions', label: 'Conversions (upper bound)', unit: 'int', forecast: t.conversions.value, actual: h.conversions, delta: deltaPct(h.conversions, t.conversions.value), banded: true, inBand: inBand(h.conversions, t.band.conversions.conservative, t.band.conversions.optimistic) },
-      { key: 'spend', label: 'Spend', unit: 'usd', forecast: t.cost, actual: h.spend, delta: deltaPct(h.spend, t.cost), banded: false, inBand: false },
-      { key: 'costPerConversion', label: 'Cost per conversion', unit: 'usd', forecast: t.costPerConversion, actual: actualCpc, delta: t.costPerConversion == null ? null : deltaPct(actualCpc, t.costPerConversion), banded: false, inBand: false },
+      { key: 'spend', label: 'Spend', unit: 'usd', forecast: t.cost, actual: h.spend, delta: deltaPct(h.spend, t.cost), banded: false, inBand: false, lowerIsBetter: true },
+      { key: 'costPerConversion', label: 'Cost per conversion', unit: 'usd', forecast: t.costPerConversion, actual: actualCpc, delta: t.costPerConversion == null ? null : deltaPct(actualCpc, t.costPerConversion), banded: false, inBand: false, lowerIsBetter: true },
     ];
   });
 
@@ -297,6 +307,7 @@ export class SectionResultsComponent {
         engagedClicks: c.engagedClicks,
         conversions: c.conversions,
         cost: c.cost,
+        reachable: c.reachable,
       });
     }
     return m;
@@ -367,10 +378,14 @@ export class SectionResultsComponent {
     return `${d > 0 ? '+' : ''}${d}%`;
   }
 
-  protected deltaColor(d: number | null): string {
-    if (d == null) return 'var(--color-text-muted)';
-    if (d > 0) return 'var(--color-sf-green)';
-    if (d < 0) return 'var(--color-sf-orange)';
-    return 'var(--color-text-muted)';
+  /**
+   * Green = the campaign did better than forecast. For volume rows that means
+   * over; for cost rows (`lowerIsBetter`) it means under — beating a $20,000
+   * cost per conversion by half is a win, not a 50% shortfall.
+   */
+  protected deltaColor(d: number | null, lowerIsBetter = false): string {
+    if (d == null || d === 0) return 'var(--color-text-muted)';
+    const better = lowerIsBetter ? d < 0 : d > 0;
+    return better ? 'var(--color-sf-green)' : 'var(--color-sf-orange)';
   }
 }
