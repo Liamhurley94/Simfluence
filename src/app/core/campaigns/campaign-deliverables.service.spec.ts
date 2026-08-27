@@ -8,6 +8,8 @@ function deliverable(over: Partial<CampaignDeliverable> = {}): CampaignDeliverab
   return {
     id: 'd1', campaignCreatorId: 'cc1', platform: 'YouTube', format: 'Integrated',
     quantity: 1, durationHours: null, agreedFee: null,
+    actualImpressions: null, actualClicks: null, actualConversions: null,
+    actualSpend: null, actualRevenue: null, deliveredAt: null,
     createdAt: '2026-08-26T00:00:00Z', updatedAt: '2026-08-26T00:00:00Z',
     ...over,
   };
@@ -22,6 +24,7 @@ describe('CampaignDeliverablesService', () => {
       listForCampaignCreators: vi.fn().mockResolvedValue([]),
       add: vi.fn(),
       update: vi.fn(),
+      updateActuals: vi.fn(),
       remove: vi.fn().mockResolvedValue(undefined),
     };
   }
@@ -67,6 +70,16 @@ describe('CampaignDeliverablesService', () => {
     repo.update.mockResolvedValue(deliverable({ id: 'd1', quantity: 3 }));
     await svc.update('d1', { quantity: 3 });
     expect(svc.records()[0].quantity).toBe(3);
+  });
+
+  it('updateActuals patches the row and replaces it in records', async () => {
+    repo.listForCampaignCreators.mockResolvedValue([deliverable({ id: 'd1' })]);
+    await svc.loadFor(['cc1']);
+    repo.updateActuals.mockResolvedValue({ ...deliverable({ id: 'd1' }), actualImpressions: 12000, deliveredAt: '2026-08-01' });
+    const res = await svc.updateActuals('d1', { actualImpressions: 12000, deliveredAt: '2026-08-01' });
+    expect(repo.updateActuals).toHaveBeenCalledWith('d1', { actualImpressions: 12000, deliveredAt: '2026-08-01' });
+    expect(res?.actualImpressions).toBe(12000);
+    expect((svc.records()[0] as CampaignDeliverable & { deliveredAt: string | null }).deliveredAt).toBe('2026-08-01');
   });
 
   it('remove is optimistic and rolls back on error', async () => {

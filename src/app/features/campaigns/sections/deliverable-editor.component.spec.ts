@@ -23,7 +23,10 @@ function creator(over: Partial<Creator> = {}): Creator {
 function d(over: Partial<CampaignDeliverable> = {}): CampaignDeliverable {
   return {
     id: 'd1', campaignCreatorId: 'cc1', platform: 'YouTube', format: 'Integrated',
-    quantity: 1, durationHours: null, agreedFee: null, createdAt: '', updatedAt: '', ...over,
+    quantity: 1, durationHours: null, agreedFee: null,
+    actualImpressions: null, actualClicks: null, actualConversions: null,
+    actualSpend: null, actualRevenue: null, deliveredAt: null,
+    createdAt: '', updatedAt: '', ...over,
   };
 }
 

@@ -2,6 +2,7 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { CampaignDeliverablesRepository } from './campaign-deliverables.repository';
 import {
   CampaignDeliverable, NewCampaignDeliverable, UpdateCampaignDeliverable,
+  UpdateDeliverableActuals,
 } from './campaign-deliverables.types';
 
 @Injectable({ providedIn: 'root' })
@@ -48,6 +49,17 @@ export class CampaignDeliverablesService {
   async update(id: string, dto: UpdateCampaignDeliverable): Promise<CampaignDeliverable | null> {
     try {
       const updated = await this.repo.update(id, dto);
+      this.records.update((list) => list.map((d) => (d.id === id ? updated : d)));
+      return updated;
+    } catch (err) {
+      this.error.set(this.message(err));
+      return null;
+    }
+  }
+
+  async updateActuals(id: string, dto: UpdateDeliverableActuals): Promise<CampaignDeliverable | null> {
+    try {
+      const updated = await this.repo.updateActuals(id, dto);
       this.records.update((list) => list.map((d) => (d.id === id ? updated : d)));
       return updated;
     } catch (err) {
