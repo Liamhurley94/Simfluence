@@ -10,10 +10,19 @@ import {
   isW2Forecast,
 } from '../../../core/campaigns/campaign.types';
 import { CampaignCreator, UpdateCampaignCreator } from '../../../core/campaigns/campaign-creators.types';
+import { CampaignDeliverablesService } from '../../../core/campaigns/campaign-deliverables.service';
+import { CampaignDeliverable } from '../../../core/campaigns/campaign-deliverables.types';
 import { Creator } from '../../../core/data/creator.types';
-import { CreatorActuals, ctr, cvr, roas, rollup, deltaPct, inBand } from '../../../core/campaigns/actuals-math';
+import {
+  CreatorActuals, CreatorActualsBundle, ctr, cvr, roas, rollup, deltaPct, inBand,
+  effectiveCreatorActuals, platformRollup,
+} from '../../../core/campaigns/actuals-math';
 
 type ActualField = 'actualImpressions' | 'actualClicks' | 'actualConversions' | 'actualSpend' | 'actualRevenue';
+/** Creator-level entry is conversions/spend/revenue only — impressions and
+ * clicks moved to deliverable grain (spec: two grains by design). */
+type CreatorEntryField = 'actualConversions' | 'actualSpend' | 'actualRevenue';
+type DeliverableEntryField = 'actualImpressions' | 'actualClicks';
 
 interface DebriefRow {
   key: string;
@@ -118,6 +127,46 @@ interface W2CreatorForecast {
         </p>
       }
 
+      @if (platform().platforms.length > 0) {
+        <div class="mb-4">
+          <div class="text-[10px] uppercase tracking-wider mb-2" style="color: var(--color-text-muted);">Actuals by platform</div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs" data-testid="results-platform-table">
+              <thead>
+                <tr style="color: var(--color-text-muted);">
+                  <th class="text-left font-normal px-1 py-1">Platform</th>
+                  <th class="text-right font-normal px-1 py-1">Impr</th>
+                  <th class="text-right font-normal px-1 py-1">Clicks</th>
+                  <th class="text-right font-normal px-1 py-1">CTR</th>
+                  <th class="text-right font-normal px-1 py-1">Conv</th>
+                  <th class="text-right font-normal px-1 py-1">Spend</th>
+                  <th class="text-right font-normal px-1 py-1">Cost / conv</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (p of platform().platforms; track p.platform) {
+                  <tr style="border-top: 1px solid var(--color-border); color: var(--color-text);">
+                    <td class="px-1 py-1.5">{{ p.platform }}</td>
+                    <td class="px-1 py-1.5 text-right">{{ p.impressions == null ? '—' : (p.impressions | number: '1.0-0') }}</td>
+                    <td class="px-1 py-1.5 text-right">{{ p.clicks == null ? '—' : (p.clicks | number: '1.0-0') }}</td>
+                    <td class="px-1 py-1.5 text-right">{{ p.ctr == null ? '—' : p.ctr + '%' }}</td>
+                    <td class="px-1 py-1.5 text-right">{{ p.conversions == null ? '—' : (p.conversions | number: '1.0-0') }}</td>
+                    <td class="px-1 py-1.5 text-right">{{ p.spend == null ? '—' : '$' + (p.spend | number: '1.0-0') }}</td>
+                    <td class="px-1 py-1.5 text-right" style="color: var(--color-sf-gold);">{{ p.costPerConversion == null ? '—' : '$' + (p.costPerConversion | number: '1.2-2') }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          @if (platform().hasUnattributed) {
+            <p class="text-[11px] mt-1" style="color: var(--color-text-muted);" data-testid="results-unattributed-note">
+              Some conversions / spend / revenue are tracked per creator and can't be attributed to a
+              single platform — they count in the campaign totals but not in this table.
+            </p>
+          }
+        </div>
+      }
+
       <div class="text-[10px] uppercase tracking-wider mb-2" style="color: var(--color-text-muted);">
         Per-creator actuals @if (!editable()) { <span>(read-only)</span> }
       </div>
@@ -125,9 +174,10 @@ interface W2CreatorForecast {
         <table class="w-full text-xs">
           <thead>
             <tr style="color: var(--color-text-muted);">
-              <th class="text-left font-normal px-1 py-1">Creator</th>
+              <th class="text-left font-normal px-1 py-1">Creator / deliverable</th>
               <th class="text-right font-normal px-1 py-1">Impr</th>
               <th class="text-right font-normal px-1 py-1">Clicks</th>
+              <th class="text-right font-normal px-1 py-1">Delivered</th>
               <th class="text-right font-normal px-1 py-1">Conv</th>
               <th class="text-right font-normal px-1 py-1">Spend</th>
               <th class="text-right font-normal px-1 py-1">Revenue</th>
@@ -153,6 +203,16 @@ interface W2CreatorForecast {
                     </div>
                   }
                 </td>
+                <!-- Effective (read-only) impressions/clicks — entered on the
+                     deliverable rows below; legacy creator-level values still
+                     read through the per-measure fallback. -->
+                <td class="px-1 py-2 text-right" style="color: var(--color-text-muted);">
+                  {{ effFor(row.cc).impressions == null ? '—' : (effFor(row.cc).impressions | number: '1.0-0') }}
+                </td>
+                <td class="px-1 py-2 text-right" style="color: var(--color-text-muted);">
+                  {{ effFor(row.cc).clicks == null ? '—' : (effFor(row.cc).clicks | number: '1.0-0') }}
+                </td>
+                <td class="px-1 py-2"></td>
                 @for (field of FIELDS; track field) {
                   <td class="px-1 py-2">
                     <input type="number" min="0" inputmode="numeric"
@@ -164,8 +224,40 @@ interface W2CreatorForecast {
                   </td>
                 }
               </tr>
+              @for (d of delivFor(row.cc.id); track d.id) {
+                <tr>
+                  <td class="px-1 py-1 pl-4 text-[11px]" style="color: var(--color-text-muted);">
+                    {{ d.platform }} · {{ d.format }} ×{{ d.quantity }}@if (d.durationHours != null) {<span> · {{ d.durationHours }}hr</span>}
+                  </td>
+                  <td class="px-1 py-1">
+                    <input type="number" min="0" inputmode="numeric"
+                      [value]="d.actualImpressions ?? ''"
+                      (blur)="setDeliverableActual(d, 'actualImpressions', $event)"
+                      [readOnly]="!editable()"
+                      class="sf-input px-1 py-0.5 text-xs w-20 text-right"
+                      [attr.data-testid]="'actual-d-impressions-' + d.id" />
+                  </td>
+                  <td class="px-1 py-1">
+                    <input type="number" min="0" inputmode="numeric"
+                      [value]="d.actualClicks ?? ''"
+                      (blur)="setDeliverableActual(d, 'actualClicks', $event)"
+                      [readOnly]="!editable()"
+                      class="sf-input px-1 py-0.5 text-xs w-20 text-right"
+                      [attr.data-testid]="'actual-d-clicks-' + d.id" />
+                  </td>
+                  <td class="px-1 py-1">
+                    <input type="date"
+                      [value]="d.deliveredAt ?? ''"
+                      (blur)="setDelivered(d, $event)"
+                      [readOnly]="!editable()"
+                      class="sf-input px-1 py-0.5 text-xs w-28 text-right"
+                      [attr.data-testid]="'actual-d-delivered-' + d.id" />
+                  </td>
+                  <td class="px-1 py-1" colspan="3"></td>
+                </tr>
+              }
               <tr>
-                <td colspan="6" class="px-1 pb-2">
+                <td colspan="7" class="px-1 pb-2">
                   <input type="text"
                     [value]="row.cc.debriefNotes ?? ''"
                     (blur)="setCreatorNote(row.cc, $event)"
@@ -199,9 +291,13 @@ export class SectionResultsComponent {
   private campaignCreators = inject(CampaignCreatorsService);
   private campaignsSvc = inject(CampaignsService);
   private creatorsSvc = inject(CreatorsService);
+  // Deliverables are loaded by section-creators' loadFor effect, which is
+  // always mounted when Results is (Results needs a roster, a roster needs a
+  // budget, a budget shows the creators section) — read, don't re-load.
+  protected deliverables = inject(CampaignDeliverablesService);
 
-  protected readonly FIELDS: ActualField[] = [
-    'actualImpressions', 'actualClicks', 'actualConversions', 'actualSpend', 'actualRevenue',
+  protected readonly FIELDS: CreatorEntryField[] = [
+    'actualConversions', 'actualSpend', 'actualRevenue',
   ];
 
   protected readonly creatorById = signal<Map<number, Creator>>(new Map());
@@ -213,15 +309,39 @@ export class SectionResultsComponent {
 
   private readonly records = computed(() => this.campaignCreators.records() as CampaignCreator[]);
 
+  // One bundle per roster row: its creator-level actuals + its deliverable
+  // rows' actuals. Everything downstream (headline, platform table, the
+  // effective read-only cells) derives from this via the per-measure rule.
+  private readonly bundles = computed<Map<string, CreatorActualsBundle>>(() => {
+    const byCc = this.deliverables.byCampaignCreator();
+    const m = new Map<string, CreatorActualsBundle>();
+    for (const cc of this.records()) {
+      m.set(cc.id, {
+        creatorLevel: {
+          impressions: cc.actualImpressions,
+          clicks: cc.actualClicks,
+          conversions: cc.actualConversions,
+          spend: cc.actualSpend,
+          revenue: cc.actualRevenue,
+        },
+        deliverables: (byCc.get(cc.id) ?? []).map((d) => ({
+          platform: d.platform,
+          impressions: d.actualImpressions,
+          clicks: d.actualClicks,
+          conversions: d.actualConversions,
+          spend: d.actualSpend,
+          revenue: d.actualRevenue,
+        })),
+      });
+    }
+    return m;
+  });
+
   private readonly actuals = computed<CreatorActuals[]>(() =>
-    this.records().map((cc) => ({
-      impressions: cc.actualImpressions,
-      clicks: cc.actualClicks,
-      conversions: cc.actualConversions,
-      spend: cc.actualSpend,
-      revenue: cc.actualRevenue,
-    })),
+    [...this.bundles().values()].map(effectiveCreatorActuals),
   );
+
+  protected readonly platform = computed(() => platformRollup([...this.bundles().values()]));
 
   protected readonly headline = computed(() => {
     const a = this.actuals();
@@ -339,7 +459,35 @@ export class SectionResultsComponent {
     return cc[field];
   }
 
-  async setActual(cc: CampaignCreator, field: ActualField, ev: Event): Promise<void> {
+  protected effFor(cc: CampaignCreator): CreatorActuals {
+    const b = this.bundles().get(cc.id);
+    return b ? effectiveCreatorActuals(b) : {
+      impressions: cc.actualImpressions, clicks: cc.actualClicks,
+      conversions: cc.actualConversions, spend: cc.actualSpend, revenue: cc.actualRevenue,
+    };
+  }
+
+  protected delivFor(ccId: string): CampaignDeliverable[] {
+    return this.deliverables.byCampaignCreator().get(ccId) ?? [];
+  }
+
+  async setDeliverableActual(d: CampaignDeliverable, field: DeliverableEntryField, ev: Event): Promise<void> {
+    if (!this.editable()) return;
+    const raw = (ev.target as HTMLInputElement).value.trim();
+    const value = raw === '' ? null : Number(raw);
+    if (value != null && (Number.isNaN(value) || value < 0)) return;
+    if (value === d[field]) return;
+    await this.deliverables.updateActuals(d.id, { [field]: value });
+  }
+
+  async setDelivered(d: CampaignDeliverable, ev: Event): Promise<void> {
+    if (!this.editable()) return;
+    const value = (ev.target as HTMLInputElement).value || null;
+    if (value === d.deliveredAt) return;
+    await this.deliverables.updateActuals(d.id, { deliveredAt: value });
+  }
+
+  async setActual(cc: CampaignCreator, field: CreatorEntryField, ev: Event): Promise<void> {
     if (!this.editable()) return;
     const raw = (ev.target as HTMLInputElement).value.trim();
     const value = raw === '' ? null : Number(raw);

@@ -1,12 +1,24 @@
 import { TestBed } from '@angular/core/testing';
-import { signal } from '@angular/core';
+import { computed, signal } from '@angular/core';
 import { describe, expect, it, vi } from 'vitest';
 import { SectionResultsComponent } from './section-results.component';
 import { CampaignCreatorsService } from '../../../core/campaigns/campaign-creators.service';
+import { CampaignDeliverablesService } from '../../../core/campaigns/campaign-deliverables.service';
 import { CampaignsService } from '../../../core/campaigns/campaigns.service';
 import { CreatorsService } from '../../../core/creators/creators.service';
 import { Campaign } from '../../../core/campaigns/campaign.types';
+import { CampaignDeliverable } from '../../../core/campaigns/campaign-deliverables.types';
 import { W2Response } from '../../../core/simulation/simulation-w2.types';
+
+function dlv(over: Partial<CampaignDeliverable> = {}): CampaignDeliverable {
+  return {
+    id: 'd1', campaignCreatorId: 'cc1', platform: 'YouTube', format: 'Integrated',
+    quantity: 1, durationHours: null, agreedFee: null,
+    actualImpressions: null, actualClicks: null, actualConversions: null,
+    actualSpend: null, actualRevenue: null, deliveredAt: null,
+    createdAt: '', updatedAt: '', ...over,
+  };
+}
 
 const band = (n: number) => ({
   conservative: Math.round(n * 0.68),
@@ -73,22 +85,34 @@ function ccRecord(overrides: Record<string, unknown> = {}) {
   };
 }
 
-function setup(campaign: Campaign, records = signal<any[]>([ccRecord()])) {
+function setup(
+  campaign: Campaign,
+  records = signal<any[]>([ccRecord()]),
+  deliverables: CampaignDeliverable[] = [],
+) {
   const updateActuals = vi.fn().mockResolvedValue(null);
   const updateDebriefNotes = vi.fn().mockResolvedValue(null);
   const update = vi.fn().mockResolvedValue(campaign);
+  const dRecords = signal<CampaignDeliverable[]>(deliverables);
+  const byCampaignCreator = computed(() => {
+    const m = new Map<string, CampaignDeliverable[]>();
+    for (const d of dRecords()) m.set(d.campaignCreatorId, [...(m.get(d.campaignCreatorId) ?? []), d]);
+    return m;
+  });
+  const updateDeliverableActuals = vi.fn().mockResolvedValue(null);
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({
     imports: [SectionResultsComponent],
     providers: [
       { provide: CampaignCreatorsService, useValue: { records, updateActuals, updateDebriefNotes } },
+      { provide: CampaignDeliverablesService, useValue: { records: dRecords, byCampaignCreator, updateActuals: updateDeliverableActuals } },
       { provide: CampaignsService, useValue: { update } },
       { provide: CreatorsService, useValue: { byIds: vi.fn(async (ids: number[]) => ids.map((id) => ({ id, name: `C${id}` }))) } },
     ],
   });
   const f = TestBed.createComponent(SectionResultsComponent);
   f.componentRef.setInput('campaign', campaign);
-  return { f, updateActuals, updateDebriefNotes, update };
+  return { f, updateActuals, updateDebriefNotes, update, updateDeliverableActuals };
 }
 
 describe('SectionResultsComponent', () => {
@@ -112,22 +136,22 @@ describe('SectionResultsComponent', () => {
     const { f } = setup(mkCampaign('completed', false));
     f.detectChanges(); await f.whenStable(); f.detectChanges();
     expect(f.nativeElement.querySelector('[data-testid="results-no-forecast"]')).toBeTruthy();
-    expect(f.nativeElement.querySelector('[data-testid="actual-actualImpressions-cc1"]')).toBeTruthy();
+    expect(f.nativeElement.querySelector('[data-testid="actual-actualConversions-cc1"]')).toBeTruthy();
   });
 
   it('active: entering an actual calls updateActuals; archived is read-only', async () => {
     const { f, updateActuals } = setup(mkCampaign('active'));
     f.detectChanges(); await f.whenStable(); f.detectChanges();
-    const input: HTMLInputElement = f.nativeElement.querySelector('[data-testid="actual-actualClicks-cc1"]');
+    const input: HTMLInputElement = f.nativeElement.querySelector('[data-testid="actual-actualConversions-cc1"]');
     expect(input.readOnly).toBe(false);
     input.value = '35';
     input.dispatchEvent(new Event('blur'));
     await f.whenStable();
-    expect(updateActuals).toHaveBeenCalledWith('cc1', { actualClicks: 35 });
+    expect(updateActuals).toHaveBeenCalledWith('cc1', { actualConversions: 35 });
 
     const archived = setup(mkCampaign('archived'));
     archived.f.detectChanges(); await archived.f.whenStable(); archived.f.detectChanges();
-    expect((archived.f.nativeElement.querySelector('[data-testid="actual-actualClicks-cc1"]') as HTMLInputElement).readOnly).toBe(true);
+    expect((archived.f.nativeElement.querySelector('[data-testid="actual-actualConversions-cc1"]') as HTMLInputElement).readOnly).toBe(true);
   });
 
   it('editing the campaign debrief note calls CampaignsService.update', async () => {
@@ -244,11 +268,11 @@ describe('SectionResultsComponent — W2 forecasts', () => {
   it('still records actuals normally under a W2 forecast', async () => {
     const { f, updateActuals } = setup({ ...mkCampaign('active'), forecast: w2Forecast() });
     f.detectChanges(); await f.whenStable(); f.detectChanges();
-    const input: HTMLInputElement = f.nativeElement.querySelector('[data-testid="actual-actualClicks-cc1"]');
+    const input: HTMLInputElement = f.nativeElement.querySelector('[data-testid="actual-actualConversions-cc1"]');
     input.value = '35';
     input.dispatchEvent(new Event('blur'));
     await f.whenStable();
-    expect(updateActuals).toHaveBeenCalledWith('cc1', { actualClicks: 35 });
+    expect(updateActuals).toHaveBeenCalledWith('cc1', { actualConversions: 35 });
   });
 });
 
@@ -300,5 +324,77 @@ describe('SectionResultsComponent — W2 delta polarity and excluded creators', 
     f.detectChanges();
     expect(f.nativeElement.querySelector('[data-testid="creator-forecast-w2"]')).toBeTruthy();
     expect(f.nativeElement.querySelector('[data-testid="creator-forecast-w2-excluded"]')).toBeNull();
+  });
+});
+
+describe('SectionResultsComponent — per-deliverable actuals', () => {
+  it('renders deliverable rows with impr/clicks/date inputs and a creator row with only conv/spend/revenue inputs', async () => {
+    const { f } = setup(mkCampaign('completed'), signal<any[]>([ccRecord()]), [dlv({ id: 'd1' })]);
+    f.detectChanges(); await f.whenStable(); f.detectChanges();
+    const el = f.nativeElement as HTMLElement;
+    expect(el.querySelector('[data-testid="actual-d-impressions-d1"]')).toBeTruthy();
+    expect(el.querySelector('[data-testid="actual-d-clicks-d1"]')).toBeTruthy();
+    expect(el.querySelector('[data-testid="actual-d-delivered-d1"]')).toBeTruthy();
+    expect(el.querySelector('[data-testid="actual-actualConversions-cc1"]')).toBeTruthy();
+    expect(el.querySelector('[data-testid="actual-actualSpend-cc1"]')).toBeTruthy();
+    expect(el.querySelector('[data-testid="actual-actualRevenue-cc1"]')).toBeTruthy();
+    // impressions/clicks are no longer creator-level inputs
+    expect(el.querySelector('[data-testid="actual-actualImpressions-cc1"]')).toBeNull();
+    expect(el.querySelector('[data-testid="actual-actualClicks-cc1"]')).toBeNull();
+  });
+
+  it('deliverable input blur calls deliverables.updateActuals with the parsed value', async () => {
+    const { f, updateDeliverableActuals } = setup(mkCampaign('completed'), signal<any[]>([ccRecord()]), [dlv({ id: 'd1' })]);
+    f.detectChanges(); await f.whenStable(); f.detectChanges();
+    const input = f.nativeElement.querySelector('[data-testid="actual-d-impressions-d1"]') as HTMLInputElement;
+    input.value = '12000';
+    input.dispatchEvent(new Event('blur'));
+    await f.whenStable();
+    expect(updateDeliverableActuals).toHaveBeenCalledWith('d1', { actualImpressions: 12000 });
+  });
+
+  it('headline uses deliverable-grain impressions over legacy creator-level (per-measure rule)', async () => {
+    const { f } = setup(
+      mkCampaign('completed'),
+      signal<any[]>([ccRecord({ actualImpressions: 999 })]),
+      [dlv({ id: 'd1', actualImpressions: 90 })],
+    );
+    f.detectChanges(); await f.whenStable(); f.detectChanges();
+    const row = f.nativeElement.querySelector('[data-testid="debrief-row-impressions"]');
+    expect(row.textContent).toContain('-10%'); // 90 vs forecast 100, not 999
+  });
+
+  it('platform table renders per-platform cost per conversion for a single-platform creator', async () => {
+    const { f } = setup(
+      mkCampaign('completed'),
+      signal<any[]>([ccRecord({ actualConversions: 30, actualSpend: 8000 })]),
+      [dlv({ id: 'd1', platform: 'Twitch', format: 'Dedicated', actualImpressions: 20000, actualClicks: 400 })],
+    );
+    f.detectChanges(); await f.whenStable(); f.detectChanges();
+    const table = f.nativeElement.querySelector('[data-testid="results-platform-table"]') as HTMLElement;
+    expect(table).toBeTruthy();
+    expect(table.textContent).toContain('Twitch');
+    expect(table.textContent).toContain('266.67'); // 8000 / 30
+    expect(f.nativeElement.querySelector('[data-testid="results-unattributed-note"]')).toBeNull();
+  });
+
+  it('multi-platform creator with creator-level conversions shows the unattributed note', async () => {
+    const { f } = setup(
+      mkCampaign('completed'),
+      signal<any[]>([ccRecord({ actualConversions: 50 })]),
+      [
+        dlv({ id: 'd1', platform: 'YouTube', actualImpressions: 1000 }),
+        dlv({ id: 'd2', platform: 'Twitch', format: 'Dedicated', actualImpressions: 600 }),
+      ],
+    );
+    f.detectChanges(); await f.whenStable(); f.detectChanges();
+    expect(f.nativeElement.querySelector('[data-testid="results-unattributed-note"]')).toBeTruthy();
+  });
+
+  it('legacy campaign (creator-level only, no deliverable actuals) renders the old numbers via fallback', async () => {
+    const { f } = setup(mkCampaign('completed'), signal<any[]>([ccRecord({ actualImpressions: 90 })]), [dlv({ id: 'd1' })]);
+    f.detectChanges(); await f.whenStable(); f.detectChanges();
+    const row = f.nativeElement.querySelector('[data-testid="debrief-row-impressions"]');
+    expect(row.textContent).toContain('-10%'); // legacy 90 still read through fallback
   });
 });
