@@ -77,3 +77,101 @@ export function deltaPct(actual: number | null, forecastMidpoint: number): numbe
 export function inBand(actual: number | null, bandLow: number, bandHigh: number): boolean {
   return actual != null && actual >= bandLow && actual <= bandHigh;
 }
+
+export interface DeliverableActualsRow {
+  platform: 'YouTube' | 'Twitch';
+  impressions: number | null;
+  clicks: number | null;
+  conversions: number | null;
+  spend: number | null;
+  revenue: number | null;
+}
+
+export interface CreatorActualsBundle {
+  creatorLevel: CreatorActuals;
+  deliverables: DeliverableActualsRow[];
+}
+
+const MEASURES = ['impressions', 'clicks', 'conversions', 'spend', 'revenue'] as const;
+type Measure = (typeof MEASURES)[number];
+
+const sumIfAny = (rows: DeliverableActualsRow[], m: Measure): number | null =>
+  rows.some((r) => r[m] != null)
+    ? rows.reduce((a, r) => a + (r[m] ?? 0), 0)
+    : null;
+
+/**
+ * Per-measure read rule: deliverable-grain sum when any row carries the
+ * measure, else the creator-level value. Deterministic — deliverable grain
+ * wins per measure, so double-filled data never double-counts.
+ */
+export function effectiveCreatorActuals(b: CreatorActualsBundle): CreatorActuals {
+  const out = { ...b.creatorLevel };
+  for (const m of MEASURES) {
+    const dg = sumIfAny(b.deliverables, m);
+    if (dg != null) out[m] = dg;
+  }
+  return out;
+}
+
+/** The single platform all rows share, else null (mixed or no rows). */
+export function attributablePlatform(rows: DeliverableActualsRow[]): 'YouTube' | 'Twitch' | null {
+  const set = new Set(rows.map((r) => r.platform));
+  return set.size === 1 ? rows[0].platform : null;
+}
+
+export interface PlatformActuals {
+  platform: 'YouTube' | 'Twitch';
+  impressions: number | null;
+  clicks: number | null;
+  conversions: number | null;
+  spend: number | null;
+  revenue: number | null;
+  ctr: number | null;
+  costPerConversion: number | null;
+}
+
+export interface PlatformRollup {
+  platforms: PlatformActuals[];
+  /** true when creator-level values existed that no platform could honestly claim. */
+  hasUnattributed: boolean;
+}
+
+/**
+ * The D27 payoff: actuals by platform. A single-platform creator's effective
+ * measures (incl. creator-level conversions) attribute wholly to that
+ * platform; a multi-platform creator contributes only deliverable-grain
+ * values to each row's platform — creator-level values with no
+ * deliverable-grain coverage are flagged unattributed, never split.
+ */
+export function platformRollup(bundles: CreatorActualsBundle[]): PlatformRollup {
+  const acc = new Map<'YouTube' | 'Twitch', Record<Measure, number | null>>();
+  const addTo = (p: 'YouTube' | 'Twitch', m: Measure, v: number | null) => {
+    if (v == null) return;
+    const slot = acc.get(p) ?? { impressions: null, clicks: null, conversions: null, spend: null, revenue: null };
+    slot[m] = (slot[m] ?? 0) + v;
+    acc.set(p, slot);
+  };
+  let hasUnattributed = false;
+  for (const b of bundles) {
+    const single = attributablePlatform(b.deliverables);
+    if (single) {
+      const eff = effectiveCreatorActuals(b);
+      for (const m of MEASURES) addTo(single, m, eff[m]);
+    } else {
+      for (const row of b.deliverables) for (const m of MEASURES) addTo(row.platform, m, row[m]);
+      for (const m of MEASURES) {
+        if (b.creatorLevel[m] != null && sumIfAny(b.deliverables, m) == null) hasUnattributed = true;
+      }
+    }
+  }
+  const platforms: PlatformActuals[] = [...acc.entries()].map(([platform, s]) => ({
+    platform, ...s,
+    ctr: ctr(s.impressions, s.clicks),
+    costPerConversion:
+      s.conversions != null && s.conversions > 0 && s.spend != null
+        ? round2(s.spend / s.conversions)
+        : null,
+  }));
+  return { platforms, hasUnattributed };
+}

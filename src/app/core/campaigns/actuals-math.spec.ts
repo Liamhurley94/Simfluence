@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { CreatorActuals, ctr, cvr, roas, rollup, deltaPct, inBand } from './actuals-math';
+import {
+  CreatorActuals, CreatorActualsBundle, DeliverableActualsRow,
+  attributablePlatform, ctr, cvr, deltaPct, effectiveCreatorActuals, inBand,
+  platformRollup, roas, rollup,
+} from './actuals-math';
+
+const dRow = (p: 'YouTube' | 'Twitch', over: Partial<DeliverableActualsRow> = {}): DeliverableActualsRow =>
+  ({ platform: p, impressions: null, clicks: null, conversions: null, spend: null, revenue: null, ...over });
+const cLevel = (over: Partial<CreatorActuals> = {}): CreatorActuals =>
+  ({ impressions: null, clicks: null, conversions: null, spend: null, revenue: null, ...over });
 
 const row = (o: Partial<CreatorActuals> = {}): CreatorActuals => ({
   impressions: null, clicks: null, conversions: null, spend: null, revenue: null, ...o,
@@ -59,5 +68,66 @@ describe('actuals-math', () => {
     expect(inBand(67, 68, 142)).toBe(false);
     expect(inBand(143, 68, 142)).toBe(false);
     expect(inBand(null, 68, 142)).toBe(false);
+  });
+});
+
+describe('effectiveCreatorActuals', () => {
+  it('uses deliverable sums per measure when any row carries it, else creator level', () => {
+    const eff = effectiveCreatorActuals({
+      creatorLevel: cLevel({ impressions: 999, conversions: 40, revenue: 1200 }),
+      deliverables: [dRow('YouTube', { impressions: 100, clicks: 5 }), dRow('Twitch', { impressions: 50 })],
+    });
+    expect(eff.impressions).toBe(150);
+    expect(eff.clicks).toBe(5);
+    expect(eff.conversions).toBe(40);
+    expect(eff.spend).toBeNull();
+    expect(eff.revenue).toBe(1200);
+  });
+
+  it('empty deliverables -> creator level verbatim', () => {
+    const cl = cLevel({ impressions: 7 });
+    expect(effectiveCreatorActuals({ creatorLevel: cl, deliverables: [] })).toEqual(cl);
+  });
+});
+
+describe('attributablePlatform', () => {
+  it('single platform across rows -> that platform; mixed or empty -> null', () => {
+    expect(attributablePlatform([dRow('Twitch'), dRow('Twitch')])).toBe('Twitch');
+    expect(attributablePlatform([dRow('Twitch'), dRow('YouTube')])).toBeNull();
+    expect(attributablePlatform([])).toBeNull();
+  });
+});
+
+describe('platformRollup', () => {
+  it('single-platform creator contributes effective measures incl. creator-level conversions', () => {
+    const r = platformRollup([{
+      creatorLevel: cLevel({ conversions: 30, spend: 8000, revenue: 9000 }),
+      deliverables: [dRow('Twitch', { impressions: 20000, clicks: 400 })],
+    }]);
+    expect(r.hasUnattributed).toBe(false);
+    expect(r.platforms).toEqual([{
+      platform: 'Twitch', impressions: 20000, clicks: 400, conversions: 30,
+      spend: 8000, revenue: 9000, ctr: 2, costPerConversion: 266.67,
+    }]);
+  });
+
+  it('multi-platform creator: row measures split per platform, creator-level conversions flagged unattributed', () => {
+    const r = platformRollup([{
+      creatorLevel: cLevel({ conversions: 50 }),
+      deliverables: [dRow('YouTube', { impressions: 1000 }), dRow('Twitch', { impressions: 600, clicks: 30 })],
+    }]);
+    expect(r.hasUnattributed).toBe(true);
+    const yt = r.platforms.find((p) => p.platform === 'YouTube')!;
+    const tw = r.platforms.find((p) => p.platform === 'Twitch')!;
+    expect(yt.impressions).toBe(1000);
+    expect(yt.conversions).toBeNull();
+    expect(tw.clicks).toBe(30);
+    expect(tw.conversions).toBeNull();
+  });
+
+  it('no contributions at all -> empty platforms, nothing fabricated', () => {
+    const r = platformRollup([{ creatorLevel: cLevel(), deliverables: [dRow('YouTube')] }]);
+    expect(r.platforms).toEqual([]);
+    expect(r.hasUnattributed).toBe(false);
   });
 });
