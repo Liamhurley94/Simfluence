@@ -52,7 +52,7 @@ describe('actuals-math', () => {
     expect(deltaPct(50, 0)).toBeNull();
   });
 
-  it('inBand inclusive of P10 and P90', () => {
+  it('inBand inclusive at both band edges', () => {
     expect(inBand(100, 68, 142)).toBe(true);
     expect(inBand(68, 68, 142)).toBe(true);
     expect(inBand(142, 68, 142)).toBe(true);
