@@ -60,14 +60,20 @@ export function rollup(rows: CreatorActuals[]): ActualsRollup {
   };
 }
 
-/** Signed percentage delta of actual vs the forecast P50. Null if either is unusable. */
-export function deltaPct(actual: number | null, forecastP50: number): number | null {
-  return actual != null && forecastP50 !== 0
-    ? Math.round((actual / forecastP50 - 1) * 100)
+/**
+ * Signed percentage delta of actual vs the forecast midpoint — P50 on the
+ * legacy path, Expected on the W2 path. Null if either is unusable.
+ */
+export function deltaPct(actual: number | null, forecastMidpoint: number): number | null {
+  return actual != null && forecastMidpoint !== 0
+    ? Math.round((actual / forecastMidpoint - 1) * 100)
     : null;
 }
 
-/** Whether the actual landed inside the forecast P10–P90 band (inclusive). */
-export function inBand(actual: number | null, p10: number, p90: number): boolean {
-  return actual != null && actual >= p10 && actual <= p90;
+/**
+ * Whether the actual landed inside the forecast band (inclusive) — P10–P90 on
+ * the legacy path, Conservative–Optimistic on the W2 path.
+ */
+export function inBand(actual: number | null, bandLow: number, bandHigh: number): boolean {
+  return actual != null && actual >= bandLow && actual <= bandHigh;
 }
