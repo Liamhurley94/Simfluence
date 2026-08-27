@@ -66,11 +66,7 @@ import { W2Response } from '../../../core/simulation/simulation-w2.types';
         </div>
       }
 
-      @if (forecastLocked()) {
-        @if (!campaign().forecast) {
-          <p class="text-xs" style="color: var(--color-text-muted);">No forecast was saved before this campaign started.</p>
-        }
-      } @else if (creators().length === 0) {
+      @if (creators().length === 0) {
         <p class="text-xs" style="color: var(--color-text-muted);">Add creators to this campaign to run a forecast.</p>
       } @else {
         <app-simulation-panel
@@ -82,11 +78,18 @@ import { W2Response } from '../../../core/simulation/simulation-w2.types';
           (simulated)="result.set($event)"
           (failed)="result.set(null)"
         >
-          <button type="button" (click)="onSaveClick()" [disabled]="!result() || saving()"
-            class="sf-btn text-xs uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
-            style="background: var(--color-sf-green); color: var(--color-bg);" data-testid="campaign-forecast-save">
-            {{ saving() ? 'Saving…' : 'Save forecast' }}
-          </button>
+          @if (saveLocked()) {
+            <span class="text-[10px] uppercase tracking-wider self-center" style="color: var(--color-text-muted);"
+              data-testid="forecast-save-locked-note">
+              Saved forecast is locked — it's the record actuals are graded against
+            </span>
+          } @else {
+            <button type="button" (click)="onSaveClick()" [disabled]="!result() || saving()"
+              class="sf-btn text-xs uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
+              style="background: var(--color-sf-green); color: var(--color-bg);" data-testid="campaign-forecast-save">
+              {{ saving() ? 'Saving…' : 'Save forecast' }}
+            </button>
+          }
         </app-simulation-panel>
       }
 
@@ -138,7 +141,13 @@ export class CampaignSimulatorComponent {
   // dialog is open (only when a forecast already exists).
   protected readonly confirmingOverwrite = signal(false);
 
-  protected readonly forecastLocked = computed(() => this.campaign().status !== 'planning');
+  // Re-forecasting is allowed on any status (Enshrouded audit §6) — but once a
+  // campaign leaves planning, an already-saved forecast is the record actuals
+  // are graded against and must never be overwritten. A first save (no forecast
+  // yet) stays possible on any status.
+  protected readonly saveLocked = computed(
+    () => this.campaign().status !== 'planning' && !!this.campaign().forecast,
+  );
 
   protected readonly savedW2 = computed(() => {
     const f = this.campaign().forecast;
@@ -163,7 +172,7 @@ export class CampaignSimulatorComponent {
   // is kept per campaign), so gate that behind a confirm dialog. First save goes
   // straight through.
   onSaveClick(): void {
-    if (!this.result() || this.forecastLocked()) return;
+    if (!this.result() || this.saveLocked()) return;
     if (this.campaign().forecast) {
       this.confirmingOverwrite.set(true);
     } else {
@@ -182,7 +191,7 @@ export class CampaignSimulatorComponent {
 
   async saveForecast(): Promise<void> {
     const r = this.result();
-    if (!r || this.forecastLocked()) return;
+    if (!r || this.saveLocked()) return;
     this.saving.set(true);
     try {
       // The whole version-stamped response is the record (spec §8): no slimming,

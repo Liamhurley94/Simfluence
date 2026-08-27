@@ -164,8 +164,9 @@ export class CampaignDetailComponent {
   });
 
   // The creator roster is editable only while planning. Once a campaign is
-  // started (active) — or completed/archived — the roster is frozen. Mirrors
-  // the simulator's `forecastLocked` (status !== 'planning').
+  // started (active) — or completed/archived — the roster is frozen. (The
+  // forecast itself is re-runnable on any status; only overwriting a saved
+  // forecast is locked past planning — see the simulator's `saveLocked`.)
   protected readonly rosterLocked = computed(() => this.campaign()?.status !== 'planning');
 
   protected readonly showTargeting = computed(() => !!this.campaign()?.name);

@@ -151,10 +151,34 @@ describe('CampaignSimulatorComponent — campaign mode', () => {
     expect(bg('engagement')).not.toContain('color-sf-blue');
   });
 
-  it('active: forecast is locked — no run/save controls', async () => {
-    const { el } = await mounted(mkCampaign('active'), 'active');
-    expect(el.querySelector('[data-testid="simw2-run"]')).toBeNull();
+  it('active with no saved forecast: run and save are both available', async () => {
+    const { f, el, update } = await mounted(mkCampaign('active'), 'active');
+    (el.querySelector('[data-testid="simw2-run"]') as HTMLButtonElement).click();
+    await f.whenStable(); f.detectChanges();
+    (el.querySelector('[data-testid="campaign-forecast-save"]') as HTMLButtonElement).click();
+    await f.whenStable(); f.detectChanges();
+    expect(el.querySelector('[data-testid="forecast-overwrite-confirm"]')).toBeNull();
+    expect(update).toHaveBeenCalledWith('c1', expect.objectContaining({
+      forecast: expect.objectContaining({ totals: expect.objectContaining({ impressions: 90_000 }) }),
+    }));
+  });
+
+  it('completed with a saved forecast: run is available, Save is replaced by the locked note', async () => {
+    const withForecast: Campaign = { ...mkCampaign('completed'), forecast: w2() };
+    const { f, el, update } = await mounted(withForecast, 'completed');
     expect(el.querySelector('[data-testid="campaign-forecast-save"]')).toBeNull();
+    expect(el.querySelector('[data-testid="forecast-save-locked-note"]')).toBeTruthy();
+    (el.querySelector('[data-testid="simw2-run"]') as HTMLButtonElement).click();
+    await f.whenStable(); f.detectChanges();
+    expect(el.querySelector('[data-testid="simw2-total-impressions"]')!.textContent).toContain('90,000');
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it('planning: no locked note — overwrite stays possible via the confirm dialog', async () => {
+    const withForecast: Campaign = { ...mkCampaign('planning'), forecast: LEGACY_FORECAST };
+    const { el } = await mounted(withForecast);
+    expect(el.querySelector('[data-testid="forecast-save-locked-note"]')).toBeNull();
+    expect(el.querySelector('[data-testid="campaign-forecast-save"]')).toBeTruthy();
   });
 
   it('Save is projected into the panel actions row next to Run', async () => {
