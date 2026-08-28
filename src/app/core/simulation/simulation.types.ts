@@ -20,8 +20,3 @@ export interface SimBand {
   roas: number;
 }
 
-export interface ObjectiveWeights {
-  awarenessW: number;
-  salesW: number;
-  engagementW: number;
-}
