@@ -5,11 +5,11 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { guestGuard } from './guest.guard';
 import { AuthService } from './auth.service';
 
-function runGuard(isAuthed: boolean): boolean | UrlTree {
+function runGuard(isAuthed: boolean): Promise<boolean | UrlTree> {
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({
     providers: [
-      { provide: AuthService, useValue: { isAuthenticated: () => isAuthed } },
+      { provide: AuthService, useValue: { isAuthenticated: () => isAuthed, ready: () => Promise.resolve() } },
       { provide: Router, useValue: { createUrlTree: (cmds: unknown[]) => ({ cmds }) } },
     ],
   });
@@ -17,9 +17,9 @@ function runGuard(isAuthed: boolean): boolean | UrlTree {
   const route = {} as ActivatedRouteSnapshot;
   const state = { url: '/login' } as RouterStateSnapshot;
 
-  let result!: boolean | UrlTree;
+  let result!: Promise<boolean | UrlTree>;
   TestBed.runInInjectionContext(() => {
-    result = guestGuard(route, state) as boolean | UrlTree;
+    result = guestGuard(route, state) as Promise<boolean | UrlTree>;
   });
   return result;
 }
@@ -29,12 +29,12 @@ describe('guestGuard', () => {
     // noop
   });
 
-  it('allows navigation when the visitor is unauthenticated', () => {
-    expect(runGuard(false)).toBe(true);
+  it('allows navigation when the visitor is unauthenticated', async () => {
+    expect(await runGuard(false)).toBe(true);
   });
 
-  it('redirects already-authenticated users to /app/dashboard', () => {
-    const tree = runGuard(true) as unknown as { cmds: unknown[] };
+  it('redirects already-authenticated users to /app/dashboard', async () => {
+    const tree = (await runGuard(true)) as unknown as { cmds: unknown[] };
     expect(tree.cmds).toEqual(['/app/dashboard']);
   });
 });

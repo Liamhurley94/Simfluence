@@ -22,14 +22,18 @@ function buildSupabaseStub(profileResult: { data: unknown; error: unknown } = { 
   const user = signal<User | null>(null);
   const session = signal<Session | null>(null);
 
+  let resolveSession!: () => void;
+  const sessionReady = new Promise<void>((res) => { resolveSession = res; });
+
   return {
     stub: {
       user,
       session,
       accessToken: null,
+      sessionReady,
       client: { auth, from },
     } as unknown as SupabaseService,
-    mocks: { auth, from, select, eq, maybeSingle, user, session },
+    mocks: { auth, from, select, eq, maybeSingle, user, session, resolveSession },
   };
 }
 
@@ -132,5 +136,34 @@ describe('AuthService', () => {
       expect(service.tier()).toBe('free');
       expect(service.client()).toBeNull();
     });
+  });
+});
+describe('AuthService.ready', () => {
+  it('resolves only after the initial session AND the profile row have loaded', async () => {
+    const { service, user, maybeSingle, resolveSession } = setupService({
+      data: { tier: 'silver', client: null, enterprise_id: null, is_admin: true },
+      error: null,
+    });
+    let settled = false;
+    const ready = service.ready().then(() => { settled = true; });
+
+    // Session not yet resolved: ready() must still be pending.
+    await Promise.resolve();
+    expect(settled).toBe(false);
+
+    user.set({ id: 'u1', email: 'a@b.com' } as never);
+    resolveSession();
+    await ready;
+    expect(settled).toBe(true);
+    expect(service.tier()).toBe('silver');
+    expect(maybeSingle).toHaveBeenCalled();
+  });
+
+  it('resolves immediately after the session when no user is signed in', async () => {
+    const { service, maybeSingle, resolveSession } = setupService();
+    resolveSession();
+    await service.ready();
+    expect(service.tier()).toBe('free');
+    expect(maybeSingle).not.toHaveBeenCalled();
   });
 });

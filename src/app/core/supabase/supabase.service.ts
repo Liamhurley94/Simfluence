@@ -7,6 +7,9 @@ export class SupabaseService {
   readonly client: SupabaseClient;
   readonly session = signal<Session | null>(null);
   readonly user = signal<User | null>(null);
+  /** Settles once the initial localStorage session (or its absence) has been
+   * applied — before this, `user()` being null means "unknown", not "signed out". */
+  readonly sessionReady: Promise<void>;
 
   constructor() {
     this.client = createClient(environment.supabaseUrl, environment.supabaseAnonKey, {
@@ -17,7 +20,7 @@ export class SupabaseService {
       },
     });
 
-    this.client.auth.getSession().then(({ data }) => this.applySession(data.session));
+    this.sessionReady = this.client.auth.getSession().then(({ data }) => this.applySession(data.session));
     this.client.auth.onAuthStateChange((_event, session) => this.applySession(session));
   }
 

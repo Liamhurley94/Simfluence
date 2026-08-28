@@ -38,16 +38,35 @@ export class AuthService {
     return this.tier() === 'free' ? 'basic' : 'full';
   });
 
+  // The in-flight (or last) profile fetch — what ready() awaits so route
+  // guards never read tier/isAdmin before the profile row has answered.
+  private profileLoad: Promise<void> | null = null;
+
   constructor() {
     // When the user changes (sign-in, sign-out, rehydration), reload their profile.
     effect(() => {
       const u = this.user();
       if (u?.email) {
-        void this.loadProfile(u.email);
+        this.profileLoad = this.loadProfile(u.email);
       } else {
+        this.profileLoad = null;
         this.resetAccount();
       }
     });
+  }
+
+  /**
+   * Settles once auth state is trustworthy: the initial session has
+   * rehydrated AND, if someone is signed in, their profile row (tier,
+   * is_admin, enterprise) has loaded. On a hard page load the session comes
+   * from localStorage near-instantly while the profile is a network
+   * round-trip — guards that read the signals synchronously bounced real
+   * silver users to the upgrade screen on every refresh of a gated route.
+   */
+  async ready(): Promise<void> {
+    await this.supabase.sessionReady;
+    const email = this.user()?.email;
+    if (email) await (this.profileLoad ??= this.loadProfile(email));
   }
 
   async signIn(email: string, password: string): Promise<void> {
