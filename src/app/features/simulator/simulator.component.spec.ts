@@ -300,3 +300,23 @@ describe('SimulatorComponent', () => {
     expect(openSpy).toHaveBeenCalledWith(expect.objectContaining({ id: 2 }));
   });
 });
+
+describe('SimulatorComponent — roster comparison', () => {
+  it('toggle swaps the single-run panel for the comparison view and back', async () => {
+    const { f, el } = await mounted({ selectedIds: [7, 8] });
+    const toggle = el.querySelector('[data-testid="sim-compare-toggle"]') as HTMLButtonElement;
+    expect(toggle).toBeTruthy();
+    expect(el.querySelector('app-roster-comparison')).toBeNull();
+
+    toggle.click();
+    f.detectChanges();
+    expect(el.querySelector('app-roster-comparison')).toBeTruthy();
+    expect(el.querySelector('app-simulation-panel')).toBeNull();
+    expect(el.querySelector('[data-testid="sim-save"]')).toBeNull();
+
+    (el.querySelector('[data-testid="sim-compare-toggle"]') as HTMLButtonElement).click();
+    f.detectChanges();
+    expect(el.querySelector('app-roster-comparison')).toBeNull();
+    expect(el.querySelector('app-simulation-panel')).toBeTruthy();
+  });
+});

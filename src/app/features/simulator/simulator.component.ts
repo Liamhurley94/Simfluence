@@ -2,6 +2,7 @@ import { Component, computed, inject, resource, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { SpinnerComponent } from '../../shared/spinner/spinner.component';
 import { SimulationPanelComponent } from '../../shared/simulation/simulation-panel.component';
+import { RosterComparisonComponent } from './roster-comparison.component';
 
 import { CampaignContextService } from '../../core/context/campaign-context.service';
 import { CreatorsService } from '../../core/creators/creators.service';
@@ -15,7 +16,7 @@ import { Creator } from '../../core/data/creator.types';
 @Component({
   selector: 'app-simulator',
   standalone: true,
-  imports: [RouterLink, SpinnerComponent, SimulationPanelComponent],
+  imports: [RouterLink, SpinnerComponent, SimulationPanelComponent, RosterComparisonComponent],
   template: `
     <div class="sf-appear">
     <h1 class="text-xl font-bold mb-6" style="color: var(--color-text);">Simulator</h1>
@@ -44,8 +45,15 @@ import { Creator } from '../../core/data/creator.types';
       </div>
     } @else {
       <div class="sf-panel p-3 mb-6" data-testid="sim-selected">
-        <div class="text-[10px] uppercase tracking-wider mb-2" style="color: var(--color-text-muted);">
-          Creators selected from Discovery ({{ creators().length }})
+        <div class="flex items-center justify-between mb-2">
+          <div class="text-[10px] uppercase tracking-wider" style="color: var(--color-text-muted);">
+            Creators selected from Discovery ({{ creators().length }})
+          </div>
+          <button type="button" (click)="comparing.set(!comparing())"
+            class="sf-btn sf-btn-ghost text-[10px] uppercase tracking-wider"
+            data-testid="sim-compare-toggle">
+            {{ comparing() ? 'Single roster' : 'Compare rosters' }}
+          </button>
         </div>
         <div class="flex flex-wrap gap-1.5">
           @for (c of creators(); track c.id) {
@@ -60,22 +68,32 @@ import { Creator } from '../../core/data/creator.types';
           }
         </div>
       </div>
-      <app-simulation-panel
-        mode="free"
-        [creatorIds]="creatorIds()"
-        [initialGenre]="context.genre()"
-        [genres]="genres()"
-        [subMode]="context.subMode() || undefined"
-        [autoRun]="autoRun"
-        (simulated)="onSimulated($event)"
-        (failed)="result.set(null)"
-      >
-        <button type="button" (click)="saveToCampaigns()" [disabled]="!result()"
-          class="sf-btn text-xs uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
-          style="background: var(--color-sf-green); color: var(--color-bg);" data-testid="sim-save">
-          Save to campaigns
-        </button>
-      </app-simulation-panel>
+      @if (comparing()) {
+        <!-- D24 §4: two rosters, same budget, side-by-side. Ephemeral — no
+             save; Discovery stays the picking surface. -->
+        <app-roster-comparison
+          [creators]="creators()"
+          [genres]="genres()"
+          [initialGenre]="context.genre()"
+        />
+      } @else {
+        <app-simulation-panel
+          mode="free"
+          [creatorIds]="creatorIds()"
+          [initialGenre]="context.genre()"
+          [genres]="genres()"
+          [subMode]="context.subMode() || undefined"
+          [autoRun]="autoRun"
+          (simulated)="onSimulated($event)"
+          (failed)="result.set(null)"
+        >
+          <button type="button" (click)="saveToCampaigns()" [disabled]="!result()"
+            class="sf-btn text-xs uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
+            style="background: var(--color-sf-green); color: var(--color-bg);" data-testid="sim-save">
+            Save to campaigns
+          </button>
+        </app-simulation-panel>
+      }
     }
     </div>
   `,
@@ -98,6 +116,9 @@ export class SimulatorComponent {
   protected readonly genres = this.creatorsSvc.genres;
 
   protected readonly result = signal<W2Response | null>(null);
+  // Roster comparison (D24 §4) — swaps the single-run panel for the
+  // side-by-side view; Save is single-roster-only so it hides while comparing.
+  protected readonly comparing = signal(false);
 
   // Async batch fetch of selected creators; re-runs when selection changes.
   private readonly creatorsRes = resource<Creator[], number[]>({
