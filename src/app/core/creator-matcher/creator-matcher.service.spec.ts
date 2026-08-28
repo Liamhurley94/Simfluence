@@ -58,6 +58,20 @@ describe('CreatorMatcherService', () => {
     expect('strategy' in body).toBe(false);
   });
 
+  it('sends campaignId when provided so the backend logs the suggestions (D24 s5)', async () => {
+    const { service, post } = setup(sampleResult);
+    await service.match({ genre: 'Gaming & Esports', campaignId: 'camp-1' });
+    const body = post.mock.calls[0][1] as Record<string, unknown>;
+    expect(body['campaignId']).toBe('camp-1');
+  });
+
+  it('omits campaignId outside a campaign context', async () => {
+    const { service, post } = setup(sampleResult);
+    await service.match({ genre: 'Gaming & Esports' });
+    const body = post.mock.calls[0][1] as Record<string, unknown>;
+    expect('campaignId' in body).toBe(false);
+  });
+
   it('parses the response into a MatchResult', async () => {
     const { service } = setup(sampleResult);
 

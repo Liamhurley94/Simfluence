@@ -62,6 +62,9 @@ export interface MatchInput {
   objectives?: string[];
   excludeIds?: number[];
   limit?: number;
+  /** Campaign context — when set, the backend logs this run's suggestions
+   * against the campaign (D24 §5 booked-vs-recommended). */
+  campaignId?: string | null;
 }
 
 interface MatchResponse extends Partial<MatchResult> {
@@ -87,6 +90,7 @@ export class CreatorMatcherService {
     if (input.objectives) payload['objectives'] = input.objectives;
     if (input.excludeIds) payload['excludeIds'] = input.excludeIds;
     if (input.limit != null) payload['limit'] = input.limit;
+    if (input.campaignId) payload['campaignId'] = input.campaignId;
 
     try {
       const res = await this.edge.post<MatchResponse>('match-creators', payload);

@@ -94,6 +94,7 @@ describe('CreatorMatcherPanelComponent', () => {
       objectives: ['Sales'],
       excludeIds: [1, 2, 3],
       limit: 12,
+      campaignId: null,
     });
   });
 

@@ -103,6 +103,7 @@ import { DeliverableEditorComponent } from './deliverable-editor.component';
           [budget]="campaign().budget"
           [objectives]="campaign().objectives"
           [excludeIds]="existingCreatorIdList()"
+          [campaignId]="campaign().id"
           [disabled]="editingLocked()"
           (add)="onMatcherAdd($event)"
         />

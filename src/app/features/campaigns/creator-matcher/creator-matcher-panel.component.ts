@@ -112,6 +112,8 @@ export class CreatorMatcherPanelComponent {
   readonly budget = input.required<number | null>();
   readonly objectives = input<string[]>([]);
   readonly excludeIds = input<number[]>([]);
+  /** Campaign to log suggestion runs against (D24 §5); null = no logging. */
+  readonly campaignId = input<string | null>(null);
   /** Roster-locked or read-only campaign → disable the add buttons. */
   readonly disabled = input(false);
 
@@ -152,6 +154,7 @@ export class CreatorMatcherPanelComponent {
         objectives: this.objectives(),
         excludeIds: this.excludeIds(),
         limit: 12,
+        campaignId: this.campaignId(),
       });
       this.result.set(res);
     } finally {
