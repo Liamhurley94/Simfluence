@@ -309,8 +309,9 @@ export function errorMessage(e: unknown): string {
                 <dd class="text-right" style="color: var(--color-sf-gold);">\${{ p.cost | number: '1.0-0' }}</dd>
                 <dt>Cost per conversion</dt>
                 <dd class="text-right" style="color: var(--color-sf-gold);"
+                  [attr.title]="cpcHeld(p.platform) ? CPC_HELD_TITLE : null"
                   [attr.data-testid]="'simw2-platform-cost-per-conversion-' + slug(p.platform)">
-                  {{ money(p.costPerConversion) }}
+                  {{ cpcHeld(p.platform) ? '–' : money(p.costPerConversion) }}
                 </dd>
               </dl>
             </div>
@@ -433,8 +434,9 @@ export function errorMessage(e: unknown): string {
                           }
                         </td>
                         <td class="text-right px-2 py-2" style="color: var(--color-sf-gold);"
+                          [attr.title]="cpcHeld(d.platform) ? CPC_HELD_TITLE : null"
                           [attr.data-testid]="'simw2-deliverable-cost-per-conversion-' + c.id + '-' + di">
-                          {{ money(d.costPerConversion) }}
+                          {{ cpcHeld(d.platform) ? '–' : money(d.costPerConversion) }}
                         </td>
                         <td class="text-right px-2 py-2">
                           @if (d.noData) {
@@ -528,7 +530,7 @@ export function errorMessage(e: unknown): string {
                 {{ c.uniqueReach | number: '1.0-0' }} unique reach ·
                 {{ c.engagedClicks | number: '1.0-0' }} eng. clicks ·
                 {{ c.conversions | number: '1.0-0' }} conversions ·
-                \${{ c.cost | number: '1.0-0' }} cost · {{ money(c.costPerConversion) }} per conversion
+                \${{ c.cost | number: '1.0-0' }} cost · {{ creatorCpcHeld(c) ? '–' : money(c.costPerConversion) }} per conversion
               </div>
               <!-- Only when a no-data row was paid for but produced nothing: the
                    two figures diverge and the row has to say which one the
@@ -689,6 +691,25 @@ export class SimulationPanelComponent {
   protected money(v: number | null): string {
     if (v == null) return '–';
     return `$${v.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
+  }
+
+  // LIAM-QA (a), 2026-08-31: Twitch cost per conversion is NOT signed off for
+  // clients. It is D26's maths applied honestly (CCV unmultiplied, saturating
+  // hard), but D26 itself calls CCV a visibility floor with a known
+  // conservative bias, and the figure reads as Twitch being ~50× worse value
+  // than YouTube. Held back from non-admins until it has been checked against
+  // a real campaign's actuals; admins (internal views) still see it. Only the
+  // ratio is held — the conversions and cost it derives from still render.
+  protected readonly CPC_HELD_TITLE =
+    'Twitch cost per conversion is held back until validated against campaign actuals';
+
+  protected cpcHeld(platform: string): boolean {
+    return platform === 'Twitch' && !this.auth.isAdmin();
+  }
+
+  /** A creator's own cost per conversion blends its rows, so any Twitch row holds it. */
+  protected creatorCpcHeld(c: CreatorResult): boolean {
+    return !this.auth.isAdmin() && c.deliverables.some((d) => d.platform === 'Twitch');
   }
 
   protected platformColor(platform: string): string {

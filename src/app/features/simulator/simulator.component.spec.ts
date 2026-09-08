@@ -101,6 +101,7 @@ function setup({ selectedIds = [] as number[], tier = 'silver' } = {}) {
   const tierSignal = signal(tier);
   const authStub = {
     tier: tierSignal,
+    isAdmin: () => false,
     user: () => null,
     isAuthenticated: () => true,
     enterpriseId: () => null,

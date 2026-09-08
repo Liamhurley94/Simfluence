@@ -176,7 +176,7 @@ const httpError = (body: unknown, message = 'Http failure response for /function
   message,
 });
 
-function setup(response: W2Response | Rejection = w2(), tier = 'silver') {
+function setup(response: W2Response | Rejection = w2(), tier = 'silver', admin = false) {
   localStorage.clear();
   const post =
     response instanceof Rejection
@@ -186,7 +186,7 @@ function setup(response: W2Response | Rejection = w2(), tier = 'silver') {
   TestBed.configureTestingModule({
     imports: [Host],
     providers: [
-      { provide: AuthService, useValue: { tier: signal(tier) } },
+      { provide: AuthService, useValue: { tier: signal(tier), isAdmin: signal(admin) } },
       { provide: EdgeClient, useValue: { post, get: vi.fn() } },
     ],
   });
@@ -194,8 +194,8 @@ function setup(response: W2Response | Rejection = w2(), tier = 'silver') {
 }
 
 /** Create the host, run the panel, and settle — the common arrange for render tests. */
-async function rendered(response: W2Response | Rejection = w2(), mutate?: (h: Host) => void) {
-  const { post } = setup(response);
+async function rendered(response: W2Response | Rejection = w2(), mutate?: (h: Host) => void, admin = false) {
+  const { post } = setup(response, 'silver', admin);
   const f = TestBed.createComponent(Host);
   if (mutate) mutate(f.componentInstance);
   f.detectChanges();
@@ -613,7 +613,29 @@ describe('SimulationPanelComponent (W2) — aggregates', () => {
     expect(yt.textContent).toContain('40,000');
     expect(yt.textContent).toContain('288');
     expect(tw.textContent).toContain('9,000');
+  });
+
+  // LIAM-QA (a), 2026-08-31: Twitch cost per conversion is NOT signed off for
+  // clients — D26's unmultiplied-CCV bias reads as Twitch being ~50× worse
+  // value. Held back from every non-admin surface that carries it; admins
+  // (internal views) still see it. YouTube figures are untouched.
+  it('holds Twitch cost per conversion back from non-admins — platform card, deliverable rows, creator total', async () => {
+    const { el } = await rendered();
+    expect(text(el, 'simw2-platform-cost-per-conversion-twitch').trim()).toBe('–');
+    expect(text(el, 'simw2-deliverable-cost-per-conversion-9-0').trim()).toBe('–');
+    expect(text(el, 'simw2-creator-totals-9')).not.toContain('64.8');
+    expect(text(el, 'simw2-creator-totals-9')).toContain('– per conversion');
+    // YouTube is unaffected.
+    expect(text(el, 'simw2-platform-cost-per-conversion-youtube')).toContain('20.8');
+    expect(text(el, 'simw2-deliverable-cost-per-conversion-7-0')).toContain('20.8');
+    expect(text(el, 'simw2-creator-totals-7')).toContain('20.8');
+  });
+
+  it('shows Twitch cost per conversion to admins (internal views unchanged)', async () => {
+    const { el } = await rendered(w2(), undefined, true);
     expect(text(el, 'simw2-platform-cost-per-conversion-twitch')).toContain('64.8');
+    expect(text(el, 'simw2-deliverable-cost-per-conversion-9-0')).toContain('64.8');
+    expect(text(el, 'simw2-creator-totals-9')).toContain('64.8');
   });
 
   it('sums impressions plainly but labels combined reach and conversions as an upper bound', async () => {

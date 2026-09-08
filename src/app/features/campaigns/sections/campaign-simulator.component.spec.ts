@@ -100,7 +100,7 @@ function setup(
       { provide: CampaignCreatorsService, useValue: { records } },
       { provide: CreatorsService, useValue: { byIds: vi.fn(async (ids: number[]) => ids.map(mkCreator)), genres: signal(['Gaming & Esports']) } },
       { provide: CampaignsService, useValue: { update } },
-      { provide: AuthService, useValue: { tier: signal('silver') } },
+      { provide: AuthService, useValue: { tier: signal('silver'), isAdmin: signal(false) } },
       { provide: EdgeClient, useValue: { post, get: vi.fn() } },
     ],
   });
