@@ -621,23 +621,27 @@ describe('SimulationPanelComponent (W2) — aggregates', () => {
   // (internal views) still see it. YouTube figures are untouched.
   it('holds Twitch conversions AND cost per conversion from non-admins — platform card, deliverable rows, creator total, campaign totals', async () => {
     const { el } = await rendered();
-    // Twitch platform card: conversions (54) and the ratio (64.8) both go; impressions stay.
-    expect(text(el, 'simw2-platform-conversions-twitch').trim()).toBe('–');
-    expect(text(el, 'simw2-platform-cost-per-conversion-twitch').trim()).toBe('–');
-    expect(el.querySelector('[data-testid="simw2-platform-twitch"]')!.textContent).toContain('9,000');
+    // Twitch platform card: the conversions and ratio rows are gone entirely; impressions stay.
+    const twCard = el.querySelector('[data-testid="simw2-platform-twitch"]')!;
+    expect(twCard.querySelector('[data-testid="simw2-platform-conversions-twitch"]')).toBeNull();
+    expect(twCard.querySelector('[data-testid="simw2-platform-cost-per-conversion-twitch"]')).toBeNull();
+    expect(twCard.textContent).not.toMatch(/conversion/i);
+    expect(twCard.textContent).toContain('9,000');
     // Twitch deliverable row.
     expect(text(el, 'simw2-deliverable-conversions-9-0').trim()).toBe('–');
     expect(text(el, 'simw2-deliverable-cost-per-conversion-9-0').trim()).toBe('–');
-    // Creator line blends its rows, so both figures are held; cost stays.
-    expect(text(el, 'simw2-creator-totals-9')).toContain('– conversions');
-    expect(text(el, 'simw2-creator-totals-9')).toContain('– per conversion');
+    // Creator line blends its rows, so both segments are dropped (no "–" placeholders); cost stays.
+    expect(text(el, 'simw2-creator-totals-9')).not.toMatch(/conversion/i);
     expect(text(el, 'simw2-creator-totals-9')).toContain('3,500');
+    expect(text(el, 'simw2-creator-totals-9')).toContain('eng. clicks');
     // Campaign totals blend Twitch, so the headline conversions/ratio are held; impressions and cost are not.
     expect(text(el, 'simw2-total-conversions')).not.toContain('342');
     expect(el.querySelector('[data-testid="simw2-total-conversions-upper-bound"]')).toBeNull();
     expect(text(el, 'simw2-total-cost-per-conversion')).not.toContain('27.78');
     expect(text(el, 'simw2-total-impressions')).toContain('49,000');
     expect(text(el, 'simw2-total-cost')).toContain('9,500');
+    // Band cards drop their conversions line rather than print "– conversions".
+    expect(el.querySelector('[data-testid="simw2-band-expected"]')?.textContent ?? '').not.toMatch(/conversions/i);
     // YouTube is unaffected.
     expect(text(el, 'simw2-platform-conversions-youtube')).toContain('288');
     expect(text(el, 'simw2-platform-cost-per-conversion-youtube')).toContain('20.8');

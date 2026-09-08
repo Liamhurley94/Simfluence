@@ -271,9 +271,11 @@ export function errorMessage(e: unknown): string {
                   {{ pick(r.totals.band.impressions, p.key) | number: '1.0-0' }}
                 </div>
                 <div class="text-[10px]" style="color: var(--color-text-muted);">impressions</div>
-                <div class="text-[10px] mt-1" style="color: var(--color-text-muted);">
-                  {{ blendedHeld(r.platforms) ? '–' : (pick(r.totals.band.conversions, p.key) | number: '1.0-0') }} conversions{{ blendedHeld(r.platforms) ? '' : ' (upper bound)' }}
-                </div>
+                @if (!blendedHeld(r.platforms)) {
+                  <div class="text-[10px] mt-1" style="color: var(--color-text-muted);">
+                    {{ pick(r.totals.band.conversions, p.key) | number: '1.0-0' }} conversions (upper bound)
+                  </div>
+                }
               </div>
             }
           </div>
@@ -308,18 +310,20 @@ export function errorMessage(e: unknown): string {
                 <dd class="text-right" style="color: var(--color-text);">{{ p.uniqueReach | number: '1.0-0' }}</dd>
                 <dt>Eng. clicks</dt>
                 <dd class="text-right" style="color: var(--color-text);">{{ p.engagedClicks | number: '1.0-0' }}</dd>
-                <dt>Conversions</dt>
-                <dd class="text-right" style="color: var(--color-text);"
-                  [attr.title]="platformHeld(p.platform) ? HELD_TITLE : null"
-                  [attr.data-testid]="'simw2-platform-conversions-' + slug(p.platform)">{{ platformHeld(p.platform) ? '–' : (p.conversions | number: '1.0-0') }}</dd>
+                @if (!platformHeld(p.platform)) {
+                  <dt>Conversions</dt>
+                  <dd class="text-right" style="color: var(--color-text);"
+                    [attr.data-testid]="'simw2-platform-conversions-' + slug(p.platform)">{{ p.conversions | number: '1.0-0' }}</dd>
+                }
                 <dt>Cost</dt>
                 <dd class="text-right" style="color: var(--color-sf-gold);">\${{ p.cost | number: '1.0-0' }}</dd>
-                <dt>Cost per conversion</dt>
-                <dd class="text-right" style="color: var(--color-sf-gold);"
-                  [attr.title]="platformHeld(p.platform) ? HELD_TITLE : null"
-                  [attr.data-testid]="'simw2-platform-cost-per-conversion-' + slug(p.platform)">
-                  {{ platformHeld(p.platform) ? '–' : money(p.costPerConversion) }}
-                </dd>
+                @if (!platformHeld(p.platform)) {
+                  <dt>Cost per conversion</dt>
+                  <dd class="text-right" style="color: var(--color-sf-gold);"
+                    [attr.data-testid]="'simw2-platform-cost-per-conversion-' + slug(p.platform)">
+                    {{ money(p.costPerConversion) }}
+                  </dd>
+                }
               </dl>
             </div>
           }
@@ -537,8 +541,10 @@ export function errorMessage(e: unknown): string {
                 Creator total — {{ c.impressions | number: '1.0-0' }} impressions ·
                 {{ c.uniqueReach | number: '1.0-0' }} unique reach ·
                 {{ c.engagedClicks | number: '1.0-0' }} eng. clicks ·
-                {{ blendedHeld(c.deliverables) ? '–' : (c.conversions | number: '1.0-0') }} conversions ·
-                \${{ c.cost | number: '1.0-0' }} cost · {{ blendedHeld(c.deliverables) ? '–' : money(c.costPerConversion) }} per conversion
+                @if (!blendedHeld(c.deliverables)) {
+                  {{ c.conversions | number: '1.0-0' }} conversions ·
+                }
+                \${{ c.cost | number: '1.0-0' }} cost@if (!blendedHeld(c.deliverables)) { · {{ money(c.costPerConversion) }} per conversion }
               </div>
               <!-- Only when a no-data row was paid for but produced nothing: the
                    two figures diverge and the row has to say which one the

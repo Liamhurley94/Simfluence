@@ -49,8 +49,9 @@ export class BriefPdfService {
       const t = f.totals;
       // `holdTwitch` is the caller's LIAM-QA (a) decision (core/simulation/twitch-hold.ts):
       // this service has no auth of its own, deliberately.
-      const cpc = holdTwitch || t.costPerConversion == null ? '–' : `$${t.costPerConversion.toLocaleString('en-GB')}`;
-      const conv = (n: number) => holdTwitch ? '– conversions' : `${n.toLocaleString('en-GB')} conversions (upper bound)`;
+      const cpc = t.costPerConversion == null ? '–' : `$${t.costPerConversion.toLocaleString('en-GB')}`;
+      const conv = (n: number) => holdTwitch ? '' : `${n.toLocaleString('en-GB')} conversions (upper bound)`;
+      const expectedSub = holdTwitch ? '' : `${conv(t.conversions.value)} · ${cpc} per conversion`;
       forecastBlock = `
       <section class="forecast">
         <h2>Campaign forecast</h2>
@@ -63,7 +64,7 @@ export class BriefPdfService {
           <div class="band base">
             <div class="label">Expected</div>
             <div class="value">${t.impressions.toLocaleString('en-GB')} impressions</div>
-            <div class="sub">${conv(t.conversions.value)} · ${cpc} per conversion</div>
+            <div class="sub">${expectedSub}</div>
           </div>
           <div class="band best">
             <div class="label">Optimistic</div>

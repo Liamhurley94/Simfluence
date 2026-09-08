@@ -104,8 +104,8 @@ describe('BriefPdfService.buildHtml', () => {
     expect(shown).toContain('11,250 conversions (upper bound)');
     expect(held).not.toContain('7.56');
     expect(held).not.toContain('11,250');
-    expect(held).not.toMatch(/\d conversions/);
-    expect(held).toContain('– conversions · – per conversion');
+    expect(held).not.toMatch(/conversion/i);
+    expect(held).not.toMatch(/– (conversions|per conversion)/);
     // Impressions and cost are not held.
     expect(held).toContain('impressions');
   });
