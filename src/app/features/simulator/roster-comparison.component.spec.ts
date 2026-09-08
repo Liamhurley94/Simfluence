@@ -127,7 +127,7 @@ describe('RosterComparisonComponent', () => {
     expect((el.querySelector('[data-testid="cmp-row-conversions"]') as HTMLElement).textContent).toContain('Upper bound');
   });
 
-  it('holds a side\'s cost per conversion from non-admins when that side has Twitch in its blend (LIAM-QA (a))', async () => {
+  it('holds a side\'s conversions and cost per conversion from non-admins when that side has Twitch in its blend (LIAM-QA (a))', async () => {
     const { f, el, runFree } = await mount();
     // Side B (2 creators → high fixture) gains a Twitch platform; side A stays YouTube-only.
     runFree.mockImplementation(async (req: { creators: Array<{ id: number }> }) => {
@@ -142,6 +142,10 @@ describe('RosterComparisonComponent', () => {
     expect(row.textContent).toContain('80');       // side A, YouTube-only, still shown
     expect(row.textContent).not.toContain('61.73'); // side B held
     expect(el.querySelector('[data-testid="cmp-delta-costPerConversion"]')?.textContent ?? '').not.toContain('%');
+    const conv = el.querySelector('[data-testid="cmp-row-conversions"]') as HTMLElement;
+    expect(conv.textContent).toContain('250');      // side A
+    expect(conv.textContent).not.toContain('648');  // side B held
+    expect(el.querySelector('[data-testid="cmp-delta-conversions"]')?.textContent ?? '').not.toContain('%');
   });
 
   it('shows each side\'s unallocated advisory', async () => {

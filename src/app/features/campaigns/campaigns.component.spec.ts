@@ -157,7 +157,7 @@ describe('CampaignsComponent', () => {
     expect(fixture.nativeElement.querySelector('[data-testid="campaign-forecast-legacy-a"]')).toBeNull();
   });
 
-  it('holds the card\'s cost per conversion from non-admins when Twitch is in the blend (LIAM-QA (a))', async () => {
+  it('holds the card\'s conversions and cost per conversion from non-admins when Twitch is in the blend (LIAM-QA (a))', async () => {
     const { repo } = setup();
     const twitchPlatform = { ...W2_FORECAST.totals, platform: 'Twitch' as const, uniqueReach: 0, conversions: 0, costPerConversion: null };
     repo.list.mockResolvedValueOnce([makeCampaign({ id: 'a', forecast: { ...W2_FORECAST, platforms: [twitchPlatform as any] } })]);
@@ -167,6 +167,8 @@ describe('CampaignsComponent', () => {
     fixture.detectChanges();
     const card = fixture.nativeElement.querySelector('[data-testid="campaign-forecast-w2-a"]');
     expect(card.textContent).not.toContain('20.8');
+    expect(card.textContent).not.toContain('288');
+    expect(card.textContent).toContain('40,000'); // impressions still render
     expect(card.textContent).toContain('–');
   });
 

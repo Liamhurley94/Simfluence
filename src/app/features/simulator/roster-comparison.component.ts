@@ -1,7 +1,7 @@
 import { Component, computed, inject, input, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { AuthService } from '../../core/auth/auth.service';
-import { blendedCpcHeld, platformCpcHeld } from '../../core/simulation/cpc-hold';
+import { blendedHeld, platformHeld } from '../../core/simulation/twitch-hold';
 import { RateLimitService } from '../../core/simulation/rate-limit.service';
 import { RunSimulationService } from '../../core/simulation/run-simulation.service';
 import { errorMessage } from '../../shared/simulation/simulation-panel.component';
@@ -158,8 +158,8 @@ export class RosterComparisonComponent {
   private rateLimitSvc = inject(RateLimitService);
   private auth = inject(AuthService);
 
-  private heldCpc(r: W2Response, v: number | null): number | null {
-    return blendedCpcHeld(r.platforms, this.auth.isAdmin()) ? null : v;
+  private held(r: W2Response, v: number | null): number | null {
+    return blendedHeld(r.platforms, this.auth.isAdmin()) ? null : v;
   }
 
   readonly creators = input.required<Creator[]>();
@@ -261,10 +261,10 @@ export class RosterComparisonComponent {
       { key: 'impressions', label: 'Impressions', unit: 'int', a: a.totals.impressions, b: b.totals.impressions },
       { key: 'uniqueReach', label: 'Unique reach', unit: 'int', a: a.totals.uniqueReach.value, b: b.totals.uniqueReach.value, upperBound: true },
       { key: 'engagedClicks', label: 'Eng. clicks', unit: 'int', a: a.totals.engagedClicks, b: b.totals.engagedClicks },
-      { key: 'conversions', label: 'Conversions', unit: 'int', a: a.totals.conversions.value, b: b.totals.conversions.value, upperBound: true },
+      // LIAM-QA (a): a side with Twitch in its blend shows "–" for conversions and cost per conversion to non-admins.
+      { key: 'conversions', label: 'Conversions', unit: 'int', a: this.held(a, a.totals.conversions.value), b: this.held(b, b.totals.conversions.value), upperBound: true },
       { key: 'cost', label: 'Cost', unit: 'usd', a: a.totals.cost, b: b.totals.cost, lowerIsBetter: true },
-      // LIAM-QA (a): a side with Twitch in its blend shows "–" for non-admins.
-      { key: 'costPerConversion', label: 'Cost per conversion', unit: 'usd2', a: this.heldCpc(a, a.totals.costPerConversion), b: this.heldCpc(b, b.totals.costPerConversion), lowerIsBetter: true },
+      { key: 'costPerConversion', label: 'Cost per conversion', unit: 'usd2', a: this.held(a, a.totals.costPerConversion), b: this.held(b, b.totals.costPerConversion), lowerIsBetter: true },
     ];
   });
 
@@ -280,8 +280,8 @@ export class RosterComparisonComponent {
         platform,
         imprA: pa?.impressions ?? null,
         imprB: pb?.impressions ?? null,
-        cpcA: platformCpcHeld(platform, this.auth.isAdmin()) ? null : pa?.costPerConversion ?? null,
-        cpcB: platformCpcHeld(platform, this.auth.isAdmin()) ? null : pb?.costPerConversion ?? null,
+        cpcA: platformHeld(platform, this.auth.isAdmin()) ? null : pa?.costPerConversion ?? null,
+        cpcB: platformHeld(platform, this.auth.isAdmin()) ? null : pb?.costPerConversion ?? null,
       };
     });
   });

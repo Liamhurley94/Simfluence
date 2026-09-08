@@ -3,8 +3,8 @@ import { Campaign, isW2Forecast } from './campaign.types';
 
 export interface BriefOptions {
   creatorCount?: number;
-  /** Print "–" for the headline cost per conversion (Twitch in the blend, non-admin viewer). */
-  holdCpc?: boolean;
+  /** Print "–" for conversions and cost per conversion (Twitch in the blend, non-admin viewer — LIAM-QA (a)). */
+  holdTwitch?: boolean;
 }
 
 /**
@@ -36,7 +36,7 @@ export class BriefPdfService {
   }
 
   /** Exposed separately so tests can assert document shape without opening a window. */
-  buildHtml(campaign: Campaign, { creatorCount = 0, holdCpc = false }: BriefOptions = {}): string {
+  buildHtml(campaign: Campaign, { creatorCount = 0, holdTwitch = false }: BriefOptions = {}): string {
     const f = campaign.forecast;
     const date = new Date().toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' });
 
@@ -47,9 +47,10 @@ export class BriefPdfService {
       forecastBlock = '<p class="empty">No forecast attached.</p>';
     } else if (isW2Forecast(f)) {
       const t = f.totals;
-      // `holdCpc` is the caller's LIAM-QA (a) decision (core/simulation/cpc-hold.ts):
+      // `holdTwitch` is the caller's LIAM-QA (a) decision (core/simulation/twitch-hold.ts):
       // this service has no auth of its own, deliberately.
-      const cpc = holdCpc || t.costPerConversion == null ? '–' : `$${t.costPerConversion.toLocaleString('en-GB')}`;
+      const cpc = holdTwitch || t.costPerConversion == null ? '–' : `$${t.costPerConversion.toLocaleString('en-GB')}`;
+      const conv = (n: number) => holdTwitch ? '– conversions' : `${n.toLocaleString('en-GB')} conversions (upper bound)`;
       forecastBlock = `
       <section class="forecast">
         <h2>Campaign forecast</h2>
@@ -57,17 +58,17 @@ export class BriefPdfService {
           <div class="band worst">
             <div class="label">Conservative</div>
             <div class="value">${t.band.impressions.conservative.toLocaleString('en-GB')} impressions</div>
-            <div class="sub">${t.band.conversions.conservative.toLocaleString('en-GB')} conversions (upper bound)</div>
+            <div class="sub">${conv(t.band.conversions.conservative)}</div>
           </div>
           <div class="band base">
             <div class="label">Expected</div>
             <div class="value">${t.impressions.toLocaleString('en-GB')} impressions</div>
-            <div class="sub">${t.conversions.value.toLocaleString('en-GB')} conversions (upper bound) · ${cpc} per conversion</div>
+            <div class="sub">${conv(t.conversions.value)} · ${cpc} per conversion</div>
           </div>
           <div class="band best">
             <div class="label">Optimistic</div>
             <div class="value">${t.band.impressions.optimistic.toLocaleString('en-GB')} impressions</div>
-            <div class="sub">${t.band.conversions.optimistic.toLocaleString('en-GB')} conversions (upper bound)</div>
+            <div class="sub">${conv(t.band.conversions.optimistic)}</div>
           </div>
         </div>
       </section>

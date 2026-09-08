@@ -5,7 +5,7 @@ import { IconComponent } from '../icon/icon.component';
 import { SourceZoneHeaderComponent } from '../compliance/source-zone-header.component';
 import { ProprietaryNoteComponent } from '../compliance/proprietary-note.component';
 import { AuthService } from '../../core/auth/auth.service';
-import { TWITCH_CPC_HELD_TITLE, blendedCpcHeld, platformCpcHeld } from '../../core/simulation/cpc-hold';
+import { TWITCH_HELD_TITLE, blendedHeld, platformHeld } from '../../core/simulation/twitch-hold';
 import { RunSimulationService } from '../../core/simulation/run-simulation.service';
 import { RateLimitService } from '../../core/simulation/rate-limit.service';
 import { OBJECTIVES, Objective } from '../../core/simulation/simulation.types';
@@ -237,12 +237,15 @@ export function errorMessage(e: unknown): string {
               <div class="text-[10px] uppercase" style="color: var(--color-text-muted);">Eng. clicks</div>
               <div class="text-lg font-bold" style="color: var(--color-text);">{{ r.totals.engagedClicks | number: '1.0-0' }}</div>
             </div>
-            <div class="p-4 border-r" style="border-color: var(--color-border);" data-testid="simw2-total-conversions">
+            <div class="p-4 border-r" style="border-color: var(--color-border);" data-testid="simw2-total-conversions"
+              [attr.title]="blendedHeld(r.platforms) ? HELD_TITLE : null">
               <div class="text-[10px] uppercase" style="color: var(--color-text-muted);">Conversions</div>
-              <div class="text-lg font-bold" style="color: var(--color-text);">{{ r.totals.conversions.value | number: '1.0-0' }}</div>
-              <div class="text-[9px] mt-0.5" style="color: var(--color-sf-orange);" data-testid="simw2-total-conversions-upper-bound">
-                Upper bound — platforms overlap
-              </div>
+              <div class="text-lg font-bold" style="color: var(--color-text);">{{ blendedHeld(r.platforms) ? '–' : (r.totals.conversions.value | number: '1.0-0') }}</div>
+              @if (!blendedHeld(r.platforms)) {
+                <div class="text-[9px] mt-0.5" style="color: var(--color-sf-orange);" data-testid="simw2-total-conversions-upper-bound">
+                  Upper bound — platforms overlap
+                </div>
+              }
             </div>
             <div class="p-4 border-r" style="border-color: var(--color-border);" data-testid="simw2-total-cost">
               <div class="text-[10px] uppercase" style="color: var(--color-text-muted);">Cost</div>
@@ -254,7 +257,7 @@ export function errorMessage(e: unknown): string {
             <div class="p-4" data-testid="simw2-total-cost-per-conversion">
               <div class="text-[10px] uppercase" style="color: var(--color-text-muted);">Cost per conversion</div>
               <div class="text-lg font-bold" style="color: var(--color-sf-gold);"
-                [attr.title]="blendedCpcHeld(r.platforms) ? CPC_HELD_TITLE : null">{{ blendedCpcHeld(r.platforms) ? '–' : money(r.totals.costPerConversion) }}</div>
+                [attr.title]="blendedHeld(r.platforms) ? HELD_TITLE : null">{{ blendedHeld(r.platforms) ? '–' : money(r.totals.costPerConversion) }}</div>
             </div>
           </div>
 
@@ -269,7 +272,7 @@ export function errorMessage(e: unknown): string {
                 </div>
                 <div class="text-[10px]" style="color: var(--color-text-muted);">impressions</div>
                 <div class="text-[10px] mt-1" style="color: var(--color-text-muted);">
-                  {{ pick(r.totals.band.conversions, p.key) | number: '1.0-0' }} conversions (upper bound)
+                  {{ blendedHeld(r.platforms) ? '–' : (pick(r.totals.band.conversions, p.key) | number: '1.0-0') }} conversions{{ blendedHeld(r.platforms) ? '' : ' (upper bound)' }}
                 </div>
               </div>
             }
@@ -306,14 +309,16 @@ export function errorMessage(e: unknown): string {
                 <dt>Eng. clicks</dt>
                 <dd class="text-right" style="color: var(--color-text);">{{ p.engagedClicks | number: '1.0-0' }}</dd>
                 <dt>Conversions</dt>
-                <dd class="text-right" style="color: var(--color-text);">{{ p.conversions | number: '1.0-0' }}</dd>
+                <dd class="text-right" style="color: var(--color-text);"
+                  [attr.title]="platformHeld(p.platform) ? HELD_TITLE : null"
+                  [attr.data-testid]="'simw2-platform-conversions-' + slug(p.platform)">{{ platformHeld(p.platform) ? '–' : (p.conversions | number: '1.0-0') }}</dd>
                 <dt>Cost</dt>
                 <dd class="text-right" style="color: var(--color-sf-gold);">\${{ p.cost | number: '1.0-0' }}</dd>
                 <dt>Cost per conversion</dt>
                 <dd class="text-right" style="color: var(--color-sf-gold);"
-                  [attr.title]="cpcHeld(p.platform) ? CPC_HELD_TITLE : null"
+                  [attr.title]="platformHeld(p.platform) ? HELD_TITLE : null"
                   [attr.data-testid]="'simw2-platform-cost-per-conversion-' + slug(p.platform)">
-                  {{ cpcHeld(p.platform) ? '–' : money(p.costPerConversion) }}
+                  {{ platformHeld(p.platform) ? '–' : money(p.costPerConversion) }}
                 </dd>
               </dl>
             </div>
@@ -422,7 +427,8 @@ export function errorMessage(e: unknown): string {
                         <td class="text-right px-2 py-2" style="color: var(--color-text);"
                           [attr.data-testid]="'simw2-deliverable-engaged-clicks-' + c.id + '-' + di">{{ d.engagedClicks | number: '1.0-0' }}</td>
                         <td class="text-right px-2 py-2" style="color: var(--color-text);"
-                          [attr.data-testid]="'simw2-deliverable-conversions-' + c.id + '-' + di">{{ d.conversions | number: '1.0-0' }}</td>
+                          [attr.title]="platformHeld(d.platform) ? HELD_TITLE : null"
+                          [attr.data-testid]="'simw2-deliverable-conversions-' + c.id + '-' + di">{{ platformHeld(d.platform) ? '–' : (d.conversions | number: '1.0-0') }}</td>
                         <td class="text-right px-2 py-2" style="color: var(--color-sf-gold);"
                           [attr.data-testid]="'simw2-deliverable-cost-' + c.id + '-' + di">
                           \${{ d.cost | number: '1.0-0' }}
@@ -436,9 +442,9 @@ export function errorMessage(e: unknown): string {
                           }
                         </td>
                         <td class="text-right px-2 py-2" style="color: var(--color-sf-gold);"
-                          [attr.title]="cpcHeld(d.platform) ? CPC_HELD_TITLE : null"
+                          [attr.title]="platformHeld(d.platform) ? HELD_TITLE : null"
                           [attr.data-testid]="'simw2-deliverable-cost-per-conversion-' + c.id + '-' + di">
-                          {{ cpcHeld(d.platform) ? '–' : money(d.costPerConversion) }}
+                          {{ platformHeld(d.platform) ? '–' : money(d.costPerConversion) }}
                         </td>
                         <td class="text-right px-2 py-2">
                           @if (d.noData) {
@@ -482,7 +488,7 @@ export function errorMessage(e: unknown): string {
                                     <td class="text-right py-0.5" style="color: var(--color-text);"
                                       [attr.data-testid]="'simw2-window-' + w.days + '-engaged-clicks-' + c.id + '-' + di">{{ w.v.engagedClicks | number: '1.0-0' }}</td>
                                     <td class="text-right py-0.5" style="color: var(--color-text);"
-                                      [attr.data-testid]="'simw2-window-' + w.days + '-conversions-' + c.id + '-' + di">{{ w.v.conversions | number: '1.0-0' }}</td>
+                                      [attr.data-testid]="'simw2-window-' + w.days + '-conversions-' + c.id + '-' + di">{{ platformHeld(d.platform) ? '–' : (w.v.conversions | number: '1.0-0') }}</td>
                                   </tr>
                                 }
                               </tbody>
@@ -513,7 +519,7 @@ export function errorMessage(e: unknown): string {
                                     <td class="text-right py-0.5" style="color: var(--color-text);">{{ pick(d.band.impressions, p.key) | number: '1.0-0' }}</td>
                                     <td class="text-right py-0.5" style="color: var(--color-text);">{{ pick(d.band.uniqueReach, p.key) | number: '1.0-0' }}</td>
                                     <td class="text-right py-0.5" style="color: var(--color-text);">{{ pick(d.band.engagedClicks, p.key) | number: '1.0-0' }}</td>
-                                    <td class="text-right py-0.5" style="color: var(--color-text);">{{ pick(d.band.conversions, p.key) | number: '1.0-0' }}</td>
+                                    <td class="text-right py-0.5" style="color: var(--color-text);">{{ platformHeld(d.platform) ? '–' : (pick(d.band.conversions, p.key) | number: '1.0-0') }}</td>
                                   </tr>
                                 }
                               </tbody>
@@ -531,8 +537,8 @@ export function errorMessage(e: unknown): string {
                 Creator total — {{ c.impressions | number: '1.0-0' }} impressions ·
                 {{ c.uniqueReach | number: '1.0-0' }} unique reach ·
                 {{ c.engagedClicks | number: '1.0-0' }} eng. clicks ·
-                {{ c.conversions | number: '1.0-0' }} conversions ·
-                \${{ c.cost | number: '1.0-0' }} cost · {{ blendedCpcHeld(c.deliverables) ? '–' : money(c.costPerConversion) }} per conversion
+                {{ blendedHeld(c.deliverables) ? '–' : (c.conversions | number: '1.0-0') }} conversions ·
+                \${{ c.cost | number: '1.0-0' }} cost · {{ blendedHeld(c.deliverables) ? '–' : money(c.costPerConversion) }} per conversion
               </div>
               <!-- Only when a no-data row was paid for but produced nothing: the
                    two figures diverge and the row has to say which one the
@@ -695,16 +701,17 @@ export class SimulationPanelComponent {
     return `$${v.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
   }
 
-  // LIAM-QA (a): Twitch cost per conversion is held from non-admins — see
-  // core/simulation/cpc-hold.ts for the rule and why it covers blends.
-  protected readonly CPC_HELD_TITLE = TWITCH_CPC_HELD_TITLE;
+  // LIAM-QA (a): Twitch conversions and cost per conversion are held from
+  // non-admins — see core/simulation/twitch-hold.ts for the rule and why it
+  // covers blends.
+  protected readonly HELD_TITLE = TWITCH_HELD_TITLE;
 
-  protected cpcHeld(platform: string): boolean {
-    return platformCpcHeld(platform, this.auth.isAdmin());
+  protected platformHeld(platform: string): boolean {
+    return platformHeld(platform, this.auth.isAdmin());
   }
 
-  protected blendedCpcHeld(rows: ReadonlyArray<{ platform: string }>): boolean {
-    return blendedCpcHeld(rows, this.auth.isAdmin());
+  protected blendedHeld(rows: ReadonlyArray<{ platform: string }>): boolean {
+    return blendedHeld(rows, this.auth.isAdmin());
   }
 
   protected platformColor(platform: string): string {

@@ -8,7 +8,7 @@ import { Campaign, LegacyCampaignForecast, isW2Forecast } from '../../../core/ca
 import { Creator } from '../../../core/data/creator.types';
 import { W2Response } from '../../../core/simulation/simulation-w2.types';
 import { AuthService } from '../../../core/auth/auth.service';
-import { blendedCpcHeld } from '../../../core/simulation/cpc-hold';
+import { blendedHeld } from '../../../core/simulation/twitch-hold';
 
 @Component({
   selector: 'app-campaign-simulator',
@@ -31,13 +31,15 @@ import { blendedCpcHeld } from '../../../core/simulation/cpc-hold';
           </div>
           <div>
             <div class="text-[10px] uppercase tracking-wider" style="color: var(--color-text-muted);">Conversions</div>
-            <div class="text-lg font-bold" style="color: var(--color-text);">{{ fc.totals.conversions.value | number: '1.0-0' }}</div>
-            <div class="text-[10px]" style="color: var(--color-sf-orange);">Upper bound — platforms overlap</div>
+            <div class="text-lg font-bold" style="color: var(--color-text);">{{ held(fc) ? '–' : (fc.totals.conversions.value | number: '1.0-0') }}</div>
+            @if (!held(fc)) {
+              <div class="text-[10px]" style="color: var(--color-sf-orange);">Upper bound — platforms overlap</div>
+            }
           </div>
           <div>
             <div class="text-[10px] uppercase tracking-wider" style="color: var(--color-text-muted);">Cost per conversion</div>
             <div class="text-lg font-bold" style="color: var(--color-sf-gold);">
-              {{ cpcHeld(fc) || fc.totals.costPerConversion === null ? '–' : '$' + (fc.totals.costPerConversion | number: '1.0-2') }}
+              {{ held(fc) || fc.totals.costPerConversion === null ? '–' : '$' + (fc.totals.costPerConversion | number: '1.0-2') }}
             </div>
             <div class="text-[10px]" style="color: var(--color-text-muted);">on \${{ fc.totals.cost | number: '1.0-0' }} spend</div>
           </div>
@@ -136,9 +138,9 @@ export class CampaignSimulatorComponent {
   private campaignsSvc = inject(CampaignsService);
   private auth = inject(AuthService);
 
-  /** LIAM-QA (a): the headline blends Twitch conversions, so it is held from non-admins whenever Twitch is in the roster. */
-  protected cpcHeld(fc: W2Response): boolean {
-    return blendedCpcHeld(fc.platforms, this.auth.isAdmin());
+  /** LIAM-QA (a): the headline blends Twitch conversions, so conversions and cost per conversion are held from non-admins whenever Twitch is in the roster. */
+  protected held(fc: W2Response): boolean {
+    return blendedHeld(fc.platforms, this.auth.isAdmin());
   }
 
   readonly campaign = input.required<Campaign>();

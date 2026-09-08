@@ -619,27 +619,48 @@ describe('SimulationPanelComponent (W2) — aggregates', () => {
   // clients — D26's unmultiplied-CCV bias reads as Twitch being ~50× worse
   // value. Held back from every non-admin surface that carries it; admins
   // (internal views) still see it. YouTube figures are untouched.
-  it('holds Twitch cost per conversion back from non-admins — platform card, deliverable rows, creator total', async () => {
+  it('holds Twitch conversions AND cost per conversion from non-admins — platform card, deliverable rows, creator total, campaign totals', async () => {
     const { el } = await rendered();
+    // Twitch platform card: conversions (54) and the ratio (64.8) both go; impressions stay.
+    expect(text(el, 'simw2-platform-conversions-twitch').trim()).toBe('–');
     expect(text(el, 'simw2-platform-cost-per-conversion-twitch').trim()).toBe('–');
+    expect(el.querySelector('[data-testid="simw2-platform-twitch"]')!.textContent).toContain('9,000');
+    // Twitch deliverable row.
+    expect(text(el, 'simw2-deliverable-conversions-9-0').trim()).toBe('–');
     expect(text(el, 'simw2-deliverable-cost-per-conversion-9-0').trim()).toBe('–');
-    expect(text(el, 'simw2-creator-totals-9')).not.toContain('64.8');
+    // Creator line blends its rows, so both figures are held; cost stays.
+    expect(text(el, 'simw2-creator-totals-9')).toContain('– conversions');
     expect(text(el, 'simw2-creator-totals-9')).toContain('– per conversion');
+    expect(text(el, 'simw2-creator-totals-9')).toContain('3,500');
+    // Campaign totals blend Twitch, so the headline conversions/ratio are held; impressions and cost are not.
+    expect(text(el, 'simw2-total-conversions')).not.toContain('342');
+    expect(el.querySelector('[data-testid="simw2-total-conversions-upper-bound"]')).toBeNull();
+    expect(text(el, 'simw2-total-cost-per-conversion')).not.toContain('27.78');
+    expect(text(el, 'simw2-total-impressions')).toContain('49,000');
+    expect(text(el, 'simw2-total-cost')).toContain('9,500');
     // YouTube is unaffected.
+    expect(text(el, 'simw2-platform-conversions-youtube')).toContain('288');
     expect(text(el, 'simw2-platform-cost-per-conversion-youtube')).toContain('20.8');
+    expect(text(el, 'simw2-deliverable-conversions-7-0')).toContain('288');
     expect(text(el, 'simw2-deliverable-cost-per-conversion-7-0')).toContain('20.8');
+    expect(text(el, 'simw2-creator-totals-7')).toContain('288 conversions');
     expect(text(el, 'simw2-creator-totals-7')).toContain('20.8');
   });
 
-  it('shows Twitch cost per conversion to admins (internal views unchanged)', async () => {
+  it('shows Twitch conversions and cost per conversion to admins (internal views unchanged)', async () => {
     const { el } = await rendered(w2(), undefined, true);
+    expect(text(el, 'simw2-platform-conversions-twitch')).toContain('54');
     expect(text(el, 'simw2-platform-cost-per-conversion-twitch')).toContain('64.8');
+    expect(text(el, 'simw2-deliverable-conversions-9-0')).toContain('54');
     expect(text(el, 'simw2-deliverable-cost-per-conversion-9-0')).toContain('64.8');
+    expect(text(el, 'simw2-creator-totals-9')).toContain('54 conversions');
     expect(text(el, 'simw2-creator-totals-9')).toContain('64.8');
+    expect(text(el, 'simw2-total-conversions')).toContain('342');
+    expect(text(el, 'simw2-total-cost-per-conversion')).toContain('27.78');
   });
 
-  it('sums impressions plainly but labels combined reach and conversions as an upper bound', async () => {
-    const { el } = await rendered();
+  it('sums impressions plainly but labels combined reach and conversions as an upper bound (admin — fixture includes Twitch)', async () => {
+    const { el } = await rendered(w2(), undefined, true);
     expect(text(el, 'simw2-total-impressions')).toContain('49,000');
     expect(text(el, 'simw2-total-unique-reach')).toContain('39,200');
     expect(text(el, 'simw2-total-conversions')).toContain('342');
@@ -655,9 +676,10 @@ describe('SimulationPanelComponent (W2) — aggregates', () => {
     expect(text(el, 'simw2-total-cost-per-conversion')).toContain('27.78');
   });
 
-  it('holds the headline cost per conversion from non-admins when Twitch is in the blend', async () => {
+  it('holds the headline conversions and cost per conversion from non-admins when Twitch is in the blend', async () => {
     const { el } = await rendered();
     expect(text(el, 'simw2-total-cost')).toContain('9,500');
+    expect(text(el, 'simw2-total-conversions')).toContain('–');
     expect(text(el, 'simw2-total-cost-per-conversion')).not.toContain('27.78');
     expect(text(el, 'simw2-total-cost-per-conversion')).toContain('–');
   });

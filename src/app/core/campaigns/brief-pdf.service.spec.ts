@@ -97,12 +97,17 @@ describe('BriefPdfService.buildHtml', () => {
     expect(html).toMatch(/Creators[\s\S]*7/);
   });
 
-  it('prints "–" for the headline cost per conversion when the caller holds it (LIAM-QA (a))', () => {
+  it('prints "–" for conversions and cost per conversion when the caller holds Twitch (LIAM-QA (a))', () => {
     const shown = svc.buildHtml({ ...SAMPLE, forecast: W2_SAMPLE }, { creatorCount: 3 });
-    const held  = svc.buildHtml({ ...SAMPLE, forecast: W2_SAMPLE }, { creatorCount: 3, holdCpc: true });
+    const held  = svc.buildHtml({ ...SAMPLE, forecast: W2_SAMPLE }, { creatorCount: 3, holdTwitch: true });
     expect(shown).toContain('$7.56 per conversion');
+    expect(shown).toContain('11,250 conversions (upper bound)');
     expect(held).not.toContain('7.56');
-    expect(held).toContain('– per conversion');
+    expect(held).not.toContain('11,250');
+    expect(held).not.toMatch(/\d conversions/);
+    expect(held).toContain('– conversions · – per conversion');
+    // Impressions and cost are not held.
+    expect(held).toContain('impressions');
   });
 
   it('renders a W2 forecast as Conservative/Expected/Optimistic, with no percentiles or ROAS', () => {

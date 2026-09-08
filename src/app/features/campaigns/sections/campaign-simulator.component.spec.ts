@@ -256,14 +256,15 @@ describe('CampaignSimulatorComponent — saving', () => {
 });
 
 describe('CampaignSimulatorComponent — saved-forecast summary', () => {
-  it('holds the saved forecast\'s cost per conversion from non-admins when Twitch is in the blend (LIAM-QA (a))', async () => {
+  it('holds the saved forecast\'s conversions and cost per conversion from non-admins when Twitch is in the blend (LIAM-QA (a))', async () => {
     const base = w2();
     const twitch = { ...base.platforms[0], platform: 'Twitch' as const };
     const saved: Campaign = { ...mkCampaign('planning'), forecast: { ...base, platforms: [base.platforms[0], twitch] } };
     const { el } = await mounted(saved);
     const summary = el.querySelector('[data-testid="campaign-forecast-summary-w2"]') as HTMLElement;
     expect(summary.textContent).not.toContain('61.73');
-    expect(summary.textContent).toContain('648'); // conversions still render
+    expect(summary.textContent).not.toContain('648');
+    expect(summary.textContent).toContain('90,000'); // impressions still render
   });
 
   it('renders a saved W2 forecast without percentiles or ROAS', async () => {

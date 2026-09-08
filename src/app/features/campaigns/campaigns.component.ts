@@ -12,7 +12,7 @@ import {
   isW2Forecast,
 } from '../../core/campaigns/campaign.types';
 import { W2Response } from '../../core/simulation/simulation-w2.types';
-import { blendedCpcHeld } from '../../core/simulation/cpc-hold';
+import { blendedHeld } from '../../core/simulation/twitch-hold';
 import { tierRank } from '../../core/types';
 import { SpinnerComponent } from '../../shared/spinner/spinner.component';
 
@@ -116,13 +116,13 @@ import { SpinnerComponent } from '../../shared/spinner/spinner.component';
                 <div>
                   <div class="text-[9px] uppercase" style="color: var(--color-text-muted);">Conv. (max)</div>
                   <div class="text-xs font-bold" style="color: var(--color-text);">
-                    {{ f.totals.conversions.value | number: '1.0-0' }}
+                    {{ held(f) ? '–' : (f.totals.conversions.value | number: '1.0-0') }}
                   </div>
                 </div>
                 <div>
                   <div class="text-[9px] uppercase" style="color: var(--color-text-muted);">Cost / conv.</div>
                   <div class="text-xs font-bold" style="color: var(--color-sf-gold);">
-                    {{ cpcHeld(f) || f.totals.costPerConversion === null ? '–' : '$' + (f.totals.costPerConversion | number: '1.0-2') }}
+                    {{ held(f) || f.totals.costPerConversion === null ? '–' : '$' + (f.totals.costPerConversion | number: '1.0-2') }}
                   </div>
                 </div>
               </div>
@@ -213,7 +213,7 @@ export class CampaignsComponent {
 
   exportPdf(c: Campaign, ev: MouseEvent): void {
     ev.stopPropagation();
-    this.pdf.export(c, { holdCpc: isW2Forecast(c.forecast) && this.cpcHeld(c.forecast) });
+    this.pdf.export(c, { holdTwitch: isW2Forecast(c.forecast) && this.held(c.forecast) });
   }
 
   protected statusLabel(c: Campaign): string {
@@ -239,9 +239,9 @@ export class CampaignsComponent {
     return isW2Forecast(c.forecast) ? c.forecast : null;
   }
 
-  /** LIAM-QA (a): headline cost per conversion is held from non-admins when Twitch is in the blend. */
-  protected cpcHeld(f: W2Response): boolean {
-    return blendedCpcHeld(f.platforms, this.auth.isAdmin());
+  /** LIAM-QA (a): headline conversions and cost per conversion are held from non-admins when Twitch is in the blend. */
+  protected held(f: W2Response): boolean {
+    return blendedHeld(f.platforms, this.auth.isAdmin());
   }
 
   protected legacyForecastOf(c: Campaign): LegacyCampaignForecast | null {
