@@ -67,6 +67,13 @@ const FORECASTABLE: DeliverablePlatform[] = ['YouTube', 'Twitch'];
                 class="sf-input px-1 py-0.5 text-[10px] w-14"
                 [attr.data-testid]="'deliverable-hours-' + row.id"
               />
+              <!-- LIAM-QA (b): the estimate scales linearly with hours, but
+                   prolonged streams are commonly negotiated (pay for 4h, the
+                   streamer runs 6) — the agreed fee is the expected override. -->
+              <span class="text-[9px]" style="color: var(--color-text-muted);"
+                [attr.data-testid]="'deliverable-hours-note-' + row.id">
+                Costs for longer streams are often negotiable – enter the agreed fee to override.
+              </span>
             }
 
             <input

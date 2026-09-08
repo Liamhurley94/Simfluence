@@ -133,6 +133,16 @@ describe('DeliverableEditorComponent', () => {
     expect(updateSpy).toHaveBeenCalledWith('d1', { platform: 'YouTube', format: 'Integrated', durationHours: null });
   });
 
+  it('Twitch rows carry the "longer streams are often negotiable" note; YouTube rows do not (LIAM-QA (b))', async () => {
+    await mount(creator({ platform: 'Twitch' }), [d({ platform: 'Twitch', format: 'Dedicated', durationHours: 2 })]);
+    const note = fixture.nativeElement.querySelector('[data-testid="deliverable-hours-note-d1"]') as HTMLElement;
+    expect(note).toBeTruthy();
+    expect(note.textContent).toMatch(/longer streams are often negotiable/i);
+
+    await mount(creator(), [d()]);
+    expect(fixture.nativeElement.querySelector('[data-testid="deliverable-hours-note-d1"]')).toBeNull();
+  });
+
   it('onHoursBlur clamps 0 up to the 0.5 minimum (DB CHECK duration_hours > 0)', async () => {
     await mount(creator({ platform: 'Twitch' }),
       [d({ platform: 'Twitch', format: 'Dedicated', durationHours: 2 })]);
