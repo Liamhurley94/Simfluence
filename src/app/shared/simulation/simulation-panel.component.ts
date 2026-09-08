@@ -5,6 +5,7 @@ import { IconComponent } from '../icon/icon.component';
 import { SourceZoneHeaderComponent } from '../compliance/source-zone-header.component';
 import { ProprietaryNoteComponent } from '../compliance/proprietary-note.component';
 import { AuthService } from '../../core/auth/auth.service';
+import { TWITCH_CPC_HELD_TITLE, blendedCpcHeld, platformCpcHeld } from '../../core/simulation/cpc-hold';
 import { RunSimulationService } from '../../core/simulation/run-simulation.service';
 import { RateLimitService } from '../../core/simulation/rate-limit.service';
 import { OBJECTIVES, Objective } from '../../core/simulation/simulation.types';
@@ -252,7 +253,8 @@ export function errorMessage(e: unknown): string {
             </div>
             <div class="p-4" data-testid="simw2-total-cost-per-conversion">
               <div class="text-[10px] uppercase" style="color: var(--color-text-muted);">Cost per conversion</div>
-              <div class="text-lg font-bold" style="color: var(--color-sf-gold);">{{ money(r.totals.costPerConversion) }}</div>
+              <div class="text-lg font-bold" style="color: var(--color-sf-gold);"
+                [attr.title]="blendedCpcHeld(r.platforms) ? CPC_HELD_TITLE : null">{{ blendedCpcHeld(r.platforms) ? '–' : money(r.totals.costPerConversion) }}</div>
             </div>
           </div>
 
@@ -530,7 +532,7 @@ export function errorMessage(e: unknown): string {
                 {{ c.uniqueReach | number: '1.0-0' }} unique reach ·
                 {{ c.engagedClicks | number: '1.0-0' }} eng. clicks ·
                 {{ c.conversions | number: '1.0-0' }} conversions ·
-                \${{ c.cost | number: '1.0-0' }} cost · {{ creatorCpcHeld(c) ? '–' : money(c.costPerConversion) }} per conversion
+                \${{ c.cost | number: '1.0-0' }} cost · {{ blendedCpcHeld(c.deliverables) ? '–' : money(c.costPerConversion) }} per conversion
               </div>
               <!-- Only when a no-data row was paid for but produced nothing: the
                    two figures diverge and the row has to say which one the
@@ -693,23 +695,16 @@ export class SimulationPanelComponent {
     return `$${v.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
   }
 
-  // LIAM-QA (a), 2026-08-31: Twitch cost per conversion is NOT signed off for
-  // clients. It is D26's maths applied honestly (CCV unmultiplied, saturating
-  // hard), but D26 itself calls CCV a visibility floor with a known
-  // conservative bias, and the figure reads as Twitch being ~50× worse value
-  // than YouTube. Held back from non-admins until it has been checked against
-  // a real campaign's actuals; admins (internal views) still see it. Only the
-  // ratio is held — the conversions and cost it derives from still render.
-  protected readonly CPC_HELD_TITLE =
-    'Twitch cost per conversion is held back until validated against campaign actuals';
+  // LIAM-QA (a): Twitch cost per conversion is held from non-admins — see
+  // core/simulation/cpc-hold.ts for the rule and why it covers blends.
+  protected readonly CPC_HELD_TITLE = TWITCH_CPC_HELD_TITLE;
 
   protected cpcHeld(platform: string): boolean {
-    return platform === 'Twitch' && !this.auth.isAdmin();
+    return platformCpcHeld(platform, this.auth.isAdmin());
   }
 
-  /** A creator's own cost per conversion blends its rows, so any Twitch row holds it. */
-  protected creatorCpcHeld(c: CreatorResult): boolean {
-    return !this.auth.isAdmin() && c.deliverables.some((d) => d.platform === 'Twitch');
+  protected blendedCpcHeld(rows: ReadonlyArray<{ platform: string }>): boolean {
+    return blendedCpcHeld(rows, this.auth.isAdmin());
   }
 
   protected platformColor(platform: string): string {

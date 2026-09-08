@@ -66,7 +66,7 @@ describe('BriefPdfService.buildHtml', () => {
   const svc = new BriefPdfService();
 
   it('contains all the headline fields', () => {
-    const html = svc.buildHtml(SAMPLE, 3);
+    const html = svc.buildHtml(SAMPLE, { creatorCount: 3 });
     expect(html).toContain('<title>Nestlé Gaming Q3');
     expect(html).toContain('Nestlé');
     expect(html).toContain('Gaming &amp; Esports');
@@ -75,30 +75,38 @@ describe('BriefPdfService.buildHtml', () => {
   });
 
   it('renders the P10/P50/P90 bands when forecast is present', () => {
-    const html = svc.buildHtml(SAMPLE, 3);
+    const html = svc.buildHtml(SAMPLE, { creatorCount: 3 });
     expect(html).toContain('1,062,500');
     expect(html).toContain('1,562,500');
     expect(html).toContain('2,218,750');
   });
 
   it('renders an empty-forecast note when forecast is null', () => {
-    const html = svc.buildHtml({ ...SAMPLE, forecast: null }, 0);
+    const html = svc.buildHtml({ ...SAMPLE, forecast: null }, { creatorCount: 0 });
     expect(html).toContain('No forecast attached');
   });
 
   it('html-escapes user-provided fields', () => {
-    const html = svc.buildHtml({ ...SAMPLE, name: '<script>alert(1)</script>' }, 0);
+    const html = svc.buildHtml({ ...SAMPLE, name: '<script>alert(1)</script>' }, { creatorCount: 0 });
     expect(html).not.toContain('<script>alert');
     expect(html).toContain('&lt;script&gt;');
   });
 
   it('includes the creator count when passed', () => {
-    const html = svc.buildHtml(SAMPLE, 7);
+    const html = svc.buildHtml(SAMPLE, { creatorCount: 7 });
     expect(html).toMatch(/Creators[\s\S]*7/);
   });
 
+  it('prints "–" for the headline cost per conversion when the caller holds it (LIAM-QA (a))', () => {
+    const shown = svc.buildHtml({ ...SAMPLE, forecast: W2_SAMPLE }, { creatorCount: 3 });
+    const held  = svc.buildHtml({ ...SAMPLE, forecast: W2_SAMPLE }, { creatorCount: 3, holdCpc: true });
+    expect(shown).toContain('$7.56 per conversion');
+    expect(held).not.toContain('7.56');
+    expect(held).toContain('– per conversion');
+  });
+
   it('renders a W2 forecast as Conservative/Expected/Optimistic, with no percentiles or ROAS', () => {
-    const html = svc.buildHtml({ ...SAMPLE, forecast: W2_SAMPLE }, 3);
+    const html = svc.buildHtml({ ...SAMPLE, forecast: W2_SAMPLE }, { creatorCount: 3 });
     expect(html).toContain('Conservative');
     expect(html).toContain('Expected');
     expect(html).toContain('Optimistic');

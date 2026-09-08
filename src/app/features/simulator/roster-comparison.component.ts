@@ -1,6 +1,7 @@
 import { Component, computed, inject, input, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { AuthService } from '../../core/auth/auth.service';
+import { blendedCpcHeld, platformCpcHeld } from '../../core/simulation/cpc-hold';
 import { RateLimitService } from '../../core/simulation/rate-limit.service';
 import { RunSimulationService } from '../../core/simulation/run-simulation.service';
 import { errorMessage } from '../../shared/simulation/simulation-panel.component';
@@ -157,6 +158,10 @@ export class RosterComparisonComponent {
   private rateLimitSvc = inject(RateLimitService);
   private auth = inject(AuthService);
 
+  private heldCpc(r: W2Response, v: number | null): number | null {
+    return blendedCpcHeld(r.platforms, this.auth.isAdmin()) ? null : v;
+  }
+
   readonly creators = input.required<Creator[]>();
   readonly genres = input<string[]>([]);
   readonly initialGenre = input<string>('');
@@ -258,7 +263,8 @@ export class RosterComparisonComponent {
       { key: 'engagedClicks', label: 'Eng. clicks', unit: 'int', a: a.totals.engagedClicks, b: b.totals.engagedClicks },
       { key: 'conversions', label: 'Conversions', unit: 'int', a: a.totals.conversions.value, b: b.totals.conversions.value, upperBound: true },
       { key: 'cost', label: 'Cost', unit: 'usd', a: a.totals.cost, b: b.totals.cost, lowerIsBetter: true },
-      { key: 'costPerConversion', label: 'Cost per conversion', unit: 'usd2', a: a.totals.costPerConversion, b: b.totals.costPerConversion, lowerIsBetter: true },
+      // LIAM-QA (a): a side with Twitch in its blend shows "–" for non-admins.
+      { key: 'costPerConversion', label: 'Cost per conversion', unit: 'usd2', a: this.heldCpc(a, a.totals.costPerConversion), b: this.heldCpc(b, b.totals.costPerConversion), lowerIsBetter: true },
     ];
   });
 
@@ -274,8 +280,8 @@ export class RosterComparisonComponent {
         platform,
         imprA: pa?.impressions ?? null,
         imprB: pb?.impressions ?? null,
-        cpcA: pa?.costPerConversion ?? null,
-        cpcB: pb?.costPerConversion ?? null,
+        cpcA: platformCpcHeld(platform, this.auth.isAdmin()) ? null : pa?.costPerConversion ?? null,
+        cpcB: platformCpcHeld(platform, this.auth.isAdmin()) ? null : pb?.costPerConversion ?? null,
       };
     });
   });

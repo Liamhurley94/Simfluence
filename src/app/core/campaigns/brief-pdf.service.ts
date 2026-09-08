@@ -1,6 +1,12 @@
 import { Injectable } from '@angular/core';
 import { Campaign, isW2Forecast } from './campaign.types';
 
+export interface BriefOptions {
+  creatorCount?: number;
+  /** Print "–" for the headline cost per conversion (Twitch in the blend, non-admin viewer). */
+  holdCpc?: boolean;
+}
+
 /**
  * Builds a print-ready HTML document and opens it in a new window with the
  * browser's native print dialog. Mirrors the approach in app.html:
@@ -10,9 +16,9 @@ import { Campaign, isW2Forecast } from './campaign.types';
  */
 @Injectable({ providedIn: 'root' })
 export class BriefPdfService {
-  /** Renders `buildHtml(campaign, creatorCount)` and invokes print. Returns `false` if popup blocked. */
-  export(campaign: Campaign, creatorCount = 0): boolean {
-    const html = this.buildHtml(campaign, creatorCount);
+  /** Renders `buildHtml(campaign, …)` and invokes print. Returns `false` if popup blocked. */
+  export(campaign: Campaign, opts: BriefOptions = {}): boolean {
+    const html = this.buildHtml(campaign, opts);
     const win = typeof window !== 'undefined' ? window.open('', '_blank', 'width=900,height=1100') : null;
     if (!win) return false;
     win.document.write(html);
@@ -30,7 +36,7 @@ export class BriefPdfService {
   }
 
   /** Exposed separately so tests can assert document shape without opening a window. */
-  buildHtml(campaign: Campaign, creatorCount = 0): string {
+  buildHtml(campaign: Campaign, { creatorCount = 0, holdCpc = false }: BriefOptions = {}): string {
     const f = campaign.forecast;
     const date = new Date().toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' });
 
@@ -41,7 +47,9 @@ export class BriefPdfService {
       forecastBlock = '<p class="empty">No forecast attached.</p>';
     } else if (isW2Forecast(f)) {
       const t = f.totals;
-      const cpc = t.costPerConversion == null ? '–' : `$${t.costPerConversion.toLocaleString('en-GB')}`;
+      // `holdCpc` is the caller's LIAM-QA (a) decision (core/simulation/cpc-hold.ts):
+      // this service has no auth of its own, deliberately.
+      const cpc = holdCpc || t.costPerConversion == null ? '–' : `$${t.costPerConversion.toLocaleString('en-GB')}`;
       forecastBlock = `
       <section class="forecast">
         <h2>Campaign forecast</h2>

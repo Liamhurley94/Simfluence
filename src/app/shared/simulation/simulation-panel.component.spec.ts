@@ -649,10 +649,17 @@ describe('SimulationPanelComponent (W2) — aggregates', () => {
     expect(el.querySelector('[data-testid="simw2-total-impressions-upper-bound"]')).toBeNull();
   });
 
-  it('renders campaign cost and cost per conversion', async () => {
-    const { el } = await rendered();
+  it('renders campaign cost and cost per conversion (admin — the fixture roster includes Twitch)', async () => {
+    const { el } = await rendered(w2(), undefined, true);
     expect(text(el, 'simw2-total-cost')).toContain('9,500');
     expect(text(el, 'simw2-total-cost-per-conversion')).toContain('27.78');
+  });
+
+  it('holds the headline cost per conversion from non-admins when Twitch is in the blend', async () => {
+    const { el } = await rendered();
+    expect(text(el, 'simw2-total-cost')).toContain('9,500');
+    expect(text(el, 'simw2-total-cost-per-conversion')).not.toContain('27.78');
+    expect(text(el, 'simw2-total-cost-per-conversion')).toContain('–');
   });
 });
 

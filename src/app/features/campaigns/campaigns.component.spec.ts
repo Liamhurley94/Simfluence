@@ -26,6 +26,7 @@ function setup({ tier = 'silver', enterprise = null as { name: string } | null }
   const enterpriseSignal = signal(enterprise);
   const authStub = {
     tier: tierSignal,
+    isAdmin: () => false,
     user: () => null,
     isAuthenticated: () => true,
     enterprise: enterpriseSignal,
@@ -154,6 +155,19 @@ describe('CampaignsComponent', () => {
     expect(card.textContent).toContain('288');
     expect(card.textContent.toLowerCase()).not.toContain('roas');
     expect(fixture.nativeElement.querySelector('[data-testid="campaign-forecast-legacy-a"]')).toBeNull();
+  });
+
+  it('holds the card\'s cost per conversion from non-admins when Twitch is in the blend (LIAM-QA (a))', async () => {
+    const { repo } = setup();
+    const twitchPlatform = { ...W2_FORECAST.totals, platform: 'Twitch' as const, uniqueReach: 0, conversions: 0, costPerConversion: null };
+    repo.list.mockResolvedValueOnce([makeCampaign({ id: 'a', forecast: { ...W2_FORECAST, platforms: [twitchPlatform as any] } })]);
+    const fixture = TestBed.createComponent(CampaignsComponent);
+    fixture.detectChanges();
+    await flush();
+    fixture.detectChanges();
+    const card = fixture.nativeElement.querySelector('[data-testid="campaign-forecast-w2-a"]');
+    expect(card.textContent).not.toContain('20.8');
+    expect(card.textContent).toContain('–');
   });
 
   it('still renders a legacy saved forecast on the card', async () => {
