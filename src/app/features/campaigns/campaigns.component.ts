@@ -127,7 +127,10 @@ import { SpinnerComponent } from '../../shared/spinner/spinner.component';
                 </div>
               </div>
             } @else if (legacyForecastOf(c); as f) {
-              <div class="grid grid-cols-3 gap-1 text-center mb-3" [attr.data-testid]="'campaign-forecast-legacy-' + c.id">
+              <!-- Legacy (pre-W2) saved forecast. Its ROAS tile went 2026-09-08:
+                   the saved JSON still carries roas, but ROAS left the product
+                   consistently (LIAM-QA (f)) and the old figure was asserted. -->
+              <div class="grid grid-cols-2 gap-1 text-center mb-3" [attr.data-testid]="'campaign-forecast-legacy-' + c.id">
                 <div>
                   <div class="text-[9px] uppercase" style="color: var(--color-text-muted);">P50 Imp.</div>
                   <div class="text-xs font-bold" style="color: var(--color-text);">
@@ -137,12 +140,6 @@ import { SpinnerComponent } from '../../shared/spinner/spinner.component';
                 <div>
                   <div class="text-[9px] uppercase" style="color: var(--color-text-muted);">CTR</div>
                   <div class="text-xs font-bold" style="color: var(--color-text);">{{ f.p50.ctr }}%</div>
-                </div>
-                <div>
-                  <div class="text-[9px] uppercase" style="color: var(--color-text-muted);">ROAS</div>
-                  <div class="text-xs font-bold" style="color: var(--color-sf-gold);">
-                    {{ f.p50.roas }}×
-                  </div>
                 </div>
               </div>
             }

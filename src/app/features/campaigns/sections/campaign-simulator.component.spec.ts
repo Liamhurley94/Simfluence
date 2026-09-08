@@ -285,7 +285,8 @@ describe('CampaignSimulatorComponent — saved-forecast summary', () => {
     const summary = el.querySelector('[data-testid="campaign-forecast-summary-legacy"]') as HTMLElement;
     expect(summary).toBeTruthy();
     expect(summary.textContent).toContain('P50');
-    expect(summary.textContent).toContain('0.2×');
+    expect(summary.textContent).not.toContain('0.2×');           // legacy ROAS tile gone 2026-09-08
+    expect(summary.textContent!.toLowerCase()).not.toContain('roas');
     expect(el.querySelector('[data-testid="campaign-forecast-summary-w2"]')).toBeNull();
   });
 });

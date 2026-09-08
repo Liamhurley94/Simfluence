@@ -75,6 +75,8 @@ export class BriefPdfService {
       </section>
     `;
     } else {
+      // Legacy (pre-W2) shape. Its ROAS went 2026-09-08 — the saved JSON still
+      // carries it, but ROAS left the product consistently (LIAM-QA (f)).
       forecastBlock = `
       <section class="forecast">
         <h2>Campaign forecast</h2>
@@ -82,17 +84,17 @@ export class BriefPdfService {
           <div class="band worst">
             <div class="label">P10 · Worst case</div>
             <div class="value">${f.p10.impressions.toLocaleString('en-GB')} impressions</div>
-            <div class="sub">CTR ${f.p10.ctr}% · ROAS ${f.p10.roas}×</div>
+            <div class="sub">CTR ${f.p10.ctr}%</div>
           </div>
           <div class="band base">
             <div class="label">P50 · Base case</div>
             <div class="value">${f.p50.impressions.toLocaleString('en-GB')} impressions</div>
-            <div class="sub">CTR ${f.p50.ctr}% · ROAS ${f.p50.roas}×</div>
+            <div class="sub">CTR ${f.p50.ctr}%</div>
           </div>
           <div class="band best">
             <div class="label">P90 · Best case</div>
             <div class="value">${f.p90.impressions.toLocaleString('en-GB')} impressions</div>
-            <div class="sub">CTR ${f.p90.ctr}% · ROAS ${f.p90.roas}×</div>
+            <div class="sub">CTR ${f.p90.ctr}%</div>
           </div>
         </div>
       </section>

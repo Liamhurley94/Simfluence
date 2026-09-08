@@ -181,7 +181,9 @@ describe('CampaignsComponent', () => {
     fixture.detectChanges();
     const card = fixture.nativeElement.querySelector('[data-testid="campaign-forecast-legacy-a"]');
     expect(card).toBeTruthy();
-    expect(card.textContent).toContain('2.4');   // ROAS
+    expect(card.textContent).toContain('100');   // P50 impressions
+    expect(card.textContent).toContain('3.2');   // CTR
+    expect(card.textContent.toLowerCase()).not.toContain('roas'); // legacy ROAS tile gone 2026-09-08
     expect(fixture.nativeElement.querySelector('[data-testid="campaign-forecast-w2-a"]')).toBeNull();
   });
 

@@ -107,7 +107,7 @@ describe('ScoringComponent', () => {
     expect(fixture.nativeElement.querySelector('[data-testid="genre-benchmark"]')).toBeTruthy();
   });
 
-  it('benchmark strip carries no ROAS card — ROAS left the product consistently (LIAM-QA (f))', async () => {
+  it('benchmark strip carries no ROAS or CPM card — both left the product consistently (LIAM-QA (f))', async () => {
     setup({ selectedIds: [2, 14] });
     const fixture = TestBed.createComponent(ScoringComponent);
     fixture.detectChanges();
@@ -115,8 +115,9 @@ describe('ScoringComponent', () => {
     fixture.detectChanges();
     const strip = fixture.nativeElement.querySelector('[data-testid="genre-benchmark"]') as HTMLElement;
     expect(strip.querySelector('[data-testid="benchmark-roas"]')).toBeNull();
-    expect(strip.textContent).not.toMatch(/roas/i);
-    expect(strip.querySelectorAll('[data-testid^="benchmark-"]').length).toBe(4);
+    expect(strip.querySelector('[data-testid="benchmark-cpm"]')).toBeNull();
+    expect(strip.textContent).not.toMatch(/roas|cpm/i);
+    expect(strip.querySelectorAll('[data-testid^="benchmark-"]').length).toBe(3);
   });
 
   it('triggers scoreBulk with selected creators on mount, and refetches on genre change', async () => {

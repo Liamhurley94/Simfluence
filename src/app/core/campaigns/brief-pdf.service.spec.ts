@@ -74,11 +74,13 @@ describe('BriefPdfService.buildHtml', () => {
     expect(html).toContain('Awareness + sales, EMEA');
   });
 
-  it('renders the P10/P50/P90 bands when forecast is present', () => {
+  it('renders the P10/P50/P90 bands when forecast is present — without the legacy ROAS', () => {
     const html = svc.buildHtml(SAMPLE, { creatorCount: 3 });
     expect(html).toContain('1,062,500');
     expect(html).toContain('1,562,500');
     expect(html).toContain('2,218,750');
+    expect(html).toContain('CTR 1.9%');
+    expect(html).not.toMatch(/roas/i);
   });
 
   it('renders an empty-forecast note when forecast is null', () => {
