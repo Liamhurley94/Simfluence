@@ -363,7 +363,7 @@ interface ScoredRow {
         </p>
       }
 
-      <!-- Genre benchmark — 5-card layout, mirrors prod. -->
+      <!-- Genre benchmark — 4-card layout (was 5; the ROAS card went 2026-09-08). -->
       <div
         class="sf-card overflow-hidden"
         data-testid="genre-benchmark"
@@ -374,7 +374,7 @@ interface ScoredRow {
         >
           Genre Benchmark · {{ context.genre() }}
         </div>
-        <div class="grid grid-cols-5 gap-3 p-4">
+        <div class="grid grid-cols-4 gap-3 p-4">
           @for (m of benchmarkCards(); track m.key) {
             <div
               class="text-center p-4 rounded-md"
@@ -503,7 +503,10 @@ export class ScoringComponent {
       { key: 'ctr', label: 'CTR', value: b.ctrBase + '%' },
       { key: 'cpm', label: 'CPM', value: '$' + b.cpmBase },
       { key: 'cvr', label: 'CVR', value: b.cvrBase + '%' },
-      { key: 'roas', label: 'ROAS', value: b.roasBase + '×' },
+      // No ROAS card: D23 cut ROAS from the forecast for being asserted, and
+      // Liam removed it here too so it leaves the product consistently
+      // (LIAM-QA (f), 2026-08-31). `roasBase` stays in benchmarks.data.ts
+      // for the legacy debrief path only.
       { key: 'eng', label: 'Eng Rate', value: b.engBase + '%' },
     ];
   });
