@@ -98,7 +98,7 @@ interface Step {
             </h1>
             <p class="mt-6 text-lg max-w-xl" style="color: var(--color-text-dim);">
               Forecast a creator campaign's reach and cost before a single dollar is committed —
-              with P10 / P50 / P90 confidence bands. Model it, see the range, launch with a
+              with Conservative / Expected / Optimistic bands. Model it, see the range, launch with a
               benchmark.
             </p>
 
@@ -164,7 +164,7 @@ interface Step {
 
                 <!-- Headline metric tile -->
                 <div class="sf-panel p-4 flex flex-col justify-center text-center w-32" style="background: var(--color-bg-3);">
-                  <div class="text-[10px] uppercase tracking-wide" style="color: var(--color-text-muted);">P50 reach</div>
+                  <div class="text-[10px] uppercase tracking-wide" style="color: var(--color-text-muted);">Expected reach</div>
                   <div class="text-2xl font-semibold leading-none mt-1" style="font-family: var(--font-mono);">5.1M</div>
                   <div class="text-[10px] mt-1" style="color: var(--color-text-muted);">impressions</div>
                 </div>
@@ -174,7 +174,7 @@ interface Step {
               <div class="sf-panel p-4 mt-3">
                 <div class="flex items-center justify-between mb-2">
                   <span class="text-xs font-semibold" style="color: var(--color-text-dim);">Forecast · Impressions</span>
-                  <span class="sf-chip">P10–P90</span>
+                  <span class="sf-chip">Conservative–Optimistic</span>
                 </div>
                 <svg viewBox="0 0 320 110" class="w-full h-[110px]" preserveAspectRatio="none">
                   <defs>
@@ -423,7 +423,7 @@ export class LandingComponent {
       prefix: 'P',
       suffix: '',
       decimals: 0,
-      label: 'confidence bands — P10 / P50 / P90 on every forecast',
+      label: 'forecast bands — Conservative / Expected / Optimistic on every forecast',
     },
   ];
 
@@ -443,8 +443,8 @@ export class LandingComponent {
     {
       icon: 'target',
       title: 'Campaign forecasting',
-      body: 'Forecast reach and cost with P10 / P50 / P90 confidence bands — so you see the likely range, not a single optimistic number, before you commit budget.',
-      meta: 'P10 / P50 / P90 bands',
+      body: 'Forecast reach and cost with Conservative / Expected / Optimistic bands — so you see the likely range, not a single hopeful number, before you commit budget.',
+      meta: 'Conservative / Expected / Optimistic bands',
     },
     {
       icon: 'beaker',
@@ -480,7 +480,7 @@ export class LandingComponent {
     {
       n: '3',
       title: 'Run the simulation',
-      body: 'Get probabilistic forecasts with P10, P50 and P90 confidence bands.',
+      body: 'Get Conservative, Expected and Optimistic forecasts on every run.',
     },
     {
       n: '4',

@@ -73,7 +73,7 @@ interface Plan {
           </h1>
           <p class="mt-5 text-lg" style="color: var(--color-text-dim);">
             Start small and scale up. Every plan includes CPI &amp; GFI scoring and
-            P10 / P50 / P90 forecasts. All prices USD, excl. tax.
+            Conservative / Expected / Optimistic forecasts. All prices USD, excl. tax.
           </p>
         </div>
       </section>
