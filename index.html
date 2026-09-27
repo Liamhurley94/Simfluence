@@ -390,8 +390,9 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
       </div>
 
       <!-- Profile panel — expands BELOW the grid, full width -->
-      <div id="sf-overlay" style="max-height:0;overflow:hidden;opacity:0;transition:max-height 0.5s cubic-bezier(.23,1,.32,1),opacity 0.35s ease,margin-top 0.35s ease;margin-top:0;border-radius:12px;background:#0D0D16;border:1px solid rgba(255,255,255,0.1);">
-        <div id="sf-overlay-inner" style="padding:20px;"><!-- populated by JS --></div>
+      <div id="sf-overlay" style="position:relative;margin-top:16px;border-radius:12px;background:#0D0D16;border:1px solid rgba(255,255,255,0.1);">
+        <div id="sf-overlay-hint" style="position:absolute;left:0;top:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;font-size:9px;letter-spacing:.12em;color:rgba(255,255,255,0.25);transition:opacity 0.35s ease;pointer-events:none;">SELECT A CREATOR TO OPEN THE PROFILE</div>
+        <div id="sf-overlay-inner" style="padding:20px;opacity:0;transition:opacity 0.35s ease;"><!-- populated by JS --></div>
       </div>
 
       <!-- Animated cursor -->
@@ -522,9 +523,8 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
 
   function openProfile(cr, cardEl){
     populateOverlay(cr);
-    ov.style.maxHeight='500px';
-    ov.style.marginTop='16px';
-    ov.style.opacity='1';
+    document.getElementById('sf-overlay-inner').style.opacity='1';
+    document.getElementById('sf-overlay-hint').style.opacity='0';
     cardEl.classList.add('sf-active');
     setTimeout(function(){
       countUp(document.getElementById('sf-cpi-n'),cr.cpi,'',600);
@@ -541,13 +541,14 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
   }
 
   function closeProfile(cardEl){
-    ov.style.maxHeight='0';
-    ov.style.marginTop='0';
-    ov.style.opacity='0';
+    document.getElementById('sf-overlay-inner').style.opacity='0';
+    document.getElementById('sf-overlay-hint').style.opacity='1';
     if(cardEl) cardEl.classList.remove('sf-active');
   }
 
-  function runSequence(){
+  var _sfActive=false, _sfRun=0;
+  function runSequence(token){
+    if(!_sfActive || token!==_sfRun) return;
     var cr=CREATORS[currentIdx];
     var cardEl=document.getElementById(cr.id);
     var rect=wrap.getBoundingClientRect();
@@ -563,13 +564,19 @@ footer{border-top:1px solid var(--border);padding:60px 48px 32px;display:grid;gr
     });
 
     setTimeout(function(){
+      if(token!==_sfRun) return;
       closeProfile(cardEl);
       currentIdx=(currentIdx+1)%CREATORS.length;
-      setTimeout(runSequence, 1200);
+      setTimeout(function(){runSequence(token);}, 1200);
     }, 6000);
   }
 
-  setTimeout(runSequence,1000);
+  populateOverlay(CREATORS[0]);
+  var _sfObs=new IntersectionObserver(function(e){
+    if(e[0].isIntersecting && !_sfActive){_sfActive=true;_sfRun++;setTimeout((function(t){return function(){runSequence(t);};})(_sfRun),800);}
+    if(!e[0].isIntersecting && _sfActive){_sfActive=false;_sfRun++;closeProfile(document.querySelector('.sf-demo-card.sf-active'));cur.style.opacity='0';}
+  },{threshold:0.25});
+  _sfObs.observe(wrap);
 })();
 </script>
 
